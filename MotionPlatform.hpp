@@ -87,7 +87,7 @@ public:
 	typedef Eigen::Map<const Eigen::VectorXd> ConstVectorMap;
 	typedef Eigen::Map<Eigen::MatrixXd, 0, DynamicStride> MatrixMap;
 
-	virtual void Output(const ConstVectorMap& x, const ConstVectorMap& u, VectorMap& y, MatrixMap& C, MatrixMap& D) const = 0;
+	virtual void Output(const double * x, const double * u, double * y, double * C = nullptr, double * D = nullptr) const = 0;
 
 private:
 	std::vector<MotionLimits> _axesLimits;

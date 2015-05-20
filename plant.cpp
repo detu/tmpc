@@ -198,16 +198,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     const real_T   *x  = (const real_T*) ssGetInputPortSignal(S,1);
     real_T         *y  = (real_T *)ssGetOutputPortRealSignal(S,0);
 
-	MotionPlatform::ConstVectorMap map_u(u, platform.getInputDim());
-	MotionPlatform::ConstVectorMap map_x(x, platform.getStateDim());
-	MotionPlatform::VectorMap map_y(y, platform.getOutputDim());
-
-	Eigen::MatrixXd C(platform.getOutputDim(), platform.getStateDim());
-	Eigen::MatrixXd D(platform.getOutputDim(), platform.getInputDim());
-	MotionPlatform::MatrixMap map_C(C.data(), C.rows(), C.cols(), MotionPlatform::DynamicStride(C.rows(), 1));
-	MotionPlatform::MatrixMap map_D(D.data(), D.rows(), D.cols(), MotionPlatform::DynamicStride(D.rows(), 1));
-
-	platform.Output(map_x, map_u, map_y, map_C, map_D);
+	platform.Output(x, u, y);
 }
 
 #define MDL_UPDATE  /* Change to #undef to remove function */

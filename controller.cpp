@@ -189,34 +189,35 @@ static void mdlInitializeSampleTimes(SimStruct *S)
   */
  static void mdlInitializeConditions(SimStruct *S)
  {
-	 // G = [dy/dx, dy/du]
-	 Eigen::Matrix<double, Ny, Nz> G;
-	 G << 0. << 0. << 1.;
-
-	 // Initializing matrices.
-	 // H stores Nt matrices of size Nz x Nz and 1 matrix of size Nx x Nx.
-	 std::array<double, Nz * Nz * Nt + Nx * Nx> H;
-
-	 // g stores Nt vectors of size Nz and 1 vector of size Nx
-	 std::array<double, Nz * Nt + Nx> g;
-
-	 for (unsigned i = 0; i < Nt; ++i)
-	 {
-		 Eigen::Map<Eigen::Matrix<double, Nz, Nz, Eigen::RowMajor>>(H.data() + Nz * Nz * i) = G.transpose() * G;
-		 Eigen::Map<Eigen::Matrix<double, Nz, 1>>(g.data() + Nz * i) = G.transpose() * G;
-	 }
-
-     auto qpData = reinterpret_cast<qpData_t *>(ssGetPWorkValue(S, 0));
-     
-     /** Initial MPC data setup: components not given here are set to zero (if applicable)
-	 *      instead of passing g, D, zLow, zUpp, one can also just pass NULL pointers (0) */
-	 
-	 return_t statusFlag = qpDUNES_init(qpData, H, g, C, c, z_min.data(), z_max.data(), 0, 0, 0);
-	 if (statusFlag != QPDUNES_OK) 
-     {
-  		 ssSetErrorStatus(S, "qpDUNES_init() failed.");
-		 return;
-	 }
+// 	 // G = [dy/dx, dy/du]
+// 	 Eigen::Matrix<double, Ny, Nz> G;
+// 	 G << 0. << 0. << 1.;
+// 
+// 	 // Initializing matrices.
+// 	 // H stores Nt matrices of size Nz x Nz and 1 matrix of size Nx x Nx.
+// 	 std::array<double, Nz * Nz * Nt + Nx * Nx> H;
+// 
+// 	 // g stores Nt vectors of size Nz and 1 vector of size Nx
+// 	 std::array<double, Nz * Nt + Nx> g;
+// 
+// 	 for (unsigned i = 0; i < Nt; ++i)
+// 	 {
+// 		 platform.Output(x[i], u[i], y, C, D);
+// 		 Eigen::Map<Eigen::Matrix<double, Nz, Nz, Eigen::RowMajor>>(H.data() + Nz * Nz * i) = G.transpose() * G;
+// 		 Eigen::Map<Eigen::Matrix<double, Nz, 1>>(g.data() + Nz * i) = G.transpose() * G;
+// 	 }
+// 
+//      auto qpData = reinterpret_cast<qpData_t *>(ssGetPWorkValue(S, 0));
+//      
+//      /** Initial MPC data setup: components not given here are set to zero (if applicable)
+// 	 *      instead of passing g, D, zLow, zUpp, one can also just pass NULL pointers (0) */
+// 	 
+// 	 return_t statusFlag = qpDUNES_init(qpData, H, g, C, c, z_min.data(), z_max.data(), 0, 0, 0);
+// 	 if (statusFlag != QPDUNES_OK) 
+//      {
+//   		 ssSetErrorStatus(S, "qpDUNES_init() failed.");
+// 		 return;
+// 	 }
  }
 
 #define MDL_START  /* Change to #undef to remove function */

@@ -2,6 +2,8 @@
 
 #include "MotionPlatformX.hpp"
 
+typedef Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> RowMajorMatrix;
+
 static std::vector<MotionLimits> DefaultAxesLimits()
 {
 	std::vector<MotionLimits> limits;
@@ -14,23 +16,29 @@ MotionPlatformX::MotionPlatformX()
 {
 }
 
-void MotionPlatformX::Output(const ConstVectorMap& x, const ConstVectorMap& u, VectorMap& y, MatrixMap& C, MatrixMap& D) const
+void MotionPlatformX::Output(const double * x, const double * u, double * y, double * C, double * D) const
 {
-	if (!(x.size() == getStateDim() && u.size() == getInputDim() && y.size() == getOutputDim()
-		&& C.rows() == getOutputDim() && C.cols() == getStateDim() && D.rows() == getOutputDim() && D.cols() == getInputDim()))
-		throw std::invalid_argument("MotionPlatformX::Output() input argument dimension mismatch");
-
 	// Specific force
-	y.block<3, 1>(0, 0) = getGravity();
-	y(0) -= u(0);
+	Eigen::Map<Eigen::Vector3d> f(y);
+	f = getGravity();
+	f(0) -= u[0];
 
 	// Rotational velocity
-	y.block<3, 1>(3, 0).fill(0.);
+	Eigen::Map<Eigen::Vector3d> omega(y + 3);
+	omega.fill(0.);
 
 	// C = dy/dx
-	C.fill(0.);
+	if (C)
+	{
+		Eigen::Map<RowMajorMatrix> map_C(C, getOutputDim(), getStateDim());
+		map_C.fill(0.);
+	}
 
 	// D = dy/du
-	D.fill(0.);
-	D(0, 0) = -1;
+	if (D)
+	{
+		Eigen::Map<RowMajorMatrix> map_D(D, getOutputDim(), getInputDim());
+		map_D.fill(0.);
+		map_D(0, 0) = -1;
+	}
 }
