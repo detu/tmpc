@@ -4,15 +4,8 @@
 
 typedef Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> RowMajorMatrix;
 
-static std::vector<MotionLimits> DefaultAxesLimits()
-{
-	std::vector<MotionLimits> limits;
-	limits.push_back(MotionLimits(-1., 1., -1., 1., -1., 1.));
-	return limits;
-}
-
 MotionPlatformX::MotionPlatformX()
-	: MotionPlatform(DefaultAxesLimits())
+	: MotionPlatform(1)
 {
 }
 
@@ -41,4 +34,16 @@ void MotionPlatformX::Output(const double * x, const double * u, double * y, dou
 		map_D.fill(0.);
 		map_D(0, 0) = -1;
 	}
+}
+
+void MotionPlatformX::getDefaultAxesPosition(double * q) const
+{
+	q[0] = 0;
+}
+
+void MotionPlatformX::getAxesLimits(double * q_min, double * q_max, double * v_min, double * v_max, double * u_min, double * u_max) const
+{
+	q_min[0] = -1;	q_max[0] = 1;
+	v_min[0] = -1;	v_max[0] = 1;
+	u_min[0] = -1;  u_max[0] = 1;
 }

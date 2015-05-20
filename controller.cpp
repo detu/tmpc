@@ -95,6 +95,8 @@ extern "C"
 
 #include <memory>
 
+typedef Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> RowMajorMatrix;
+
 // Motion platform to be used.
 MotionPlatformX platform;
 
@@ -111,6 +113,20 @@ extern void S_Update_wrapper(const real_T *y_ref,
 			const real_T *u,
 			real_T *xD,
 			SimStruct *S);
+
+Eigen::MatrixXd OutputWeightingMatrix()
+{
+	Eigen::MatrixXd w(6, 6);
+	w.fill(0.);
+	w.diagonal()[0] = 1;
+	w.diagonal()[1] = 1;
+	w.diagonal()[2] = 1;
+	w.diagonal()[3] = 10;
+	w.diagonal()[4] = 10;
+	w.diagonal()[5] = 10;
+
+	return w.transpose() * w;
+}
 
 /*====================*
  * S-function methods *
@@ -189,35 +205,118 @@ static void mdlInitializeSampleTimes(SimStruct *S)
   */
  static void mdlInitializeConditions(SimStruct *S)
  {
-// 	 // G = [dy/dx, dy/du]
-// 	 Eigen::Matrix<double, Ny, Nz> G;
-// 	 G << 0. << 0. << 1.;
-// 
-// 	 // Initializing matrices.
-// 	 // H stores Nt matrices of size Nz x Nz and 1 matrix of size Nx x Nx.
-// 	 std::array<double, Nz * Nz * Nt + Nx * Nx> H;
-// 
-// 	 // g stores Nt vectors of size Nz and 1 vector of size Nx
-// 	 std::array<double, Nz * Nt + Nx> g;
-// 
-// 	 for (unsigned i = 0; i < Nt; ++i)
-// 	 {
-// 		 platform.Output(x[i], u[i], y, C, D);
-// 		 Eigen::Map<Eigen::Matrix<double, Nz, Nz, Eigen::RowMajor>>(H.data() + Nz * Nz * i) = G.transpose() * G;
-// 		 Eigen::Map<Eigen::Matrix<double, Nz, 1>>(g.data() + Nz * i) = G.transpose() * G;
-// 	 }
-// 
-//      auto qpData = reinterpret_cast<qpData_t *>(ssGetPWorkValue(S, 0));
-//      
-//      /** Initial MPC data setup: components not given here are set to zero (if applicable)
-// 	 *      instead of passing g, D, zLow, zUpp, one can also just pass NULL pointers (0) */
-// 	 
-// 	 return_t statusFlag = qpDUNES_init(qpData, H, g, C, c, z_min.data(), z_max.data(), 0, 0, 0);
-// 	 if (statusFlag != QPDUNES_OK) 
-//      {
-//   		 ssSetErrorStatus(S, "qpDUNES_init() failed.");
-// 		 return;
-// 	 }
+	 /*
+	 Initialize at default position, 0 velocity, 0 input.
+	 */
+
+	 using namespace Eigen;
+
+	 // Get platform properties.
+	 const auto Nq = platform.getNumberOfAxes();
+	 const auto Nu = platform.getInputDim();
+	 const auto Nx = platform.getStateDim();
+	 const auto Ny = platform.getOutputDim();
+	 const auto Nz = Nx + Nu;
+
+	 VectorXd q_min(Nq), q_max(Nq), v_min(Nq), v_max(Nq), u_min(Nq), u_max(Nq);
+	 platform.getAxesLimits(q_min.data(), q_max.data(), v_min.data(), v_max.data(), u_min.data(), u_max.data());
+
+	 // State vector: x = [default_pos; 0]
+	 Eigen::VectorXd x(Nx);
+	 x.fill(0.);
+	 platform.getDefaultAxesPosition(x.data());
+
+	 // Input vector: u = 0
+	 VectorXd u(Nu);
+	 u.fill(0.);
+
+	 // Output vector and derivatives at default initial state
+	 VectorXd y(Ny);
+	 RowMajorMatrix C(Ny, Nx);
+	 RowMajorMatrix D(Ny, Nu);
+	 platform.Output(x.data(), u.data(), y.data(), C.data(), D.data());
+
+	 // Output weighting matrix
+	 const auto W = OutputWeightingMatrix();
+
+	 // G = [C, D]
+	 RowMajorMatrix G(Ny, Nx + Nu);
+	 G << C, D;
+
+	 // H = G^T W G
+	 RowMajorMatrix H = G.transpose() * W * G;
+
+	 // z = [x, u]
+	 VectorXd z(Nx + Nu);
+	 z << x, u;
+
+	 // g = 2 * (y_bar - y_hat - z_bar^T * G^T) * W * G
+	 //   = -2 * z_bar^T * G^T * W * G (s.t. y_bar = y_hat)
+	 VectorXd g = -2. * z.transpose() * G.transpose() * W * G;
+
+	 // K = [A, B];
+	 // x_{k+1} = K * z_k + c_k
+	 MatrixXd A(Nx, Nx);
+	 A << MatrixXd::Identity(Nq, Nq), SAMPLE_TIME_0 * MatrixXd::Identity(Nq, Nq),
+		  MatrixXd::Zero(Nq, Nq), MatrixXd::Identity(Nq, Nq);
+
+	 MatrixXd B(Nx, Nu);
+	 B << SAMPLE_TIME_0 * SAMPLE_TIME_0 / 2. * MatrixXd::Identity(Nq, Nq),
+		  SAMPLE_TIME_0 * MatrixXd::Identity(Nq, Nq);
+
+	 RowMajorMatrix K(Nx, Nx + Nu);
+	 K << A, B;
+
+	 // c = 0
+	 VectorXd c(Nx);
+	 c.fill(0.);
+
+	 // Initializing arrays.
+	 // H_ stores Nt row-major matrices of size Nz x Nz and 1 matrix of size Nx x Nx.
+	 std::vector<double> H_(Nz * Nz * Nt + Nx * Nx);
+
+	 // g_ stores Nt vectors of size Nz and 1 vector of size Nx
+	 std::vector<double> g_(Nz * Nt + Nx);
+
+	 // C_ stores Nt row-major matrices of size Nx x Nz
+	 std::vector<double> C_(Nx * Nz * Nt);
+
+	 // c_ stores Nt vectors of size Nx
+	 std::vector<double> c_(Nx * Nt);
+
+	 // z_min stores Nt vectors of size Nz and 1 vector of size Nx
+	 std::vector<double> z_min(Nz * Nt + Nx);
+
+	 // z_max stores Nt vectors of size Nz and 1 vector of size Nx
+	 std::vector<double> z_max(Nz * Nt + Nx);
+
+	 for (unsigned i = 0; i < Nt; ++i)
+	 {
+		 Map<RowMajorMatrix>(H_.data() + Nz * Nz * i, Nz, Nz) = H;
+		 Map<VectorXd>(g_.data() + Nz * i, Nz) = g;
+		 Map<RowMajorMatrix>(C_.data() + Nx * Nz * i, Nx, Nz) = K;
+		 Map<VectorXd>(c_.data() + Nx * i, Nx, 1) = c;
+		 
+		 Map<VectorXd>(z_min.data() + Nz * i, Nz, 1) << q_min, v_min, u_min;
+		 Map<VectorXd>(z_max.data() + Nz * i, Nz, 1) << q_max, v_max, u_max;
+	 }
+
+ 	 Map<RowMajorMatrix>(H_.data() + Nz * Nz * Nt, Nx, Nx).fill(0.);
+ 	 Map<VectorXd>(g_.data() + Nz * Nt, Nx).fill(0.);
+ 	 Map<VectorXd>(z_min.data() + Nz * Nt, Nx) << q_min, v_min;
+ 	 Map<VectorXd>(z_max.data() + Nz * Nt, Nx) << q_max, v_max;
+	 
+     auto qpData = reinterpret_cast<qpData_t *>(ssGetPWorkValue(S, 0));
+     
+     /** Initial MPC data setup: components not given here are set to zero (if applicable)
+	 *      instead of passing g, D, zLow, zUpp, one can also just pass NULL pointers (0) */
+	 
+	 return_t statusFlag = qpDUNES_init(qpData, H_.data(), g_.data(), C_.data(), c_.data(), z_min.data(), z_max.data(), 0, 0, 0);
+	 if (statusFlag != QPDUNES_OK) 
+     {
+  		 ssSetErrorStatus(S, "qpDUNES_init() failed.");
+		 return;
+	 }
  }
 
 #define MDL_START  /* Change to #undef to remove function */
