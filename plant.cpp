@@ -1,7 +1,7 @@
 // S-function implementation of an MPC motion cueing controller.
 
 #define S_FUNCTION_LEVEL 2
-#define S_FUNCTION_NAME controller
+#define S_FUNCTION_NAME plant
 
 #define NUM_INPUTS          2
 /* Input Port  0 */
@@ -75,42 +75,8 @@
 
 #include "MotionPlatformX.hpp"
 
-#include <qpDUNES.h>
-
-/*
-extern "C"
-{
-    return_t qpDUNES_setup(	qpData_t* const qpData,
-						uint_t nI,
-						uint_t nX,
-						uint_t nU,
-						uint_t* nD,
-						qpOptions_t* options
-						);
-    
-    return_t qpDUNES_cleanup(	qpData_t* const qpData
-						);
-}
- */
-
-#include <memory>
-
 // Motion platform to be used.
 MotionPlatformX platform;
-
-// number of control intervals
-const unsigned Nt = 3; 
-
-extern void S_Outputs_wrapper(const real_T *y_ref,
-			const real_T *x,
-			real_T *u,
-			const real_T *xD,
-			SimStruct *S);
-extern void S_Update_wrapper(const real_T *y_ref,
-			const real_T *x,
-			const real_T *u,
-			real_T *xD,
-			SimStruct *S);
 
 /*====================*
  * S-function methods *
@@ -133,7 +99,7 @@ static void mdlInitializeSizes(SimStruct *S)
 
     if (!ssSetNumInputPorts(S, NUM_INPUTS)) return;
     /*Input Port 0 */
-    ssSetInputPortWidth(S,  0, platform.getOutputDim()); /* */
+    ssSetInputPortWidth(S,  0, platform.getInputDim()); /* */
     ssSetInputPortDataType(S, 0, SS_DOUBLE);
     ssSetInputPortComplexSignal(S,  0, INPUT_0_COMPLEX);
     ssSetInputPortDirectFeedThrough(S, 0, INPUT_0_FEEDTHROUGH);
@@ -148,15 +114,14 @@ static void mdlInitializeSizes(SimStruct *S)
 
 
     if (!ssSetNumOutputPorts(S, NUM_OUTPUTS)) return;
-    ssSetOutputPortWidth(S, 0, platform.getInputDim());
+    ssSetOutputPortWidth(S, 0, platform.getOutputDim());
     ssSetOutputPortDataType(S, 0, SS_DOUBLE);
     ssSetOutputPortComplexSignal(S, 0, OUTPUT_0_COMPLEX);
     ssSetNumSampleTimes(S, 1);
     ssSetNumRWork(S, 0);
     ssSetNumIWork(S, 0);
     
-    // One PWork vector for storing a pointer to qpData_t.
-    ssSetNumPWork(S, 1);
+    ssSetNumPWork(S, 0);
     ssSetNumModes(S, 0);
     ssSetNumNonsampledZCs(S, 0);
 
@@ -175,7 +140,7 @@ static void mdlSetInputPortFrameData(SimStruct  *S,
 }
 /* Function: mdlInitializeSampleTimes =========================================
  * Abstract:
- *    Specifiy  the sample time.
+ *    Specify  the sample time.
  */
 static void mdlInitializeSampleTimes(SimStruct *S)
 {
@@ -189,34 +154,7 @@ static void mdlInitializeSampleTimes(SimStruct *S)
   */
  static void mdlInitializeConditions(SimStruct *S)
  {
-	 // G = [dy/dx, dy/du]
-	 Eigen::Matrix<double, Ny, Nz> G;
-	 G << 0. << 0. << 1.;
 
-	 // Initializing matrices.
-	 // H stores Nt matrices of size Nz x Nz and 1 matrix of size Nx x Nx.
-	 std::array<double, Nz * Nz * Nt + Nx * Nx> H;
-
-	 // g stores Nt vectors of size Nz and 1 vector of size Nx
-	 std::array<double, Nz * Nt + Nx> g;
-
-	 for (unsigned i = 0; i < Nt; ++i)
-	 {
-		 Eigen::Map<Eigen::Matrix<double, Nz, Nz, Eigen::RowMajor>>(H.data() + Nz * Nz * i) = G.transpose() * G;
-		 Eigen::Map<Eigen::Matrix<double, Nz, 1>>(g.data() + Nz * i) = G.transpose() * G;
-	 }
-
-     auto qpData = reinterpret_cast<qpData_t *>(ssGetPWorkValue(S, 0));
-     
-     /** Initial MPC data setup: components not given here are set to zero (if applicable)
-	 *      instead of passing g, D, zLow, zUpp, one can also just pass NULL pointers (0) */
-	 
-	 return_t statusFlag = qpDUNES_init(qpData, H, g, C, c, z_min.data(), z_max.data(), 0, 0, 0);
-	 if (statusFlag != QPDUNES_OK) 
-     {
-  		 ssSetErrorStatus(S, "qpDUNES_init() failed.");
-		 return;
-	 }
  }
 
 #define MDL_START  /* Change to #undef to remove function */
@@ -229,24 +167,7 @@ static void mdlInitializeSampleTimes(SimStruct *S)
 */
 static void mdlStart(SimStruct *S)
 {
-    /** Set qpDUNES options */
-	qpOptions_t qpOptions 			= qpDUNES_setupDefaultOptions();
-	qpOptions.maxIter    			= 100;
-	qpOptions.printLevel 			= 2;
-	qpOptions.stationarityTolerance = 1.e-6;
-    
-    /** Allocate data for qpDUNES and set options */
-    auto qpData = std::make_unique<qpData_t>();
-    
-    unsigned int* nD = 0;	  			/* number of affine constraints */
-	return_t statusFlag = qpDUNES_setup(qpData.get(), Nt, platform.getStateDim(), platform.getInputDim(), nD, &qpOptions);
-	if (statusFlag != QPDUNES_OK)
-	{
-		ssSetErrorStatus(S, "qpDUNES_setup() failed.");
-		return;
-	}
-    
-    ssSetPWorkValue(S, 0, qpData.release());
+
 }
 #endif /*  MDL_START */
 
@@ -273,12 +194,20 @@ static void mdlSetDefaultPortDataTypes(SimStruct *S)
 */
 static void mdlOutputs(SimStruct *S, int_T tid)
 {
-    const real_T   *y_ref  = (const real_T*) ssGetInputPortSignal(S,0);
+    const real_T   *u  = (const real_T*) ssGetInputPortSignal(S,0);
     const real_T   *x  = (const real_T*) ssGetInputPortSignal(S,1);
-    real_T         *u  = (real_T *)ssGetOutputPortRealSignal(S,0);
+    real_T         *y  = (real_T *)ssGetOutputPortRealSignal(S,0);
 
-    //S_Outputs_wrapper(y_ref, x, u, xD, S);
-	u[0] = -y_ref[0];
+	MotionPlatform::ConstVectorMap map_u(u, platform.getInputDim());
+	MotionPlatform::ConstVectorMap map_x(x, platform.getStateDim());
+	MotionPlatform::VectorMap map_y(y, platform.getOutputDim());
+
+	Eigen::MatrixXd C(platform.getOutputDim(), platform.getStateDim());
+	Eigen::MatrixXd D(platform.getOutputDim(), platform.getInputDim());
+	MotionPlatform::MatrixMap map_C(C.data(), C.rows(), C.cols(), MotionPlatform::DynamicStride(C.rows(), 1));
+	MotionPlatform::MatrixMap map_D(D.data(), D.rows(), D.cols(), MotionPlatform::DynamicStride(D.rows(), 1));
+
+	platform.Output(map_x, map_u, map_y, map_C, map_D);
 }
 
 #define MDL_UPDATE  /* Change to #undef to remove function */
@@ -295,8 +224,6 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     const real_T   *y_ref  = (const real_T*) ssGetInputPortSignal(S,0);
     const real_T   *x  = (const real_T*) ssGetInputPortSignal(S,1);
     real_T        *u  = (real_T *)ssGetOutputPortRealSignal(S,0);
-
-    S_Update_wrapper(y_ref, x, u,  xD, S);
 }
 
 
@@ -308,12 +235,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
  */
 static void mdlTerminate(SimStruct *S)
 {
-    auto qpData = reinterpret_cast<qpData_t *>(ssGetPWorkValue(S, 0));
-     
-    /** cleanup of allocated data */
-	qpDUNES_cleanup(qpData);
-    
-    delete qpData;
+
 }
 
 #ifdef  MATLAB_MEX_FILE    /* Is this file being compiled as a MEX-file? */
