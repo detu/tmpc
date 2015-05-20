@@ -94,14 +94,21 @@ extern "C"
  */
 
 #include <memory>
+#include <fstream>
 
 typedef Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> RowMajorMatrix;
 
 // Motion platform to be used.
 MotionPlatformX platform;
 
-// number of control intervals
-const unsigned Nt = 3; 
+// Number of control intervals
+const unsigned Nt = 1;
+
+// Levenberg-Marquardt parameter
+const double levenbergMarquardt = 0.01;
+
+// Log stream.
+std::ofstream log_stream;
 
 extern void S_Outputs_wrapper(const real_T *y_ref,
 			const real_T *x,
@@ -209,6 +216,9 @@ static void mdlInitializeSampleTimes(SimStruct *S)
 	 Initialize at default position, 0 velocity, 0 input.
 	 */
 
+	 log_stream.open("controller.log");
+	 log_stream << "mdlInitializeConditions()" << std::endl;
+
 	 using namespace Eigen;
 
 	 // Get platform properties.
@@ -243,16 +253,18 @@ static void mdlInitializeSampleTimes(SimStruct *S)
 	 RowMajorMatrix G(Ny, Nx + Nu);
 	 G << C, D;
 
-	 // H = G^T W G
-	 RowMajorMatrix H = G.transpose() * W * G;
+	 // H = G^T W G + \mu I
+	 // Adding Levenberg-Marquardt term to make H positive-definite.
+	 RowMajorMatrix H = G.transpose() * W * G + levenbergMarquardt * MatrixXd::Identity(Nz, Nz);		
 
 	 // z = [x, u]
 	 VectorXd z(Nx + Nu);
 	 z << x, u;
 
-	 // g = 2 * (y_bar - y_hat - z_bar^T * G^T) * W * G
-	 //   = -2 * z_bar^T * G^T * W * G (s.t. y_bar = y_hat)
-	 VectorXd g = -2. * z.transpose() * G.transpose() * W * G;
+	 // g = 2 * (y_bar - y_hat) * W * G
+	 //   = 0 (s.t. y_bar = y_hat)
+	 VectorXd g(Nz);
+	 g.fill(0.);
 
 	 // K = [A, B];
 	 // x_{k+1} = K * z_k + c_k
@@ -301,7 +313,7 @@ static void mdlInitializeSampleTimes(SimStruct *S)
 		 Map<VectorXd>(z_max.data() + Nz * i, Nz, 1) << q_max, v_max, u_max;
 	 }
 
- 	 Map<RowMajorMatrix>(H_.data() + Nz * Nz * Nt, Nx, Nx).fill(0.);
+	 Map<RowMajorMatrix>(H_.data() + Nz * Nz * Nt, Nx, Nx) = levenbergMarquardt * MatrixXd::Identity(Nx, Nx);
  	 Map<VectorXd>(g_.data() + Nz * Nt, Nx).fill(0.);
  	 Map<VectorXd>(z_min.data() + Nz * Nt, Nx) << q_min, v_min;
  	 Map<VectorXd>(z_max.data() + Nz * Nt, Nx) << q_max, v_max;
@@ -310,6 +322,89 @@ static void mdlInitializeSampleTimes(SimStruct *S)
      
      /** Initial MPC data setup: components not given here are set to zero (if applicable)
 	 *      instead of passing g, D, zLow, zUpp, one can also just pass NULL pointers (0) */
+
+	 log_stream << "H = " << std::endl;
+	 for (unsigned i = 0; i < H_.size(); ++i)
+	 {
+		 log_stream << H_[i] << '\t';
+
+		 if (i < Nz * Nz * Nt)
+		 {
+			 if ((i + 1) % Nz == 0)
+				 log_stream << std::endl;
+
+			 if ((i + 1) % (Nz * Nz) == 0)
+				 log_stream << std::endl;
+		 }
+		 else
+		 {
+			 if ((i - Nz * Nz * Nt + 1) % Nx == 0)
+				 log_stream << std::endl;
+
+			 if ((i - Nz * Nz * Nt + 1) % (Nx * Nx) == 0)
+				 log_stream << std::endl;
+		 }
+	 }
+
+	 log_stream << "g = " << std::endl;
+	 for (unsigned i = 0; i < g_.size(); ++i)
+	 {
+		 log_stream << g_[i] << '\t';
+
+		 if (i < Nz * Nt)
+		 {
+			 if ((i + 1) % Nz == 0)
+				 log_stream << std::endl;
+		 }
+		 else
+		 {
+			 if ((i - Nz * Nt + 1) % Nx == 0)
+				 log_stream << std::endl;
+		 }
+	 }
+	 log_stream << std::endl;
+
+	 log_stream << "C = " << std::endl;
+	 for (unsigned i = 0; i < C_.size(); ++i)
+	 {
+		 log_stream << C_[i] << '\t';
+
+  		 if ((i + 1) % Nz == 0)
+			log_stream << std::endl;
+
+		 if ((i + 1) % (Nz * Nx) == 0)
+			log_stream << std::endl;
+	 }
+
+	 log_stream << "c = " << std::endl;
+	 for (unsigned i = 0; i < c_.size(); ++i)
+	 {
+		 log_stream << c_[i] << '\t';
+
+		 if ((i + 1) % Nx == 0)
+			 log_stream << std::endl;
+	 }
+	 log_stream << std::endl;
+
+	 log_stream << "z_min = " << std::endl;
+	 for (unsigned i = 0; i < z_min.size(); ++i)
+	 {
+		 log_stream << z_min[i] << '\t';
+
+		 if ((i + 1) % Nz == 0)
+			 log_stream << std::endl;
+	 }
+	 log_stream << std::endl << std::endl;
+
+	 log_stream << "z_max = " << std::endl;
+	 for (unsigned i = 0; i < z_max.size(); ++i)
+	 {
+		 log_stream << z_max[i] << '\t';
+
+		 if ((i + 1) % Nz == 0)
+			 log_stream << std::endl;
+	 }
+	 log_stream << std::endl << std::endl;
 	 
 	 return_t statusFlag = qpDUNES_init(qpData, H_.data(), g_.data(), C_.data(), c_.data(), z_min.data(), z_max.data(), 0, 0, 0);
 	 if (statusFlag != QPDUNES_OK) 
@@ -373,12 +468,67 @@ static void mdlSetDefaultPortDataTypes(SimStruct *S)
 */
 static void mdlOutputs(SimStruct *S, int_T tid)
 {
+	using namespace Eigen;
+
+	log_stream << "mdlOutputs()" << std::endl;
+
     const real_T   *y_ref  = (const real_T*) ssGetInputPortSignal(S,0);
     const real_T   *x  = (const real_T*) ssGetInputPortSignal(S,1);
     real_T         *u  = (real_T *)ssGetOutputPortRealSignal(S,0);
+	
+	auto qpData = reinterpret_cast<qpData_t *>(ssGetPWorkValue(S, 0));
 
-    //S_Outputs_wrapper(y_ref, x, u, xD, S);
-	u[0] = -y_ref[0];
+	// Get platform properties.
+	const auto Nq = platform.getNumberOfAxes();
+	const auto Nu = platform.getInputDim();
+	const auto Nx = platform.getStateDim();
+	const auto Ny = platform.getOutputDim();
+	const auto Nz = Nx + Nu;
+
+	VectorXd q_min(Nq), q_max(Nq), v_min(Nq), v_max(Nq), u_min(Nq), u_max(Nq);
+	platform.getAxesLimits(q_min.data(), q_max.data(), v_min.data(), v_max.data(), u_min.data(), u_max.data());
+
+	Map<const VectorXd> map_x(x, Nx);
+	Map<const VectorXd> map_y_ref(y_ref, Ny);
+
+	/** (1) embed current initial value */
+	VectorXd z0_min(Nz), z0_max(Nz);
+	z0_min << map_x, u_min;
+	z0_max << map_x, u_max;
+
+	log_stream << "z0_min = " << std::endl;
+	for (unsigned i = 0; i < z0_min.size(); ++i)
+		log_stream << z0_min[i] << '\t';
+	log_stream << std::endl << std::endl;
+
+	log_stream << "z0_max = " << std::endl;
+	for (unsigned i = 0; i < z0_max.size(); ++i)
+		log_stream << z0_max[i] << '\t';
+	log_stream << std::endl << std::endl;
+
+	return_t statusFlag = qpDUNES_updateIntervalData(qpData, qpData->intervals[0], 0, 0, 0, 0, z0_min.data(), z0_max.data(), 0, 0, 0, 0);
+	if (statusFlag != QPDUNES_OK) 
+	{
+		ssSetErrorStatus(S, "Initial value embedding failed (qpDUNES_updateIntervalData()).");
+		return;
+	}
+
+	/** (2) solve QP */
+	statusFlag = qpDUNES_solve(qpData);
+	if (statusFlag != QPDUNES_SUCC_OPTIMAL_SOLUTION_FOUND) 
+	{
+		ssSetErrorStatus(S, "QP solution failed (qpDUNES_solve()).");
+		return;
+	}
+
+	/** (3) obtain primal and dual optimal solution */
+	// z_opt contains Nt vectors of size Nz and 1 vector of size Nx.
+	std::vector<double> z_opt(Nz * Nt + Nx);
+	qpDUNES_getPrimalSol(qpData, z_opt.data());
+	//qpDUNES_getDualSol(&qpData, lambdaOpt, muOpt);
+
+	// Send optimal input for time 0 to output.
+	std::copy_n(z_opt.begin() + Nx, Nu, u);
 }
 
 #define MDL_UPDATE  /* Change to #undef to remove function */
