@@ -85,31 +85,22 @@ typedef Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> R
 auto platform = std::make_shared<MotionPlatformX>();
 
 // Number of control intervals
-const unsigned Nt = 1;
+const unsigned Nt = 20;
 
 // Log stream.
 std::ofstream log_stream;
 
-extern void S_Outputs_wrapper(const real_T *y_ref,
-			const real_T *x,
-			real_T *u,
-			const real_T *xD,
-			SimStruct *S);
-extern void S_Update_wrapper(const real_T *y_ref,
-			const real_T *x,
-			const real_T *u,
-			real_T *xD,
-			SimStruct *S);
-
-MPC_Controller * getController(SimStruct * S)
+rtmc::MPC_Controller * getController(SimStruct * S)
 {
-	return reinterpret_cast<MPC_Controller *>(ssGetPWorkValue(S, 0));
+	return reinterpret_cast<rtmc::MPC_Controller *>(ssGetPWorkValue(S, 0));
 }
 
-void setController(SimStruct * S, MPC_Controller * c)
+void setController(SimStruct * S, rtmc::MPC_Controller * c)
 {
 	ssSetPWorkValue(S, 0, c);
 }
+
+std::string error_status;
 
 /*====================*
  * S-function methods *
@@ -195,8 +186,16 @@ static void mdlInitializeSampleTimes(SimStruct *S)
 	 log_stream.open("controller.log");
 	 log_stream << "mdlInitializeConditions()" << std::endl;
 
-	 getController(S)->InitWorkingPoint();
-	 getController(S)->PrintQP(log_stream);
+	 try
+	 {
+		 getController(S)->InitWorkingPoint();
+		 getController(S)->PrintQP(log_stream);
+	 }	 
+	 catch (const std::runtime_error& e)
+	 {
+		 error_status = e.what();
+		 ssSetErrorStatus(S, error_status.c_str());
+	 }
  }
 
 #define MDL_START  /* Change to #undef to remove function */
@@ -216,7 +215,7 @@ static void mdlStart(SimStruct *S)
 	qpOptions.stationarityTolerance = 1.e-6;
     
     /** Initialize MPC_Controller */
-	auto controller = std::make_shared<MPC_Controller>(platform, SAMPLE_TIME_0, Nt, &qpOptions);
+	auto controller = std::make_unique<rtmc::MPC_Controller>(platform, SAMPLE_TIME_0, Nt, &qpOptions);
 	controller->setLevenbergMarquardt(0.01);
 
 	setController(S, controller.release());
@@ -250,72 +249,37 @@ static void mdlOutputs(SimStruct *S, int_T tid)
 
 	log_stream << "mdlOutputs()" << std::endl;
 
-	Map<const VectorXd> y_ref((const real_T*)ssGetInputPortSignal(S, 0), ssGetCurrentInputPortWidth(S, 0));
-	Map<const VectorXd> x((const real_T*)ssGetInputPortSignal(S, 1), ssGetCurrentInputPortWidth(S, 1));
-	Map<VectorXd> u((real_T *)ssGetOutputPortRealSignal(S, 0), ssGetCurrentOutputPortWidth(S, 0));
+	const real_T * px = (const real_T*)ssGetInputPortSignal(S, 1);
+	real_t * pu = (real_T *)ssGetOutputPortRealSignal(S, 0);
+
+	Map<const VectorXd> y0_ref((const real_T*)ssGetInputPortSignal(S, 0), ssGetCurrentInputPortWidth(S, 0));
+	//Map<const VectorXd> x((const real_T*)ssGetInputPortSignal(S, 1), ssGetCurrentInputPortWidth(S, 1));
+	//Map<VectorXd> u((real_T *)ssGetOutputPortRealSignal(S, 0), ssGetCurrentOutputPortWidth(S, 0));
 
 	auto * controller = getController(S);
 
-	// (0) initialize new reference.
+	// Initialize new reference.
 	// Assume constant reference output for all prediction horizon.
-	for (i = 0; i < controller->getNumberOfIntervals(); ++i)
-		controller->yRef(i) = y_ref;
-	
-	/** (1) embed current initial value */
-	VectorXd z0_min(Nz), z0_max(Nz);
-	z0_min << map_x, u_min;
-	z0_max << map_x, u_max;
+	MatrixXd y_ref(y0_ref.size(), controller->getNumberOfIntervals());
+	for (unsigned i = 0; i < controller->getNumberOfIntervals(); ++i)
+		y_ref.col(i) = y0_ref;
 
-	log_stream << "z0_min = " << std::endl;
-	for (unsigned i = 0; i < z0_min.size(); ++i)
-		log_stream << z0_min[i] << '\t';
-	log_stream << std::endl << std::endl;
-
-	log_stream << "z0_max = " << std::endl;
-	for (unsigned i = 0; i < z0_max.size(); ++i)
-		log_stream << z0_max[i] << '\t';
-	log_stream << std::endl << std::endl;
-
-	return_t statusFlag = qpDUNES_updateIntervalData(qpData, qpData->intervals[0], 0, 0, 0, 0, z0_min.data(), z0_max.data(), 0, 0, 0, 0);
-	if (statusFlag != QPDUNES_OK) 
+	try
 	{
-		ssSetErrorStatus(S, "Initial value embedding failed (qpDUNES_updateIntervalData()).");
-		return;
-	}
+		/** Solve QP */
+		controller->Solve(px, y_ref.data());
 
-	/** (2) solve QP */
-	statusFlag = qpDUNES_solve(qpData);
-	if (statusFlag != QPDUNES_SUCC_OPTIMAL_SOLUTION_FOUND) 
+		// Copy u[0] to output.
+		controller->getWorkingU(0, pu);
+
+		// Prepare for the next step.
+		controller->UpdateWorkingPoint();
+		controller->PrintQP(log_stream);
+	}
+	catch (const std::runtime_error& e)
 	{
-		ssSetErrorStatus(S, "QP solution failed (qpDUNES_solve()).");
-		return;
-	}
-
-	/** (3) obtain primal and dual optimal solution */
-	// z_opt contains Nt vectors of size Nz and 1 vector of size Nx.
-	std::vector<double> z_opt(Nz * Nt + Nx);
-	qpDUNES_getPrimalSol(qpData, z_opt.data());
-	//qpDUNES_getDualSol(&qpData, lambdaOpt, muOpt);
-
-	// Send optimal input for time 0 to output.
-	std::copy_n(z_opt.begin() + Nx, Nu, u);
-
-	/** (4) prepare QP for next solution */
-	qpDUNES_shiftLambda(qpData);			/* shift multipliers */
-	qpDUNES_shiftIntervals(qpData);		/* shift intervals (particularly important when using qpOASES for underlying local QPs) */
-
-	// optional
-
-	/// H = ...
-	/// g = ...
-	/// C = ...
-	/// c = ...
-	/// zLow = ...
-	/// zUpp = ...
-	statusFlag = qpDUNES_updateData(qpData, H, g, 0, 0, zLow, zUpp, 0, 0, 0);		/* data update: components not given here keep their previous value */
-	if (statusFlag != QPDUNES_OK) {
-		ssSetErrorStatus(S, "Data update failed (qpDUNES_updateData())");
-		return;
+		error_status = e.what();
+		ssSetErrorStatus(S, error_status.c_str());
 	}
 }
 
@@ -327,14 +291,12 @@ static void mdlOutputs(SimStruct *S, int_T tid)
    *    for performing any tasks that should only take place once per
    *    integration step.
    */
-  static void mdlUpdate(SimStruct *S, int_T tid)
-  {
+static void mdlUpdate(SimStruct *S, int_T tid)
+{
     real_T         *xD  = ssGetDiscStates(S);
     const real_T   *y_ref  = (const real_T*) ssGetInputPortSignal(S,0);
     const real_T   *x  = (const real_T*) ssGetInputPortSignal(S,1);
     real_T        *u  = (real_T *)ssGetOutputPortRealSignal(S,0);
-
-    S_Update_wrapper(y_ref, x, u,  xD, S);
 }
 
 /* Function: mdlTerminate =====================================================

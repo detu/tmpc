@@ -19,6 +19,10 @@ namespace rtmc
 		~MPC_Controller();
 
 		void InitWorkingPoint();
+		void Solve(const double * x0, const double * y_ref);
+		void getWorkingU(unsigned i, double * pu) const;
+		void UpdateWorkingPoint();
+
 		void PrintQP(std::ostream& os) const;
 		double getLevenbergMarquardt() const { return _levenbergMarquardt; }
 		void setLevenbergMarquardt(double val) { _levenbergMarquardt = val; }
@@ -26,15 +30,18 @@ namespace rtmc
 		unsigned getNumberOfIntervals() const { return _Nt; }
 
 	private:
+		typedef Eigen::Map<Eigen::VectorXd> VectorMap;
 		typedef Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> RowMajorMatrix;
 		typedef Eigen::Map<RowMajorMatrix> RowMajorMatrixMap;
-		typedef Eigen::Map<Eigen::VectorXd> VectorMap;
-
-		void InitQP();
+		
+		// Initialized _G, _y, _C, _c, _zMin, _zMax based on current working point _w.
+		// Does not initialize g.
+		void UpdateQP();
 
 		Eigen::MatrixXd getStateSpaceA() const;
 		Eigen::MatrixXd getStateSpaceB() const;
 
+		RowMajorMatrixMap G(unsigned i);
 		RowMajorMatrixMap H(unsigned i);
 		VectorMap g(unsigned i);
 		RowMajorMatrixMap C(unsigned i);
@@ -44,10 +51,8 @@ namespace rtmc
 		VectorMap xMin(unsigned i);
 		VectorMap xMax(unsigned i);
 		
-		VectorMap z(unsigned i);
-		VectorMap x(unsigned i);
-		VectorMap u(unsigned i);
-		VectorMap yRef(unsigned i);
+		VectorMap w(unsigned i);
+		//VectorMap yRef(unsigned i);
 		
 		const std::shared_ptr<MotionPlatform> _platform;
 		double _sampleTime;
@@ -61,6 +66,12 @@ namespace rtmc
 
 		qpData_t _qpData;
 		double _levenbergMarquardt;
+		
+		// Output weighting matrix
+		RowMajorMatrix _W;
+
+		// _G stores _Nt row_major matrices of size _Ny x _Nz
+		std::vector<double> _G;
 		
 		// _H stores _Nt row-major matrices of size _Nz x _Nz and 1 matrix of size _Nx x _Nx.
 		std::vector<double> _H;
@@ -80,12 +91,21 @@ namespace rtmc
 		// _zMax stores _Nt vectors of size _Nz and 1 vector of size _Nx
 		std::vector<double> _zMax;
 
-		// Working point.
-		// _z stores _Nt vectors of size _Nz and 1 vector of size _Nx
-		std::vector<double> _z;
+		// Primal optimal solution.
+		// _zOpt stores _Nt vectors of size _Nz and 1 vector of size _Nx
+		std::vector<double> _zOpt;
+
+		// Working point (linearization point).
+		// _w stores _Nt vectors of size _Nz and 1 vector of size _Nx
+		std::vector<double> _w;
+
+		// Output at working point.
+		// _y stores _Nt vectors of size _Ny.
+		// Important: _y is column-major.
+		Eigen::MatrixXd _y;
 
 		// Reference output.
 		// _yRef stores _Nt vectors of size _Ny
-		std::vector<double> _yRef;
+		//std::vector<double> _yRef;
 	};
 }
