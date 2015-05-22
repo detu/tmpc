@@ -74,38 +74,18 @@
 #include "simstruc.h"
 
 #include "MotionPlatformX.hpp"
-
-#include <qpDUNES.h>
-
-/*
-extern "C"
-{
-    return_t qpDUNES_setup(	qpData_t* const qpData,
-						uint_t nI,
-						uint_t nX,
-						uint_t nU,
-						uint_t* nD,
-						qpOptions_t* options
-						);
-    
-    return_t qpDUNES_cleanup(	qpData_t* const qpData
-						);
-}
- */
+#include "MPC_Controller.hpp"
 
 #include <memory>
 #include <fstream>
 
 typedef Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> RowMajorMatrix;
 
-// Motion platform to be used.
-MotionPlatformX platform;
+// Motion platform to use
+auto platform = std::make_shared<MotionPlatformX>();
 
 // Number of control intervals
 const unsigned Nt = 1;
-
-// Levenberg-Marquardt parameter
-const double levenbergMarquardt = 0.01;
 
 // Log stream.
 std::ofstream log_stream;
@@ -121,18 +101,14 @@ extern void S_Update_wrapper(const real_T *y_ref,
 			real_T *xD,
 			SimStruct *S);
 
-Eigen::MatrixXd OutputWeightingMatrix()
+MPC_Controller * getController(SimStruct * S)
 {
-	Eigen::MatrixXd w(6, 6);
-	w.fill(0.);
-	w.diagonal()[0] = 1;
-	w.diagonal()[1] = 1;
-	w.diagonal()[2] = 1;
-	w.diagonal()[3] = 10;
-	w.diagonal()[4] = 10;
-	w.diagonal()[5] = 10;
+	return reinterpret_cast<MPC_Controller *>(ssGetPWorkValue(S, 0));
+}
 
-	return w.transpose() * w;
+void setController(SimStruct * S, MPC_Controller * c)
+{
+	ssSetPWorkValue(S, 0, c);
 }
 
 /*====================*
@@ -156,14 +132,14 @@ static void mdlInitializeSizes(SimStruct *S)
 
     if (!ssSetNumInputPorts(S, NUM_INPUTS)) return;
     /*Input Port 0 */
-    ssSetInputPortWidth(S,  0, platform.getOutputDim()); /* */
+    ssSetInputPortWidth(S,  0, platform->getOutputDim()); /* */
     ssSetInputPortDataType(S, 0, SS_DOUBLE);
     ssSetInputPortComplexSignal(S,  0, INPUT_0_COMPLEX);
     ssSetInputPortDirectFeedThrough(S, 0, INPUT_0_FEEDTHROUGH);
     ssSetInputPortRequiredContiguous(S, 0, 1); /*direct input signal access*/
 
     /*Input Port 1 */
-    ssSetInputPortWidth(S,  1, platform.getStateDim());
+    ssSetInputPortWidth(S,  1, platform->getStateDim());
     ssSetInputPortDataType(S, 1, SS_DOUBLE);
     ssSetInputPortComplexSignal(S, 1, INPUT_1_COMPLEX);
     ssSetInputPortDirectFeedThrough(S, 1, INPUT_1_FEEDTHROUGH);
@@ -171,14 +147,14 @@ static void mdlInitializeSizes(SimStruct *S)
 
 
     if (!ssSetNumOutputPorts(S, NUM_OUTPUTS)) return;
-    ssSetOutputPortWidth(S, 0, platform.getInputDim());
+    ssSetOutputPortWidth(S, 0, platform->getInputDim());
     ssSetOutputPortDataType(S, 0, SS_DOUBLE);
     ssSetOutputPortComplexSignal(S, 0, OUTPUT_0_COMPLEX);
     ssSetNumSampleTimes(S, 1);
     ssSetNumRWork(S, 0);
     ssSetNumIWork(S, 0);
     
-    // One PWork vector for storing a pointer to qpData_t.
+    // One PWork vector for storing a pointer to MPC_Controller.
     ssSetNumPWork(S, 1);
     ssSetNumModes(S, 0);
     ssSetNumNonsampledZCs(S, 0);
@@ -198,7 +174,7 @@ static void mdlSetInputPortFrameData(SimStruct  *S,
 }
 /* Function: mdlInitializeSampleTimes =========================================
  * Abstract:
- *    Specifiy  the sample time.
+ *    Specify  the sample time.
  */
 static void mdlInitializeSampleTimes(SimStruct *S)
 {
@@ -219,199 +195,8 @@ static void mdlInitializeSampleTimes(SimStruct *S)
 	 log_stream.open("controller.log");
 	 log_stream << "mdlInitializeConditions()" << std::endl;
 
-	 using namespace Eigen;
-
-	 // Get platform properties.
-	 const auto Nq = platform.getNumberOfAxes();
-	 const auto Nu = platform.getInputDim();
-	 const auto Nx = platform.getStateDim();
-	 const auto Ny = platform.getOutputDim();
-	 const auto Nz = Nx + Nu;
-
-	 VectorXd q_min(Nq), q_max(Nq), v_min(Nq), v_max(Nq), u_min(Nq), u_max(Nq);
-	 platform.getAxesLimits(q_min.data(), q_max.data(), v_min.data(), v_max.data(), u_min.data(), u_max.data());
-
-	 // State vector: x = [default_pos; 0]
-	 Eigen::VectorXd x(Nx);
-	 x.fill(0.);
-	 platform.getDefaultAxesPosition(x.data());
-
-	 // Input vector: u = 0
-	 VectorXd u(Nu);
-	 u.fill(0.);
-
-	 // Output vector and derivatives at default initial state
-	 VectorXd y(Ny);
-	 RowMajorMatrix C(Ny, Nx);
-	 RowMajorMatrix D(Ny, Nu);
-	 platform.Output(x.data(), u.data(), y.data(), C.data(), D.data());
-
-	 // Output weighting matrix
-	 const auto W = OutputWeightingMatrix();
-
-	 // G = [C, D]
-	 RowMajorMatrix G(Ny, Nx + Nu);
-	 G << C, D;
-
-	 // H = G^T W G + \mu I
-	 // Adding Levenberg-Marquardt term to make H positive-definite.
-	 RowMajorMatrix H = G.transpose() * W * G + levenbergMarquardt * MatrixXd::Identity(Nz, Nz);		
-
-	 // z = [x, u]
-	 VectorXd z(Nx + Nu);
-	 z << x, u;
-
-	 // g = 2 * (y_bar - y_hat) * W * G
-	 //   = 0 (s.t. y_bar = y_hat)
-	 VectorXd g(Nz);
-	 g.fill(0.);
-
-	 // K = [A, B];
-	 // x_{k+1} = K * z_k + c_k
-	 MatrixXd A(Nx, Nx);
-	 A << MatrixXd::Identity(Nq, Nq), SAMPLE_TIME_0 * MatrixXd::Identity(Nq, Nq),
-		  MatrixXd::Zero(Nq, Nq), MatrixXd::Identity(Nq, Nq);
-
-	 MatrixXd B(Nx, Nu);
-	 B << SAMPLE_TIME_0 * SAMPLE_TIME_0 / 2. * MatrixXd::Identity(Nq, Nq),
-		  SAMPLE_TIME_0 * MatrixXd::Identity(Nq, Nq);
-
-	 RowMajorMatrix K(Nx, Nx + Nu);
-	 K << A, B;
-
-	 // c = 0
-	 VectorXd c(Nx);
-	 c.fill(0.);
-
-	 // Initializing arrays.
-	 // H_ stores Nt row-major matrices of size Nz x Nz and 1 matrix of size Nx x Nx.
-	 std::vector<double> H_(Nz * Nz * Nt + Nx * Nx);
-
-	 // g_ stores Nt vectors of size Nz and 1 vector of size Nx
-	 std::vector<double> g_(Nz * Nt + Nx);
-
-	 // C_ stores Nt row-major matrices of size Nx x Nz
-	 std::vector<double> C_(Nx * Nz * Nt);
-
-	 // c_ stores Nt vectors of size Nx
-	 std::vector<double> c_(Nx * Nt);
-
-	 // z_min stores Nt vectors of size Nz and 1 vector of size Nx
-	 std::vector<double> z_min(Nz * Nt + Nx);
-
-	 // z_max stores Nt vectors of size Nz and 1 vector of size Nx
-	 std::vector<double> z_max(Nz * Nt + Nx);
-
-	 for (unsigned i = 0; i < Nt; ++i)
-	 {
-		 Map<RowMajorMatrix>(H_.data() + Nz * Nz * i, Nz, Nz) = H;
-		 Map<VectorXd>(g_.data() + Nz * i, Nz) = g;
-		 Map<RowMajorMatrix>(C_.data() + Nx * Nz * i, Nx, Nz) = K;
-		 Map<VectorXd>(c_.data() + Nx * i, Nx, 1) = c;
-		 
-		 Map<VectorXd>(z_min.data() + Nz * i, Nz, 1) << q_min, v_min, u_min;
-		 Map<VectorXd>(z_max.data() + Nz * i, Nz, 1) << q_max, v_max, u_max;
-	 }
-
-	 Map<RowMajorMatrix>(H_.data() + Nz * Nz * Nt, Nx, Nx) = levenbergMarquardt * MatrixXd::Identity(Nx, Nx);
- 	 Map<VectorXd>(g_.data() + Nz * Nt, Nx).fill(0.);
- 	 Map<VectorXd>(z_min.data() + Nz * Nt, Nx) << q_min, v_min;
- 	 Map<VectorXd>(z_max.data() + Nz * Nt, Nx) << q_max, v_max;
-	 
-     auto qpData = reinterpret_cast<qpData_t *>(ssGetPWorkValue(S, 0));
-     
-     /** Initial MPC data setup: components not given here are set to zero (if applicable)
-	 *      instead of passing g, D, zLow, zUpp, one can also just pass NULL pointers (0) */
-
-	 log_stream << "H = " << std::endl;
-	 for (unsigned i = 0; i < H_.size(); ++i)
-	 {
-		 log_stream << H_[i] << '\t';
-
-		 if (i < Nz * Nz * Nt)
-		 {
-			 if ((i + 1) % Nz == 0)
-				 log_stream << std::endl;
-
-			 if ((i + 1) % (Nz * Nz) == 0)
-				 log_stream << std::endl;
-		 }
-		 else
-		 {
-			 if ((i - Nz * Nz * Nt + 1) % Nx == 0)
-				 log_stream << std::endl;
-
-			 if ((i - Nz * Nz * Nt + 1) % (Nx * Nx) == 0)
-				 log_stream << std::endl;
-		 }
-	 }
-
-	 log_stream << "g = " << std::endl;
-	 for (unsigned i = 0; i < g_.size(); ++i)
-	 {
-		 log_stream << g_[i] << '\t';
-
-		 if (i < Nz * Nt)
-		 {
-			 if ((i + 1) % Nz == 0)
-				 log_stream << std::endl;
-		 }
-		 else
-		 {
-			 if ((i - Nz * Nt + 1) % Nx == 0)
-				 log_stream << std::endl;
-		 }
-	 }
-	 log_stream << std::endl;
-
-	 log_stream << "C = " << std::endl;
-	 for (unsigned i = 0; i < C_.size(); ++i)
-	 {
-		 log_stream << C_[i] << '\t';
-
-  		 if ((i + 1) % Nz == 0)
-			log_stream << std::endl;
-
-		 if ((i + 1) % (Nz * Nx) == 0)
-			log_stream << std::endl;
-	 }
-
-	 log_stream << "c = " << std::endl;
-	 for (unsigned i = 0; i < c_.size(); ++i)
-	 {
-		 log_stream << c_[i] << '\t';
-
-		 if ((i + 1) % Nx == 0)
-			 log_stream << std::endl;
-	 }
-	 log_stream << std::endl;
-
-	 log_stream << "z_min = " << std::endl;
-	 for (unsigned i = 0; i < z_min.size(); ++i)
-	 {
-		 log_stream << z_min[i] << '\t';
-
-		 if ((i + 1) % Nz == 0)
-			 log_stream << std::endl;
-	 }
-	 log_stream << std::endl << std::endl;
-
-	 log_stream << "z_max = " << std::endl;
-	 for (unsigned i = 0; i < z_max.size(); ++i)
-	 {
-		 log_stream << z_max[i] << '\t';
-
-		 if ((i + 1) % Nz == 0)
-			 log_stream << std::endl;
-	 }
-	 log_stream << std::endl << std::endl;
-	 
-	 return_t statusFlag = qpDUNES_init(qpData, H_.data(), g_.data(), C_.data(), c_.data(), z_min.data(), z_max.data(), 0, 0, 0);
-	 if (statusFlag != QPDUNES_OK) 
-     {
-  		 ssSetErrorStatus(S, "qpDUNES_init() failed.");
-		 return;
-	 }
+	 getController(S)->InitWorkingPoint();
+	 getController(S)->PrintQP(log_stream);
  }
 
 #define MDL_START  /* Change to #undef to remove function */
@@ -430,18 +215,11 @@ static void mdlStart(SimStruct *S)
 	qpOptions.printLevel 			= 2;
 	qpOptions.stationarityTolerance = 1.e-6;
     
-    /** Allocate data for qpDUNES and set options */
-    auto qpData = std::make_unique<qpData_t>();
-    
-    unsigned int* nD = 0;	  			/* number of affine constraints */
-	return_t statusFlag = qpDUNES_setup(qpData.get(), Nt, platform.getStateDim(), platform.getInputDim(), nD, &qpOptions);
-	if (statusFlag != QPDUNES_OK)
-	{
-		ssSetErrorStatus(S, "qpDUNES_setup() failed.");
-		return;
-	}
-    
-    ssSetPWorkValue(S, 0, qpData.release());
+    /** Initialize MPC_Controller */
+	auto controller = std::make_shared<MPC_Controller>(platform, SAMPLE_TIME_0, Nt, &qpOptions);
+	controller->setLevenbergMarquardt(0.01);
+
+	setController(S, controller.release());
 }
 #endif /*  MDL_START */
 
@@ -472,25 +250,17 @@ static void mdlOutputs(SimStruct *S, int_T tid)
 
 	log_stream << "mdlOutputs()" << std::endl;
 
-    const real_T   *y_ref  = (const real_T*) ssGetInputPortSignal(S,0);
-    const real_T   *x  = (const real_T*) ssGetInputPortSignal(S,1);
-    real_T         *u  = (real_T *)ssGetOutputPortRealSignal(S,0);
+	Map<const VectorXd> y_ref((const real_T*)ssGetInputPortSignal(S, 0), ssGetCurrentInputPortWidth(S, 0));
+	Map<const VectorXd> x((const real_T*)ssGetInputPortSignal(S, 1), ssGetCurrentInputPortWidth(S, 1));
+	Map<VectorXd> u((real_T *)ssGetOutputPortRealSignal(S, 0), ssGetCurrentOutputPortWidth(S, 0));
+
+	auto * controller = getController(S);
+
+	// (0) initialize new reference.
+	// Assume constant reference output for all prediction horizon.
+	for (i = 0; i < controller->getNumberOfIntervals(); ++i)
+		controller->yRef(i) = y_ref;
 	
-	auto qpData = reinterpret_cast<qpData_t *>(ssGetPWorkValue(S, 0));
-
-	// Get platform properties.
-	const auto Nq = platform.getNumberOfAxes();
-	const auto Nu = platform.getInputDim();
-	const auto Nx = platform.getStateDim();
-	const auto Ny = platform.getOutputDim();
-	const auto Nz = Nx + Nu;
-
-	VectorXd q_min(Nq), q_max(Nq), v_min(Nq), v_max(Nq), u_min(Nq), u_max(Nq);
-	platform.getAxesLimits(q_min.data(), q_max.data(), v_min.data(), v_max.data(), u_min.data(), u_max.data());
-
-	Map<const VectorXd> map_x(x, Nx);
-	Map<const VectorXd> map_y_ref(y_ref, Ny);
-
 	/** (1) embed current initial value */
 	VectorXd z0_min(Nz), z0_max(Nz);
 	z0_min << map_x, u_min;
@@ -529,6 +299,24 @@ static void mdlOutputs(SimStruct *S, int_T tid)
 
 	// Send optimal input for time 0 to output.
 	std::copy_n(z_opt.begin() + Nx, Nu, u);
+
+	/** (4) prepare QP for next solution */
+	qpDUNES_shiftLambda(qpData);			/* shift multipliers */
+	qpDUNES_shiftIntervals(qpData);		/* shift intervals (particularly important when using qpOASES for underlying local QPs) */
+
+	// optional
+
+	/// H = ...
+	/// g = ...
+	/// C = ...
+	/// c = ...
+	/// zLow = ...
+	/// zUpp = ...
+	statusFlag = qpDUNES_updateData(qpData, H, g, 0, 0, zLow, zUpp, 0, 0, 0);		/* data update: components not given here keep their previous value */
+	if (statusFlag != QPDUNES_OK) {
+		ssSetErrorStatus(S, "Data update failed (qpDUNES_updateData())");
+		return;
+	}
 }
 
 #define MDL_UPDATE  /* Change to #undef to remove function */
@@ -549,7 +337,6 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     S_Update_wrapper(y_ref, x, u,  xD, S);
 }
 
-
 /* Function: mdlTerminate =====================================================
  * Abstract:
  *    In this function, you should perform any actions that are necessary
@@ -558,12 +345,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
  */
 static void mdlTerminate(SimStruct *S)
 {
-    auto qpData = reinterpret_cast<qpData_t *>(ssGetPWorkValue(S, 0));
-     
-    /** cleanup of allocated data */
-	qpDUNES_cleanup(qpData);
-    
-    delete qpData;
+	delete getController(S);
 }
 
 #ifdef  MATLAB_MEX_FILE    /* Is this file being compiled as a MEX-file? */
