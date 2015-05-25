@@ -18,25 +18,10 @@ private:
 
 namespace rtmc
 {
-	Eigen::MatrixXd OutputWeightingMatrix()
-	{
-		Eigen::MatrixXd w(6, 6);
-		w.fill(0.);
-		w.diagonal()[0] = 1;
-		w.diagonal()[1] = 1;
-		w.diagonal()[2] = 1;
-		w.diagonal()[3] = 10;
-		w.diagonal()[4] = 10;
-		w.diagonal()[5] = 10;
-
-		return w.transpose() * w;
-	}
-
 	MPC_Controller::MPC_Controller(const std::shared_ptr<MotionPlatform>& platform, double sample_time, 
 		unsigned Nt, const qpOptions_t * qpOptions /*= nullptr*/) : _platform(platform)
 		, _levenbergMarquardt(0.01)
 		, _sampleTime(sample_time)
-		, _W(OutputWeightingMatrix())
 		, _y(platform->getOutputDim(), Nt)
 	{
 		// Get sizes.
@@ -48,6 +33,7 @@ namespace rtmc
 		_Nt = Nt;
 
 		// Allocate arrays.
+		_W.resize(_Ny * _Ny * _Nt);
 		_G.resize(_Ny * _Nz * _Nt);
 		_H.resize(_Nz * _Nz * _Nt + _Nx * _Nx);
 		_g.resize(_Nz * _Nt + _Nx);
@@ -57,6 +43,10 @@ namespace rtmc
 		_zMax.resize(_Nz * _Nt + _Nx);
 		_zOpt.resize(_Nz * _Nt + _Nx);
 		_w.resize(_Nz * _Nt + _Nx);
+
+		// Initialize weight matrices
+		for (unsigned i = 0; i < _Nt; ++i)
+			W(i).setIdentity();
 
 		// Set up qpData
 		unsigned int* nD = 0;	  			/* number of affine constraints */
@@ -176,14 +166,19 @@ namespace rtmc
 
 			// H = G^T W G + \mu I
 			// Adding Levenberg-Marquardt term to make H positive-definite.
-			H(i) = G(i).transpose() * _W * G(i) + _levenbergMarquardt * MatrixXd::Identity(_Nz, _Nz);
+			H(i) = G(i).transpose() * W(i) * G(i) + _levenbergMarquardt * MatrixXd::Identity(_Nz, _Nz);
 
 			// C = [ssA, ssB];
 			// x_{k+1} = C * z_k + c_k
-			C(i) << getStateSpaceA(), getStateSpaceB();
+			RowMajorMatrix ssA(_Nx, _Nx);
+			RowMajorMatrix ssB(_Nx, _Nu);
+			VectorXd x_plus(_Nx);
+			Integrate(w(i).data(), w(i).data() + _Nx, x_plus.data(), ssA.data(), ssB.data());
+			C(i) << ssA, ssB;
 
-			// c = K * z_k - x_{k+1}
-			c(i) = C(i) * w(i) - w(i + 1).topRows(_Nx);
+			// \Delta x_{k+1} = C \Delta z_k + f(z_k) - x_{k+1}
+			// c = f(z_k) - x_{k+1}
+			c(i) = x_plus - w(i + 1).topRows(_Nx);
 
 			// z_min stores _Nt vectors of size _Nz and 1 vector of size _Nx
 			zMin(i) = z_min - w(i);
@@ -321,7 +316,7 @@ namespace rtmc
 			
 			for (unsigned i = 0; i < _Nt; ++i)
 				// g = 2 * (y_bar - y_hat)^T * W * G
-				g(i) = 2. * (_y.col(i) - y_ref.col(i)).transpose() * _W * G(i);
+				g(i) = 1. * (_y.col(i) - y_ref.col(i)).transpose() * W(i) * G(i);
 
 			g(_Nt).fill(0.);
 
@@ -375,4 +370,25 @@ namespace rtmc
 		std::copy_n(_w.begin() + i * _Nz + _Nx, _Nu, pu);
 	}
 
+	MPC_Controller::RowMajorMatrixMap MPC_Controller::W(unsigned i)
+	{
+		assert(i < _Nt);
+		return RowMajorMatrixMap(_W.data() + i * _Ny * _Ny, _Ny, _Ny);
+	}
+
+	void MPC_Controller::Integrate(const double * px, const double * pu, double * px_next, double * pA, double * pB) const
+	{
+		using namespace Eigen;
+
+		Map<const VectorXd> x(px, _Nx);
+		Map<const VectorXd> u(pu, _Nu);
+		Map<VectorXd> x_next(px_next, _Nx);
+		RowMajorMatrixMap A(pA, _Nx, _Nx);
+		RowMajorMatrixMap B(pB, _Nx, _Nu);
+
+		A = getStateSpaceA();
+		B = getStateSpaceB();
+
+		x_next = A * x + B * u;
+	}
 }

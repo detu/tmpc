@@ -15,6 +15,11 @@ namespace rtmc
 	class MPC_Controller
 	{
 	public:
+		typedef Eigen::Map<Eigen::VectorXd> VectorMap;
+		typedef Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> RowMajorMatrix;
+		typedef Eigen::Map<RowMajorMatrix> RowMajorMatrixMap;
+		typedef Eigen::Map<const RowMajorMatrix> RowMajorMatrixConstMap;
+
 		MPC_Controller(const std::shared_ptr<MotionPlatform>& platform, double sample_time, unsigned Nt, const qpOptions_t * qpOptions = nullptr);
 		~MPC_Controller();
 
@@ -26,18 +31,15 @@ namespace rtmc
 		void PrintQP(std::ostream& os) const;
 		double getLevenbergMarquardt() const { return _levenbergMarquardt; }
 		void setLevenbergMarquardt(double val) { _levenbergMarquardt = val; }
-
 		unsigned getNumberOfIntervals() const { return _Nt; }
+		RowMajorMatrixMap W(unsigned i);
 
 	private:
-		typedef Eigen::Map<Eigen::VectorXd> VectorMap;
-		typedef Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> RowMajorMatrix;
-		typedef Eigen::Map<RowMajorMatrix> RowMajorMatrixMap;
-		
 		// Initialized _G, _y, _C, _c, _zMin, _zMax based on current working point _w.
 		// Does not initialize g.
 		void UpdateQP();
 
+		void Integrate(const double * x, const double * u, double * x_next, double * A, double * B) const;
 		Eigen::MatrixXd getStateSpaceA() const;
 		Eigen::MatrixXd getStateSpaceB() const;
 
@@ -68,7 +70,8 @@ namespace rtmc
 		double _levenbergMarquardt;
 		
 		// Output weighting matrix
-		RowMajorMatrix _W;
+		// _W stores _Nt matrices of size _Ny x _Ny
+		std::vector<double> _W;
 
 		// _G stores _Nt row_major matrices of size _Ny x _Nz
 		std::vector<double> _G;

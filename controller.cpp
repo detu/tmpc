@@ -84,11 +84,17 @@ typedef Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> R
 // Motion platform to use
 auto platform = std::make_shared<MotionPlatformX>();
 
+// Number of prediction intervals
+const unsigned Np = 100;
+
 // Number of control intervals
-const unsigned Nt = 20;
+const unsigned Nc = 10;
 
 // Log stream.
 std::ofstream log_stream;
+
+// Error status for Simulink
+std::string error_status;
 
 rtmc::MPC_Controller * getController(SimStruct * S)
 {
@@ -100,7 +106,19 @@ void setController(SimStruct * S, rtmc::MPC_Controller * c)
 	ssSetPWorkValue(S, 0, c);
 }
 
-std::string error_status;
+Eigen::MatrixXd OutputWeightingMatrix()
+{
+	Eigen::MatrixXd w(6, 6);
+	w.fill(0.);
+	w.diagonal()[0] = 1;
+	w.diagonal()[1] = 1;
+	w.diagonal()[2] = 1;
+	w.diagonal()[3] = 10;
+	w.diagonal()[4] = 10;
+	w.diagonal()[5] = 10;
+
+	return w.transpose() * w;
+}
 
 /*====================*
  * S-function methods *
@@ -188,8 +206,18 @@ static void mdlInitializeSampleTimes(SimStruct *S)
 
 	 try
 	 {
-		 getController(S)->InitWorkingPoint();
-		 getController(S)->PrintQP(log_stream);
+		 auto const controller = getController(S);
+
+		 for (unsigned i = 0; i < controller->getNumberOfIntervals(); ++i)
+		 {
+			 if (i < Nc)
+				 controller->W(i) = OutputWeightingMatrix();
+			 else
+				 controller->W(i).setZero();
+		 }
+
+		 controller->InitWorkingPoint();
+		 controller->PrintQP(log_stream);
 	 }	 
 	 catch (const std::runtime_error& e)
 	 {
@@ -215,7 +243,7 @@ static void mdlStart(SimStruct *S)
 	qpOptions.stationarityTolerance = 1.e-6;
     
     /** Initialize MPC_Controller */
-	auto controller = std::make_unique<rtmc::MPC_Controller>(platform, SAMPLE_TIME_0, Nt, &qpOptions);
+	auto controller = std::make_unique<rtmc::MPC_Controller>(platform, SAMPLE_TIME_0, Np, &qpOptions);
 	controller->setLevenbergMarquardt(0.01);
 
 	setController(S, controller.release());
@@ -247,7 +275,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
 {
 	using namespace Eigen;
 
-	log_stream << "mdlOutputs()" << std::endl;
+	//log_stream << "mdlOutputs()" << std::endl;
 
 	const real_T * px = (const real_T*)ssGetInputPortSignal(S, 1);
 	real_t * pu = (real_T *)ssGetOutputPortRealSignal(S, 0);
@@ -274,7 +302,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
 
 		// Prepare for the next step.
 		controller->UpdateWorkingPoint();
-		controller->PrintQP(log_stream);
+		//controller->PrintQP(log_stream);
 	}
 	catch (const std::runtime_error& e)
 	{
