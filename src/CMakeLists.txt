@@ -31,3 +31,6 @@ set (SRC
 
 add_library(rtmc STATIC ${HDR} ${SRC})
 target_link_libraries(rtmc ${qpDUNES_STATIC_LIBRARIES})
+
+add_executable(perftest perftest.cpp)
+target_link_libraries(perftest rtmc)

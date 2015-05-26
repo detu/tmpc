@@ -1,7 +1,6 @@
 // S-function implementation of an MPC motion cueing controller.
 
 #define S_FUNCTION_LEVEL 2
-#define S_FUNCTION_NAME plant_output
 
 #define NUM_INPUTS          2
 /* Input Port  0 */
@@ -77,8 +76,7 @@
 #include "CyberMotion.hpp"
 
 // Motion platform to be used.
-CyberMotion platform;
-//MotionPlatformX platform;
+PLATFORM_TYPE platform;
 
 /*====================*
  * S-function methods *

@@ -1,7 +1,6 @@
 // S-function implementation of an MPC motion cueing controller.
 
 #define S_FUNCTION_LEVEL 2
-#define S_FUNCTION_NAME controller
 
 #define NUM_INPUTS          2
 /* Input Port  0 */
@@ -83,14 +82,16 @@
 typedef Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> RowMajorMatrix;
 
 // Motion platform to use
-auto platform = std::make_shared<CyberMotion>();
-//auto platform = std::make_shared<MotionPlatformX>();
+auto platform = std::make_shared<PLATFORM_TYPE>();
 
 // Number of prediction intervals
-const unsigned Np = 50;
+const unsigned Np = N_PREDICTION;
 
 // Number of control intervals
-const unsigned Nc = 50;
+#ifndef N_CONTROL
+	#define N_CONTROL N_PREDICTION
+#endif
+const unsigned Nc = N_CONTROL;
 
 // Log stream.
 std::ofstream log_stream;
