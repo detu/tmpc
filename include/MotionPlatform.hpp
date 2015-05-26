@@ -115,6 +115,8 @@ public:
 
 	virtual void getAxesLimits(double * q_min, double * q_max, double * v_min, double * v_max, double * u_min, double * u_max) const = 0;
 	virtual void getDefaultAxesPosition(double * q) const = 0;
+
+	// Output matrices storage order is column-major.
 	virtual void Output(const double * x, const double * u, double * y, double * C = nullptr, double * D = nullptr) const = 0;
 
 private:

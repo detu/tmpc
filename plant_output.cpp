@@ -74,9 +74,11 @@
 #include "simstruc.h"
 
 #include "MotionPlatformX.hpp"
+#include "CyberMotion.hpp"
 
 // Motion platform to be used.
-MotionPlatformX platform;
+CyberMotion platform;
+//MotionPlatformX platform;
 
 /*====================*
  * S-function methods *

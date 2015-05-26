@@ -2,11 +2,13 @@
 
 #include <stdexcept>
 
+#define TO_STR( k ) (char* const)#k
+
 class qpDUNESException : public std::runtime_error
 {
 public:
 	qpDUNESException(return_t code, const std::string& info)
-		: std::runtime_error(qpDUNES_getErrorString(code))
+		: std::runtime_error("qpDUNES return code = " + std::to_string(code))
 		, _code(code)
 	{
 		
@@ -156,9 +158,10 @@ namespace rtmc
 
 		for (unsigned i = 0; i < _Nt; ++i)
 		{
-			// Output vector and derivatives
-			RowMajorMatrix ssC(_Ny, _Nx);
-			RowMajorMatrix ssD(_Ny, _Nu);
+			// Output vector and derivatives.
+			// Output() returns derivative matrices in column-major format.
+			MatrixXd ssC(_Ny, _Nx);
+			MatrixXd ssD(_Ny, _Nu);
 			_platform->Output(w(i).data(), w(i).data() + _Nx, _y.col(i).data(), ssC.data(), ssD.data());
 
 			// G = [C, D]
@@ -191,6 +194,25 @@ namespace rtmc
 		
 		zMin(_Nt) = z_min.topRows(_Nx) - w(_Nt);
 		zMax(_Nt) = z_max.topRows(_Nx) - w(_Nt);
+
+		// Convert IEEE NaNs to large finite numbers to make qpDUNES happy.
+		const double INFTY = 1.0e12;
+		
+		for (auto& z : _zMin)
+		{
+			if (z == std::numeric_limits<double>::infinity())
+				z = INFTY;
+			if (z == -std::numeric_limits<double>::infinity())
+				z = -INFTY;
+		}
+
+		for (auto& z : _zMax)
+		{
+			if (z == std::numeric_limits<double>::infinity())
+				z = INFTY;
+			if (z == -std::numeric_limits<double>::infinity())
+				z = -INFTY;
+		}
 	}
 
 	MPC_Controller::RowMajorMatrixMap MPC_Controller::H(unsigned i)
@@ -292,6 +314,12 @@ namespace rtmc
 
 		// Initialize QP
 		UpdateQP();
+
+		/** set sparsity of primal Hessian and local constraint matrix */
+		for (unsigned kk = 0; kk < _Nt + 1; ++kk) {
+			_qpData.intervals[kk]->H.sparsityType = QPDUNES_DENSE;
+			//_qpData.intervals[kk]->D.sparsityType = QPDUNES_IDENTITY;
+		}
 
 		/** Initial MPC data setup: components not given here are set to zero (if applicable)
 		*      instead of passing g, D, zLow, zUpp, one can also just pass NULL pointers (0) */

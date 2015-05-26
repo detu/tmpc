@@ -2,7 +2,7 @@
 
 #include "MotionPlatformX.hpp"
 
-typedef Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> RowMajorMatrix;
+typedef Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> ColMajorMatrix;
 
 MotionPlatformX::MotionPlatformX()
 	: MotionPlatform(1)
@@ -23,14 +23,14 @@ void MotionPlatformX::Output(const double * x, const double * u, double * y, dou
 	// C = dy/dx
 	if (C)
 	{
-		Eigen::Map<RowMajorMatrix> map_C(C, getOutputDim(), getStateDim());
+		Eigen::Map<ColMajorMatrix> map_C(C, getOutputDim(), getStateDim());
 		map_C.fill(0.);
 	}
 
 	// D = dy/du
 	if (D)
 	{
-		Eigen::Map<RowMajorMatrix> map_D(D, getOutputDim(), getInputDim());
+		Eigen::Map<ColMajorMatrix> map_D(D, getOutputDim(), getInputDim());
 		map_D.fill(0.);
 		map_D(0, 0) = -1;
 	}

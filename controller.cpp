@@ -74,6 +74,7 @@
 #include "simstruc.h"
 
 #include "MotionPlatformX.hpp"
+#include "CyberMotion.hpp"
 #include "MPC_Controller.hpp"
 
 #include <memory>
@@ -82,13 +83,14 @@
 typedef Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> RowMajorMatrix;
 
 // Motion platform to use
-auto platform = std::make_shared<MotionPlatformX>();
+auto platform = std::make_shared<CyberMotion>();
+//auto platform = std::make_shared<MotionPlatformX>();
 
 // Number of prediction intervals
-const unsigned Np = 100;
+const unsigned Np = 50;
 
 // Number of control intervals
-const unsigned Nc = 10;
+const unsigned Nc = 50;
 
 // Log stream.
 std::ofstream log_stream;
@@ -218,6 +220,7 @@ static void mdlInitializeSampleTimes(SimStruct *S)
 
 		 controller->InitWorkingPoint();
 		 controller->PrintQP(log_stream);
+		 log_stream << std::flush;
 	 }	 
 	 catch (const std::runtime_error& e)
 	 {
@@ -275,7 +278,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
 {
 	using namespace Eigen;
 
-	//log_stream << "mdlOutputs()" << std::endl;
+	log_stream << "mdlOutputs()" << std::endl;
 
 	const real_T * px = (const real_T*)ssGetInputPortSignal(S, 1);
 	real_t * pu = (real_T *)ssGetOutputPortRealSignal(S, 0);
@@ -297,12 +300,14 @@ static void mdlOutputs(SimStruct *S, int_T tid)
 		/** Solve QP */
 		controller->Solve(px, y_ref.data());
 
+		controller->PrintQP(log_stream);
+		log_stream << std::flush;
+
 		// Copy u[0] to output.
 		controller->getWorkingU(0, pu);
 
 		// Prepare for the next step.
 		controller->UpdateWorkingPoint();
-		//controller->PrintQP(log_stream);
 	}
 	catch (const std::runtime_error& e)
 	{

@@ -18,12 +18,15 @@ add_definitions(-DEIGEN_DONT_ALIGN_STATICALLY)
 set(HDR 
 	${RTMC_INCLUDE_DIR}/MotionPlatform.hpp
 	${RTMC_INCLUDE_DIR}/MotionPlatformX.hpp
+	${RTMC_INCLUDE_DIR}/CyberMotion.hpp
 	${RTMC_INCLUDE_DIR}/MPC_Controller.hpp
 )
 
 set (SRC
 	MotionPlatformX.cpp
+	CyberMotion.cpp
 	MPC_Controller.cpp
+	CMS_output_jacobian.cpp
 )
 
 add_library(rtmc STATIC ${HDR} ${SRC})
