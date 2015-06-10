@@ -34,3 +34,6 @@ target_link_libraries(rtmc ${qpDUNES_STATIC_LIBRARIES})
 
 add_executable(perftest perftest.cpp)
 target_link_libraries(perftest rtmc)
+
+add_executable(mpc_test mpc_test.cpp)
+target_link_libraries(mpc_test rtmc)

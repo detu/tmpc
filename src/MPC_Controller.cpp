@@ -65,88 +65,92 @@ namespace rtmc
 
 	void MPC_Controller::PrintQP(std::ostream& log_stream) const
 	{
-		log_stream << "H = " << std::endl;
+		using std::endl;
+
+		log_stream << "H = {" << endl;
 		for (unsigned i = 0; i < _H.size(); ++i)
 		{
-			log_stream << _H[i] << '\t';
+			log_stream << _H[i] << ",\t";
 
 			if (i < _Nz * _Nz * _Nt)
 			{
 				if ((i + 1) % _Nz == 0)
-					log_stream << std::endl;
+					log_stream << endl;
 
 				if ((i + 1) % (_Nz * _Nz) == 0)
-					log_stream << std::endl;
+					log_stream << endl;
 			}
 			else
 			{
 				if ((i - _Nz * _Nz * _Nt + 1) % _Nx == 0)
-					log_stream << std::endl;
+					log_stream << endl;
 
 				if ((i - _Nz * _Nz * _Nt + 1) % (_Nx * _Nx) == 0)
-					log_stream << std::endl;
+					log_stream << endl;
 			}
 		}
+		log_stream << "};" << endl << endl;
 
-		log_stream << "g = " << std::endl;
+		log_stream << "g = {" << endl;
 		for (unsigned i = 0; i < _g.size(); ++i)
 		{
-			log_stream << _g[i] << '\t';
+			log_stream << _g[i] << ",\t";
 
 			if (i < _Nz * _Nt)
 			{
 				if ((i + 1) % _Nz == 0)
-					log_stream << std::endl;
+					log_stream << endl;
 			}
 			else
 			{
 				if ((i - _Nz * _Nt + 1) % _Nx == 0)
-					log_stream << std::endl;
+					log_stream << endl;
 			}
 		}
-		log_stream << std::endl;
+		log_stream << "};" << endl << endl;
 
-		log_stream << "C = " << std::endl;
+		log_stream << "C = {" << endl;
 		for (unsigned i = 0; i < _C.size(); ++i)
 		{
-			log_stream << _C[i] << '\t';
+			log_stream << _C[i] << ",\t";
 
 			if ((i + 1) % _Nz == 0)
-				log_stream << std::endl;
+				log_stream << endl;
 
 			if ((i + 1) % (_Nz * _Nx) == 0)
-				log_stream << std::endl;
+				log_stream << endl;
 		}
+		log_stream << "};" << endl << endl;
 
-		log_stream << "c = " << std::endl;
+		log_stream << "c = {" << endl;
 		for (unsigned i = 0; i < _c.size(); ++i)
 		{
-			log_stream << _c[i] << '\t';
+			log_stream << _c[i] << ",\t";
 
 			if ((i + 1) % _Nx == 0)
-				log_stream << std::endl;
+				log_stream << endl;
 		}
-		log_stream << std::endl;
+		log_stream << "};" << endl << endl;
 
-		log_stream << "_zMin = " << std::endl;
+		log_stream << "zMin = {" << endl;
 		for (unsigned i = 0; i < _zMin.size(); ++i)
 		{
-			log_stream << _zMin[i] << '\t';
+			log_stream << _zMin[i] << ",\t";
 
 			if ((i + 1) % _Nz == 0)
-				log_stream << std::endl;
+				log_stream << endl;
 		}
-		log_stream << std::endl << std::endl;
+		log_stream << endl << "};" << endl << endl;
 
-		log_stream << "_zMax = " << std::endl;
+		log_stream << "zMax = {" << endl;
 		for (unsigned i = 0; i < _zMax.size(); ++i)
 		{
-			log_stream << _zMax[i] << '\t';
+			log_stream << _zMax[i] << ",\t";
 
 			if ((i + 1) % _Nz == 0)
-				log_stream << std::endl;
+				log_stream << endl;
 		}
-		log_stream << std::endl << std::endl;
+		log_stream << endl << "};" << endl << endl;
 	}
 
 	void MPC_Controller::UpdateQP()
@@ -155,6 +159,11 @@ namespace rtmc
 
 		VectorXd z_min(_Nz), z_max(_Nz);
 		_platform->getAxesLimits(z_min.data(), z_max.data(), z_min.data() + _Nq, z_max.data() + _Nq, z_min.data() + 2 * _Nq, z_max.data() + 2 * _Nq);
+		const auto q_min = z_min.middleRows(      0, _Nq), q_max = z_max.middleRows(      0, _Nq);
+		const auto v_min = z_min.middleRows(    _Nq, _Nq), v_max = z_max.middleRows(    _Nq, _Nq);
+		const auto u_min = z_min.middleRows(2 * _Nq, _Nq), u_max = z_max.middleRows(2 * _Nq, _Nq);
+		const VectorXd q_min_final = q_min + v_min.cwiseAbs2().cwiseQuotient(2 * u_max);
+		const VectorXd q_max_final = q_max + v_max.cwiseAbs2().cwiseQuotient(2 * u_min);
 
 		for (unsigned i = 0; i < _Nt; ++i)
 		{
@@ -192,8 +201,13 @@ namespace rtmc
 
 		H(_Nt) = _levenbergMarquardt * MatrixXd::Identity(_Nx, _Nx);
 		
-		zMin(_Nt) = z_min.topRows(_Nx) - w(_Nt);
-		zMax(_Nt) = z_max.topRows(_Nx) - w(_Nt);
+		VectorXd zero_v(_Nq);
+		zero_v.fill(0.);
+
+		zMin(_Nt) << q_min, v_min;
+		zMin(_Nt) -= w(_Nt);
+		zMax(_Nt) << q_max, v_max;
+		zMax(_Nt) -= w(_Nt);
 
 		// Convert IEEE NaNs to large finite numbers to make qpDUNES happy.
 		const double INFTY = 1.0e12;
@@ -315,11 +329,11 @@ namespace rtmc
 		// Initialize QP
 		UpdateQP();
 
-		/** set sparsity of primal Hessian and local constraint matrix */
-		for (unsigned kk = 0; kk < _Nt + 1; ++kk) {
-			_qpData.intervals[kk]->H.sparsityType = QPDUNES_DENSE;
-			//_qpData.intervals[kk]->D.sparsityType = QPDUNES_IDENTITY;
-		}
+// 		/** set sparsity of primal Hessian and local constraint matrix */
+// 		for (unsigned kk = 0; kk < _Nt + 1; ++kk) {
+// 			_qpData.intervals[kk]->H.sparsityType = QPDUNES_DENSE;
+// 			//_qpData.intervals[kk]->D.sparsityType = QPDUNES_IDENTITY;
+// 		}
 
 		/** Initial MPC data setup: components not given here are set to zero (if applicable)
 		*      instead of passing g, D, zLow, zUpp, one can also just pass NULL pointers (0) */
@@ -334,42 +348,12 @@ namespace rtmc
 		return RowMajorMatrixMap(_G.data() + i * _Ny * _Nz, _Ny, _Nz);
 	}
 
-	void MPC_Controller::Solve(const double * px0, const double * py_ref)
-	{
-		using namespace Eigen;
-
-		// Update g
-		{
-			Map<const MatrixXd> y_ref(py_ref, _Ny, _Nt);
-			
-			for (unsigned i = 0; i < _Nt; ++i)
-				// g = 2 * (y_bar - y_hat)^T * W * G
-				g(i) = 1. * (_y.col(i) - y_ref.col(i)).transpose() * W(i) * G(i);
-
-			g(_Nt).fill(0.);
-
-			return_t statusFlag = qpDUNES_updateData(&_qpData, _H.data(), _g.data(), _C.data(), _c.data(), _zMin.data(), _zMax.data(), 0, 0, 0);		/* data update: components not given here keep their previous value */
-			if (statusFlag != QPDUNES_OK)
-				throw qpDUNESException(statusFlag, "Data update failed (qpDUNES_updateData()).");
-		}
-
-		/** embed current initial value */
-		{
-			Map<const VectorXd> x0(px0, _Nx);
-			zMin(0).topRows(_Nx) = x0 - w(0).topRows(_Nx);
-			zMax(0).topRows(_Nx) = x0 - w(0).topRows(_Nx);
-
-			return_t statusFlag = qpDUNES_updateIntervalData(&_qpData, _qpData.intervals[0], 0, 0, 0, 0, zMin(0).data(), zMax(0).data(), 0, 0, 0, 0);
-			if (statusFlag != QPDUNES_OK)
-				throw qpDUNESException(statusFlag, "Initial value embedding failed (qpDUNES_updateIntervalData()).");
-		}
-		
+	void MPC_Controller::Solve()
+{
 		/** solve QP */
-		{
-			return_t statusFlag = qpDUNES_solve(&_qpData);
-			if (statusFlag != QPDUNES_SUCC_OPTIMAL_SOLUTION_FOUND)
-				throw qpDUNESException(statusFlag, "QP solution failed (qpDUNES_solve()).");
-		}
+		return_t statusFlag = qpDUNES_solve(&_qpData);
+		if (statusFlag != QPDUNES_SUCC_OPTIMAL_SOLUTION_FOUND)
+			throw qpDUNESException(statusFlag, "QP solution failed (qpDUNES_solve()).");
 
 		/** obtain optimal solution */
 		qpDUNES_getPrimalSol(&_qpData, _zOpt.data());
@@ -379,7 +363,7 @@ namespace rtmc
 		std::transform(_w.begin(), _w.end(), _zOpt.begin(), _w.begin(), std::plus<double>());
 	}
 
-	void MPC_Controller::UpdateWorkingPoint()
+	void MPC_Controller::PrepareForNext()
 	{
 		/** prepare QP for next solution */
 		qpDUNES_shiftLambda(&_qpData);			/* shift multipliers */
@@ -418,6 +402,34 @@ namespace rtmc
 		B = getStateSpaceB();
 
 		x_next = A * x + B * u;
+	}
+
+	void MPC_Controller::SetReference(const double * py_ref)
+	{
+		// Update g
+		Eigen::Map<const Eigen::MatrixXd> y_ref(py_ref, _Ny, _Nt);
+
+		for (unsigned i = 0; i < _Nt; ++i)
+			// g = 2 * (y_bar - y_hat)^T * W * G
+			g(i) = 1. * (_y.col(i) - y_ref.col(i)).transpose() * W(i) * G(i);
+
+		g(_Nt).fill(0.);
+
+		return_t statusFlag = qpDUNES_updateData(&_qpData, _H.data(), _g.data(), _C.data(), _c.data(), _zMin.data(), _zMax.data(), 0, 0, 0);		/* data update: components not given here keep their previous value */
+		if (statusFlag != QPDUNES_OK)
+			throw qpDUNESException(statusFlag, "Data update failed (qpDUNES_updateData()).");
+	}
+
+	void MPC_Controller::EmbedInitialValue(const double * px0)
+	{
+		/** embed current initial value */
+		Eigen::Map<const Eigen::VectorXd> x0(px0, _Nx);
+		zMin(0).topRows(_Nx) = x0 - w(0).topRows(_Nx);
+		zMax(0).topRows(_Nx) = x0 - w(0).topRows(_Nx);
+
+		return_t statusFlag = qpDUNES_updateIntervalData(&_qpData, _qpData.intervals[0], 0, 0, 0, 0, zMin(0).data(), zMax(0).data(), 0, 0, 0, 0);
+		if (statusFlag != QPDUNES_OK)
+			throw qpDUNESException(statusFlag, "Initial value embedding failed (qpDUNES_updateIntervalData()).");
 	}
 }
 

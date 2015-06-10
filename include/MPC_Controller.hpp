@@ -24,9 +24,14 @@ namespace rtmc
 		~MPC_Controller();
 
 		void InitWorkingPoint();
-		void Solve(const double * x0, const double * y_ref);
+		void Solve();
+
+		void EmbedInitialValue(const double * px0);
+
+		void SetReference(const double * py_ref);
+
 		void getWorkingU(unsigned i, double * pu) const;
-		void UpdateWorkingPoint();
+		void PrepareForNext();
 
 		void PrintQP(std::ostream& os) const;
 		double getLevenbergMarquardt() const { return _levenbergMarquardt; }
