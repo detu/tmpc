@@ -5,7 +5,7 @@
 #include <iostream>
 #include <fstream>
 
-int main(int argc, char * argv[])
+int not_main(int argc, char * argv[])
 {
 	//const auto platform = std::make_shared<rtmc::MotionPlatformX>();
 	const auto platform = std::make_shared<rtmc::CyberMotion>();
