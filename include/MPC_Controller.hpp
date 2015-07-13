@@ -16,11 +16,12 @@ namespace rtmc
 	{
 	public:
 		typedef Eigen::Map<Eigen::VectorXd> VectorMap;
+		typedef Eigen::Map<const Eigen::VectorXd> VectorConstMap;
 		typedef Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> RowMajorMatrix;
 		typedef Eigen::Map<RowMajorMatrix> RowMajorMatrixMap;
 		typedef Eigen::Map<const RowMajorMatrix> RowMajorMatrixConstMap;
 
-		MPC_Controller(const std::shared_ptr<MotionPlatform>& platform, double sample_time, unsigned Nt, const qpOptions_t * qpOptions = nullptr);
+		MPC_Controller(const std::shared_ptr<MotionPlatform>& platform, double sample_time, unsigned Nt, const qpOptions_t * qpOptions = nullptr, std::ostream * call_log = nullptr);
 		~MPC_Controller();
 
 		void InitWorkingPoint();
@@ -33,13 +34,23 @@ namespace rtmc
 		void getWorkingU(unsigned i, double * pu) const;
 		void PrepareForNext();
 
-		void PrintQP(std::ostream& os) const;
+		void PrintQP_C(std::ostream& os) const;
+
+		void PrintQP_zMax_C(std::ostream& log_stream) const;
+
+		void PrintQP_zMin_C(std::ostream& log_stream) const;
+
+		void PrintQP_MATLAB(std::ostream& log_stream) const;
 		double getLevenbergMarquardt() const { return _levenbergMarquardt; }
 		void setLevenbergMarquardt(double val) { _levenbergMarquardt = val; }
 		unsigned getNumberOfIntervals() const { return _Nt; }
 		RowMajorMatrixMap W(unsigned i);
 
+// 		std::ostream * qpDUNES_call_log() const { return _qpDUNES_call_log; }
+// 		void qpDUNES_call_log(std::ostream * val) { _qpDUNES_call_log = val; }
+
 	private:
+		std::ostream * _qpDUNES_call_log;
 		// Initialized _G, _y, _C, _c, _zMin, _zMax based on current working point _w.
 		// Does not initialize g.
 		void UpdateQP();
@@ -49,12 +60,25 @@ namespace rtmc
 		Eigen::MatrixXd getStateSpaceB() const;
 
 		RowMajorMatrixMap G(unsigned i);
+
 		RowMajorMatrixMap H(unsigned i);
+		RowMajorMatrixConstMap H(unsigned i) const;
+		
 		VectorMap g(unsigned i);
+		VectorConstMap g(unsigned i) const;
+		
 		RowMajorMatrixMap C(unsigned i);
+		RowMajorMatrixConstMap C(unsigned i) const;
+		
 		VectorMap c(unsigned i);
+		VectorConstMap c(unsigned i) const;
+		
 		VectorMap zMin(unsigned i);
+		VectorConstMap zMin(unsigned i) const;
+		
 		VectorMap zMax(unsigned i);
+		VectorConstMap zMax(unsigned i) const;
+
 		VectorMap xMin(unsigned i);
 		VectorMap xMax(unsigned i);
 		
