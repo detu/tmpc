@@ -21,10 +21,11 @@ private:
 namespace rtmc
 {
 	MPC_Controller::MPC_Controller(const std::shared_ptr<MotionPlatform>& platform, double sample_time, 
-		unsigned Nt, const qpOptions_t * qpOptions /*= nullptr*/) : _platform(platform)
+		unsigned Nt, const qpOptions_t * qpOptions /*= nullptr*/, std::ostream * call_log /*= nullptr*/) : _platform(platform)
 		, _levenbergMarquardt(0.01)
 		, _sampleTime(sample_time)
 		, _y(platform->getOutputDim(), Nt)
+		, _qpDUNES_call_log(call_log)
 	{
 		// Get sizes.
 		_Nq = platform->getNumberOfAxes();
@@ -52,6 +53,19 @@ namespace rtmc
 
 		// Set up qpData
 		unsigned int* nD = 0;	  			/* number of affine constraints */
+		if (_qpDUNES_call_log)
+		{
+			*_qpDUNES_call_log << "{" << std::endl;
+			*_qpDUNES_call_log << "const unsigned int nT = " << _Nt << ";" << std::endl;
+			*_qpDUNES_call_log << "const unsigned int nX = " << _Nx << ";" << std::endl;
+			*_qpDUNES_call_log << "const unsigned int nU = " << _Nu << ";" << std::endl;
+			*_qpDUNES_call_log << "unsigned int * nD = " << nD << ";" << std::endl;
+			*_qpDUNES_call_log << "qpOptions_t qpOptions = qpDUNES_setupDefaultOptions();" << std::endl;
+			*_qpDUNES_call_log << "return_t statusFlag = qpDUNES_setup(&qpData, nT, nX, nU, nD, &qpOptions);" << std::endl;
+			*_qpDUNES_call_log << "assert(statusFlag == QPDUNES_OK);" << std::endl;
+			*_qpDUNES_call_log << "}" << std::endl;
+		}
+
 		return_t statusFlag = qpDUNES_setup(&_qpData, _Nt, _Nx, _Nu, nD, qpOptions);
 		if (statusFlag != QPDUNES_OK)
 			throw qpDUNESException(statusFlag, "qpDUNES_setup() failed.");
@@ -60,14 +74,17 @@ namespace rtmc
 	MPC_Controller::~MPC_Controller()
 	{
 		/** cleanup of allocated data */
+		if (_qpDUNES_call_log)
+			*_qpDUNES_call_log << "qpDUNES_cleanup(&qpData);";
+
 		qpDUNES_cleanup(&_qpData);
 	}
 
-	void MPC_Controller::PrintQP(std::ostream& log_stream) const
+	void MPC_Controller::PrintQP_C(std::ostream& log_stream) const
 	{
 		using std::endl;
 
-		log_stream << "H = {" << endl;
+		log_stream << "const double H[] = {" << endl;
 		for (unsigned i = 0; i < _H.size(); ++i)
 		{
 			log_stream << _H[i] << ",\t";
@@ -91,7 +108,7 @@ namespace rtmc
 		}
 		log_stream << "};" << endl << endl;
 
-		log_stream << "g = {" << endl;
+		log_stream << "const double g[] = {" << endl;
 		for (unsigned i = 0; i < _g.size(); ++i)
 		{
 			log_stream << _g[i] << ",\t";
@@ -109,7 +126,7 @@ namespace rtmc
 		}
 		log_stream << "};" << endl << endl;
 
-		log_stream << "C = {" << endl;
+		log_stream << "const double C[] = {" << endl;
 		for (unsigned i = 0; i < _C.size(); ++i)
 		{
 			log_stream << _C[i] << ",\t";
@@ -122,7 +139,7 @@ namespace rtmc
 		}
 		log_stream << "};" << endl << endl;
 
-		log_stream << "c = {" << endl;
+		log_stream << "const double c[] = {" << endl;
 		for (unsigned i = 0; i < _c.size(); ++i)
 		{
 			log_stream << _c[i] << ",\t";
@@ -132,25 +149,28 @@ namespace rtmc
 		}
 		log_stream << "};" << endl << endl;
 
-		log_stream << "zMin = {" << endl;
-		for (unsigned i = 0; i < _zMin.size(); ++i)
+		PrintQP_zMin_C(log_stream);
+		PrintQP_zMax_C(log_stream);
+	}
+
+	void MPC_Controller::PrintQP_MATLAB(std::ostream& log_stream) const
+	{
+		using std::endl;
+
+		for (unsigned k = 0; k <= _Nt; ++k)
 		{
-			log_stream << _zMin[i] << ",\t";
+			log_stream << "qp.H{" << k + 1 << "} = [..." << endl << H(k) << "];" << endl;
+			log_stream << "qp.g{" << k + 1 << "} = [..." << endl << g(k) << "];" << endl;
+			
+			if (k < _Nt)
+			{
+				log_stream << "qp.C{" << k + 1 << "} = [..." << endl << C(k) << "];" << endl;
+				log_stream << "qp.c{" << k + 1 << "} = [..." << endl << c(k) << "];" << endl;
+			}
 
-			if ((i + 1) % _Nz == 0)
-				log_stream << endl;
+			log_stream << "qp.zMin{" << k + 1 << "} = [..." << endl << zMin(k) << "];" << endl;
+			log_stream << "qp.zMax{" << k + 1 << "} = [..." << endl << zMax(k) << "];" << endl;
 		}
-		log_stream << endl << "};" << endl << endl;
-
-		log_stream << "zMax = {" << endl;
-		for (unsigned i = 0; i < _zMax.size(); ++i)
-		{
-			log_stream << _zMax[i] << ",\t";
-
-			if ((i + 1) % _Nz == 0)
-				log_stream << endl;
-		}
-		log_stream << endl << "};" << endl << endl;
 	}
 
 	void MPC_Controller::UpdateQP()
@@ -236,10 +256,23 @@ namespace rtmc
 		return RowMajorMatrixMap(_H.data() + i * _Nz * _Nz, sz, sz);
 	}
 
+	MPC_Controller::RowMajorMatrixConstMap MPC_Controller::H(unsigned i) const
+	{
+		assert(i < _Nt + 1);
+		const auto sz = i < _Nt ? _Nz : _Nx;
+		return RowMajorMatrixConstMap(_H.data() + i * _Nz * _Nz, sz, sz);
+	}
+
 	MPC_Controller::VectorMap MPC_Controller::g(unsigned i)
 	{
 		assert(i < _Nt + 1);
 		return VectorMap(_g.data() + i * _Nz, i < _Nt ? _Nz : _Nx);
+	}
+
+	MPC_Controller::VectorConstMap MPC_Controller::g(unsigned i) const
+	{
+		assert(i < _Nt + 1);
+		return VectorConstMap(_g.data() + i * _Nz, i < _Nt ? _Nz : _Nx);
 	}
 
 	MPC_Controller::RowMajorMatrixMap MPC_Controller::C(unsigned i)
@@ -247,9 +280,19 @@ namespace rtmc
 		return RowMajorMatrixMap(_C.data() + i * _Nx * _Nz, _Nx, _Nz);
 	}
 
+	MPC_Controller::RowMajorMatrixConstMap MPC_Controller::C(unsigned i) const
+	{
+		return RowMajorMatrixConstMap(_C.data() + i * _Nx * _Nz, _Nx, _Nz);
+	}
+
 	MPC_Controller::VectorMap MPC_Controller::c(unsigned i)
 	{
 		return VectorMap(_c.data() + i * _Nx, _Nx);
+	}
+
+	MPC_Controller::VectorConstMap MPC_Controller::c(unsigned i) const
+	{
+		return VectorConstMap(_c.data() + i * _Nx, _Nx);
 	}
 
 	MPC_Controller::VectorMap MPC_Controller::zMin(unsigned i)
@@ -258,10 +301,22 @@ namespace rtmc
 		return VectorMap(_zMin.data() + i * _Nz, i < _Nt ? _Nz : _Nx);
 	}
 
+	MPC_Controller::VectorConstMap MPC_Controller::zMin(unsigned i) const
+	{
+		assert(i < _Nt + 1);
+		return VectorConstMap(_zMin.data() + i * _Nz, i < _Nt ? _Nz : _Nx);
+	}
+
 	MPC_Controller::VectorMap MPC_Controller::zMax(unsigned i)
 	{
 		assert(i < _Nt + 1);
 		return VectorMap(_zMax.data() + i * _Nz, i < _Nt ? _Nz : _Nx);
+	}
+
+	MPC_Controller::VectorConstMap MPC_Controller::zMax(unsigned i) const
+	{
+		assert(i < _Nt + 1);
+		return VectorConstMap(_zMax.data() + i * _Nz, i < _Nt ? _Nz : _Nx);
 	}
 
 	Eigen::MatrixXd MPC_Controller::getStateSpaceA() const
@@ -337,6 +392,15 @@ namespace rtmc
 
 		/** Initial MPC data setup: components not given here are set to zero (if applicable)
 		*      instead of passing g, D, zLow, zUpp, one can also just pass NULL pointers (0) */
+		if (_qpDUNES_call_log)
+		{
+			*_qpDUNES_call_log << "{" << std::endl;
+			PrintQP_C(*_qpDUNES_call_log);
+			*_qpDUNES_call_log << "return_t statusFlag = qpDUNES_init(&qpData, H, g, C, c, zLow, zUpp, 0, 0, 0);" << std::endl;
+			*_qpDUNES_call_log << "assert(statusFlag == QPDUNES_OK);" << std::endl;
+			*_qpDUNES_call_log << "}" << std::endl;
+		}
+
 		return_t statusFlag = qpDUNES_init(&_qpData, _H.data(), _g.data(), _C.data(), _c.data(), _zMin.data(), _zMax.data(), 0, 0, 0);
 		if (statusFlag != QPDUNES_OK)
 			throw qpDUNESException(statusFlag, "qpDUNES_init() failed.");
@@ -351,6 +415,14 @@ namespace rtmc
 	void MPC_Controller::Solve()
 {
 		/** solve QP */
+		if (_qpDUNES_call_log)
+		{
+			*_qpDUNES_call_log << "{" << std::endl;
+			*_qpDUNES_call_log << "return_t statusFlag = qpDUNES_solve(&qpData);" << std::endl;
+			*_qpDUNES_call_log << "assert(statusFlag == QPDUNES_SUCC_OPTIMAL_SOLUTION_FOUND);" << std::endl;
+			*_qpDUNES_call_log << "}" << std::endl;
+		}
+
 		return_t statusFlag = qpDUNES_solve(&_qpData);
 		if (statusFlag != QPDUNES_SUCC_OPTIMAL_SOLUTION_FOUND)
 			throw qpDUNESException(statusFlag, "QP solution failed (qpDUNES_solve()).");
@@ -366,7 +438,22 @@ namespace rtmc
 	void MPC_Controller::PrepareForNext()
 	{
 		/** prepare QP for next solution */
+		if (_qpDUNES_call_log)
+		{
+			*_qpDUNES_call_log << "{" << std::endl;
+			*_qpDUNES_call_log << "return_t statusFlag = qpDUNES_shiftLambda(&qpData);" << std::endl;
+			*_qpDUNES_call_log << "assert(statusFlag == QPDUNES_OK);" << std::endl;
+			*_qpDUNES_call_log << "}" << std::endl;
+		}
 		qpDUNES_shiftLambda(&_qpData);			/* shift multipliers */
+
+		if (_qpDUNES_call_log)
+		{
+			*_qpDUNES_call_log << "{" << std::endl;
+			*_qpDUNES_call_log << "return_t statusFlag = qpDUNES_shiftIntervals(&qpData);" << std::endl;
+			*_qpDUNES_call_log << "assert(statusFlag == QPDUNES_OK);" << std::endl;
+			*_qpDUNES_call_log << "}" << std::endl;
+		}
 		qpDUNES_shiftIntervals(&_qpData);		/* shift intervals (particularly important when using qpOASES for underlying local QPs) */
 
 		// Shift working point
@@ -415,6 +502,15 @@ namespace rtmc
 
 		g(_Nt).fill(0.);
 
+		if (_qpDUNES_call_log)
+		{
+			*_qpDUNES_call_log << "{" << std::endl;
+			PrintQP_C(*_qpDUNES_call_log);
+			*_qpDUNES_call_log << "return_t statusFlag = qpDUNES_updateData(&qpData, H, g, C, c, zLow, zUpp, 0, 0, 0);" << std::endl;
+			*_qpDUNES_call_log << "assert(statusFlag == QPDUNES_OK);" << std::endl;
+			*_qpDUNES_call_log << "}" << std::endl;
+		}
+
 		return_t statusFlag = qpDUNES_updateData(&_qpData, _H.data(), _g.data(), _C.data(), _c.data(), _zMin.data(), _zMax.data(), 0, 0, 0);		/* data update: components not given here keep their previous value */
 		if (statusFlag != QPDUNES_OK)
 			throw qpDUNESException(statusFlag, "Data update failed (qpDUNES_updateData()).");
@@ -427,10 +523,51 @@ namespace rtmc
 		zMin(0).topRows(_Nx) = x0 - w(0).topRows(_Nx);
 		zMax(0).topRows(_Nx) = x0 - w(0).topRows(_Nx);
 
+		if (_qpDUNES_call_log)
+		{
+			*_qpDUNES_call_log << "{" << std::endl;
+			PrintQP_zMin_C(*_qpDUNES_call_log);
+			PrintQP_zMax_C(*_qpDUNES_call_log);
+			*_qpDUNES_call_log << "return_t statusFlag = qpDUNES_updateIntervalData(&qpData, qpData.intervals[0], 0, 0, 0, 0, zLow, zUpp, 0, 0, 0, 0);" << std::endl;
+			*_qpDUNES_call_log << "assert(statusFlag == QPDUNES_OK);" << std::endl;
+			*_qpDUNES_call_log << "}" << std::endl;
+		}
+
 		return_t statusFlag = qpDUNES_updateIntervalData(&_qpData, _qpData.intervals[0], 0, 0, 0, 0, zMin(0).data(), zMax(0).data(), 0, 0, 0, 0);
 		if (statusFlag != QPDUNES_OK)
 			throw qpDUNESException(statusFlag, "Initial value embedding failed (qpDUNES_updateIntervalData()).");
 	}
+
+	void MPC_Controller::PrintQP_zMin_C(std::ostream& log_stream) const
+	{
+		using std::endl;
+
+		log_stream << "const double zLow[] = {" << endl;
+		for (unsigned i = 0; i < _zMin.size(); ++i)
+		{
+			log_stream << _zMin[i] << ",\t";
+
+			if ((i + 1) % _Nz == 0)
+				log_stream << endl;
+		}
+		log_stream << endl << "};" << endl << endl;
+	}
+
+	void MPC_Controller::PrintQP_zMax_C(std::ostream& log_stream) const
+	{
+		using std::endl;
+
+		log_stream << "const double zUpp[] = {" << endl;
+		for (unsigned i = 0; i < _zMax.size(); ++i)
+		{
+			log_stream << _zMax[i] << ",\t";
+
+			if ((i + 1) % _Nz == 0)
+				log_stream << endl;
+		}
+		log_stream << endl << "};" << endl << endl;
+	}
+
 }
 
 #define QPDUNES_ERROR_MESSAGE_CASE( k ) case k: return (#k);

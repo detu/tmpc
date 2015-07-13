@@ -22,10 +22,13 @@ int main(int argc, char * argv[])
 	//qpOptions.maxIter = 100;
 	//qpOptions.printLevel = 2;
 	//qpOptions.stationarityTolerance = 1.e-6;
+	qpOptions.lsType = QPDUNES_LS_BACKTRACKING_LS;
 
 	try
 	{
-		rtmc::MPC_Controller controller(platform, Ts, Nt, &qpOptions);
+		std::ofstream call_log("qpDUNES_call.log");
+		rtmc::MPC_Controller controller(platform, Ts, Nt, &qpOptions, &call_log);
+		//controller.qpDUNES_call_log(&call_log);
 		controller.InitWorkingPoint();
 
 		Eigen::VectorXd x0(platform->getStateDim());
@@ -44,21 +47,31 @@ int main(int argc, char * argv[])
 
 			for (unsigned k = 0; k < y_ref.cols(); ++k)
 			{
-				//y_ref(0, k) = sin(2 * M_PI * freq * i * Ts);
-				y_ref(0, k) = 1;
+				y_ref(0, k) = sin(2 * M_PI * freq * i * Ts);
+				//y_ref(0, k) = 1;
 				y_ref(2, k) = -g;
 			}
 
 			controller.SetReference(y_ref.data());
 			controller.EmbedInitialValue(x0.data());
-			controller.PrintQP(std::cout);
-			controller.Solve();
+			//controller.PrintQP(std::cout);
+
+			try
+			{
+				controller.Solve();
+			}
+			catch (const std::runtime_error& e)
+			{
+				controller.PrintQP_MATLAB(std::ofstream("failed_qp.m"));
+				controller.PrintQP_C(std::ofstream("failed_qp.cpp"));
+				throw e;
+			}
 
 			controller.getWorkingU(0, u.data());
 			controller.PrepareForNext();
 
 			std::cout << "\tu = " << u << std::endl;
-			out << y_ref(0, 0) << "\t" << -u << std::endl;
+			out << y_ref(0, 0) << "\t" << u.transpose() << std::endl << std::flush;
 
 			auto q = x0.topRows(platform->getNumberOfAxes());
 			auto v = x0.bottomRows(platform->getNumberOfAxes());
