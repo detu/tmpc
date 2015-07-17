@@ -51,7 +51,7 @@ TEST(test_1, my_test_1)
 	H2 << 1, 2, 3, 4;
 	H2 = H2.transpose() * H2;	// Make positive definite.
 
-	const Eigen::MatrixXd Q2 = H1.topLeftCorner(qp.nX(), qp.nX());
+	const Eigen::MatrixXd Q2 = H2.topLeftCorner(qp.nX(), qp.nX());
 
 	// Setup QP
 	qp.H(0) = H0;
@@ -101,6 +101,7 @@ TEST(test_1, my_test_1)
 		B0.transpose() * Q1 * A0 + B0.transpose() * A1.transpose() * Q2 * A1 * A0 + S0.transpose(), B0.transpose() * Q1 * B0 + B0.transpose() * A1.transpose() * Q2 * A1 * B0 + R0, B0.transpose() * S1 + B0.transpose() * A1.transpose() * Q2 * B1,
 		S1.transpose() * A0 + B1.transpose() * Q2 * A1 * A0,										S1.transpose() * B0 + B1.transpose() * Q2 * A1 * B0,							B1.transpose() * Q2 * B1 + R1;
 
+	EXPECT_TRUE(Hc_expected == Hc);
 	std::cout << Hc_expected << std::endl;
 	//qp.PrintQP_C(std::cout);
 }
