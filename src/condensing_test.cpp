@@ -78,8 +78,8 @@ TEST(test_1, my_test_1)
 // 	std::cout << v << std::endl;
 // 	std::cout << H << std::endl;
 // 	std::cout << P << std::endl;
-	std::cout << Hc << std::endl;
-//	std::cout << gc << std::endl;
+// 	std::cout << Hc << std::endl;
+// 	std::cout << gc << std::endl;
 
 	Eigen::MatrixXd M_expected(qp.nDep(), qp.nIndep());
 	M_expected << 
@@ -102,6 +102,14 @@ TEST(test_1, my_test_1)
 		S1.transpose() * A0 + B1.transpose() * Q2 * A1 * A0,										S1.transpose() * B0 + B1.transpose() * Q2 * A1 * B0,							B1.transpose() * Q2 * B1 + R1;
 
 	EXPECT_TRUE(Hc_expected == Hc);
-	std::cout << Hc_expected << std::endl;
+	//std::cout << Hc_expected << std::endl;
 	//qp.PrintQP_C(std::cout);
-}
+
+	Eigen::VectorXd gc_expected(qp.nIndep());
+	gc_expected <<
+		2 * A0.transpose() * Q1 * a0					+ 2 * A0.transpose() * A1.transpose() * Q2 * a1			+ 2 * A0.transpose() * A1.transpose() * Q2 * A1 * a0,
+		2 * B0.transpose() * A1.transpose() * Q2 * a1	+ 2 * B0.transpose() * A1.transpose() * Q2 * A1 * a0	+ 2 * B0.transpose() * Q1 * a0,
+		2 * B1.transpose() * Q2 * A1 * a0				+ 2 * B1.transpose() * Q2 * a1							+ 2 * S1.transpose() * a0;
+
+	EXPECT_TRUE(gc_expected == gc);
+ }
