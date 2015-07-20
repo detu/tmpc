@@ -142,7 +142,9 @@ namespace camels
 		VectorConstMap zMax(unsigned i) const;
 
 		VectorMap xMin(unsigned i);
+		VectorConstMap xMin(unsigned i) const;
 		VectorMap xMax(unsigned i);
+		VectorConstMap xMax(unsigned i) const;
 
 	private:
 		size_type _Nu;

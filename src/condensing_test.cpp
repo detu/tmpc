@@ -9,6 +9,9 @@ TEST(test_1, my_test_1)
 //int main(int, char **)
 {
 	camels::MultiStageQP qp(2, 1, 2);
+	qp.zMin(0).setConstant(-1);	qp.zMax(0).setConstant(1);
+	qp.zMin(1).setConstant(-1);	qp.zMax(1).setConstant(1);
+	qp.zMin(2).setConstant(-1);	qp.zMax(2).setConstant(1);
 
 	// Stage 0
 	Eigen::MatrixXd H0(qp.nZ(), qp.nZ());
@@ -89,6 +92,10 @@ TEST(test_1, my_test_1)
 		2 * B1.transpose() * Q2 * A1 * a0				+ 2 * B1.transpose() * Q2 * a1							+ 2 * S1.transpose() * a0;
 
 	EXPECT_TRUE(gc_expected == gc);
+
+	std::cout << solver.QP().A() << std::endl;
+	std::cout << solver.QP().lbA() << std::endl;
+	std::cout << solver.QP().ubA() << std::endl;
 
 	//return 0;
  }

@@ -11,13 +11,12 @@ namespace camels
 		typedef Eigen::MatrixXd Matrix;
 		typedef Eigen::VectorXd Vector;
 
-		QuadraticProgram(size_type nx, size_type neq, size_type nineq)
-			: _H(nx, nx), _g(nx), _Aineq(nineq, nx), _bineq(nineq), _Aeq(neq, nx), _beq(neq)
+		QuadraticProgram(size_type nx, size_type nc)
+			: _H(nx, nx), _g(nx), _A(nc, nx), _lbA(nc), _ubA(nc)
 		{}
 
 		size_type nx() const { return static_cast<size_type>(_H.rows()); }
-		size_type neq() const { return static_cast<size_type>(_Aeq.rows()); }
-		size_type nineq() const { return static_cast<size_type>(_Aineq.rows()); }
+		size_type nc() const { return static_cast<size_type>(_A.rows()); }
 
 		Matrix& H() { return _H; }
 		const Matrix& H() const { return _H; }
@@ -25,26 +24,21 @@ namespace camels
 		Vector& g() { return _g; }
 		const Vector& g() const { return _g; }
 		
-		Matrix& Aeq() { return _Aeq; }
-		const Matrix& Aeq() const { return _Aeq; }
+		Matrix& A() { return _A; }
+		const Matrix& A() const { return _A; }
 
-		Vector& beq() { return _beq; }
-		const Vector& beq() const { return _beq; }
+		Vector& lbA() { return _lbA; }
+		const Vector& lbA() const { return _lbA; }
 
-		Matrix& Aineq() { return _Aineq; }
-		const Matrix& Aineq() const { return _Aineq; }
-
-		Vector& bineq() { return _bineq; }
-		const Vector& bineq() const { return _bineq; }
+		Vector& ubA() { return _ubA; }
+		const Vector& ubA() const { return _ubA; }
 
 	private:
 		Matrix _H;
 		Vector _g;
 
-		Matrix _Aeq;
-		Vector _beq;
-
-		Matrix _Aineq;
-		Vector _bineq;
+		Matrix _A;
+		Vector _lbA;
+		Vector _ubA;
 	};
 }

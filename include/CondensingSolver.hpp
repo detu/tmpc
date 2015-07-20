@@ -11,7 +11,7 @@ namespace camels
 		typedef unsigned size_type;
 
 		CondensingSolver(size_type nx, size_type nu, size_type nt)
-			: _qp(nx + nt * nu, nx * nt, 2 * (nx + nt * (nx + nu)))
+			: _qp(nx + nt * nu, nx + nt * nx)
 			, _Nx(nx), _Nu(nu), _Nt(nt), _Nz(nx + nu)
 		{}
 
@@ -51,6 +51,10 @@ namespace camels
 					M_k.rightCols(_Nu) = B_k_minus;
 					v = A_k_minus * v + msqp.c(k - 1);
 				}
+
+				_qp.A().middleRows(k * _Nx, _Nx) = M;
+				_qp.lbA().middleRows(k * _Nx, _Nx) = msqp.xMin(k) - v;
+				_qp.ubA().middleRows(k * _Nx, _Nx) = msqp.xMax(k) - v;
 
 				const auto H_k = msqp.H(k);
 				const auto g_k = msqp.g(k);

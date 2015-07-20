@@ -194,10 +194,22 @@ namespace camels
 		return VectorMap(_zMin.data() + i * _Nz, _Nx);
 	}
 
+	MultiStageQP::VectorConstMap MultiStageQP::xMin(unsigned i) const
+	{
+		assert(i < _Nt + 1);
+		return VectorConstMap(_zMin.data() + i * _Nz, _Nx);
+	}
+
 	MultiStageQP::VectorMap MultiStageQP::xMax(unsigned i)
 	{
 		assert(i < _Nt + 1);
 		return VectorMap(_zMax.data() + i * _Nz, _Nx);
+	}
+
+	MultiStageQP::VectorConstMap MultiStageQP::xMax(unsigned i) const
+	{
+		assert(i < _Nt + 1);
+		return VectorConstMap(_zMax.data() + i * _Nz, _Nx);
 	}
 
 	void MultiStageQP::PrintQP_zMin_C(std::ostream& log_stream) const
