@@ -1,10 +1,12 @@
-#include <MultiStageQP.hpp>
+#include <CondensingSolver.hpp>
 
 #include <gtest/gtest.h>
+//#define EXPECT_TRUE(X) assert(X)
 
 #include <iostream>
 
 TEST(test_1, my_test_1)
+//int main(int, char **)
 {
 	camels::MultiStageQP qp(2, 1, 2);
 
@@ -64,37 +66,11 @@ TEST(test_1, my_test_1)
 	qp.c(1) << a1;
 
 	// Condense
-	Eigen::MatrixXd M(qp.nDep(), qp.nIndep());
-	Eigen::VectorXd v(qp.nDep());
-	Eigen::SparseMatrix<double> H(qp.nVar(), qp.nVar());
-	Eigen::SparseMatrix<double> P(qp.nVar(), qp.nVar());
-	Eigen::MatrixXd Hc(qp.nIndep(), qp.nIndep());
-	Eigen::VectorXd gc(qp.nIndep());
+	camels::CondensingSolver solver(qp.nX(), qp.nU(), qp.nT());
+	solver.Condense(qp);
 
-	qp.Calculate_M(M);
-	qp.Calculate_v(v);
-	qp.Condense(Hc, gc);
-// 	std::cout << M << std::endl;
-// 	std::cout << v << std::endl;
-// 	std::cout << H << std::endl;
-// 	std::cout << P << std::endl;
-// 	std::cout << Hc << std::endl;
-// 	std::cout << gc << std::endl;
-
-	Eigen::MatrixXd M_expected(qp.nDep(), qp.nIndep());
-	M_expected << 
-		A0,			B0,			Eigen::MatrixXd::Zero(qp.nX(), qp.nU()),
-		A1 * A0,	A1 * B0,	B1;
-
-	Eigen::VectorXd v_expected(qp.nIndep());
-	v_expected << 
-		a0,
-		A1 * a0 + a1;
-	
-	EXPECT_TRUE(M_expected == M);
-	EXPECT_TRUE(v_expected == v);
-
-	Eigen::MatrixXd Hc_expected(qp.nIndep(), qp.nIndep());
+	const auto Hc = solver.QP().H();
+	Eigen::MatrixXd Hc_expected(solver.nIndep(), solver.nIndep());
 	
 	Hc_expected <<
 		A0.transpose() * Q1 * A0 + A0.transpose() * A1.transpose() * Q2 * A1 * A0 + Q0,				A0.transpose() * Q1 * B0 + A0.transpose() * A1.transpose() * Q2 * A1 * B0 + S0,	A0.transpose() * S1 + A0.transpose() * A1.transpose() * Q2 * B1,
@@ -105,6 +81,7 @@ TEST(test_1, my_test_1)
 	//std::cout << Hc_expected << std::endl;
 	//qp.PrintQP_C(std::cout);
 
+	const auto gc = solver.QP().g();
 	Eigen::VectorXd gc_expected(qp.nIndep());
 	gc_expected <<
 		2 * A0.transpose() * Q1 * a0					+ 2 * A0.transpose() * A1.transpose() * Q2 * a1			+ 2 * A0.transpose() * A1.transpose() * Q2 * A1 * a0,
@@ -112,4 +89,6 @@ TEST(test_1, my_test_1)
 		2 * B1.transpose() * Q2 * A1 * a0				+ 2 * B1.transpose() * Q2 * a1							+ 2 * S1.transpose() * a0;
 
 	EXPECT_TRUE(gc_expected == gc);
+
+	//return 0;
  }

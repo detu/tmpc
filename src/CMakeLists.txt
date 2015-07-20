@@ -24,6 +24,8 @@ set(HDR
 	${RTMC_INCLUDE_DIR}/CyberMotion.hpp
 	${RTMC_INCLUDE_DIR}/MPC_Controller.hpp
 	${RTMC_INCLUDE_DIR}/MultiStageQP.hpp
+	${RTMC_INCLUDE_DIR}/QuadraticProgram.hpp
+	${RTMC_INCLUDE_DIR}/CondensingSolver.hpp
 )
 
 set (SRC
