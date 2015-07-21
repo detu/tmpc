@@ -4,6 +4,23 @@
 
 namespace camels
 {
+	struct qpOASESException : std::runtime_error
+	{
+		qpOASESException(qpOASES::returnValue ret)
+		: std::runtime_error(ErrorMessage(ret)), _returnValue(ret)
+		{}
+
+		qpOASES::returnValue getReturnValue() const { return _returnValue; }
+
+	private:
+		qpOASES::returnValue _returnValue;
+
+		static std::string ErrorMessage(qpOASES::returnValue ret)
+		{
+			return "qpOASES return code " + std::to_string(ret);
+		}
+	};
+
 	void CondensingSolver::Condense(const MultiStageQP& msqp)
 	{
 		assert(msqp.nX() == _Nx && msqp.nU() == _Nu && msqp.nT() == _Nt);
@@ -89,8 +106,12 @@ namespace camels
 		problem.setOptions(options);
 
 		/* Solve the condensed QP. */
-		int nWSR = 10;
-		const auto res = problem.init(_condensedQP.H().data(), _condensedQP.g().data(), _condensedQP.A().data(), _condensedQP.lb().data(), _condensedQP.ub().data(), _condensedQP.lbA().data(), _condensedQP.ubA().data(), nWSR);
+		int nWSR = 1000;
+		const auto res = problem.init(_condensedQP.H().data(), _condensedQP.g().data(), _condensedQP.A().data(), 
+			_condensedQP.lb().data(), _condensedQP.ub().data(), _condensedQP.lbA().data(), _condensedQP.ubA().data(), nWSR);
+
+		if (res != qpOASES::SUCCESSFUL_RETURN)
+			throw qpOASESException(res);
 
 		/* Get solution of the condensed QP. */
 		problem.getPrimalSolution(_primalCondensedSolution.data());
