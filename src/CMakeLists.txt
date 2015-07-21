@@ -31,19 +31,22 @@ set(HDR
 set (SRC
 	MotionPlatformX.cpp
 	CyberMotion.cpp
-	MPC_Controller.cpp
+	#MPC_Controller.cpp
 	CMS_output_jacobian.cpp
 	MultiStageQP.cpp
+	CondensingSolver.cpp
 )
 
 add_library(rtmc STATIC ${HDR} ${SRC})
-target_link_libraries(rtmc ${qpDUNES_STATIC_LIBRARIES})
+#target_link_libraries(rtmc ${qpDUNES_STATIC_LIBRARIES})
+target_link_libraries(rtmc ${qpOASES_LIBRARIES})
 
 add_executable(perftest perftest.cpp)
 target_link_libraries(perftest rtmc)
 
 include_directories(${GTEST_INCLUDE_DIRS})
-add_executable(mpc_test mpc_test.cpp condensing_test.cpp)
+#add_executable(mpc_test mpc_test.cpp condensing_test.cpp)
+add_executable(mpc_test condensing_test.cpp)
 target_link_libraries(mpc_test rtmc ${GTEST_BOTH_LIBRARIES})
 
 add_test(AllTests mpc_test)

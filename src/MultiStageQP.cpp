@@ -241,4 +241,28 @@ namespace camels
 		}
 		log_stream << endl << "};" << endl << endl;
 	}
+
+	MultiStageQP::VectorMap MultiStageQP::uMin(unsigned i)
+	{
+		assert(i < _Nt);
+		return VectorMap(_zMin.data() + i * _Nz + _Nx, _Nu);
+	}
+
+	MultiStageQP::VectorConstMap MultiStageQP::uMin(unsigned i) const
+	{
+		assert(i < _Nt);
+		return VectorConstMap(_zMin.data() + i * _Nz + _Nx, _Nu);
+	}
+
+	MultiStageQP::VectorMap MultiStageQP::uMax(unsigned i)
+	{
+		assert(i < _Nt);
+		return VectorMap(_zMax.data() + i * _Nz + _Nx, _Nu);
+	}
+
+	MultiStageQP::VectorConstMap MultiStageQP::uMax(unsigned i) const
+	{
+		assert(i < _Nt);
+		return VectorConstMap(_zMax.data() + i * _Nz + _Nx, _Nu);
+	}
 }

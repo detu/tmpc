@@ -72,7 +72,7 @@ TEST(test_1, my_test_1)
 	camels::CondensingSolver solver(qp.nX(), qp.nU(), qp.nT());
 	solver.Condense(qp);
 
-	const auto Hc = solver.QP().H();
+	const auto Hc = solver.getCondensedQP().H();
 	Eigen::MatrixXd Hc_expected(solver.nIndep(), solver.nIndep());
 	
 	Hc_expected <<
@@ -84,7 +84,7 @@ TEST(test_1, my_test_1)
 	//std::cout << Hc_expected << std::endl;
 	//qp.PrintQP_C(std::cout);
 
-	const auto gc = solver.QP().g();
+	const auto gc = solver.getCondensedQP().g();
 	Eigen::VectorXd gc_expected(qp.nIndep());
 	gc_expected <<
 		2 * A0.transpose() * Q1 * a0					+ 2 * A0.transpose() * A1.transpose() * Q2 * a1			+ 2 * A0.transpose() * A1.transpose() * Q2 * A1 * a0,
@@ -93,9 +93,15 @@ TEST(test_1, my_test_1)
 
 	EXPECT_TRUE(gc_expected == gc);
 
-	std::cout << solver.QP().A() << std::endl;
-	std::cout << solver.QP().lbA() << std::endl;
-	std::cout << solver.QP().ubA() << std::endl;
+	std::cout << "--- A ---" << std::endl << solver.getCondensedQP().A() << std::endl;
+	std::cout << "-- lbA --" << std::endl << solver.getCondensedQP().lbA() << std::endl;
+	std::cout << "-- ubA --" << std::endl << solver.getCondensedQP().ubA() << std::endl;
+	std::cout << "-- lb ---" << std::endl << solver.getCondensedQP().lb() << std::endl;
+	std::cout << "-- ub ---" << std::endl << solver.getCondensedQP().ub() << std::endl;
+
+	solver.Solve(qp);
+	std::cout << "-- sol (condensed ) --" << std::endl << solver.getPrimalCondensedSolution() << std::endl;
+	std::cout << "-- sol (multistage) --" << std::endl << solver.getPrimalSolution() << std::endl;
 
 	//return 0;
  }
