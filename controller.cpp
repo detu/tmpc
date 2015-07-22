@@ -220,7 +220,7 @@ static void mdlInitializeSampleTimes(SimStruct *S)
 		 }
 
 		 controller->InitWorkingPoint();
-		 controller->PrintQP(log_stream);
+		 controller->PrintQP_MATLAB(log_stream);
 		 log_stream << std::flush;
 	 }	 
 	 catch (const std::runtime_error& e)
@@ -240,14 +240,8 @@ static void mdlInitializeSampleTimes(SimStruct *S)
 */
 static void mdlStart(SimStruct *S)
 {
-    /** Set qpDUNES options */
-	qpOptions_t qpOptions 			= qpDUNES_setupDefaultOptions();
-	qpOptions.maxIter    			= 100;
-	qpOptions.printLevel 			= 2;
-	qpOptions.stationarityTolerance = 1.e-6;
-    
     /** Initialize MPC_Controller */
-	auto controller = std::make_unique<rtmc::MPC_Controller>(platform, SAMPLE_TIME_0, Np, &qpOptions);
+	auto controller = std::make_unique<rtmc::MPC_Controller>(platform, SAMPLE_TIME_0, Np);
 	controller->setLevenbergMarquardt(0.01);
 
 	setController(S, controller.release());
@@ -282,7 +276,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
 	log_stream << "mdlOutputs()" << std::endl;
 
 	const real_T * px = (const real_T*)ssGetInputPortSignal(S, 1);
-	real_t * pu = (real_T *)ssGetOutputPortRealSignal(S, 0);
+	real_T * pu = (real_T *)ssGetOutputPortRealSignal(S, 0);
 
 	Map<const VectorXd> y0_ref((const real_T*)ssGetInputPortSignal(S, 0), ssGetCurrentInputPortWidth(S, 0));
 	//Map<const VectorXd> x((const real_T*)ssGetInputPortSignal(S, 1), ssGetCurrentInputPortWidth(S, 1));
@@ -298,17 +292,20 @@ static void mdlOutputs(SimStruct *S, int_T tid)
 
 	try
 	{
+        controller->SetReference(y_ref.data());
+		controller->EmbedInitialValue(px);
+        
 		/** Solve QP */
-		controller->Solve(px, y_ref.data());
+		controller->Solve();
 
-		controller->PrintQP(log_stream);
+		controller->PrintQP_MATLAB(log_stream);
 		log_stream << std::flush;
 
 		// Copy u[0] to output.
 		controller->getWorkingU(0, pu);
 
 		// Prepare for the next step.
-		controller->UpdateWorkingPoint();
+		controller->PrepareForNext();
 	}
 	catch (const std::runtime_error& e)
 	{
