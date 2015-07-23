@@ -10,6 +10,8 @@ namespace camels
 	public:
 		typedef unsigned int size_type;
 		typedef Eigen::Matrix<Scalar, Eigen::Dynamic, Eigen::Dynamic, Options> Matrix;
+		typedef Eigen::SelfAdjointView<Matrix, Eigen::Upper> SelfAdjointView;
+		typedef Eigen::SelfAdjointView<const Matrix, Eigen::Upper> ConstSelfAdjointView;
 		typedef Eigen::Matrix<Scalar, Eigen::Dynamic, 1> Vector;
 		
 		QuadraticProgram(size_type nx, size_type nc)

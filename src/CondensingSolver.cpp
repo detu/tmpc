@@ -64,21 +64,19 @@ namespace camels
 
 			if (k < _Nt)
 			{
-				const auto Q = H_k.topLeftCorner(_Nx, _Nx);
+				const auto Q = H_k.topLeftCorner(_Nx, _Nx).selfadjointView<Eigen::Upper>();
 				const auto S = H_k.topRightCorner(_Nx, _Nu);
-				const auto ST = H_k.bottomLeftCorner(_Nu, _Nx);
 				const auto R = H_k.bottomRightCorner(_Nu, _Nu);
 
 				const auto nn = M_k.cols();
 				auto Hc_k = Hc.topLeftCorner(nn + _Nu, nn + _Nu);
-				Hc_k.topLeftCorner(nn, nn) += M_k.transpose() * Q * M_k;
+				Hc_k.topLeftCorner(nn, nn).triangularView<Eigen::Upper>() += M_k.transpose() * Q * M_k;
 				Hc_k.topRightCorner(nn, _Nu) += M_k.transpose() * S;
-				Hc_k.bottomLeftCorner(_Nu, nn) += ST * M_k;
-				Hc_k.bottomRightCorner(_Nu, _Nu) += R;
+				Hc_k.bottomRightCorner(_Nu, _Nu).triangularView<Eigen::Upper>() += R;
 
 				auto gc_k = gc.topRows(nn + _Nu);
 				gc_k.topRows(nn) += M_k.transpose() * (g_k.topRows(_Nx) + Q * v);
-				gc_k.bottomRows(_Nu) += g_k.bottomRows(_Nu) + ST * v;
+				gc_k.bottomRows(_Nu) += g_k.bottomRows(_Nu) + S.transpose() * v;
 
 				_condensedQP.lb().middleRows(_Nx + k * _Nu, _Nu) = msqp.uMin(k);
 				_condensedQP.ub().middleRows(_Nx + k * _Nu, _Nu) = msqp.uMax(k);
@@ -86,10 +84,12 @@ namespace camels
 			else
 			{
 				// Final state.
-				Hc += M_k.transpose() * H_k * M_k;
+				Hc.triangularView<Eigen::Upper>() += M_k.transpose() * H_k.selfadjointView<Eigen::Upper>() * M_k;
 				gc += M_k.transpose() * (g_k.topRows(_Nx) + H_k * v);
 			}
 		}
+
+		Hc = Hc.selfadjointView<Eigen::Upper>();
 	}
 
 	void CondensingSolver::Solve(const MultiStageQP& msqp)
