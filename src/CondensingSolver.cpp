@@ -1,7 +1,5 @@
 #include <CondensingSolver.hpp>
 
-#include <qpOASES.hpp>
-
 namespace camels
 {
 	struct qpOASESException : std::runtime_error
@@ -99,22 +97,21 @@ namespace camels
 		// Make a condensed problem.
 		Condense(msqp);
 
-		/* Setting up QProblem object. */
-		qpOASES::QProblem problem(_condensedQP.nx(), _condensedQP.nc());
-
-		qpOASES::Options options;
-		problem.setOptions(options);
-
 		/* Solve the condensed QP. */
 		int nWSR = 1000;
-		const auto res = problem.init(_condensedQP.H().data(), _condensedQP.g().data(), _condensedQP.A().data(), 
+		const auto res = _hotStart ?
+			_problem.hotstart(_condensedQP.H().data(), _condensedQP.g().data(), _condensedQP.A().data(),
+			_condensedQP.lb().data(), _condensedQP.ub().data(), _condensedQP.lbA().data(), _condensedQP.ubA().data(), nWSR) :
+			_problem.init(_condensedQP.H().data(), _condensedQP.g().data(), _condensedQP.A().data(),
 			_condensedQP.lb().data(), _condensedQP.ub().data(), _condensedQP.lbA().data(), _condensedQP.ubA().data(), nWSR);
+
+		_hotStart = true;
 
 		if (res != qpOASES::SUCCESSFUL_RETURN)
 			throw qpOASESException(res);
 
 		/* Get solution of the condensed QP. */
-		problem.getPrimalSolution(_primalCondensedSolution.data());
+		_problem.getPrimalSolution(_primalCondensedSolution.data());
 		//problem.getDualSolution(yOpt);
 
 		// Calculate the solution of the multi-stage QP.
@@ -141,7 +138,10 @@ namespace camels
 		, _Nx(nx), _Nu(nu), _Nt(nt), _Nz(nx + nu)
 		, _primalCondensedSolution(nx + nt * nu)
 		, _primalSolution(nx + (nx + nu) * nt)
+		, _problem(nx + nt * nu, nt * nx)
 	{
+		qpOASES::Options options;
+		_problem.setOptions(options);
 	}
 
 	const CondensingSolver::Vector& CondensingSolver::getPrimalCondensedSolution() const

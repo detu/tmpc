@@ -3,6 +3,8 @@
 #include <MultiStageQP.hpp>
 #include <QuadraticProgram.hpp>
 
+#include <qpOASES.hpp>
+
 namespace camels
 {
 	class CondensingSolver
@@ -24,6 +26,7 @@ namespace camels
 		const Vector& getPrimalCondensedSolution() const;
 
 		const CondensedQP& getCondensedQP() const { return _condensedQP; }
+		bool getHotStart() const { return _hotStart; }
 
 	private:
 		size_type _Nu;
@@ -34,5 +37,8 @@ namespace camels
 		CondensedQP _condensedQP;
 		Vector _primalSolution;
 		Vector _primalCondensedSolution;
+
+		bool _hotStart = false;
+		qpOASES::SQProblem _problem;
 	};
 }

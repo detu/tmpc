@@ -182,7 +182,7 @@ namespace rtmc
 	}
 
 	void MPC_Controller::Solve()
-{
+	{
 		/** solve QP */
 		_Solver.Solve(_QP);
 		

@@ -298,8 +298,8 @@ static void mdlOutputs(SimStruct *S, int_T tid)
 		/** Solve QP */
 		controller->Solve();
 
-		controller->PrintQP_MATLAB(log_stream);
-		log_stream << std::flush;
+// 		controller->PrintQP_MATLAB(log_stream);
+// 		log_stream << std::flush;
 
 		// Copy u[0] to output.
 		controller->getWorkingU(0, pu);
