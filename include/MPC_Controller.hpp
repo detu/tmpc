@@ -41,6 +41,10 @@ namespace rtmc
 		
 		double getLevenbergMarquardt() const { return _levenbergMarquardt; }
 		void setLevenbergMarquardt(double val) { _levenbergMarquardt = val; }
+
+		double getWashoutFactor() const { return _washoutFactor; }
+		void setWashoutFactor(double val) { _washoutFactor = val; }
+
 		unsigned getNumberOfIntervals() const { return _Nt; }
 		RowMajorMatrixMap W(unsigned i);
 
@@ -48,6 +52,8 @@ namespace rtmc
 		// Initialized _G, _y, _C, _c, _zMin, _zMax based on current working point _w.
 		// Does not initialize g.
 		void UpdateQP();
+
+		Eigen::VectorXd getWashoutState() const;
 
 		void Integrate(const double * x, const double * u, double * x_next, double * A, double * B) const;
 		Eigen::MatrixXd getStateSpaceA() const;
@@ -71,7 +77,10 @@ namespace rtmc
 		camels::CondensingSolver _Solver;
 
 		double _levenbergMarquardt;
-		
+
+		// The more the washout factor, the more penalty for the terminal state to be far from the default (washout) position.
+		double _washoutFactor = 0.;
+
 		// Output weighting matrix
 		// _W stores _Nt matrices of size _Ny x _Ny
 		std::vector<double> _W;

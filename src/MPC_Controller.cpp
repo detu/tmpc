@@ -72,6 +72,9 @@ namespace rtmc
 			// Adding Levenberg-Marquardt term to make H positive-definite.
 			_QP.H(i) = G(i).transpose() * W(i) * G(i) + _levenbergMarquardt * MatrixXd::Identity(_Nz, _Nz);
 
+			// Quadratic term corresponding to washout (penalty for final state deviating from the default position).
+			_QP.H(i).topLeftCorner(_Nx, _Nx) += _washoutFactor * MatrixXd::Identity(_Nx, _Nx);
+
 			// C = [ssA, ssB];
 			// x_{k+1} = C * z_k + c_k
 			RowMajorMatrix ssA(_Nx, _Nx);
@@ -91,7 +94,7 @@ namespace rtmc
 			_QP.zMax(i) = z_max - w(i);
 		}
 
-		_QP.H(_Nt) = _levenbergMarquardt * MatrixXd::Identity(_Nx, _Nx);
+		_QP.H(_Nt) = _washoutFactor * MatrixXd::Identity(_Nx, _Nx) + _levenbergMarquardt * MatrixXd::Identity(_Nx, _Nx);
 		
 		VectorXd zero_v(_Nq);
 		zero_v.fill(0.);
@@ -100,25 +103,6 @@ namespace rtmc
 		_QP.zMin(_Nt) -= w(_Nt);
 		_QP.zMax(_Nt) << q_max, v_max;
 		_QP.zMax(_Nt) -= w(_Nt);
-
-// 		// Convert IEEE NaNs to large finite numbers to make qpDUNES happy.
-// 		const double INFTY = 1.0e12;
-// 
-// 		for (auto& z : _zMin)
-// 		{
-// 			if (z == std::numeric_limits<double>::infinity())
-// 				z = INFTY;
-// 			if (z == -std::numeric_limits<double>::infinity())
-// 				z = -INFTY;
-// 		}
-// 
-// 		for (auto& z : _zMax)
-// 		{
-// 			if (z == std::numeric_limits<double>::infinity())
-// 				z = INFTY;
-// 			if (z == -std::numeric_limits<double>::infinity())
-// 				z = -INFTY;
-// 		}
 	}
 
 	Eigen::MatrixXd MPC_Controller::getStateSpaceA() const
@@ -236,11 +220,19 @@ namespace rtmc
 		// Update g
 		Eigen::Map<const Eigen::MatrixXd> y_ref(py_ref, _Ny, _Nt);
 
-		for (unsigned i = 0; i < _Nt; ++i)
-			// g = 2 * (y_bar - y_hat)^T * W * G
-			_QP.g(i) = 1. * (_y.col(i) - y_ref.col(i)).transpose() * W(i) * G(i);
+		const auto x_washout = getWashoutState();
 
-		_QP.g(_Nt).setZero();
+		for (unsigned i = 0; i < _Nt; ++i)
+		{
+			// g = 2 * (y_bar - y_hat)^T * W * G
+			_QP.g(i) = (_y.col(i) - y_ref.col(i)).transpose() * W(i) * G(i);
+
+			// Linear term corresponding to washout (penalty for final state deviating from the default position).
+			_QP.g(i).topRows(_Nx) += _washoutFactor * (w(i).topRows(_Nx) - x_washout);
+		}
+
+		// Linear term corresponding to washout (penalty for final state deviating from the default position).
+		_QP.g(_Nt) = _washoutFactor * (w(_Nt).topRows(_Nx) - x_washout);
 	}
 
 	void MPC_Controller::EmbedInitialValue(const double * px0)
@@ -249,5 +241,15 @@ namespace rtmc
 		Eigen::Map<const Eigen::VectorXd> x0(px0, _Nx);
 		_QP.xMin(0) = x0 - w(0).topRows(_Nx);
 		_QP.xMax(0) = x0 - w(0).topRows(_Nx);
+	}
+
+	Eigen::VectorXd MPC_Controller::getWashoutState() const
+	{
+		// The "washout" state.
+		Eigen::VectorXd x_washout(_Nx);
+		x_washout.setZero();
+		_platform->getDefaultAxesPosition(x_washout.data());
+
+		return x_washout;
 	}
 }

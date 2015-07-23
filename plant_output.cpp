@@ -55,7 +55,7 @@
 
 #define NPARAMS              0
 
-#define SAMPLE_TIME_0        0.05
+#define SAMPLE_TIME_0        0.012
 #define NUM_DISC_STATES      0
 #define DISC_STATES_IC       [0]
 #define NUM_CONT_STATES      0

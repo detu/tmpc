@@ -21,6 +21,7 @@ TEST(mpc_test, mpc_test_case)
 	std::ofstream out("out.txt");
 
 	rtmc::MPC_Controller controller(platform, Ts, Nt);
+	controller.setWashoutFactor(0.1);
 	controller.InitWorkingPoint();
 
 	Eigen::VectorXd x0(platform->getStateDim());

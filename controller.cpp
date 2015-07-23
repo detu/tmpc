@@ -55,7 +55,7 @@
 
 #define NPARAMS              0
 
-#define SAMPLE_TIME_0        0.05
+#define SAMPLE_TIME_0        0.012
 #define NUM_DISC_STATES      0
 #define DISC_STATES_IC       [0]
 #define NUM_CONT_STATES      0
@@ -243,6 +243,7 @@ static void mdlStart(SimStruct *S)
     /** Initialize MPC_Controller */
 	auto controller = std::make_unique<rtmc::MPC_Controller>(platform, SAMPLE_TIME_0, Np);
 	controller->setLevenbergMarquardt(0.01);
+    controller->setWashoutFactor(1);
 
 	setController(S, controller.release());
 }
