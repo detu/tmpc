@@ -77,8 +77,8 @@ namespace camels
 				Hc_k.bottomRightCorner(_Nu, _Nu) += R;
 
 				auto gc_k = gc.topRows(nn + _Nu);
-				gc_k.topRows(nn) += M_k.transpose() * (g_k.topRows(_Nx) + (Q + Q.transpose()) * v);
-				gc_k.bottomRows(_Nu) += g_k.bottomRows(_Nu) + (S.transpose() + ST) * v;
+				gc_k.topRows(nn) += M_k.transpose() * (g_k.topRows(_Nx) + Q * v);
+				gc_k.bottomRows(_Nu) += g_k.bottomRows(_Nu) + ST * v;
 
 				_condensedQP.lb().middleRows(_Nx + k * _Nu, _Nu) = msqp.uMin(k);
 				_condensedQP.ub().middleRows(_Nx + k * _Nu, _Nu) = msqp.uMax(k);
@@ -87,7 +87,7 @@ namespace camels
 			{
 				// Final state.
 				Hc += M_k.transpose() * H_k * M_k;
-				gc += M_k.transpose() * (g_k.topRows(_Nx) + (H_k + H_k.transpose()) * v);
+				gc += M_k.transpose() * (g_k.topRows(_Nx) + H_k * v);
 			}
 		}
 	}
@@ -105,10 +105,10 @@ namespace camels
 			_problem.init(_condensedQP.H().data(), _condensedQP.g().data(), _condensedQP.A().data(),
 			_condensedQP.lb().data(), _condensedQP.ub().data(), _condensedQP.lbA().data(), _condensedQP.ubA().data(), nWSR);
 
-		_hotStart = true;
-
 		if (res != qpOASES::SUCCESSFUL_RETURN)
 			throw qpOASESException(res);
+
+		_hotStart = true;
 
 		/* Get solution of the condensed QP. */
 		_problem.getPrimalSolution(_primalCondensedSolution.data());

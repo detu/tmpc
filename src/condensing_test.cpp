@@ -87,9 +87,9 @@ TEST(test_1, my_test_1)
 	const auto gc = solver.getCondensedQP().g();
 	Eigen::VectorXd gc_expected(qp.nIndep());
 	gc_expected <<
-		2 * A0.transpose() * Q1 * a0					+ 2 * A0.transpose() * A1.transpose() * Q2 * a1			+ 2 * A0.transpose() * A1.transpose() * Q2 * A1 * a0,
-		2 * B0.transpose() * A1.transpose() * Q2 * a1	+ 2 * B0.transpose() * A1.transpose() * Q2 * A1 * a0	+ 2 * B0.transpose() * Q1 * a0,
-		2 * B1.transpose() * Q2 * A1 * a0				+ 2 * B1.transpose() * Q2 * a1							+ 2 * S1.transpose() * a0;
+		A0.transpose() * Q1 * a0					+ A0.transpose() * A1.transpose() * Q2 * a1			+ A0.transpose() * A1.transpose() * Q2 * A1 * a0,
+		B0.transpose() * A1.transpose() * Q2 * a1	+ B0.transpose() * A1.transpose() * Q2 * A1 * a0	+ B0.transpose() * Q1 * a0,
+		B1.transpose() * Q2 * A1 * a0				+ B1.transpose() * Q2 * a1							+ S1.transpose() * a0;
 
 	EXPECT_TRUE(gc_expected == gc);
 
