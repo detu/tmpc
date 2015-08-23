@@ -1,5 +1,5 @@
 cmake_minimum_required (VERSION 2.8)
-project (RTMC)
+project (MPMC)
 
 SET(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/CMakeModules;${CMAKE_MODULE_PATH})
 #SET(WABS_ROOT ${PROJECT_SOURCE_DIR}/.. CACHE PATH "WABS root directory")
