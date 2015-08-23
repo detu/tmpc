@@ -45,7 +45,7 @@ namespace rtmc
 
 	void CyberMotion::getAxesLimits(double * q_min, double * q_max, double * v_min, double * v_max, double * u_min, double * u_max) const
 	{
-		const double data[8][6] = {
+		static const double data[8][6] = {
 			{ 0.2, 9.3, -1.47, 1.47, -1.0780, 1.0780 },
 			{ -std::numeric_limits<double>::infinity(), std::numeric_limits<double>::infinity(), -1.1802, 1.1802, -1.6762, 1.6762 },
 			{ -2.1447, -0.8727, -0.9749, 0.9749, -1.1973, 1.1973 },
