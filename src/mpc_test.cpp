@@ -55,8 +55,16 @@ TEST(mpc_test, mpc_test_case)
 		}
 		catch (const std::runtime_error& e)
 		{
-			controller.PrintQP_MATLAB(std::ofstream("failed_qp.m"));
-			controller.PrintQP_C(std::ofstream("failed_qp.cpp"));
+			{
+				std::ofstream os("failed_qp.m");
+				controller.PrintQP_MATLAB(os);
+			}
+
+			{
+				std::ofstream os("failed_qp.cpp");
+				controller.PrintQP_C(os);
+			}
+
 			throw e;
 		}
 

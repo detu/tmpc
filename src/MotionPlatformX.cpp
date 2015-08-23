@@ -1,5 +1,3 @@
-#pragma once
-
 #include "MotionPlatformX.hpp"
 
 typedef Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> ColMajorMatrix;

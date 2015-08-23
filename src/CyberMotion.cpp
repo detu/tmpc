@@ -1,8 +1,9 @@
-#pragma once
-
 #include "CyberMotion.hpp"
 
 #include <array>
+#include <cassert>
+#include <limits>
+#include <algorithm>
 
 typedef Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> ColMajorMatrix;
 
