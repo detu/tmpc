@@ -252,4 +252,9 @@ namespace rtmc
 
 		return x_washout;
 	}
+
+	double MPC_Controller::getSampleTime() const
+	{
+		return _sampleTime;
+	}
 }
