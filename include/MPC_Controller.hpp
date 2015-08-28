@@ -49,6 +49,8 @@ namespace mpmc
 		void setWashoutFactor(double val) { _washoutFactor = val; }
 
 		unsigned getNumberOfIntervals() const { return _Nt; }
+		double getSampleTime() const;
+
 		RowMajorMatrixMap W(unsigned i);
 
 		const Eigen::VectorXd& getXMin() const { return _xMin; }
