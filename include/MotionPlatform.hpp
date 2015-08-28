@@ -34,7 +34,7 @@ private:
 	unsigned _outputDim;
 };
 
-namespace rtmc
+namespace mpmc
 {
 	class MotionLimits
 	{

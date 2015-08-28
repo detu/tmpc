@@ -2,7 +2,7 @@
 
 typedef Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> ColMajorMatrix;
 
-namespace rtmc
+namespace mpmc
 {
 	MotionPlatformX::MotionPlatformX()
 		: MotionPlatform(1)

@@ -10,7 +10,7 @@
 #include <memory>
 #include <ostream>
 
-namespace rtmc
+namespace mpmc
 {
 	class MPC_Controller
 	{
@@ -79,7 +79,7 @@ namespace rtmc
 		double _levenbergMarquardt;
 
 		// The more the washout factor, the more penalty for the terminal state to be far from the default (washout) position.
-		double _washoutFactor = 0.;
+		double _washoutFactor;
 
 		// Output weighting matrix
 		// _W stores _Nt matrices of size _Ny x _Ny

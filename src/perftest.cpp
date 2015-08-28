@@ -8,7 +8,7 @@
 
 int main(int argc, char * argv[])
 {
-	rtmc::CyberMotion cms;
+	mpmc::CyberMotion cms;
 
 // 	Eigen::MatrixXd x(cms.getStateDim(), nT);
 // 	x.fill(0.);

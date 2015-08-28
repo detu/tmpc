@@ -2,7 +2,7 @@
 
 #include "MotionPlatform.hpp"
 
-namespace rtmc
+namespace mpmc
 {
 	class CyberMotion : public MotionPlatform
 	{

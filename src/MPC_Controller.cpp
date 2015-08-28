@@ -2,7 +2,7 @@
 
 #include <stdexcept>
 
-namespace rtmc
+namespace mpmc
 {
 	MPC_Controller::MPC_Controller(const std::shared_ptr<MotionPlatform>& platform, double sample_time, unsigned Nt) 
 		: _platform(platform)
@@ -11,6 +11,7 @@ namespace rtmc
 		, _levenbergMarquardt(0.01)
 		, _sampleTime(sample_time)
 		, _y(platform->getOutputDim(), Nt)
+		, _washoutFactor(0.)
 	{
 		// Get sizes.
 		_Nq = platform->getNumberOfAxes();

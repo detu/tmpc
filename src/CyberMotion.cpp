@@ -24,7 +24,7 @@ matrix_size_t getSize(int i)
 	return sz;
 }
 
-namespace rtmc
+namespace mpmc
 {
 	CyberMotion::CyberMotion()
 		: MotionPlatform(8)

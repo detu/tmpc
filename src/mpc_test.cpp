@@ -11,7 +11,7 @@
 TEST(mpc_test, mpc_test_case)
 {
 	//const auto platform = std::make_shared<rtmc::MotionPlatformX>();
-	const auto platform = std::make_shared<rtmc::CyberMotion>();
+	const auto platform = std::make_shared<mpmc::CyberMotion>();
 	const double Ts = 0.05;
 	const unsigned Nt = 10;
 	const unsigned simulation_steps = 200;
@@ -20,7 +20,7 @@ TEST(mpc_test, mpc_test_case)
 	const double freq = 1.0;
 	std::ofstream out("out.txt");
 
-	rtmc::MPC_Controller controller(platform, Ts, Nt);
+	mpmc::MPC_Controller controller(platform, Ts, Nt);
 	controller.setWashoutFactor(0.1);
 	controller.InitWorkingPoint();
 

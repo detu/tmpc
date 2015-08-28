@@ -99,12 +99,12 @@ std::ofstream log_stream;
 // Error status for Simulink
 std::string error_status;
 
-rtmc::MPC_Controller * getController(SimStruct * S)
+mpmc::MPC_Controller * getController(SimStruct * S)
 {
-	return reinterpret_cast<rtmc::MPC_Controller *>(ssGetPWorkValue(S, 0));
+	return reinterpret_cast<mpmc::MPC_Controller *>(ssGetPWorkValue(S, 0));
 }
 
-void setController(SimStruct * S, rtmc::MPC_Controller * c)
+void setController(SimStruct * S, mpmc::MPC_Controller * c)
 {
 	ssSetPWorkValue(S, 0, c);
 }
@@ -241,9 +241,9 @@ static void mdlInitializeSampleTimes(SimStruct *S)
 static void mdlStart(SimStruct *S)
 {
     /** Initialize MPC_Controller */
-	auto controller = std::make_unique<rtmc::MPC_Controller>(platform, SAMPLE_TIME_0, Np);
+	auto controller = std::make_unique<mpmc::MPC_Controller>(platform, SAMPLE_TIME_0, Np);
 	controller->setLevenbergMarquardt(0.01);
-    controller->setWashoutFactor(1);
+    controller->setWashoutFactor(5);
 
 	setController(S, controller.release());
 }
