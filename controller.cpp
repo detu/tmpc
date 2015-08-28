@@ -53,7 +53,7 @@
 #define OUT_0_BIAS            0
 #define OUT_0_SLOPE           0.125
 
-#define NPARAMS              0
+#define NPARAMS              8
 
 #define SAMPLE_TIME_0        0.012
 #define NUM_DISC_STATES      0
@@ -240,10 +240,75 @@ static void mdlInitializeSampleTimes(SimStruct *S)
 */
 static void mdlStart(SimStruct *S)
 {
+    using Eigen::Map;
+    using Eigen::VectorXd;
+    
     /** Initialize MPC_Controller */
 	auto controller = std::make_unique<mpmc::MPC_Controller>(platform, SAMPLE_TIME_0, Np);
 	controller->setLevenbergMarquardt(0.01);
     controller->setWashoutFactor(5);
+    
+    // Set motion limits from block parameters.
+    const auto n_axes = platform->getNumberOfAxes();
+    const mxArray * mx_qMin = ssGetSFcnParam(S, 0);
+    if(!mx_qMin || mxGetNumberOfElements(mx_qMin) != n_axes)
+        throw std::runtime_error("Invalid number of elements for parameter qMin");
+    
+    const mxArray * mx_qMax = ssGetSFcnParam(S, 1);
+    if(!mx_qMax || mxGetNumberOfElements(mx_qMax) != n_axes)
+        throw std::runtime_error("Invalid number of elements for parameter qMax");
+    
+    const mxArray * mx_vMin = ssGetSFcnParam(S, 2);
+    if(!mx_vMin || mxGetNumberOfElements(mx_vMin) != n_axes)
+        throw std::runtime_error("Invalid number of elements for parameter vMin");
+    
+    const mxArray * mx_vMax = ssGetSFcnParam(S, 3);
+    if(!mx_vMax || mxGetNumberOfElements(mx_vMax) != n_axes)
+        throw std::runtime_error("Invalid number of elements for parameter vMax");
+    
+    const mxArray * mx_uMin = ssGetSFcnParam(S, 4);
+    if(!mx_uMin || mxGetNumberOfElements(mx_uMin) != n_axes)
+        throw std::runtime_error("Invalid number of elements for parameter uMin");
+    
+    const mxArray * mx_uMax = ssGetSFcnParam(S, 5);
+    if(!mx_uMax || mxGetNumberOfElements(mx_uMax) != n_axes)
+        throw std::runtime_error("Invalid number of elements for parameter uMax");
+    
+    VectorXd x_min(2 * n_axes), x_max(2 * n_axes);
+    x_min << Map<VectorXd>(mxGetPr(mx_qMin), n_axes), Map<VectorXd>(mxGetPr(mx_vMin), n_axes);
+    x_max << Map<VectorXd>(mxGetPr(mx_qMax), n_axes), Map<VectorXd>(mxGetPr(mx_vMax), n_axes);
+    
+    const Map<VectorXd> u_min(mxGetPr(mx_uMin), n_axes);
+    const Map<VectorXd> u_max(mxGetPr(mx_uMax), n_axes);
+    
+    controller->setXMin(x_min);
+    controller->setXMax(x_max);
+    controller->setUMin(u_min);
+    controller->setUMax(u_max);
+
+	// Setting the washout position and washout factor from block parameters.
+	const mxArray * mx_washoutPos = ssGetSFcnParam(S, 6);
+	if (!mx_washoutPos || mxGetNumberOfElements(mx_washoutPos) != n_axes)
+		throw std::runtime_error("Invalid number of elements for parameter washoutPos");
+
+	const mxArray * mx_washoutFactor = ssGetSFcnParam(S, 7);
+	if (mxGetNumberOfElements(mx_washoutFactor) != 1)
+		throw std::runtime_error("washoutFactor must be a scalar");
+
+	controller->setWashoutPosition(Map<VectorXd>(mxGetPr(mx_washoutPos), n_axes));
+	controller->setWashoutFactor(mxGetScalar(mx_washoutFactor));
+    
+    std::ostringstream os;
+	os << "Controller limits set to:" << std::endl
+		<< "xMin = " << controller->getXMin().transpose() << std::endl
+		<< "xMax = " << controller->getXMax().transpose() << std::endl
+		<< "uMin = " << controller->getUMin().transpose() << std::endl
+		<< "uMax = " << controller->getUMax().transpose() << std::endl
+		<< "Washout position:" << std::endl
+		<< "washoutPos = " << controller->getWashoutPosition().transpose() << std::endl
+		<< "washoutFactor = " << controller->getWashoutFactor() << std::endl;
+    
+    mexPrintf(os.str().c_str());
 
 	setController(S, controller.release());
 }

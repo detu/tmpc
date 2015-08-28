@@ -9,6 +9,7 @@
 #include <vector>
 #include <memory>
 #include <ostream>
+#include <functional>
 
 namespace mpmc
 {
@@ -20,6 +21,8 @@ namespace mpmc
 		typedef Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> RowMajorMatrix;
 		typedef Eigen::Map<RowMajorMatrix> RowMajorMatrixMap;
 		typedef Eigen::Map<const RowMajorMatrix> RowMajorMatrixConstMap;
+
+		typedef std::function<void (const double * x, const double * u, double * y, double * C, double * D)> OutputFunction;
 
 		MPC_Controller(const std::shared_ptr<MotionPlatform>& platform, double sample_time, unsigned Nt);
 		~MPC_Controller();
@@ -48,6 +51,21 @@ namespace mpmc
 		unsigned getNumberOfIntervals() const { return _Nt; }
 		RowMajorMatrixMap W(unsigned i);
 
+		const Eigen::VectorXd& getXMin() const { return _xMin; }
+		void setXMin(const Eigen::VectorXd& val) { _xMin = val; }
+
+		const Eigen::VectorXd& getXMax() const { return _xMax; }
+		void setXMax(const Eigen::VectorXd& val) { _xMax = val; }
+
+		const Eigen::VectorXd& getUMin() const { return _uMin; }
+		void setUMin(const Eigen::VectorXd& val) { _uMin = val; }
+
+		const Eigen::VectorXd& getUMax() const { return _uMax; }
+		void setUMax(const Eigen::VectorXd& val) { _uMax = val; }
+
+		const Eigen::VectorXd& getWashoutPosition() const { return _washoutPosition; }
+		void setWashoutPosition(const Eigen::VectorXd& val) { _washoutPosition = val; }
+
 	private:
 		// Initialized _G, _y, _C, _c, _zMin, _zMax based on current working point _w.
 		// Does not initialize g.
@@ -64,6 +82,10 @@ namespace mpmc
 		//VectorMap yRef(unsigned i);
 		
 		const std::shared_ptr<MotionPlatform> _platform;
+
+		// The output function.
+		OutputFunction _outputFunction;
+
 		double _sampleTime;
 
 		unsigned _Nq;
@@ -78,6 +100,9 @@ namespace mpmc
 
 		double _levenbergMarquardt;
 
+		// Washout position.
+		Eigen::VectorXd _washoutPosition;
+		
 		// The more the washout factor, the more penalty for the terminal state to be far from the default (washout) position.
 		double _washoutFactor;
 
@@ -101,8 +126,16 @@ namespace mpmc
 		// Important: _y is column-major.
 		Eigen::MatrixXd _y;
 
-		// Reference output.
-		// _yRef stores _Nt vectors of size _Ny
-		//std::vector<double> _yRef;
+		// Lower state limit.
+		Eigen::VectorXd _xMin;
+		
+		// Upper state limit.
+		Eigen::VectorXd _xMax;
+		
+		// Lower input limit
+		Eigen::VectorXd _uMin;
+		
+		// Upper input limit
+		Eigen::VectorXd _uMax;		
 	};
 }

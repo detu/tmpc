@@ -11,7 +11,13 @@ namespace mpmc
 		, _levenbergMarquardt(0.01)
 		, _sampleTime(sample_time)
 		, _y(platform->getOutputDim(), Nt)
+		, _washoutPosition(platform->getNumberOfAxes())
 		, _washoutFactor(0.)
+		, _xMin(platform->getStateDim())
+		, _xMax(platform->getStateDim())
+		, _uMin(platform->getInputDim())
+		, _uMax(platform->getInputDim())
+		, _outputFunction([platform](const double * x, const double * u, double * y, double * C, double * D) { platform->Output(x, u, y, C, D); })
 	{
 		// Get sizes.
 		_Nq = platform->getNumberOfAxes();
@@ -30,6 +36,12 @@ namespace mpmc
 		// Initialize weight matrices
 		for (unsigned i = 0; i < _Nt; ++i)
 			W(i).setIdentity();
+
+		// Initialize limits.
+		platform->getAxesLimits(_xMin.data(), _xMax.data(), _xMin.data() + _Nq, _xMax.data() + _Nq, _uMin.data(), _uMax.data());
+
+		// Initialize washout position.
+		platform->getDefaultAxesPosition(_washoutPosition.data());
 	}
 
 	MPC_Controller::~MPC_Controller()
@@ -51,7 +63,9 @@ namespace mpmc
 		using namespace Eigen;
 
 		VectorXd z_min(_Nz), z_max(_Nz);
-		_platform->getAxesLimits(z_min.data(), z_max.data(), z_min.data() + _Nq, z_max.data() + _Nq, z_min.data() + 2 * _Nq, z_max.data() + 2 * _Nq);
+		z_min << _xMin, _uMin;
+		z_max << _xMax, _uMax;
+		
 		const auto q_min = z_min.middleRows(      0, _Nq), q_max = z_max.middleRows(      0, _Nq);
 		const auto v_min = z_min.middleRows(    _Nq, _Nq), v_max = z_max.middleRows(    _Nq, _Nq);
 		const auto u_min = z_min.middleRows(2 * _Nq, _Nq), u_max = z_max.middleRows(2 * _Nq, _Nq);
@@ -64,7 +78,7 @@ namespace mpmc
 			// Output() returns derivative matrices in column-major format.
 			MatrixXd ssC(_Ny, _Nx);
 			MatrixXd ssD(_Ny, _Nu);
-			_platform->Output(w(i).data(), w(i).data() + _Nx, _y.col(i).data(), ssC.data(), ssD.data());
+			_outputFunction(w(i).data(), w(i).data() + _Nx, _y.col(i).data(), ssC.data(), ssD.data());
 
 			// G = [C, D]
 			G(i) << ssC, ssD;
@@ -149,7 +163,7 @@ namespace mpmc
 		u0.fill(0.);
 
 		VectorXd y0(_Ny);
-		_platform->Output(x0.data(), u0.data(), y0.data());
+		_outputFunction(x0.data(), u0.data(), y0.data(), nullptr, nullptr);
 
 		for (unsigned i = 0; i < _Nt; ++i)
 			w(i) << x0, u0;
@@ -248,8 +262,7 @@ namespace mpmc
 	{
 		// The "washout" state.
 		Eigen::VectorXd x_washout(_Nx);
-		x_washout.setZero();
-		_platform->getDefaultAxesPosition(x_washout.data());
+		x_washout << _washoutPosition, Eigen::VectorXd::Zero(_Nq);
 
 		return x_washout;
 	}
