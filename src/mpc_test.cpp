@@ -22,11 +22,11 @@ TEST(mpc_test, mpc_test_case)
 
 	mpmc::MPC_Controller controller(platform, Ts, Nt);
 	controller.setWashoutFactor(0.1);
-	controller.InitWorkingPoint();
 
-	Eigen::VectorXd x0(platform->getStateDim());
+	Eigen::VectorXd x0(controller.getStateDim());
 	x0.fill(0.);
 	platform->getDefaultAxesPosition(x0.data());
+	controller.InitWorkingPoint(x0);
 
 	Eigen::MatrixXd y_ref(platform->getOutputDim(), Nt);
 	y_ref.fill(0.);

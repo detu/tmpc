@@ -201,7 +201,7 @@ static void mdlInitializeSampleTimes(SimStruct *S)
  static void mdlInitializeConditions(SimStruct *S)
  {
 	 /*
-	 Initialize at default position, 0 velocity, 0 input.
+	 Initialize at current position, 0 velocity, 0 input.
 	 */
 
 	 log_stream.open("controller.log");
@@ -219,7 +219,15 @@ static void mdlInitializeSampleTimes(SimStruct *S)
 				 controller->W(i).setZero();
 		 }
 
-		 controller->InitWorkingPoint();
+		 Eigen::VectorXd x0(controller->getStateDim());
+		 x0.fill(0.);
+		 platform->getDefaultAxesPosition(x0.data());
+
+		 std::ostringstream msg;
+		 msg << "mdlInitializeConditions(): initializing MPC controller at working point " << x0.transpose() << std::endl;
+		 mexPrintf(msg.str().c_str());
+
+		 controller->InitWorkingPoint(x0);
 		 controller->PrintQP_MATLAB(log_stream);
 		 log_stream << std::flush;
 	 }	 

@@ -148,22 +148,13 @@ namespace mpmc
 		return VectorMap(_w.data() + i * _Nz, i < _Nt ? _Nz : _Nx);
 	}
 
-	void MPC_Controller::InitWorkingPoint()
-	{
+	void MPC_Controller::InitWorkingPoint( const Eigen::VectorXd& x0 )
+{
 		using namespace Eigen;
-
-		// Set up initial working point and reference.
-		// x0 = [q0; 0]
-		VectorXd x0(_Nx);
-		x0.fill(0.);
-		_platform->getDefaultAxesPosition(x0.data());
 
 		// u0 = 0;
 		VectorXd u0(_Nu);
 		u0.fill(0.);
-
-		VectorXd y0(_Ny);
-		_outputFunction(x0.data(), u0.data(), y0.data(), nullptr, nullptr);
 
 		for (unsigned i = 0; i < _Nt; ++i)
 			w(i) << x0, u0;

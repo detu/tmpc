@@ -27,7 +27,7 @@ namespace mpmc
 		MPC_Controller(const std::shared_ptr<MotionPlatform>& platform, double sample_time, unsigned Nt);
 		~MPC_Controller();
 
-		void InitWorkingPoint();
+		void InitWorkingPoint(const Eigen::VectorXd& x0);
 		void Solve();
 
 		void EmbedInitialValue(const double * px0);
