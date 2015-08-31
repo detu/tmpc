@@ -271,4 +271,9 @@ namespace mpmc
 	{
 		return _sampleTime;
 	}
+
+	unsigned MPC_Controller::getStateDim() const
+	{
+		return _platform->getStateDim();
+	}
 }
