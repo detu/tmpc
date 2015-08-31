@@ -173,6 +173,18 @@ namespace mpmc
 
 	void MPC_Controller::Solve()
 	{
+		const auto x_washout = getWashoutState();
+
+		// Add washout factors.
+		for (unsigned i = 0; i < _Nt; ++i)
+		{
+			// Linear term corresponding to washout (penalty for final state deviating from the default position).
+			_QP.g(i).topRows(_Nx) += _washoutFactor * (w(i).topRows(_Nx) - x_washout);
+		}
+
+		// Linear term corresponding to washout (penalty for final state deviating from the default position).
+		_QP.g(_Nt) = _washoutFactor * (w(_Nt).topRows(_Nx) - x_washout);
+
 		/** solve QP */
 		_Solver.Solve(_QP);
 		
@@ -221,24 +233,22 @@ namespace mpmc
 		x_next = A * x + B * u;
 	}
 
+	void MPC_Controller::SetReference(unsigned i, const Eigen::VectorXd& y_ref)
+	{
+		// g = 2 * (y_bar - y_hat)^T * W * G
+		_QP.g(i) = (_y.col(i) - y_ref.col(i)).transpose() * W(i) * G(i);
+	}
+
 	void MPC_Controller::SetReference(const double * py_ref)
 	{
 		// Update g
 		Eigen::Map<const Eigen::MatrixXd> y_ref(py_ref, _Ny, _Nt);
 
-		const auto x_washout = getWashoutState();
-
 		for (unsigned i = 0; i < _Nt; ++i)
 		{
 			// g = 2 * (y_bar - y_hat)^T * W * G
 			_QP.g(i) = (_y.col(i) - y_ref.col(i)).transpose() * W(i) * G(i);
-
-			// Linear term corresponding to washout (penalty for final state deviating from the default position).
-			_QP.g(i).topRows(_Nx) += _washoutFactor * (w(i).topRows(_Nx) - x_washout);
 		}
-
-		// Linear term corresponding to washout (penalty for final state deviating from the default position).
-		_QP.g(_Nt) = _washoutFactor * (w(_Nt).topRows(_Nx) - x_washout);
 	}
 
 	void MPC_Controller::EmbedInitialValue(const double * px0)

@@ -33,7 +33,7 @@ namespace mpmc
 		void EmbedInitialValue(const double * px0);
 
 		void SetReference(const double * py_ref);
-
+		void SetReference(unsigned i, const Eigen::VectorXd& py_ref);
 		void getWorkingU(unsigned i, double * pu) const;
 		void PrepareForNext();
 
