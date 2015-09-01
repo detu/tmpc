@@ -273,8 +273,13 @@ namespace mpmc
 		return _sampleTime;
 	}
 
+	unsigned MPC_Controller::getInputDim() const
+	{
+		return _Nu;
+	}
+
 	unsigned MPC_Controller::getStateDim() const
 	{
-		return _platform->getStateDim();
+		return _Nx;
 	}
 }

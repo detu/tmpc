@@ -53,6 +53,7 @@ namespace mpmc
 
 		RowMajorMatrixMap W(unsigned i);
 
+		unsigned getInputDim() const;
 		unsigned getStateDim() const;
 
 		const Eigen::VectorXd& getXMin() const { return _xMin; }
