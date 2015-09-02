@@ -53,7 +53,7 @@
 #define OUT_0_BIAS            0
 #define OUT_0_SLOPE           0.125
 
-#define NPARAMS              8
+#define NPARAMS              9
 
 #define SAMPLE_TIME_0        0.012
 #define NUM_DISC_STATES      0
@@ -74,7 +74,7 @@
 
 #include "MotionPlatformX.hpp"
 #include "CyberMotion.hpp"
-#include "MPC_Controller.hpp"
+#include "MotionPlatformModelPredictiveController.hpp"
 
 #include <memory>
 #include <fstream>
@@ -84,27 +84,18 @@ typedef Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> R
 // Motion platform to use
 auto platform = std::make_shared<PLATFORM_TYPE>();
 
-// Number of prediction intervals
-const unsigned Np = N_PREDICTION;
-
-// Number of control intervals
-#ifndef N_CONTROL
-	#define N_CONTROL N_PREDICTION
-#endif
-const unsigned Nc = N_CONTROL;
-
 // Log stream.
 std::ofstream log_stream;
 
 // Error status for Simulink
 std::string error_status;
 
-mpmc::MPC_Controller * getController(SimStruct * S)
+mpmc::MotionPlatformModelPredictiveController * getController(SimStruct * S)
 {
-	return reinterpret_cast<mpmc::MPC_Controller *>(ssGetPWorkValue(S, 0));
+	return reinterpret_cast<mpmc::MotionPlatformModelPredictiveController *>(ssGetPWorkValue(S, 0));
 }
 
-void setController(SimStruct * S, mpmc::MPC_Controller * c)
+void setController(SimStruct * S, mpmc::MotionPlatformModelPredictiveController * c)
 {
 	ssSetPWorkValue(S, 0, c);
 }
@@ -211,15 +202,7 @@ static void mdlInitializeSampleTimes(SimStruct *S)
 	 {
 		 auto const controller = getController(S);
 
-		 for (unsigned i = 0; i < controller->getNumberOfIntervals(); ++i)
-		 {
-			 if (i < Nc)
-				 controller->W(i) = OutputWeightingMatrix();
-			 else
-				 controller->W(i).setZero();
-		 }
-
-		 Eigen::VectorXd x0(controller->getStateDim());
+		 Eigen::VectorXd x0(controller->nX());
 		 x0.fill(0.);
 		 platform->getDefaultAxesPosition(x0.data());
 
@@ -250,9 +233,19 @@ static void mdlStart(SimStruct *S)
 {
     using Eigen::Map;
     using Eigen::VectorXd;
-    
-    /** Initialize MPC_Controller */
-	auto controller = std::make_unique<mpmc::MPC_Controller>(platform, SAMPLE_TIME_0, Np);
+
+	/** Initialize MPC_Controller */
+
+	// 
+	const mxArray * mx_n_intervals = ssGetSFcnParam(S, 8);
+	if (!(mx_n_intervals && mxGetNumberOfElements(mx_n_intervals) == 1))
+		throw std::runtime_error("nIntervals must be a scalar.");
+
+	double n_intervals = 0;
+	if (!((n_intervals = mxGetScalar(mx_n_intervals)) == std::floor(n_intervals) && n_intervals > 0))
+		throw std::runtime_error("nIntervals must be a positive integer.");
+
+	auto controller = std::make_unique<mpmc::MotionPlatformModelPredictiveController>(platform, SAMPLE_TIME_0, static_cast<unsigned>(n_intervals));
 	controller->setLevenbergMarquardt(0.01);
     controller->setWashoutFactor(5);
     
@@ -305,16 +298,27 @@ static void mdlStart(SimStruct *S)
 
 	controller->setWashoutPosition(Map<VectorXd>(mxGetPr(mx_washoutPos), n_axes));
 	controller->setWashoutFactor(mxGetScalar(mx_washoutFactor));
+
+	// Initialize weighting matrices.
+	const unsigned Nc = static_cast<unsigned>(n_intervals);	// number of control intervals
+	for (unsigned i = 0; i < controller->getNumberOfIntervals(); ++i)
+	{
+		if (i < Nc)
+			controller->W(i) = OutputWeightingMatrix();
+		else
+			controller->W(i).setZero();
+	}
     
     std::ostringstream os;
 	os << "Controller limits set to:" << std::endl
-		<< "xMin = " << controller->getXMin().transpose() << std::endl
-		<< "xMax = " << controller->getXMax().transpose() << std::endl
-		<< "uMin = " << controller->getUMin().transpose() << std::endl
-		<< "uMax = " << controller->getUMax().transpose() << std::endl
+		<< "xMin =\t" << controller->getXMin().transpose() << std::endl
+		<< "xMax =\t" << controller->getXMax().transpose() << std::endl
+		<< "uMin =\t" << controller->getUMin().transpose() << std::endl
+		<< "uMax =\t" << controller->getUMax().transpose() << std::endl
 		<< "Washout position:" << std::endl
-		<< "washoutPos = " << controller->getWashoutPosition().transpose() << std::endl
-		<< "washoutFactor = " << controller->getWashoutFactor() << std::endl;
+		<< "washoutPos =\t" << controller->getWashoutPosition().transpose() << std::endl
+		<< "washoutFactor =\t" << controller->getWashoutFactor() << std::endl
+		<< "nIntervals =\t" << controller->getNumberOfIntervals() << std::endl;
     
     mexPrintf(os.str().c_str());
 
@@ -366,7 +370,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
 
 	try
 	{
-        controller->SetReference(y_ref.data());
+        controller->setReference(y_ref);
 		controller->EmbedInitialValue(px);
         
 		/** Solve QP */

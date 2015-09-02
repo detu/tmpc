@@ -4,44 +4,31 @@
 
 namespace mpmc
 {
-	MPC_Controller::MPC_Controller(const std::shared_ptr<MotionPlatform>& platform, double sample_time, unsigned Nt) 
-		: _platform(platform)
-		, _QP(platform->getStateDim(), platform->getInputDim(), Nt)
-		, _Solver(platform->getStateDim(), platform->getInputDim(), Nt)
+	MPC_Controller::MPC_Controller(unsigned state_dim, unsigned input_dim, double sample_time, unsigned Nt) 
+		: _QP(state_dim, input_dim, Nt)
+		, _Solver(state_dim, input_dim, Nt)
 		, _levenbergMarquardt(0.01)
 		, _sampleTime(sample_time)
-		, _y(platform->getOutputDim(), Nt)
-		, _washoutPosition(platform->getNumberOfAxes())
-		, _washoutFactor(0.)
-		, _xMin(platform->getStateDim())
-		, _xMax(platform->getStateDim())
-		, _uMin(platform->getInputDim())
-		, _uMax(platform->getInputDim())
-		, _outputFunction([platform](const double * x, const double * u, double * y, double * C, double * D) { platform->Output(x, u, y, C, D); })
+		, _xMin(state_dim)
+		, _xMax(state_dim)
+		, _uMin(input_dim)
+		, _uMax(input_dim)
 	{
 		// Get sizes.
-		_Nq = platform->getNumberOfAxes();
-		_Nu = platform->getInputDim();
-		_Nx = platform->getStateDim();
-		_Ny = platform->getOutputDim();
+		_Nu = input_dim;
+		_Nx = state_dim;
 		_Nz = _Nx + _Nu;
 		_Nt = Nt;
 
 		// Allocate arrays.
-		_W.resize(_Ny * _Ny * _Nt);
-		_G.resize(_Ny * _Nz * _Nt);
 		_zOpt.resize(_Nz * _Nt + _Nx);
 		_w.resize(_Nz * _Nt + _Nx);
 
-		// Initialize weight matrices
-		for (unsigned i = 0; i < _Nt; ++i)
-			W(i).setIdentity();
-
 		// Initialize limits.
-		platform->getAxesLimits(_xMin.data(), _xMax.data(), _xMin.data() + _Nq, _xMax.data() + _Nq, _uMin.data(), _uMax.data());
-
-		// Initialize washout position.
-		platform->getDefaultAxesPosition(_washoutPosition.data());
+		_xMin.fill(-std::numeric_limits<double>::infinity());
+		_xMax.fill( std::numeric_limits<double>::infinity());
+		_uMin.fill(-std::numeric_limits<double>::infinity());
+		_uMax.fill( std::numeric_limits<double>::infinity());
 	}
 
 	MPC_Controller::~MPC_Controller()
@@ -66,36 +53,22 @@ namespace mpmc
 		z_min << _xMin, _uMin;
 		z_max << _xMax, _uMax;
 		
+		/*
 		const auto q_min = z_min.middleRows(      0, _Nq), q_max = z_max.middleRows(      0, _Nq);
 		const auto v_min = z_min.middleRows(    _Nq, _Nq), v_max = z_max.middleRows(    _Nq, _Nq);
 		const auto u_min = z_min.middleRows(2 * _Nq, _Nq), u_max = z_max.middleRows(2 * _Nq, _Nq);
 		const VectorXd q_min_final = q_min + v_min.cwiseAbs2().cwiseQuotient(2 * u_max);
 		const VectorXd q_max_final = q_max + v_max.cwiseAbs2().cwiseQuotient(2 * u_min);
+		*/
 
 		for (unsigned i = 0; i < _Nt; ++i)
 		{
-			// Output vector and derivatives.
-			// Output() returns derivative matrices in column-major format.
-			MatrixXd ssC(_Ny, _Nx);
-			MatrixXd ssD(_Ny, _Nu);
-			_outputFunction(w(i).data(), w(i).data() + _Nx, _y.col(i).data(), ssC.data(), ssD.data());
-
-			// G = [C, D]
-			G(i) << ssC, ssD;
-
-			// H = G^T W G + \mu I
-			// Adding Levenberg-Marquardt term to make H positive-definite.
-			_QP.H(i) = G(i).transpose() * W(i) * G(i) + _levenbergMarquardt * MatrixXd::Identity(_Nz, _Nz);
-
-			// Quadratic term corresponding to washout (penalty for final state deviating from the default position).
-			_QP.H(i).topLeftCorner(_Nx, _Nx) += _washoutFactor * MatrixXd::Identity(_Nx, _Nx);
-
 			// C = [ssA, ssB];
 			// x_{k+1} = C * z_k + c_k
-			RowMajorMatrix ssA(_Nx, _Nx);
-			RowMajorMatrix ssB(_Nx, _Nu);
+			MatrixXd ssA(_Nx, _Nx);
+			MatrixXd ssB(_Nx, _Nu);
 			VectorXd x_plus(_Nx);
-			Integrate(w(i).data(), w(i).data() + _Nx, x_plus.data(), ssA.data(), ssB.data());
+			Integrate(w(i).topRows(nX()), w(i).bottomRows(nU()), x_plus, ssA, ssB);
 			_QP.C(i) << ssA, ssB;
 
 			// \Delta x_{k+1} = C \Delta z_k + f(z_k) - x_{k+1}
@@ -109,37 +82,8 @@ namespace mpmc
 			_QP.zMax(i) = z_max - w(i);
 		}
 
-		_QP.H(_Nt) = _washoutFactor * MatrixXd::Identity(_Nx, _Nx) + _levenbergMarquardt * MatrixXd::Identity(_Nx, _Nx);
-		
-		VectorXd zero_v(_Nq);
-		zero_v.fill(0.);
-
-		_QP.zMin(_Nt) << q_min, v_min;
-		_QP.zMin(_Nt) -= w(_Nt);
-		_QP.zMax(_Nt) << q_max, v_max;
-		_QP.zMax(_Nt) -= w(_Nt);
-	}
-
-	Eigen::MatrixXd MPC_Controller::getStateSpaceA() const
-	{
-		using namespace Eigen;
-
-		MatrixXd A(_Nx, _Nx);
-		A << MatrixXd::Identity(_Nq, _Nq), _sampleTime * MatrixXd::Identity(_Nq, _Nq),
-			MatrixXd::Zero(_Nq, _Nq), MatrixXd::Identity(_Nq, _Nq);
-
-		return A;
-	}
-
-	Eigen::MatrixXd MPC_Controller::getStateSpaceB() const
-	{
-		using namespace Eigen;
-
-		MatrixXd B(_Nx, _Nu);
-		B << _sampleTime * _sampleTime / 2. * MatrixXd::Identity(_Nq, _Nq),
-			_sampleTime * MatrixXd::Identity(_Nq, _Nq);
-
-		return B;
+		_QP.zMin(_Nt) = getXMin() - w(_Nt);
+		_QP.zMax(_Nt) = getXMax() - w(_Nt);
 	}
 
 	MPC_Controller::VectorMap MPC_Controller::w(unsigned i)
@@ -149,7 +93,7 @@ namespace mpmc
 	}
 
 	void MPC_Controller::InitWorkingPoint( const Eigen::VectorXd& x0 )
-{
+	{
 		using namespace Eigen;
 
 		// u0 = 0;
@@ -165,25 +109,32 @@ namespace mpmc
 		UpdateQP();
 	}
 
-	MPC_Controller::RowMajorMatrixMap MPC_Controller::G(unsigned i)
-	{
-		assert(i < _Nt);
-		return RowMajorMatrixMap(_G.data() + i * _Ny * _Nz, _Ny, _Nz);
-	}
-
 	void MPC_Controller::Solve()
 	{
-		const auto x_washout = getWashoutState();
+		using Eigen::MatrixXd;
+		using Eigen::VectorXd;
 
-		// Add washout factors.
+		MatrixXd H_i(nZ(), nZ());
+		VectorXd g_i(nZ());
+
+		// Hessians and gradients of Lagrange terms.
 		for (unsigned i = 0; i < _Nt; ++i)
 		{
-			// Linear term corresponding to washout (penalty for final state deviating from the default position).
-			_QP.g(i).topRows(_Nx) += _washoutFactor * (w(i).topRows(_Nx) - x_washout);
+			LagrangeTerm(w(i), i, H_i, g_i);
+
+			// Adding Levenberg-Marquardt term to make H positive-definite.
+			_QP.H(i) = H_i + _levenbergMarquardt * MatrixXd::Identity(_Nz, _Nz);
+			_QP.g(i) = g_i;
 		}
 
-		// Linear term corresponding to washout (penalty for final state deviating from the default position).
-		_QP.g(_Nt) = _washoutFactor * (w(_Nt).topRows(_Nx) - x_washout);
+		// Hessian and gradient of Mayer term.
+		MatrixXd H_T(nX(), nX());
+		VectorXd g_T(nX());
+		MayerTerm(w(_Nt), H_T, g_T);
+
+		// Adding Levenberg-Marquardt term to make H positive-definite.
+		_QP.H(_Nt) = H_T + _levenbergMarquardt * MatrixXd::Identity(_Nx, _Nx);
+		_QP.g(_Nt) = g_T;
 
 		/** solve QP */
 		_Solver.Solve(_QP);
@@ -211,46 +162,6 @@ namespace mpmc
 		std::copy_n(_w.data() + i * _Nz + _Nx, _Nu, pu);
 	}
 
-	MPC_Controller::RowMajorMatrixMap MPC_Controller::W(unsigned i)
-	{
-		assert(i < _Nt);
-		return RowMajorMatrixMap(_W.data() + i * _Ny * _Ny, _Ny, _Ny);
-	}
-
-	void MPC_Controller::Integrate(const double * px, const double * pu, double * px_next, double * pA, double * pB) const
-	{
-		using namespace Eigen;
-
-		Map<const VectorXd> x(px, _Nx);
-		Map<const VectorXd> u(pu, _Nu);
-		Map<VectorXd> x_next(px_next, _Nx);
-		RowMajorMatrixMap A(pA, _Nx, _Nx);
-		RowMajorMatrixMap B(pB, _Nx, _Nu);
-
-		A = getStateSpaceA();
-		B = getStateSpaceB();
-
-		x_next = A * x + B * u;
-	}
-
-	void MPC_Controller::SetReference(unsigned i, const Eigen::VectorXd& y_ref)
-	{
-		// g = 2 * (y_bar - y_hat)^T * W * G
-		_QP.g(i) = (_y.col(i) - y_ref.col(i)).transpose() * W(i) * G(i);
-	}
-
-	void MPC_Controller::SetReference(const double * py_ref)
-	{
-		// Update g
-		Eigen::Map<const Eigen::MatrixXd> y_ref(py_ref, _Ny, _Nt);
-
-		for (unsigned i = 0; i < _Nt; ++i)
-		{
-			// g = 2 * (y_bar - y_hat)^T * W * G
-			_QP.g(i) = (_y.col(i) - y_ref.col(i)).transpose() * W(i) * G(i);
-		}
-	}
-
 	void MPC_Controller::EmbedInitialValue(const double * px0)
 	{
 		/** embed current initial value */
@@ -259,26 +170,17 @@ namespace mpmc
 		_QP.xMax(0) = x0 - w(0).topRows(_Nx);
 	}
 
-	Eigen::VectorXd MPC_Controller::getWashoutState() const
-	{
-		// The "washout" state.
-		Eigen::VectorXd x_washout(_Nx);
-		x_washout << _washoutPosition, Eigen::VectorXd::Zero(_Nq);
-
-		return x_washout;
-	}
-
 	double MPC_Controller::getSampleTime() const
 	{
 		return _sampleTime;
 	}
 
-	unsigned MPC_Controller::getInputDim() const
+	unsigned MPC_Controller::nU() const
 	{
 		return _Nu;
 	}
 
-	unsigned MPC_Controller::getStateDim() const
+	unsigned MPC_Controller::nX() const
 	{
 		return _Nx;
 	}

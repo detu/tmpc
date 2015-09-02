@@ -1,4 +1,4 @@
-#include <MPC_Controller.hpp>
+#include <MotionPlatformModelPredictiveController.hpp>
 #include <MotionPlatformX.hpp>
 #include <CyberMotion.hpp>
 
@@ -20,10 +20,10 @@ TEST(mpc_test, mpc_test_case)
 	const double freq = 1.0;
 	std::ofstream out("out.txt");
 
-	mpmc::MPC_Controller controller(platform, Ts, Nt);
+	mpmc::MotionPlatformModelPredictiveController controller(platform, Ts, Nt);
 	controller.setWashoutFactor(0.1);
 
-	Eigen::VectorXd x0(controller.getStateDim());
+	Eigen::VectorXd x0(controller.nX());
 	x0.fill(0.);
 	platform->getDefaultAxesPosition(x0.data());
 	controller.InitWorkingPoint(x0);
@@ -45,7 +45,7 @@ TEST(mpc_test, mpc_test_case)
 			y_ref(2, k) = -g;
 		}
 
-		controller.SetReference(y_ref.data());
+		controller.setReference(y_ref);
 		controller.EmbedInitialValue(x0.data());
 		//controller.PrintQP(std::cout);
 

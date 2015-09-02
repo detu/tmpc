@@ -23,6 +23,7 @@ set(HDR
 	${RTMC_INCLUDE_DIR}/MotionPlatformX.hpp
 	${RTMC_INCLUDE_DIR}/CyberMotion.hpp
 	${RTMC_INCLUDE_DIR}/MPC_Controller.hpp
+	${RTMC_INCLUDE_DIR}/MotionPlatformModelPredictiveController.hpp
 	${RTMC_INCLUDE_DIR}/MultiStageQP.hpp
 	${RTMC_INCLUDE_DIR}/QuadraticProgram.hpp
 	${RTMC_INCLUDE_DIR}/CondensingSolver.hpp
@@ -32,6 +33,7 @@ set (SRC
 	MotionPlatformX.cpp
 	CyberMotion.cpp
 	MPC_Controller.cpp
+	MotionPlatformModelPredictiveController.cpp
 	CMS_output_jacobian.cpp
 	MultiStageQP.cpp
 	CondensingSolver.cpp
