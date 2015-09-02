@@ -104,7 +104,7 @@ namespace mpmc
 	}
 
 	void MotionPlatformModelPredictiveController::getStateSpaceA( Eigen::MatrixXd& A ) const
-{
+	{
 		using namespace Eigen;
 
 		A << MatrixXd::Identity(_Nq, _Nq), getSampleTime() * MatrixXd::Identity(_Nq, _Nq),
@@ -112,10 +112,15 @@ namespace mpmc
 	}
 
 	void MotionPlatformModelPredictiveController::getStateSpaceB( Eigen::MatrixXd& B ) const
-{
+	{
 		using namespace Eigen;
 
 		B << std::pow(getSampleTime(), 2) / 2. * MatrixXd::Identity(_Nq, _Nq),
 			getSampleTime() * MatrixXd::Identity(_Nq, _Nq);
+	}
+
+	unsigned MotionPlatformModelPredictiveController::nY() const
+	{
+		return _Ny;
 	}
 }

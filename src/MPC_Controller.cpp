@@ -7,7 +7,7 @@ namespace camels
 	MPC_Controller::MPC_Controller(unsigned state_dim, unsigned input_dim, double sample_time, unsigned Nt) 
 		: _QP(state_dim, input_dim, Nt)
 		, _Solver(state_dim, input_dim, Nt)
-		, _levenbergMarquardt(0.01)
+		, _levenbergMarquardt(0.0)
 		, _sampleTime(sample_time)
 		, _xMin(state_dim)
 		, _xMax(state_dim)

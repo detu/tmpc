@@ -10,6 +10,8 @@ namespace mpmc
 	public:
 		MotionPlatformModelPredictiveController(const std::shared_ptr<MotionPlatform>& platform, double sample_time, unsigned Nt);
 
+		unsigned nY() const;
+
 		const Eigen::VectorXd& getWashoutPosition() const { return _washoutPosition; }
 		void setWashoutPosition(const Eigen::VectorXd& val) { _washoutPosition = val; }
 
