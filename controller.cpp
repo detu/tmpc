@@ -95,6 +95,16 @@ mpmc::MotionPlatformModelPredictiveController * getController(SimStruct * S)
 	return reinterpret_cast<mpmc::MotionPlatformModelPredictiveController *>(ssGetPWorkValue(S, 0));
 }
 
+void setWorkingPointInitialized(SimStruct * S, bool val)
+{
+	ssSetIWorkValue(S, 0, val ? 1 : 0);
+}
+
+bool getWorkingPointInitialized(SimStruct * S)
+{
+	return ssGetIWorkValue(S, 0) != 0;
+}
+
 void setController(SimStruct * S, mpmc::MotionPlatformModelPredictiveController * c)
 {
 	ssSetPWorkValue(S, 0, c);
@@ -155,7 +165,7 @@ static void mdlInitializeSizes(SimStruct *S)
     ssSetOutputPortComplexSignal(S, 0, OUTPUT_0_COMPLEX);
     ssSetNumSampleTimes(S, 1);
     ssSetNumRWork(S, 0);
-    ssSetNumIWork(S, 0);
+    ssSetNumIWork(S, 1);	// Reserve 1 IWork for the "Working Point Initialized" flag.
     
     // One PWork vector for storing a pointer to MPC_Controller.
     ssSetNumPWork(S, 1);
@@ -192,33 +202,9 @@ static void mdlInitializeSampleTimes(SimStruct *S)
  static void mdlInitializeConditions(SimStruct *S)
  {
 	 /*
-	 Initialize at current position, 0 velocity, 0 input.
+	 Reset the "Working Point Initialized" flag.
 	 */
-
-	 log_stream.open("controller.log");
-	 log_stream << "mdlInitializeConditions()" << std::endl;
-
-	 try
-	 {
-		 auto const controller = getController(S);
-
-		 Eigen::VectorXd x0(controller->nX());
-		 x0.fill(0.);
-		 platform->getDefaultAxesPosition(x0.data());
-
-		 std::ostringstream msg;
-		 msg << "mdlInitializeConditions(): initializing MPC controller at working point " << x0.transpose() << std::endl;
-		 mexPrintf(msg.str().c_str());
-
-		 controller->InitWorkingPoint(x0);
-		 controller->PrintQP_MATLAB(log_stream);
-		 log_stream << std::flush;
-	 }	 
-	 catch (const std::runtime_error& e)
-	 {
-		 error_status = e.what();
-		 ssSetErrorStatus(S, error_status.c_str());
-	 }
+	setWorkingPointInitialized(S, false);
  }
 
 #define MDL_START  /* Change to #undef to remove function */
@@ -247,7 +233,6 @@ static void mdlStart(SimStruct *S)
 
 	auto controller = std::make_unique<mpmc::MotionPlatformModelPredictiveController>(platform, SAMPLE_TIME_0, static_cast<unsigned>(n_intervals));
 	controller->setLevenbergMarquardt(0.01);
-    controller->setWashoutFactor(5);
     
     // Set motion limits from block parameters.
     const auto n_axes = platform->getNumberOfAxes();
@@ -320,7 +305,7 @@ static void mdlStart(SimStruct *S)
 		<< "washoutFactor =\t" << controller->getWashoutFactor() << std::endl
 		<< "nIntervals =\t" << controller->getNumberOfIntervals() << std::endl;
     
-    mexPrintf(os.str().c_str());
+    ssPrintf(os.str().c_str());
 
 	setController(S, controller.release());
 }
@@ -351,9 +336,8 @@ static void mdlOutputs(SimStruct *S, int_T tid)
 {
 	using namespace Eigen;
 
-	log_stream << "mdlOutputs()" << std::endl;
-
 	const real_T * px = (const real_T*)ssGetInputPortSignal(S, 1);
+	Map<const VectorXd> x(px, ssGetCurrentInputPortWidth(S, 1));
 	real_T * pu = (real_T *)ssGetOutputPortRealSignal(S, 0);
 
 	Map<const VectorXd> y0_ref((const real_T*)ssGetInputPortSignal(S, 0), ssGetCurrentInputPortWidth(S, 0));
@@ -361,6 +345,17 @@ static void mdlOutputs(SimStruct *S, int_T tid)
 	//Map<VectorXd> u((real_T *)ssGetOutputPortRealSignal(S, 0), ssGetCurrentOutputPortWidth(S, 0));
 
 	auto * controller = getController(S);
+
+	// Initialize working point if needed.
+	if (!getWorkingPointInitialized(S))
+	{
+		controller->InitWorkingPoint(x);
+		setWorkingPointInitialized(S, true);
+
+		std::ostringstream os;
+		os << "mdlOutputs(): MPC controller working point initialized to " << x.transpose() << std::endl;
+		ssPrintf(os.str().c_str());
+	}
 
 	// Initialize new reference.
 	// Assume constant reference output for all prediction horizon.

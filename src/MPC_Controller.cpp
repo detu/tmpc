@@ -2,7 +2,7 @@
 
 #include <stdexcept>
 
-namespace mpmc
+namespace camels
 {
 	MPC_Controller::MPC_Controller(unsigned state_dim, unsigned input_dim, double sample_time, unsigned Nt) 
 		: _QP(state_dim, input_dim, Nt)

@@ -3,7 +3,7 @@
 namespace mpmc
 {
 	MotionPlatformModelPredictiveController::MotionPlatformModelPredictiveController(const std::shared_ptr<MotionPlatform>& platform, double sample_time, unsigned Nt) :
-		MPC_Controller(platform->getStateDim(), platform->getInputDim(), sample_time, Nt),
+		camels::MPC_Controller(platform->getStateDim(), platform->getInputDim(), sample_time, Nt),
 		_platform(platform),
 		_Nq(platform->getNumberOfAxes()),
 		_Ny(platform->getOutputDim()),
@@ -13,7 +13,6 @@ namespace mpmc
 	{
 		// Allocate arrays.
 		_W.resize(_Ny * _Ny * Nt);
-		_G.resize(_Ny * nZ() * Nt);
 
 		// Initialize limits.
 		Eigen::VectorXd x_min(nX()), x_max(nX()), u_min(nU()), u_max(nU());
@@ -71,12 +70,6 @@ namespace mpmc
 		g = _washoutFactor * (x - getWashoutState());
 	}
 
-	MPC_Controller::RowMajorMatrixMap MotionPlatformModelPredictiveController::G(unsigned i)
-	{
-		assert(i < getNumberOfIntervals());
-		return RowMajorMatrixMap(_G.data() + i * _Ny * nZ(), _Ny, nZ());
-	}
-
 	void MotionPlatformModelPredictiveController::setReference(unsigned i, const Eigen::VectorXd& y_ref)
 	{
 		_yRef.col(i) = y_ref;
@@ -96,7 +89,7 @@ namespace mpmc
 		return x_washout;
 	}
 
-	MPC_Controller::RowMajorMatrixMap MotionPlatformModelPredictiveController::W(unsigned i)
+	camels::MPC_Controller::RowMajorMatrixMap MotionPlatformModelPredictiveController::W(unsigned i)
 	{
 		assert(i < getNumberOfIntervals());
 		return RowMajorMatrixMap(_W.data() + i * _Ny * _Ny, _Ny, _Ny);

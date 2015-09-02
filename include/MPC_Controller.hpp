@@ -9,7 +9,7 @@
 #include <memory>
 #include <ostream>
 
-namespace mpmc
+namespace camels
 {
 	class MPC_Controller
 	{
