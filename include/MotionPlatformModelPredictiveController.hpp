@@ -12,6 +12,9 @@ namespace mpmc
 
 		unsigned nY() const;
 
+		const Eigen::VectorXd& getErrorWeight() const;
+		void setErrorWeight(const Eigen::VectorXd& val);
+
 		const Eigen::VectorXd& getWashoutPosition() const { return _washoutPosition; }
 		void setWashoutPosition(const Eigen::VectorXd& val) { _washoutPosition = val; }
 
@@ -20,8 +23,6 @@ namespace mpmc
 
 		void setReference(const Eigen::MatrixXd& py_ref);
 		void setReference(unsigned i, const Eigen::VectorXd& py_ref);
-
-		RowMajorMatrixMap W(unsigned i);
 
 	protected:
 		void LagrangeTerm(const Eigen::MatrixXd& z, unsigned i, Eigen::MatrixXd& H, Eigen::VectorXd& g) override;
@@ -33,15 +34,14 @@ namespace mpmc
 		const unsigned _Nq;
 		const unsigned _Ny;
 
-		// Output weighting matrix
-		// _W stores _Nt matrices of size _Ny x _Ny
-		std::vector<double> _W;
-
 		// Reference trajectory.
 		// _yRef stores _Nt vectors of size _Ny.
 		// Important: _yRef is column-major.
 		Eigen::MatrixXd _yRef;
 
+		// Tracking error weights for all components of output.
+		Eigen::VectorXd _errorWeight;
+		
 		// Washout position.
 		Eigen::VectorXd _washoutPosition;
 

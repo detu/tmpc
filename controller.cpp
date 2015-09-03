@@ -53,7 +53,7 @@
 #define OUT_0_BIAS            0
 #define OUT_0_SLOPE           0.125
 
-#define NPARAMS              9
+#define NPARAMS              10
 
 #define SAMPLE_TIME_0        0.012
 #define NUM_DISC_STATES      0
@@ -285,14 +285,10 @@ static void mdlStart(SimStruct *S)
 	controller->setWashoutFactor(mxGetScalar(mx_washoutFactor));
 
 	// Initialize weighting matrices.
-	const unsigned Nc = static_cast<unsigned>(n_intervals);	// number of control intervals
-	for (unsigned i = 0; i < controller->getNumberOfIntervals(); ++i)
-	{
-		if (i < Nc)
-			controller->W(i) = OutputWeightingMatrix();
-		else
-			controller->W(i).setZero();
-	}
+	const mxArray * mx_errorWeight = ssGetSFcnParam(S, 9);
+	if (mxGetNumberOfElements(mx_errorWeight) != controller->nY())
+		throw std::runtime_error("Invalid number of elements for parameter errorWeight");
+	controller->setErrorWeight(Map<VectorXd>(mxGetPr(mx_errorWeight), mxGetNumberOfElements(mx_errorWeight)));
     
     std::ostringstream os;
 	os << "Controller limits set to:" << std::endl
@@ -303,7 +299,8 @@ static void mdlStart(SimStruct *S)
 		<< "Washout position:" << std::endl
 		<< "washoutPos =\t" << controller->getWashoutPosition().transpose() << std::endl
 		<< "washoutFactor =\t" << controller->getWashoutFactor() << std::endl
-		<< "nIntervals =\t" << controller->getNumberOfIntervals() << std::endl;
+		<< "nIntervals =\t" << controller->getNumberOfIntervals() << std::endl
+		<< "errorWeight =\t" << controller->getErrorWeight().transpose() << std::endl;
     
     ssPrintf(os.str().c_str());
 

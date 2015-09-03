@@ -9,11 +9,9 @@ namespace mpmc
 		_Ny(platform->getOutputDim()),
 		_yRef(platform->getOutputDim(), Nt),
 		_washoutPosition(platform->getNumberOfAxes()),
-		_washoutFactor(0.)
+		_washoutFactor(0.),
+		_errorWeight(platform->getOutputDim())
 	{
-		// Allocate arrays.
-		_W.resize(_Ny * _Ny * Nt);
-
 		// Initialize limits.
 		Eigen::VectorXd x_min(nX()), x_max(nX()), u_min(nU()), u_max(nU());
 		platform->getAxesLimits(x_min.data(), x_max.data(), x_min.data() + _Nq, x_max.data() + _Nq, u_min.data(), u_max.data());
@@ -23,9 +21,8 @@ namespace mpmc
 		setUMin(u_min);
 		setUMax(u_max);
 
-		// Initialize weight matrices
-		for (unsigned i = 0; i < Nt; ++i)
-			W(i).setIdentity();
+		// Initialize weights
+		_errorWeight.fill(1.);
 
 		// Initialize washout position.
 		platform->getDefaultAxesPosition(_washoutPosition.data());
@@ -46,17 +43,23 @@ namespace mpmc
 		MatrixXd G(_Ny, nX() + nU());
 		G << ssC, ssD;
 
-		// H = G^T W G + \mu I
-		H = G.transpose() * W(i) * G;
+		const auto W = _errorWeight.cwiseAbs2().asDiagonal();
 
+		// H = G^T W G + \mu I
+		H = G.transpose() * W * G;
+
+		/*
 		// Quadratic term corresponding to washout (penalty for final state deviating from the default position).
 		H.topLeftCorner(nX(), nX()) += _washoutFactor * MatrixXd::Identity(nX(), nX());
+		*/
 
 		// g = 2 * (y_bar - y_hat)^T * W * G
-		g = (y - _yRef.col(i)).transpose() * W(i) * G;
+		g = (y - _yRef.col(i)).transpose() * W * G;
 
+		/*
 		// Linear term corresponding to washout (penalty for final state deviating from the default position).
 		g.topRows(nX()) += _washoutFactor * (z.topRows(nX()) - getWashoutState());
+		*/
 	}
 
 	void MotionPlatformModelPredictiveController::MayerTerm(const Eigen::VectorXd& x, Eigen::MatrixXd& H, Eigen::VectorXd& g)
@@ -64,10 +67,10 @@ namespace mpmc
 		using namespace Eigen;
 
 		// Quadratic term corresponding to washout (penalty for final state deviating from the default position).
-		H = _washoutFactor * MatrixXd::Identity(nX(), nX());
+		H = _washoutFactor * MatrixXd::Identity(nX(), nX()) * getNumberOfIntervals();
 
 		// Linear term corresponding to washout (penalty for final state deviating from the default position).
-		g = _washoutFactor * (x - getWashoutState());
+		g = _washoutFactor * (x - getWashoutState()) * getNumberOfIntervals();
 	}
 
 	void MotionPlatformModelPredictiveController::setReference(unsigned i, const Eigen::VectorXd& y_ref)
@@ -87,12 +90,6 @@ namespace mpmc
 		x_washout << _washoutPosition, Eigen::VectorXd::Zero(_Nq);
 
 		return x_washout;
-	}
-
-	camels::MPC_Controller::RowMajorMatrixMap MotionPlatformModelPredictiveController::W(unsigned i)
-	{
-		assert(i < getNumberOfIntervals());
-		return RowMajorMatrixMap(_W.data() + i * _Ny * _Ny, _Ny, _Ny);
 	}
 
 	void MotionPlatformModelPredictiveController::Integrate(const Eigen::VectorXd& x, const Eigen::VectorXd& u, Eigen::VectorXd& x_next, Eigen::MatrixXd& A, Eigen::MatrixXd& B) const
@@ -123,4 +120,15 @@ namespace mpmc
 	{
 		return _Ny;
 	}
+
+	void MotionPlatformModelPredictiveController::setErrorWeight(const Eigen::VectorXd& val)
+	{
+		_errorWeight = val;
+	}
+
+	const Eigen::VectorXd& MotionPlatformModelPredictiveController::getErrorWeight() const
+	{
+		return _errorWeight;
+	}
+
 }
