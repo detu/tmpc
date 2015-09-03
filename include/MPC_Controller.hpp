@@ -47,16 +47,22 @@ namespace camels
 		unsigned nZ() const { return _Nz; }
 
 		const Eigen::VectorXd& getXMin() const { return _xMin; }
-		void setXMin(const Eigen::VectorXd& val) { _xMin = val; }
+		void setXMin(const Eigen::VectorXd& val);
 
 		const Eigen::VectorXd& getXMax() const { return _xMax; }
-		void setXMax(const Eigen::VectorXd& val) { _xMax = val; }
+		void setXMax(const Eigen::VectorXd& val);
+
+		const Eigen::VectorXd& getTerminalXMin() const { return _terminalXMin; }
+		void setTerminalXMin(const Eigen::VectorXd& val);
+
+		const Eigen::VectorXd& getTerminalXMax() const { return _terminalXMax; }
+		void setTerminalXMax(const Eigen::VectorXd& val);
 
 		const Eigen::VectorXd& getUMin() const { return _uMin; }
-		void setUMin(const Eigen::VectorXd& val) { _uMin = val; }
+		void setUMin(const Eigen::VectorXd& val);
 
 		const Eigen::VectorXd& getUMax() const { return _uMax; }
-		void setUMax(const Eigen::VectorXd& val) { _uMax = val; }
+		void setUMax(const Eigen::VectorXd& val);
 
 	protected:
 		virtual void LagrangeTerm(const Eigen::MatrixXd& z, unsigned i, Eigen::MatrixXd& H, Eigen::VectorXd& g) = 0;
@@ -95,6 +101,12 @@ namespace camels
 		
 		// Upper state limit.
 		Eigen::VectorXd _xMax;
+
+		// Lower terminal state limit.
+		Eigen::VectorXd _terminalXMin;
+
+		// Upper terminal state limit.
+		Eigen::VectorXd _terminalXMax;
 		
 		// Lower input limit
 		Eigen::VectorXd _uMin;

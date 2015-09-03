@@ -16,7 +16,7 @@ namespace mpmc
 		void setErrorWeight(const Eigen::VectorXd& val);
 
 		const Eigen::VectorXd& getWashoutPosition() const { return _washoutPosition; }
-		void setWashoutPosition(const Eigen::VectorXd& val) { _washoutPosition = val; }
+		void setWashoutPosition(const Eigen::VectorXd& val);
 
 		double getWashoutFactor() const { return _washoutFactor; }
 		void setWashoutFactor(double val) { _washoutFactor = val; }

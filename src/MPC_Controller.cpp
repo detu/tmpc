@@ -13,6 +13,8 @@ namespace camels
 		, _xMax(state_dim)
 		, _uMin(input_dim)
 		, _uMax(input_dim)
+		, _terminalXMin(state_dim)
+		, _terminalXMax(state_dim)
 	{
 		// Get sizes.
 		_Nu = input_dim;
@@ -29,6 +31,8 @@ namespace camels
 		_xMax.fill( std::numeric_limits<double>::infinity());
 		_uMin.fill(-std::numeric_limits<double>::infinity());
 		_uMax.fill( std::numeric_limits<double>::infinity());
+		_terminalXMin.fill(-std::numeric_limits<double>::infinity());
+		_terminalXMax.fill( std::numeric_limits<double>::infinity());
 	}
 
 	MPC_Controller::~MPC_Controller()
@@ -82,8 +86,8 @@ namespace camels
 			_QP.zMax(i) = z_max - w(i);
 		}
 
-		_QP.zMin(_Nt) = getXMin() - w(_Nt);
-		_QP.zMax(_Nt) = getXMax() - w(_Nt);
+		_QP.zMin(_Nt) = getTerminalXMin() - w(_Nt);
+		_QP.zMax(_Nt) = getTerminalXMax() - w(_Nt);
 	}
 
 	MPC_Controller::VectorMap MPC_Controller::w(unsigned i)
@@ -184,4 +188,53 @@ namespace camels
 	{
 		return _Nx;
 	}
+
+	void MPC_Controller::setXMin(const Eigen::VectorXd& val)
+	{
+		if (val.size() != nX())
+			throw std::invalid_argument("MPC_Controller::setXMin(): val has a wrong size");
+
+		_xMin = val;
+	}
+
+	void MPC_Controller::setXMax(const Eigen::VectorXd& val)
+	{
+		if (val.size() != nX())
+			throw std::invalid_argument("MPC_Controller::setXMax(): val has a wrong size");
+
+		_xMax = val;
+	}
+
+	void MPC_Controller::setTerminalXMin(const Eigen::VectorXd& val)
+	{
+		if (val.size() != nX())
+			throw std::invalid_argument("MPC_Controller::setTerminalXMin(): val has a wrong size");
+
+		_terminalXMin = val;
+	}
+
+	void MPC_Controller::setTerminalXMax(const Eigen::VectorXd& val)
+	{
+		if (val.size() != nX())
+			throw std::invalid_argument("MPC_Controller::setTerminalXMax(): val has a wrong size");
+
+		_terminalXMax = val;
+	}
+
+	void MPC_Controller::setUMin(const Eigen::VectorXd& val)
+	{
+		if (val.size() != nU())
+			throw std::invalid_argument("MPC_Controller::setUMin(): val has a wrong size");
+
+		_uMin = val;
+	}
+
+	void MPC_Controller::setUMax(const Eigen::VectorXd& val)
+	{
+		if (val.size() != nU())
+			throw std::invalid_argument("MPC_Controller::setUMax(): val has a wrong size");
+
+		_uMax = val;
+	}
+
 }

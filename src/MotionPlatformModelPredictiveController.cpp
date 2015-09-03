@@ -80,6 +80,9 @@ namespace mpmc
 
 	void MotionPlatformModelPredictiveController::setReference(const Eigen::MatrixXd& y_ref)
 	{
+		if (!(y_ref.rows() == nY() && y_ref.cols() == getNumberOfIntervals()))
+			throw std::invalid_argument("MotionPlatformModelPredictiveController::setReference(): y_ref has wrong size.");
+
 		_yRef = y_ref;
 	}
 
@@ -123,12 +126,23 @@ namespace mpmc
 
 	void MotionPlatformModelPredictiveController::setErrorWeight(const Eigen::VectorXd& val)
 	{
+		if (val.size() != nY())
+			throw std::invalid_argument("MotionPlatformModelPredictiveController::setErrorWeight(): val has invalid size.");
+
 		_errorWeight = val;
 	}
 
 	const Eigen::VectorXd& MotionPlatformModelPredictiveController::getErrorWeight() const
 	{
 		return _errorWeight;
+	}
+
+	void MotionPlatformModelPredictiveController::setWashoutPosition(const Eigen::VectorXd& val)
+	{
+		if (val.size() != _Nq)
+			throw std::invalid_argument("MotionPlatformModelPredictiveController::setWashoutPosition(): val has invalid size.");
+
+		_washoutPosition = val;
 	}
 
 }

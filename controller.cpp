@@ -53,7 +53,7 @@
 #define OUT_0_BIAS            0
 #define OUT_0_SLOPE           0.125
 
-#define NPARAMS              10
+#define NPARAMS              11
 
 #define SAMPLE_TIME_0        0.012
 #define NUM_DISC_STATES      0
@@ -289,11 +289,33 @@ static void mdlStart(SimStruct *S)
 	if (mxGetNumberOfElements(mx_errorWeight) != controller->nY())
 		throw std::runtime_error("Invalid number of elements for parameter errorWeight");
 	controller->setErrorWeight(Map<VectorXd>(mxGetPr(mx_errorWeight), mxGetNumberOfElements(mx_errorWeight)));
-    
+
+	// Initialize terminal state bounds.
+	const mxArray * mx_finalVelocityZero = ssGetSFcnParam(S, 10);
+	if (mxGetNumberOfElements(mx_finalVelocityZero) != 1)
+		throw std::runtime_error("finalVelocityZero must be a scalar");
+
+	if (mxGetScalar(mx_finalVelocityZero) != 0.)
+	{
+		VectorXd term_x_min = x_min, term_x_max = x_max;
+		term_x_min.bottomRows(n_axes).fill(0.);
+		term_x_max.bottomRows(n_axes).fill(0.);
+
+		controller->setTerminalXMin(term_x_min);
+		controller->setTerminalXMax(term_x_max);
+	}
+	else
+	{
+		controller->setTerminalXMin(x_min);
+		controller->setTerminalXMax(x_max);
+	}
+	    
     std::ostringstream os;
 	os << "Controller limits set to:" << std::endl
 		<< "xMin =\t" << controller->getXMin().transpose() << std::endl
 		<< "xMax =\t" << controller->getXMax().transpose() << std::endl
+		<< "terminalXMin =\t" << controller->getTerminalXMin().transpose() << std::endl
+		<< "terminalXMax =\t" << controller->getTerminalXMax().transpose() << std::endl
 		<< "uMin =\t" << controller->getUMin().transpose() << std::endl
 		<< "uMax =\t" << controller->getUMax().transpose() << std::endl
 		<< "Washout position:" << std::endl
