@@ -10,6 +10,22 @@
 
 namespace camels
 {
+	/* MultiStageQP represents a problem
+	*
+	*	min  sum_{ k = 0..nI } z_k'*H_k*z_k + g_k'*z_k
+	*	s.t. x_{ k + 1 } = C_k * z_k + c_k				for k = 0..nI - 1
+	*            dLow_k <= D_k * z_k <= dUpp_k			for k = 0..nI
+	*            zMin_k <= z_k <= zMax_k                for k = 0..nI
+	*
+	*	where x_k is implicitly defined by z_k = [x_k  u_k] as the first nX variables of z_k
+	*
+	*	It holds
+	*	z_k  \in R^nZ  for k = 0..nI - 1
+	*   z_nI \in R*nX
+	*
+	*	nX < nZ
+	*	nU = nZ - nX
+	*/
 	class MultiStageQP
 	{
 	public:
@@ -21,7 +37,7 @@ namespace camels
 		typedef Eigen::Map<RowMajorMatrix> RowMajorMatrixMap;
 		typedef Eigen::Map<const RowMajorMatrix> RowMajorMatrixConstMap;
 
-		MultiStageQP(size_type nx, size_type nu, size_type nt);
+		MultiStageQP(size_type nx, size_type nu, size_type nd, size_type ndt, size_type nt);
 		~MultiStageQP();
 
 		void PrintQP_C(std::ostream& os) const;
@@ -35,6 +51,8 @@ namespace camels
 		size_type nX() const { return _Nx; }
 		size_type nZ() const { return _Nz; }
 		size_type nU() const { return _Nu; }
+		size_type nD() const { return _Nd; }
+		size_type nDT() const { return _NdT; }
 		size_type nIndep() const { return _Nx + _Nu * _Nt; }
 		size_type nDep() const { return _Nx * _Nt; }
 		size_type nVar() const { return _Nz * _Nt + _Nx; }
@@ -48,9 +66,15 @@ namespace camels
 		RowMajorMatrixMap C(unsigned i);
 		RowMajorMatrixConstMap C(unsigned i) const;
 
-// 		RowMajorMatrixMap A(size_type i);
-// 		RowMajorMatrixConstMap A(size_type i) const;
-		
+		RowMajorMatrixMap D(unsigned i);
+		RowMajorMatrixConstMap D(unsigned i) const;
+
+		VectorMap dMin(unsigned i);
+		VectorConstMap dMin(unsigned i) const;
+
+		VectorMap dMax(unsigned i);
+		VectorConstMap dMax(unsigned i) const;
+				
 		VectorMap c(unsigned i);
 		VectorConstMap c(unsigned i) const;
 		
@@ -73,13 +97,13 @@ namespace camels
 		VectorConstMap uMax(unsigned i) const;
 
 	private:
-		size_type _Nu;
-		size_type _Nx;
-		size_type _Nz;
-		size_type _Nt;
+		const size_type _Nu;
+		const size_type _Nx;
+		const size_type _Nz;
+		const size_type _Nt;
+		const size_type _Nd;
+		const size_type _NdT;
 
-		double _levenbergMarquardt;
-		
 		// _H stores _Nt row-major matrices of size _Nz x _Nz and 1 matrix of size _Nx x _Nx.
 		std::vector<double> _H;
 
@@ -91,6 +115,15 @@ namespace camels
 
 		// _c stores _Nt vectors of size _Nx
 		std::vector<double> _c;
+
+		// _D stores _Nt row-major matrices of size _Nd x _Nz and 1 row-major matrix of size _NdT x _Nx
+		std::vector<double> _D;
+
+		// _dMin stores _Nt vectors of size _Nd and 1 vector of size _NdT
+		std::vector<double> _dMin;
+
+		// _dMax stores _Nt vectors of size _Nd and 1 vector of size _NdT
+		std::vector<double> _dMax;
 
 		// _zMin stores _Nt vectors of size _Nz and 1 vector of size _Nx
 		std::vector<double> _zMin;

@@ -4,18 +4,22 @@
 
 namespace camels
 {
-	MultiStageQP::MultiStageQP(size_type nx, size_type nu, size_type nt)
-		: _levenbergMarquardt(0.01)
-		, _Nx(nx)
-		, _Nu(nu)
-		, _Nt(nt)
-		, _Nz(nx + nu)
+	MultiStageQP::MultiStageQP(size_type nx, size_type nu, size_type nd, size_type ndt, size_type nt) : 
+		_Nx(nx),
+		_Nu(nu),
+		_Nt(nt),
+		_Nz(nx + nu),
+		_Nd(nd),
+		_NdT(ndt)
 	{
 		// Allocate arrays.
 		_H.resize(_Nz * _Nz * _Nt + _Nx * _Nx);
 		_g.resize(_Nz * _Nt + _Nx);
 		_C.resize(_Nx * _Nz * _Nt);
 		_c.resize(_Nx * _Nt);
+		_D.resize(_Nd * _Nz * _Nt + _NdT * _Nx);
+		_dMin.resize(_Nd * _Nt + _NdT);
+		_dMax.resize(_Nd * _Nt + _NdT);
 		_zMin.resize(_Nz * _Nt + _Nx);
 		_zMax.resize(_Nz * _Nt + _Nx);
 		_zOpt.resize(_Nz * _Nt + _Nx);
@@ -29,69 +33,41 @@ namespace camels
 	{
 		using std::endl;
 
+		Eigen::IOFormat C_format(Eigen::StreamPrecision, 0, ", ", ",\n", "", "", "", "");
+
 		log_stream << "const double H[] = {" << endl;
-		for (unsigned i = 0; i < _H.size(); ++i)
-		{
-			log_stream << _H[i] << ",\t";
-
-			if (i < _Nz * _Nz * _Nt)
-			{
-				if ((i + 1) % _Nz == 0)
-					log_stream << endl;
-
-				if ((i + 1) % (_Nz * _Nz) == 0)
-					log_stream << endl;
-			}
-			else
-			{
-				if ((i - _Nz * _Nz * _Nt + 1) % _Nx == 0)
-					log_stream << endl;
-
-				if ((i - _Nz * _Nz * _Nt + 1) % (_Nx * _Nx) == 0)
-					log_stream << endl;
-			}
-		}
+		for (unsigned i = 0; i <= nT(); ++i)
+			log_stream << H(i).format(C_format) << "," << endl;
 		log_stream << "};" << endl << endl;
 
 		log_stream << "const double g[] = {" << endl;
-		for (unsigned i = 0; i < _g.size(); ++i)
-		{
-			log_stream << _g[i] << ",\t";
-
-			if (i < _Nz * _Nt)
-			{
-				if ((i + 1) % _Nz == 0)
-					log_stream << endl;
-			}
-			else
-			{
-				if ((i - _Nz * _Nt + 1) % _Nx == 0)
-					log_stream << endl;
-			}
-		}
+		for (unsigned i = 0; i <= nT(); ++i)
+			log_stream << g(i).transpose().format(C_format) << "," << endl;
 		log_stream << "};" << endl << endl;
 
 		log_stream << "const double C[] = {" << endl;
-		for (unsigned i = 0; i < _C.size(); ++i)
-		{
-			log_stream << _C[i] << ",\t";
-
-			if ((i + 1) % _Nz == 0)
-				log_stream << endl;
-
-			if ((i + 1) % (_Nz * _Nx) == 0)
-				log_stream << endl;
-		}
+		for (unsigned i = 0; i < nT(); ++i)
+			log_stream << C(i).format(C_format) << "," << endl;
 		log_stream << "};" << endl << endl;
 
 		log_stream << "const double c[] = {" << endl;
-		for (unsigned i = 0; i < _c.size(); ++i)
-		{
-			log_stream << _c[i] << ",\t";
+		for (unsigned i = 0; i < nT(); ++i)
+			log_stream << c(i).transpose().format(C_format) << "," << endl;
+		log_stream << "};" << endl << endl;
 
-			if ((i + 1) % _Nx == 0)
-				log_stream << endl;
-		}
+		log_stream << "const double D[] = {" << endl;
+		for (unsigned i = 0; i <= nT(); ++i)
+			log_stream << D(i).format(C_format) << "," << endl;
+		log_stream << "};" << endl << endl;
+
+		log_stream << "const double dMin[] = {" << endl;
+		for (unsigned i = 0; i <= nT(); ++i)
+			log_stream << dMin(i).transpose().format(C_format) << ",";
+		log_stream << "};" << endl << endl;
+
+		log_stream << "const double dMax[] = {" << endl;
+		for (unsigned i = 0; i <= nT(); ++i)
+			log_stream << dMax(i).transpose().format(C_format) << ",";
 		log_stream << "};" << endl << endl;
 
 		PrintQP_zMin_C(log_stream);
@@ -112,6 +88,10 @@ namespace camels
 				log_stream << "qp.C{" << k + 1 << "} = [..." << endl << C(k) << "];" << endl;
 				log_stream << "qp.c{" << k + 1 << "} = [..." << endl << c(k) << "];" << endl;
 			}
+
+			log_stream << "qp.D{" << k + 1 << "} = [..." << endl << D(k) << "];" << endl;
+			log_stream << "qp.dMin{" << k + 1 << "} = [..." << endl << dMin(k) << "];" << endl;
+			log_stream << "qp.dMax{" << k + 1 << "} = [..." << endl << dMax(k) << "];" << endl;
 
 			log_stream << "qp.zMin{" << k + 1 << "} = [..." << endl << zMin(k) << "];" << endl;
 			log_stream << "qp.zMax{" << k + 1 << "} = [..." << endl << zMax(k) << "];" << endl;
@@ -216,14 +196,11 @@ namespace camels
 	{
 		using std::endl;
 
-		log_stream << "const double zLow[] = {" << endl;
-		for (unsigned i = 0; i < _zMin.size(); ++i)
-		{
-			log_stream << _zMin[i] << ",\t";
+		Eigen::IOFormat C_format(Eigen::StreamPrecision, 0, ", ", ",\n", "", "", "", "");
 
-			if ((i + 1) % _Nz == 0)
-				log_stream << endl;
-		}
+		log_stream << "const double zLow[] = {" << endl;
+		for (unsigned i = 0; i <= nT(); ++i)
+			log_stream << zMin(i).transpose().format(C_format) << "," << endl;
 		log_stream << endl << "};" << endl << endl;
 	}
 
@@ -231,14 +208,11 @@ namespace camels
 	{
 		using std::endl;
 
-		log_stream << "const double zUpp[] = {" << endl;
-		for (unsigned i = 0; i < _zMax.size(); ++i)
-		{
-			log_stream << _zMax[i] << ",\t";
+		Eigen::IOFormat C_format(Eigen::StreamPrecision, 0, ", ", ",\n", "", "", "", "");
 
-			if ((i + 1) % _Nz == 0)
-				log_stream << endl;
-		}
+		log_stream << "const double zUpp[] = {" << endl;
+		for (unsigned i = 0; i <= nT(); ++i)
+			log_stream << zMax(i).transpose().format(C_format) << "," << endl;
 		log_stream << endl << "};" << endl << endl;
 	}
 
@@ -264,5 +238,41 @@ namespace camels
 	{
 		assert(i < _Nt);
 		return VectorConstMap(_zMax.data() + i * _Nz + _Nx, _Nu);
+	}
+
+	MultiStageQP::VectorMap MultiStageQP::dMin(unsigned i)
+	{
+		assert(i <= _Nt);
+		return VectorMap(_dMin.data() + i * _Nd, i < _Nt ? _Nd : _NdT);
+	}
+
+	MultiStageQP::VectorConstMap MultiStageQP::dMin(unsigned i) const
+	{
+		assert(i <= _Nt);
+		return VectorConstMap(_dMin.data() + i * _Nd, i < _Nt ? _Nd : _NdT);
+	}
+
+	MultiStageQP::VectorMap MultiStageQP::dMax(unsigned i)
+	{
+		assert(i <= _Nt);
+		return VectorMap(_dMax.data() + i * _Nd, i < _Nt ? _Nd : _NdT);
+	}
+
+	MultiStageQP::VectorConstMap MultiStageQP::dMax(unsigned i) const
+	{
+		assert(i <= _Nt);
+		return VectorConstMap(_dMax.data() + i * _Nd, i < _Nt ? _Nd : _NdT);
+	}
+
+	MultiStageQP::RowMajorMatrixMap MultiStageQP::D(unsigned i)
+	{
+		assert(i <= _Nt);
+		return RowMajorMatrixMap(_D.data() + i * _Nd * _Nz, i < _Nt ? _Nd : _NdT, i < _Nt ? _Nz : _Nx);
+	}
+
+	MultiStageQP::RowMajorMatrixConstMap MultiStageQP::D(unsigned i) const
+	{
+		assert(i <= _Nt);
+		return RowMajorMatrixConstMap(_D.data() + i * _Nd * _Nz, i < _Nt ? _Nd : _NdT, i < _Nt ? _Nz : _Nx);
 	}
 }

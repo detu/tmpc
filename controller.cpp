@@ -110,20 +110,6 @@ void setController(SimStruct * S, mpmc::MotionPlatformModelPredictiveController 
 	ssSetPWorkValue(S, 0, c);
 }
 
-Eigen::MatrixXd OutputWeightingMatrix()
-{
-	Eigen::MatrixXd w(6, 6);
-	w.fill(0.);
-	w.diagonal()[0] = 1;
-	w.diagonal()[1] = 1;
-	w.diagonal()[2] = 1;
-	w.diagonal()[3] = 10;
-	w.diagonal()[4] = 10;
-	w.diagonal()[5] = 10;
-
-	return w.transpose() * w;
-}
-
 /*====================*
  * S-function methods *
  *====================*/

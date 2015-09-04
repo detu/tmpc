@@ -8,7 +8,7 @@
 TEST(test_1, my_test_1)
 //int main(int, char **)
 {
-	camels::MultiStageQP qp(2, 1, 2);
+	camels::MultiStageQP qp(2, 1, 0, 0, 2);
 	qp.zMin(0).setConstant(-1);	qp.zMax(0).setConstant(1);
 	qp.zMin(1).setConstant(-1);	qp.zMax(1).setConstant(1);
 	qp.zMin(2).setConstant(-1);	qp.zMax(2).setConstant(1);
