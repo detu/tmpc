@@ -3,7 +3,7 @@
 namespace mpmc
 {
 	MotionPlatformModelPredictiveController::MotionPlatformModelPredictiveController(const std::shared_ptr<MotionPlatform>& platform, double sample_time, unsigned Nt) :
-		camels::MPC_Controller(platform->getStateDim(), platform->getInputDim(), sample_time, Nt),
+		camels::MPC_Controller(platform->getStateDim(), platform->getInputDim(), 2 * platform->getNumberOfAxes(), 2 * platform->getNumberOfAxes(), sample_time, Nt),
 		_platform(platform),
 		_Nq(platform->getNumberOfAxes()),
 		_Ny(platform->getOutputDim()),
@@ -16,7 +16,7 @@ namespace mpmc
 		Eigen::VectorXd x_min(nX()), x_max(nX()), u_min(nU()), u_max(nU());
 		platform->getAxesLimits(x_min.data(), x_max.data(), x_min.data() + _Nq, x_max.data() + _Nq, u_min.data(), u_max.data());
 
-		setXMin(x_min);
+		setXMin(x_min);	// TODO: remove boundary constraints for axes position; they must be handled by the non-linear SR-constraints.
 		setXMax(x_max);
 		setUMin(u_min);
 		setUMax(u_max);
@@ -145,4 +145,42 @@ namespace mpmc
 		_washoutPosition = val;
 	}
 
+	template<class Vector1, class Matrix, class Vector2>
+	void MotionPlatformModelPredictiveController::SRConstraints(const Eigen::MatrixBase<Vector1>& x, Eigen::MatrixBase<Matrix>& D, Eigen::MatrixBase<Vector2>& d_min, Eigen::MatrixBase<Vector2>& d_max)
+	{
+		using Eigen::VectorXd;
+		using Eigen::MatrixXd;
+
+		const auto q = x.topRows(_Nq);
+		const auto v = x.bottomRows(_Nq);
+		const VectorXd q_min = getXMin().topRows(_Nq);
+		const VectorXd q_max = getXMax().topRows(_Nq);
+
+		/*
+		Stoppability-reachability equations:
+		v^2 + 2 * (q_max - q) * a_min <= 0
+		v^2 + 2 * (q_min - q) * a_max <= 0
+
+		Linearization:
+		-inf <= 2 * (v * dv - a_min * dq) <= -v^2 - 2 * (q_max - q) * a_min
+		-v^2 - 2 * (q_min - q) * a_max <= 2 * (v * dv - a_min * dq) <= inf
+		*/
+		D << 2. * MatrixXd(q.asDiagonal()), -2. * MatrixXd(getUMin().asDiagonal()),
+			 2. * MatrixXd(q.asDiagonal()), -2. * MatrixXd(getUMax().asDiagonal());
+
+		const auto inf = VectorXd::Constant(_Nq, std::numeric_limits<double>::infinity());
+		d_min << -inf, -v.cwiseAbs2() - 2. * (q_max - q).cwiseProduct(getUMin());
+		d_max << -v.cwiseAbs2() - 2. * (q_min - q).cwiseProduct(getUMax()), inf;
+	}
+
+	void MotionPlatformModelPredictiveController::PathConstraints(unsigned i, const Eigen::VectorXd& x, const Eigen::VectorXd& u, Eigen::MatrixXd& D, Eigen::VectorXd& d_min, Eigen::VectorXd& d_max)
+	{
+		SRConstraints(x, D.leftCols(nX()), d_min, d_max);
+		D.rightCols(nU()).setConstant(0.);
+	}
+
+	void MotionPlatformModelPredictiveController::TerminalConstraints(const Eigen::VectorXd& x, Eigen::MatrixXd& D, Eigen::VectorXd& d_min, Eigen::VectorXd& d_max)
+	{
+		SRConstraints(x, D, d_min, d_max);
+	}
 }

@@ -4,24 +4,24 @@
 
 namespace camels
 {
-	MPC_Controller::MPC_Controller(unsigned state_dim, unsigned input_dim, double sample_time, unsigned Nt) 
-		: _QP(state_dim, input_dim, 0, 0, Nt)
-		, _Solver(state_dim, input_dim, Nt)
-		, _levenbergMarquardt(0.0)
-		, _sampleTime(sample_time)
-		, _xMin(state_dim)
-		, _xMax(state_dim)
-		, _uMin(input_dim)
-		, _uMax(input_dim)
-		, _terminalXMin(state_dim)
-		, _terminalXMax(state_dim)
+	MPC_Controller::MPC_Controller(unsigned state_dim, unsigned input_dim, unsigned n_path_constr, unsigned n_term_constr, double sample_time, unsigned Nt) : 
+		_QP(state_dim, input_dim, n_path_constr, n_term_constr, Nt),
+		_Solver(state_dim, input_dim, Nt),
+		_levenbergMarquardt(0.0),
+		_sampleTime(sample_time),
+		_xMin(state_dim),
+		_xMax(state_dim),
+		_uMin(input_dim),
+		_uMax(input_dim),
+		_terminalXMin(state_dim),
+		_terminalXMax(state_dim),
+		_Nu(input_dim),
+		_Nx(state_dim),
+		_Nz(input_dim + state_dim),
+		_Nt(Nt),
+		_Nd(n_path_constr),
+		_NdT(n_term_constr)
 	{
-		// Get sizes.
-		_Nu = input_dim;
-		_Nx = state_dim;
-		_Nz = _Nx + _Nu;
-		_Nt = Nt;
-
 		// Allocate arrays.
 		_zOpt.resize(_Nz * _Nt + _Nx);
 		_w.resize(_Nz * _Nt + _Nx);
@@ -79,12 +79,28 @@ namespace camels
 			// c = f(z_k) - x_{k+1}
 			_QP.c(i) = x_plus - w(i + 1).topRows(_Nx);
 
+			MatrixXd D(_Nd, _Nz);
+			VectorXd d_min(_Nd);
+			VectorXd d_max(_Nd);
+			PathConstraints(i, w(i).topRows(nX()), w(i).bottomRows(nU()), D, d_min, d_max);
+			_QP.D(i) = D;
+			_QP.dMin(i) = d_min;
+			_QP.dMax(i) = d_max;
+
 			// z_min stores _Nt vectors of size _Nz and 1 vector of size _Nx
 			_QP.zMin(i) = z_min - w(i);
 
 			// z_max stores _Nt vectors of size _Nz and 1 vector of size _Nx
 			_QP.zMax(i) = z_max - w(i);
 		}
+
+		MatrixXd D(_NdT, _Nx);
+		VectorXd d_min(_NdT);
+		VectorXd d_max(_NdT);
+		TerminalConstraints(w(_Nt), D, d_min, d_max);
+		_QP.D(_Nt) = D;
+		_QP.dMin(_Nt) = d_min;
+		_QP.dMax(_Nt) = d_max;
 
 		_QP.zMin(_Nt) = getTerminalXMin() - w(_Nt);
 		_QP.zMax(_Nt) = getTerminalXMax() - w(_Nt);

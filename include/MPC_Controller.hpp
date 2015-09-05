@@ -20,7 +20,7 @@ namespace camels
 		typedef Eigen::Map<RowMajorMatrix> RowMajorMatrixMap;
 		typedef Eigen::Map<const RowMajorMatrix> RowMajorMatrixConstMap;
 
-		MPC_Controller(unsigned state_dim, unsigned input_dim, double sample_time, unsigned Nt);
+		MPC_Controller(unsigned state_dim, unsigned input_dim, unsigned n_path_constr, unsigned n_term_constr, double sample_time, unsigned Nt);
 		~MPC_Controller();
 
 		void InitWorkingPoint(const Eigen::VectorXd& x0);
@@ -67,6 +67,8 @@ namespace camels
 	protected:
 		virtual void LagrangeTerm(const Eigen::MatrixXd& z, unsigned i, Eigen::MatrixXd& H, Eigen::VectorXd& g) = 0;
 		virtual void MayerTerm(const Eigen::VectorXd& x, Eigen::MatrixXd& H, Eigen::VectorXd& g) = 0;
+		virtual void PathConstraints(unsigned i, const Eigen::VectorXd& x, const Eigen::VectorXd& u, Eigen::MatrixXd& D, Eigen::VectorXd& d_min, Eigen::VectorXd& d_max) = 0;
+		virtual void TerminalConstraints(const Eigen::VectorXd& x, Eigen::MatrixXd& D, Eigen::VectorXd& d_min, Eigen::VectorXd& d_max) = 0;
 		virtual void Integrate(const Eigen::VectorXd& x, const Eigen::VectorXd& u, Eigen::VectorXd& x_next, Eigen::MatrixXd& A, Eigen::MatrixXd& B) const = 0;
 
 	private:
@@ -76,12 +78,14 @@ namespace camels
 
 		VectorMap w(unsigned i);
 
-		double _sampleTime;
+		const double _sampleTime;
 
-		unsigned _Nu;
-		unsigned _Nx;
-		unsigned _Nz;
-		unsigned _Nt;
+		const unsigned _Nu;
+		const unsigned _Nx;
+		const unsigned _Nz;
+		const unsigned _Nt;
+		const unsigned _Nd;
+		const unsigned _NdT;
 		
 		camels::MultiStageQP _QP;
 		camels::CondensingSolver _Solver;
