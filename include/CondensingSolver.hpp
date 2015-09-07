@@ -39,6 +39,9 @@ namespace camels
 	private:
 		const MultiStageQPSize _size;
 
+		// Number of constraints per stage = nX() + nD().
+		size_type nC() const;
+
 		CondensedQP _condensedQP;
 		Vector _primalSolution;
 		Vector _primalCondensedSolution;

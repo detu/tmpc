@@ -14,7 +14,7 @@ TEST(mpc_test, mpc_test_case)
 	const auto platform = std::make_shared<mpmc::CyberMotion>();
 	const double Ts = 0.05;
 	const unsigned Nt = 10;
-	const unsigned simulation_steps = 200;
+	const unsigned simulation_steps = 20;
 	const double g = 9.81;
 	const double a_max = 1.0;
 	const double freq = 1.0;

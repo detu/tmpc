@@ -5,14 +5,13 @@ namespace camels
 {
 	void CondensingSolver::Condense(const MultiStageQP& msqp)
 	{
+		using namespace Eigen;
+
 		if (msqp.size() != size())
 			throw std::invalid_argument("CondensingSolver::Condense(): the problem has a size different from what the solver expects.");
 
-		Eigen::MatrixXd M(nX(), nIndep());
-		M.setZero();
-
-		Eigen::VectorXd v(nX());
-		v.setZero();
+		MatrixXd M = MatrixXd::Identity(nX(), nIndep());
+		VectorXd v = VectorXd::Zero(nX());
 
 		auto& Hc = _condensedQP.H();
 		auto& gc = _condensedQP.g();
@@ -23,56 +22,46 @@ namespace camels
 		_condensedQP.lb().topRows(nX()) = msqp.xMin(0);
 		_condensedQP.ub().topRows(nX()) = msqp.xMax(0);
 
-		for (unsigned k = 0; k <= nT(); ++k)
+		for (unsigned k = 0; k < nT(); ++k)
 		{
 			auto M_k = M.leftCols(nX() + k * nU());
-			if (k == 0)
-			{
-				M_k.setIdentity();
-				v.setZero();
-			}
-			else
-			{
-				const auto A_k_minus = msqp.C(k - 1).leftCols(nX());
-				const auto B_k_minus = msqp.C(k - 1).rightCols(nU());
-				M_k = A_k_minus * M_k;
-				M_k.rightCols(nU()) = B_k_minus;
-				v = A_k_minus * v + msqp.c(k - 1);
-
-				_condensedQP.A()  .middleRows((k - 1) * nX(), nX()) = M;
-				_condensedQP.lbA().middleRows((k - 1) * nX(), nX()) = msqp.xMin(k) - v;
-				_condensedQP.ubA().middleRows((k - 1) * nX(), nX()) = msqp.xMax(k) - v;
-			}
-
 			const auto H_k = msqp.H(k);
 			const auto g_k = msqp.g(k);
 
-			if (k < nT())
-			{
-				const auto Q = H_k.topLeftCorner(nX(), nX()).selfadjointView<Eigen::Upper>();
-				const auto S = H_k.topRightCorner(nX(), nU());
-				const auto R = H_k.bottomRightCorner(nU(), nU());
+			const auto Q = H_k.topLeftCorner(nX(), nX()).selfadjointView<Eigen::Upper>();
+			const auto S = H_k.topRightCorner(nX(), nU());
+			const auto R = H_k.bottomRightCorner(nU(), nU());
 
-				const auto nn = M_k.cols();
-				auto Hc_k = Hc.topLeftCorner(nn + nU(), nn + nU());
-				Hc_k.topLeftCorner(nn, nn).triangularView<Eigen::Upper>() += M_k.transpose() * Q * M_k;
-				Hc_k.topRightCorner(nn, nU()) += M_k.transpose() * S;
-				Hc_k.bottomRightCorner(nU(), nU()).triangularView<Eigen::Upper>() += R;
+			const auto nn = M_k.cols();
+			auto Hc_k = Hc.topLeftCorner(nn + nU(), nn + nU());
+			Hc_k.topLeftCorner(nn, nn).triangularView<Eigen::Upper>() += M_k.transpose() * Q * M_k;
+			Hc_k.topRightCorner(nn, nU()) += M_k.transpose() * S;
+			Hc_k.bottomRightCorner(nU(), nU()).triangularView<Eigen::Upper>() += R;
 
-				auto gc_k = gc.topRows(nn + nU());
-				gc_k.topRows(nn) += M_k.transpose() * (g_k.topRows(nX()) + Q * v);
-				gc_k.bottomRows(nU()) += g_k.bottomRows(nU()) + S.transpose() * v;
+			auto gc_k = gc.topRows(nn + nU());
+			gc_k.topRows(nn) += M_k.transpose() * (g_k.topRows(nX()) + Q * v);
+			gc_k.bottomRows(nU()) += g_k.bottomRows(nU()) + S.transpose() * v;
 
-				_condensedQP.lb().middleRows(nX() + k * nU(), nU()) = msqp.uMin(k);
-				_condensedQP.ub().middleRows(nX() + k * nU(), nU()) = msqp.uMax(k);
-			}
-			else
-			{
-				// Final state.
-				Hc.triangularView<Eigen::Upper>() += M_k.transpose() * H_k.selfadjointView<Eigen::Upper>() * M_k;
-				gc += M_k.transpose() * (g_k.topRows(nX()) + H_k * v);
-			}
+			_condensedQP.lb().middleRows(nX() + k * nU(), nU()) = msqp.uMin(k);
+			_condensedQP.ub().middleRows(nX() + k * nU(), nU()) = msqp.uMax(k);
+			
+			// Update M and v.
+			//auto M_k = M.leftCols(nX() + (k + 1) * nU());
+			const auto A_k = msqp.C(k).leftCols(nX());
+			const auto B_k = msqp.C(k).rightCols(nU());
+			M_k = A_k * M_k;
+			M.middleCols(nX() + k * nU(), nU()) = B_k;
+			v = A_k * v + msqp.c(k);
+
+			// Set constraints for next state.
+			_condensedQP.A().middleRows(k * nX(), nX()) = M;
+			_condensedQP.lbA().middleRows(k * nX(), nX()) = msqp.xMin(k + 1) - v;
+			_condensedQP.ubA().middleRows(k * nX(), nX()) = msqp.xMax(k + 1) - v;
 		}
+
+		// Cost of final state.
+		Hc.triangularView<Eigen::Upper>() += M.transpose() * msqp.H(nT()).selfadjointView<Eigen::Upper>() * M;
+		gc += M.transpose() * (msqp.g(nT()) + msqp.H(nT()) * v);
 
 		Hc = Hc.selfadjointView<Eigen::Upper>();
 	}
@@ -124,7 +113,7 @@ namespace camels
 	}
 
 	CondensingSolver::CondensingSolver(const MultiStageQPSize& size) :
-		_condensedQP(size.nIndep(), size.nDep()),
+		_condensedQP(size.nIndep(), size.nDep() /*+ size.nConstr()*/),
 		_size(size),
 		_primalCondensedSolution(size.nIndep()),
 		_primalSolution(size.nVar()),
@@ -187,5 +176,10 @@ namespace camels
 	const MultiStageQPSize& CondensingSolver::size() const
 	{
 		return _size;
+	}
+
+	CondensingSolver::size_type CondensingSolver::nC() const
+	{
+		return nX() + nD();
 	}
 }

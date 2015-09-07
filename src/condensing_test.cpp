@@ -5,7 +5,7 @@
 
 #include <iostream>
 
-TEST(test_1, my_test_1)
+TEST(test_1, consending_test)
 //int main(int, char **)
 {
 	camels::MultiStageQP qp(2, 1, 0, 0, 2);

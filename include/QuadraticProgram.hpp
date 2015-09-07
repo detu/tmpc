@@ -16,7 +16,8 @@ namespace camels
 		
 		QuadraticProgram(size_type nx, size_type nc)
 			: _H(nx, nx), _g(nx), _A(nc, nx), _lbA(nc), _ubA(nc), _lb(nx), _ub(nx)
-		{}
+		{
+		}
 
 		size_type nx() const { return static_cast<size_type>(_H.rows()); }
 		size_type nc() const { return static_cast<size_type>(_A.rows()); }

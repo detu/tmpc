@@ -23,6 +23,11 @@ namespace camels
 		return nZ() * nT() + nX();
 	}
 
+	camels::MultiStageQPSize::size_type MultiStageQPSize::nConstr() const
+	{
+		return nD() * nT() + nDT();
+	}
+
 	bool operator==(const MultiStageQPSize& s1, const MultiStageQPSize& s2)
 	{
 		return s1.nX() == s2.nX() && s1.nU() == s2.nU() && s1.nT() == s2.nT() && s1.nD() == s2.nD() && s1.nDT() == s2.nDT();

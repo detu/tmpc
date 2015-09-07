@@ -22,6 +22,9 @@ namespace camels
 		size_type nDep() const { return _Nx * _Nt; }
 		size_type nVar() const;
 
+		// Number of path constraints for all stages + number of terminal constraints.
+		size_type nConstr() const;
+
 	private:
 		const size_type _Nu;
 		const size_type _Nx;
