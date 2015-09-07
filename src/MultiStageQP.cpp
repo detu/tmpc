@@ -4,25 +4,25 @@
 
 namespace camels
 {
-	MultiStageQP::MultiStageQP(size_type nx, size_type nu, size_type nd, size_type ndt, size_type nt) : 
-		_Nx(nx),
-		_Nu(nu),
-		_Nt(nt),
-		_Nz(nx + nu),
-		_Nd(nd),
-		_NdT(ndt)
+	MultiStageQP::MultiStageQP(size_type nx, size_type nu, size_type nd, size_type ndt, size_type nt) :
+		MultiStageQP(MultiStageQPSize(nx, nu, nd, ndt, nt))
+	{
+	}		
+
+	MultiStageQP::MultiStageQP(const MultiStageQPSize& size) :
+		_size(size)
 	{
 		// Allocate arrays.
-		_H.resize(_Nz * _Nz * _Nt + _Nx * _Nx);
-		_g.resize(_Nz * _Nt + _Nx);
-		_C.resize(_Nx * _Nz * _Nt);
-		_c.resize(_Nx * _Nt);
-		_D.resize(_Nd * _Nz * _Nt + _NdT * _Nx);
-		_dMin.resize(_Nd * _Nt + _NdT);
-		_dMax.resize(_Nd * _Nt + _NdT);
-		_zMin.resize(_Nz * _Nt + _Nx);
-		_zMax.resize(_Nz * _Nt + _Nx);
-		_zOpt.resize(_Nz * _Nt + _Nx);
+		_H.resize(nZ() * nZ() * nT() + nX() * nX());
+		_g.resize(nZ() * nT() + nX());
+		_C.resize(nX() * nZ() * nT());
+		_c.resize(nX() * nT());
+		_D.resize(nD() * nZ() * nT() + nDT() * nX());
+		_dMin.resize(nD() * nT() + nDT());
+		_dMax.resize(nD() * nT() + nDT());
+		_zMin.resize(nZ() * nT() + nX());
+		_zMax.resize(nZ() * nT() + nX());
+		_zOpt.resize(nZ() * nT() + nX());
 	}
 
 	MultiStageQP::~MultiStageQP()
@@ -78,12 +78,12 @@ namespace camels
 	{
 		using std::endl;
 
-		for (unsigned k = 0; k <= _Nt; ++k)
+		for (unsigned k = 0; k <= nT(); ++k)
 		{
 			log_stream << "qp.H{" << k + 1 << "} = [..." << endl << H(k) << "];" << endl;
 			log_stream << "qp.g{" << k + 1 << "} = [..." << endl << g(k) << "];" << endl;
 			
-			if (k < _Nt)
+			if (k < nT())
 			{
 				log_stream << "qp.C{" << k + 1 << "} = [..." << endl << C(k) << "];" << endl;
 				log_stream << "qp.c{" << k + 1 << "} = [..." << endl << c(k) << "];" << endl;
@@ -100,96 +100,96 @@ namespace camels
 
 	MultiStageQP::RowMajorMatrixMap MultiStageQP::H(unsigned i)
 	{
-		assert(i < _Nt + 1);
-		const auto sz = i < _Nt ? _Nz : _Nx;
-		return RowMajorMatrixMap(_H.data() + i * _Nz * _Nz, sz, sz);
+		assert(i < nT() + 1);
+		const auto sz = i < nT() ? nZ() : nX();
+		return RowMajorMatrixMap(_H.data() + i * nZ() * nZ(), sz, sz);
 	}
 
 	MultiStageQP::RowMajorMatrixConstMap MultiStageQP::H(unsigned i) const
 	{
-		assert(i < _Nt + 1);
-		const auto sz = i < _Nt ? _Nz : _Nx;
-		return RowMajorMatrixConstMap(_H.data() + i * _Nz * _Nz, sz, sz);
+		assert(i < nT() + 1);
+		const auto sz = i < nT() ? nZ() : nX();
+		return RowMajorMatrixConstMap(_H.data() + i * nZ() * nZ(), sz, sz);
 	}
 
 	MultiStageQP::VectorMap MultiStageQP::g(unsigned i)
 	{
-		assert(i < _Nt + 1);
-		return VectorMap(_g.data() + i * _Nz, i < _Nt ? _Nz : _Nx);
+		assert(i < nT() + 1);
+		return VectorMap(_g.data() + i * nZ(), i < nT() ? nZ() : nX());
 	}
 
 	MultiStageQP::VectorConstMap MultiStageQP::g(unsigned i) const
 	{
-		assert(i < _Nt + 1);
-		return VectorConstMap(_g.data() + i * _Nz, i < _Nt ? _Nz : _Nx);
+		assert(i < nT() + 1);
+		return VectorConstMap(_g.data() + i * nZ(), i < nT() ? nZ() : nX());
 	}
 
 	MultiStageQP::RowMajorMatrixMap MultiStageQP::C(unsigned i)
 	{
-		return RowMajorMatrixMap(_C.data() + i * _Nx * _Nz, _Nx, _Nz);
+		return RowMajorMatrixMap(_C.data() + i * nX() * nZ(), nX(), nZ());
 	}
 
 	MultiStageQP::RowMajorMatrixConstMap MultiStageQP::C(unsigned i) const
 	{
-		return RowMajorMatrixConstMap(_C.data() + i * _Nx * _Nz, _Nx, _Nz);
+		return RowMajorMatrixConstMap(_C.data() + i * nX() * nZ(), nX(), nZ());
 	}
 
 	MultiStageQP::VectorMap MultiStageQP::c(unsigned i)
 	{
-		return VectorMap(_c.data() + i * _Nx, _Nx);
+		return VectorMap(_c.data() + i * nX(), nX());
 	}
 
 	MultiStageQP::VectorConstMap MultiStageQP::c(unsigned i) const
 	{
-		return VectorConstMap(_c.data() + i * _Nx, _Nx);
+		return VectorConstMap(_c.data() + i * nX(), nX());
 	}
 
 	MultiStageQP::VectorMap MultiStageQP::zMin(unsigned i)
 	{
-		assert(i < _Nt + 1);
-		return VectorMap(_zMin.data() + i * _Nz, i < _Nt ? _Nz : _Nx);
+		assert(i < nT() + 1);
+		return VectorMap(_zMin.data() + i * nZ(), i < nT() ? nZ() : nX());
 	}
 
 	MultiStageQP::VectorConstMap MultiStageQP::zMin(unsigned i) const
 	{
-		assert(i < _Nt + 1);
-		return VectorConstMap(_zMin.data() + i * _Nz, i < _Nt ? _Nz : _Nx);
+		assert(i < nT() + 1);
+		return VectorConstMap(_zMin.data() + i * nZ(), i < nT() ? nZ() : nX());
 	}
 
 	MultiStageQP::VectorMap MultiStageQP::zMax(unsigned i)
 	{
-		assert(i < _Nt + 1);
-		return VectorMap(_zMax.data() + i * _Nz, i < _Nt ? _Nz : _Nx);
+		assert(i < nT() + 1);
+		return VectorMap(_zMax.data() + i * nZ(), i < nT() ? nZ() : nX());
 	}
 
 	MultiStageQP::VectorConstMap MultiStageQP::zMax(unsigned i) const
 	{
-		assert(i < _Nt + 1);
-		return VectorConstMap(_zMax.data() + i * _Nz, i < _Nt ? _Nz : _Nx);
+		assert(i < nT() + 1);
+		return VectorConstMap(_zMax.data() + i * nZ(), i < nT() ? nZ() : nX());
 	}
 
 	MultiStageQP::VectorMap MultiStageQP::xMin(unsigned i)
 	{
-		assert(i < _Nt + 1);
-		return VectorMap(_zMin.data() + i * _Nz, _Nx);
+		assert(i < nT() + 1);
+		return VectorMap(_zMin.data() + i * nZ(), nX());
 	}
 
 	MultiStageQP::VectorConstMap MultiStageQP::xMin(unsigned i) const
 	{
-		assert(i < _Nt + 1);
-		return VectorConstMap(_zMin.data() + i * _Nz, _Nx);
+		assert(i < nT() + 1);
+		return VectorConstMap(_zMin.data() + i * nZ(), nX());
 	}
 
 	MultiStageQP::VectorMap MultiStageQP::xMax(unsigned i)
 	{
-		assert(i < _Nt + 1);
-		return VectorMap(_zMax.data() + i * _Nz, _Nx);
+		assert(i < nT() + 1);
+		return VectorMap(_zMax.data() + i * nZ(), nX());
 	}
 
 	MultiStageQP::VectorConstMap MultiStageQP::xMax(unsigned i) const
 	{
-		assert(i < _Nt + 1);
-		return VectorConstMap(_zMax.data() + i * _Nz, _Nx);
+		assert(i < nT() + 1);
+		return VectorConstMap(_zMax.data() + i * nZ(), nX());
 	}
 
 	void MultiStageQP::PrintQP_zMin_C(std::ostream& log_stream) const
@@ -218,61 +218,111 @@ namespace camels
 
 	MultiStageQP::VectorMap MultiStageQP::uMin(unsigned i)
 	{
-		assert(i < _Nt);
-		return VectorMap(_zMin.data() + i * _Nz + _Nx, _Nu);
+		assert(i < nT());
+		return VectorMap(_zMin.data() + i * nZ() + nX(), nU());
 	}
 
 	MultiStageQP::VectorConstMap MultiStageQP::uMin(unsigned i) const
 	{
-		assert(i < _Nt);
-		return VectorConstMap(_zMin.data() + i * _Nz + _Nx, _Nu);
+		assert(i < nT());
+		return VectorConstMap(_zMin.data() + i * nZ() + nX(), nU());
 	}
 
 	MultiStageQP::VectorMap MultiStageQP::uMax(unsigned i)
 	{
-		assert(i < _Nt);
-		return VectorMap(_zMax.data() + i * _Nz + _Nx, _Nu);
+		assert(i < nT());
+		return VectorMap(_zMax.data() + i * nZ() + nX(), nU());
 	}
 
 	MultiStageQP::VectorConstMap MultiStageQP::uMax(unsigned i) const
 	{
-		assert(i < _Nt);
-		return VectorConstMap(_zMax.data() + i * _Nz + _Nx, _Nu);
+		assert(i < nT());
+		return VectorConstMap(_zMax.data() + i * nZ() + nX(), nU());
 	}
 
 	MultiStageQP::VectorMap MultiStageQP::dMin(unsigned i)
 	{
-		assert(i <= _Nt);
-		return VectorMap(_dMin.data() + i * _Nd, i < _Nt ? _Nd : _NdT);
+		assert(i <= nT());
+		return VectorMap(_dMin.data() + i * nD(), i < nT() ? nD() : nDT());
 	}
 
 	MultiStageQP::VectorConstMap MultiStageQP::dMin(unsigned i) const
 	{
-		assert(i <= _Nt);
-		return VectorConstMap(_dMin.data() + i * _Nd, i < _Nt ? _Nd : _NdT);
+		assert(i <= nT());
+		return VectorConstMap(_dMin.data() + i * nD(), i < nT() ? nD() : nDT());
 	}
 
 	MultiStageQP::VectorMap MultiStageQP::dMax(unsigned i)
 	{
-		assert(i <= _Nt);
-		return VectorMap(_dMax.data() + i * _Nd, i < _Nt ? _Nd : _NdT);
+		assert(i <= nT());
+		return VectorMap(_dMax.data() + i * nD(), i < nT() ? nD() : nDT());
 	}
 
 	MultiStageQP::VectorConstMap MultiStageQP::dMax(unsigned i) const
 	{
-		assert(i <= _Nt);
-		return VectorConstMap(_dMax.data() + i * _Nd, i < _Nt ? _Nd : _NdT);
+		assert(i <= nT());
+		return VectorConstMap(_dMax.data() + i * nD(), i < nT() ? nD() : nDT());
 	}
 
 	MultiStageQP::RowMajorMatrixMap MultiStageQP::D(unsigned i)
 	{
-		assert(i <= _Nt);
-		return RowMajorMatrixMap(_D.data() + i * _Nd * _Nz, i < _Nt ? _Nd : _NdT, i < _Nt ? _Nz : _Nx);
+		assert(i <= nT());
+		return RowMajorMatrixMap(_D.data() + i * nD() * nZ(), i < nT() ? nD() : nDT(), i < nT() ? nZ() : nX());
 	}
 
 	MultiStageQP::RowMajorMatrixConstMap MultiStageQP::D(unsigned i) const
 	{
-		assert(i <= _Nt);
-		return RowMajorMatrixConstMap(_D.data() + i * _Nd * _Nz, i < _Nt ? _Nd : _NdT, i < _Nt ? _Nz : _Nx);
+		assert(i <= nT());
+		return RowMajorMatrixConstMap(_D.data() + i * nD() * nZ(), i < nT() ? nD() : nDT(), i < nT() ? nZ() : nX());
+	}
+
+	camels::MultiStageQP::size_type MultiStageQP::nT() const
+	{
+		return _size.nT();
+	}
+
+	camels::MultiStageQP::size_type MultiStageQP::nX() const
+	{
+		return _size.nX();
+	}
+
+	camels::MultiStageQP::size_type MultiStageQP::nZ() const
+	{
+		return _size.nZ();
+	}
+
+	camels::MultiStageQP::size_type MultiStageQP::nU() const
+	{
+		return _size.nU();
+	}
+
+	camels::MultiStageQP::size_type MultiStageQP::nD() const
+	{
+		return _size.nD();
+	}
+
+	camels::MultiStageQP::size_type MultiStageQP::nDT() const
+	{
+		return _size.nDT();
+	}
+
+	camels::MultiStageQP::size_type MultiStageQP::nIndep() const
+	{
+		return _size.nIndep();
+	}
+
+	camels::MultiStageQP::size_type MultiStageQP::nDep() const
+	{
+		return _size.nDep();
+	}
+
+	camels::MultiStageQP::size_type MultiStageQP::nVar() const
+	{
+		return _size.nVar();
+	}
+
+	const MultiStageQPSize& MultiStageQP::size() const
+	{
+		return _size;
 	}
 }

@@ -6,7 +6,7 @@ namespace camels
 {
 	MPC_Controller::MPC_Controller(unsigned state_dim, unsigned input_dim, unsigned n_path_constr, unsigned n_term_constr, double sample_time, unsigned Nt) : 
 		_QP(state_dim, input_dim, n_path_constr, n_term_constr, Nt),
-		_Solver(state_dim, input_dim, Nt),
+		_Solver(MultiStageQPSize(state_dim, input_dim, n_path_constr, n_term_constr, Nt)),
 		_levenbergMarquardt(0.0),
 		_sampleTime(sample_time),
 		_xMin(state_dim),

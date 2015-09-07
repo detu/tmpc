@@ -14,11 +14,19 @@ namespace camels
 		typedef QuadraticProgram<double, Eigen::RowMajor> CondensedQP;
 		typedef Eigen::VectorXd Vector;
 
+		CondensingSolver(const MultiStageQPSize& size);
 		CondensingSolver(size_type nx, size_type nu, size_type nt);
 
-		size_type nIndep() const { return _Nx + _Nu * _Nt; }
-		size_type nDep() const { return _Nx * _Nt; }
-		size_type nVar() const { return _Nz * _Nt + _Nx; }
+		const MultiStageQPSize& size() const;
+		size_type nT() const;
+		size_type nX() const;
+		size_type nZ() const;
+		size_type nU() const;
+		size_type nD() const;
+		size_type nDT() const;
+		size_type nIndep() const;
+		size_type nDep() const;
+		size_type nVar() const;
 
 		void Condense(const MultiStageQP& msqp);
 		void Solve(const MultiStageQP& msqp);
@@ -29,10 +37,7 @@ namespace camels
 		bool getHotStart() const { return _hotStart; }
 
 	private:
-		size_type _Nu;
-		size_type _Nx;
-		size_type _Nz;
-		size_type _Nt;
+		const MultiStageQPSize _size;
 
 		CondensedQP _condensedQP;
 		Vector _primalSolution;

@@ -1,5 +1,7 @@
 #pragma once
 
+#include "MultiStageQPSize.hpp"
+
 #include <Eigen/Dense>
 #include <Eigen/SparseCore>
 
@@ -37,6 +39,7 @@ namespace camels
 		typedef Eigen::Map<RowMajorMatrix> RowMajorMatrixMap;
 		typedef Eigen::Map<const RowMajorMatrix> RowMajorMatrixConstMap;
 
+		MultiStageQP(const MultiStageQPSize& size);
 		MultiStageQP(size_type nx, size_type nu, size_type nd, size_type ndt, size_type nt);
 		~MultiStageQP();
 
@@ -47,15 +50,17 @@ namespace camels
 		void PrintQP_zMin_C(std::ostream& log_stream) const;
 
 		void PrintQP_MATLAB(std::ostream& log_stream) const;
-		size_type nT() const { return _Nt; }
-		size_type nX() const { return _Nx; }
-		size_type nZ() const { return _Nz; }
-		size_type nU() const { return _Nu; }
-		size_type nD() const { return _Nd; }
-		size_type nDT() const { return _NdT; }
-		size_type nIndep() const { return _Nx + _Nu * _Nt; }
-		size_type nDep() const { return _Nx * _Nt; }
-		size_type nVar() const { return _Nz * _Nt + _Nx; }
+
+		const MultiStageQPSize& size() const;
+		size_type nT() const;
+		size_type nX() const;
+		size_type nZ() const;
+		size_type nU() const;
+		size_type nD() const;
+		size_type nDT() const;
+		size_type nIndep() const;
+		size_type nDep() const;
+		size_type nVar() const;
 
 		RowMajorMatrixMap H(unsigned i);
 		RowMajorMatrixConstMap H(unsigned i) const;
@@ -97,12 +102,7 @@ namespace camels
 		VectorConstMap uMax(unsigned i) const;
 
 	private:
-		const size_type _Nu;
-		const size_type _Nx;
-		const size_type _Nz;
-		const size_type _Nt;
-		const size_type _Nd;
-		const size_type _NdT;
+		const MultiStageQPSize _size;
 
 		// _H stores _Nt row-major matrices of size _Nz x _Nz and 1 matrix of size _Nx x _Nx.
 		std::vector<double> _H;
