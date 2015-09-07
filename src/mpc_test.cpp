@@ -10,10 +10,10 @@
 //int not_main(int argc, char * argv[])
 TEST(mpc_test, mpc_test_case)
 {
-	//const auto platform = std::make_shared<rtmc::MotionPlatformX>();
-	const auto platform = std::make_shared<mpmc::CyberMotion>();
+	const auto platform = std::make_shared<mpmc::MotionPlatformX>();
+	//const auto platform = std::make_shared<mpmc::CyberMotion>();
 	const double Ts = 0.05;
-	const unsigned Nt = 10;
+	const unsigned Nt = 1;
 	const unsigned simulation_steps = 20;
 	const double g = 9.81;
 	const double a_max = 1.0;
@@ -53,7 +53,22 @@ TEST(mpc_test, mpc_test_case)
 		{
 			controller.Solve();
 		}
-		catch (const std::runtime_error& e)
+		catch (const camels::CondensingSolverSolveException& e)
+		{
+			{
+				std::ofstream os("failed_qp.m");
+				controller.PrintQP_MATLAB(os);
+				e.getCondensedQP().Print_MATLAB("cond_qp", os);
+			}
+
+			{
+				std::ofstream os("failed_qp.cpp");
+				controller.PrintQP_C(os);
+			}
+
+			throw;
+		}
+		catch (const std::runtime_error&)
 		{
 			{
 				std::ofstream os("failed_qp.m");
@@ -65,7 +80,7 @@ TEST(mpc_test, mpc_test_case)
 				controller.PrintQP_C(os);
 			}
 
-			throw e;
+			throw;
 		}
 
 		controller.getWorkingU(0, u.data());

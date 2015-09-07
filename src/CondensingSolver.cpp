@@ -25,6 +25,8 @@ namespace camels
 		for (unsigned k = 0; k < nT(); ++k)
 		{
 			auto M_k = M.leftCols(nX() + k * nU());
+
+			// Calculate Hessian (H_k) and gradient (g_k) for current time step w.r.t. condensed (independent) variables.
 			const auto H_k = msqp.H(k);
 			const auto g_k = msqp.g(k);
 
@@ -42,22 +44,43 @@ namespace camels
 			gc_k.topRows(nn) += M_k.transpose() * (g_k.topRows(nX()) + Q * v);
 			gc_k.bottomRows(nU()) += g_k.bottomRows(nU()) + S.transpose() * v;
 
+			// Set lower and upper bound for independent variables at stage k.
 			_condensedQP.lb().middleRows(nX() + k * nU(), nU()) = msqp.uMin(k);
 			_condensedQP.ub().middleRows(nX() + k * nU(), nU()) = msqp.uMax(k);
+
+			// Set path constraints for stage k.
+			auto Aconstr_k = _condensedQP.A().middleRows(k * nC(), nC());
+			auto lbAconstr_k = _condensedQP.lbA().middleRows(k * nC(), nC());
+			auto ubAconstr_k = _condensedQP.ubA().middleRows(k * nC(), nC());
+			auto D_k_x = msqp.D(k).leftCols(nX());
+			auto D_k_u = msqp.D(k).rightCols(nU());
+			const auto d_ofs = (D_k_x * v).eval();
+
+			Aconstr_k.topRows(nD()) = D_k_x * M;
+			Aconstr_k.block(0, nn, nD(), nU()) = D_k_u;
+			lbAconstr_k.topRows(nD()) = msqp.dMin(k) - d_ofs;
+			ubAconstr_k.topRows(nD()) = msqp.dMax(k) - d_ofs;
 			
 			// Update M and v.
-			//auto M_k = M.leftCols(nX() + (k + 1) * nU());
 			const auto A_k = msqp.C(k).leftCols(nX());
 			const auto B_k = msqp.C(k).rightCols(nU());
 			M_k = A_k * M_k;
 			M.middleCols(nX() + k * nU(), nU()) = B_k;
 			v = A_k * v + msqp.c(k);
 
-			// Set constraints for next state.
-			_condensedQP.A().middleRows(k * nX(), nX()) = M;
-			_condensedQP.lbA().middleRows(k * nX(), nX()) = msqp.xMin(k + 1) - v;
-			_condensedQP.ubA().middleRows(k * nX(), nX()) = msqp.xMax(k + 1) - v;
+			// Set next state bound constraints.
+			Aconstr_k.bottomRows(nX()) = M;
+			lbAconstr_k.bottomRows(nX()) = msqp.xMin(k + 1) - v;
+			ubAconstr_k.bottomRows(nX()) = msqp.xMax(k + 1) - v;
 		}
+
+		// Set terminal constraints.
+		const auto D_k_term = msqp.D(nT());
+		const auto d_ofs = (D_k_term * v).eval();
+
+		_condensedQP.A().bottomRows(nDT()) = D_k_term * M;
+		_condensedQP.lbA().bottomRows(nDT()) = msqp.dMin(nT()) - d_ofs;
+		_condensedQP.ubA().bottomRows(nDT()) = msqp.dMax(nT()) - d_ofs;
 
 		// Cost of final state.
 		Hc.triangularView<Eigen::Upper>() += M.transpose() * msqp.H(nT()).selfadjointView<Eigen::Upper>() * M;
@@ -80,7 +103,7 @@ namespace camels
 			_condensedQP.lb().data(), _condensedQP.ub().data(), _condensedQP.lbA().data(), _condensedQP.ubA().data(), nWSR);
 
 		if (res != qpOASES::SUCCESSFUL_RETURN)
-			throw qpOASES::Exception(res);
+			throw CondensingSolverSolveException(res, _condensedQP);
 
 		_hotStart = true;
 
@@ -113,11 +136,11 @@ namespace camels
 	}
 
 	CondensingSolver::CondensingSolver(const MultiStageQPSize& size) :
-		_condensedQP(size.nIndep(), size.nDep() /*+ size.nConstr()*/),
+		_condensedQP(size.nIndep(), size.nDep() + size.nConstr()),
 		_size(size),
 		_primalCondensedSolution(size.nIndep()),
 		_primalSolution(size.nVar()),
-		_problem(size.nIndep(), size.nDep())
+		_problem(size.nIndep(), size.nDep() + size.nConstr())
 	{
 		qpOASES::Options options;
 		_problem.setOptions(options);
@@ -181,5 +204,22 @@ namespace camels
 	CondensingSolver::size_type CondensingSolver::nC() const
 	{
 		return nX() + nD();
+	}
+
+	CondensingSolverSolveException::CondensingSolverSolveException(qpOASES::returnValue code, const CondensingSolver::CondensedQP& cqp) :
+		std::runtime_error("CondensingSolver::Solve() failed. qpOASES return code " + std::to_string(code)),
+		_code(code), _CondensedQP(cqp)
+	{
+
+	}
+
+	const qpOASES::returnValue CondensingSolverSolveException::getCode() const
+	{
+		return _code;
+	}
+
+	const CondensingSolver::CondensedQP& CondensingSolverSolveException::getCondensedQP() const
+	{
+		return _CondensedQP;
 	}
 }

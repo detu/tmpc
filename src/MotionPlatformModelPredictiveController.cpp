@@ -18,6 +18,8 @@ namespace mpmc
 
 		setXMin(x_min);	// TODO: remove boundary constraints for axes position; they must be handled by the non-linear SR-constraints.
 		setXMax(x_max);
+		setTerminalXMin(x_min);
+		setTerminalXMax(x_max);
 		setUMin(u_min);
 		setUMax(u_max);
 
@@ -162,15 +164,15 @@ namespace mpmc
 		v^2 + 2 * (q_min - q) * a_max <= 0
 
 		Linearization:
-		-inf <= 2 * (v * dv - a_min * dq) <= -v^2 - 2 * (q_max - q) * a_min
-		-v^2 - 2 * (q_min - q) * a_max <= 2 * (v * dv - a_min * dq) <= inf
+		-inf <= 2 * (-a_min * dq + v * dv) <= -v^2 - 2 * (q_max - q) * a_min
+		-inf <= 2 * (-a_min * dq + v * dv) <= -v^2 - 2 * (q_min - q) * a_max
 		*/
-		D << 2. * MatrixXd(q.asDiagonal()), -2. * MatrixXd(getUMin().asDiagonal()),
-			 2. * MatrixXd(q.asDiagonal()), -2. * MatrixXd(getUMax().asDiagonal());
+		D << -2. * MatrixXd(getUMin().asDiagonal()), 2. * MatrixXd(q.asDiagonal()),
+			 -2. * MatrixXd(getUMax().asDiagonal()), 2. * MatrixXd(q.asDiagonal());
 
 		const auto inf = VectorXd::Constant(_Nq, std::numeric_limits<double>::infinity());
-		d_min << -inf, -v.cwiseAbs2() - 2. * (q_max - q).cwiseProduct(getUMin());
-		d_max << -v.cwiseAbs2() - 2. * (q_min - q).cwiseProduct(getUMax()), inf;
+		d_min << -inf, -inf;
+		d_max << -v.cwiseAbs2() - 2. * (q_max - q).cwiseProduct(getUMin()), -v.cwiseAbs2() - 2. * (q_min - q).cwiseProduct(getUMax());
 	}
 
 	void MotionPlatformModelPredictiveController::PathConstraints(unsigned i, const Eigen::VectorXd& x, const Eigen::VectorXd& u, Eigen::MatrixXd& D, Eigen::VectorXd& d_min, Eigen::VectorXd& d_max)

@@ -49,4 +49,15 @@ namespace camels
 		bool _hotStart = false;
 		qpOASES::SQProblem _problem;
 	};
+
+	struct CondensingSolverSolveException : public std::runtime_error
+	{
+		CondensingSolverSolveException(qpOASES::returnValue code, const CondensingSolver::CondensedQP& cqp);
+		const qpOASES::returnValue getCode() const;
+		const CondensingSolver::CondensedQP& getCondensedQP() const;
+
+	private:
+		const qpOASES::returnValue _code;
+		const CondensingSolver::CondensedQP _CondensedQP;
+	};
 }

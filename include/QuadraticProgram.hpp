@@ -2,6 +2,8 @@
 
 #include <Eigen/Dense>
 
+#include <iostream>
+
 namespace camels
 {
 	template<class Scalar = double, int Options = Eigen::ColMajor>
@@ -42,6 +44,19 @@ namespace camels
 
 		Vector& ub() { return _ub; }
 		const Vector& ub() const { return _ub; }
+
+		void Print_MATLAB(const std::string& var_name, std::ostream& log_stream) const
+		{
+			using std::endl;
+
+			log_stream << var_name << ".H = [..." << endl << H() << "];" << endl;
+			log_stream << var_name << ".g = [..." << endl << g() << "];" << endl;
+			log_stream << var_name << ".A = [..." << endl << A() << "];" << endl;
+			log_stream << var_name << ".lbA = [..." << endl << lbA() << "];" << endl;
+			log_stream << var_name << ".ubA = [..." << endl << ubA() << "];" << endl;
+			log_stream << var_name << ".lb = [..." << endl << lb() << "];" << endl;
+			log_stream << var_name << ".ub = [..." << endl << ub() << "];" << endl;
+		}
 
 	private:
 		Matrix _H;
