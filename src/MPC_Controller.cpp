@@ -57,14 +57,6 @@ namespace camels
 		z_min << _xMin, _uMin;
 		z_max << _xMax, _uMax;
 		
-		/*
-		const auto q_min = z_min.middleRows(      0, _Nq), q_max = z_max.middleRows(      0, _Nq);
-		const auto v_min = z_min.middleRows(    _Nq, _Nq), v_max = z_max.middleRows(    _Nq, _Nq);
-		const auto u_min = z_min.middleRows(2 * _Nq, _Nq), u_max = z_max.middleRows(2 * _Nq, _Nq);
-		const VectorXd q_min_final = q_min + v_min.cwiseAbs2().cwiseQuotient(2 * u_max);
-		const VectorXd q_max_final = q_max + v_max.cwiseAbs2().cwiseQuotient(2 * u_min);
-		*/
-
 		for (unsigned i = 0; i < _Nt; ++i)
 		{
 			// C = [ssA, ssB];

@@ -30,7 +30,7 @@ namespace mpmc
 		platform->getDefaultAxesPosition(_washoutPosition.data());
 	}
 
-	void MotionPlatformModelPredictiveController::LagrangeTerm(const Eigen::MatrixXd& z, unsigned i, Eigen::MatrixXd& H, Eigen::VectorXd& g)
+	void MotionPlatformModelPredictiveController::LagrangeTerm(const Eigen::MatrixXd& z, unsigned i, Eigen::MatrixXd& H, Eigen::VectorXd& g) const
 	{
 		using namespace Eigen;
 		
@@ -64,7 +64,7 @@ namespace mpmc
 		*/
 	}
 
-	void MotionPlatformModelPredictiveController::MayerTerm(const Eigen::VectorXd& x, Eigen::MatrixXd& H, Eigen::VectorXd& g)
+	void MotionPlatformModelPredictiveController::MayerTerm(const Eigen::VectorXd& x, Eigen::MatrixXd& H, Eigen::VectorXd& g) const
 	{
 		using namespace Eigen;
 
@@ -148,7 +148,7 @@ namespace mpmc
 	}
 
 	template<class Vector1, class Matrix, class Vector2>
-	void MotionPlatformModelPredictiveController::SRConstraints(const Eigen::MatrixBase<Vector1>& x, Eigen::MatrixBase<Matrix>& D, Eigen::MatrixBase<Vector2>& d_min, Eigen::MatrixBase<Vector2>& d_max)
+	void MotionPlatformModelPredictiveController::SRConstraints(const Eigen::MatrixBase<Vector1>& x, Eigen::MatrixBase<Matrix>& D, Eigen::MatrixBase<Vector2>& d_min, Eigen::MatrixBase<Vector2>& d_max) const
 	{
 		using Eigen::VectorXd;
 		using Eigen::MatrixXd;
@@ -175,14 +175,14 @@ namespace mpmc
 		d_max << -v.cwiseAbs2() - 2. * (q_max - q).cwiseProduct(getUMin()), -v.cwiseAbs2() - 2. * (q_min - q).cwiseProduct(getUMax());
 	}
 
-	void MotionPlatformModelPredictiveController::PathConstraints(unsigned i, const Eigen::VectorXd& x, const Eigen::VectorXd& u, Eigen::MatrixXd& D, Eigen::VectorXd& d_min, Eigen::VectorXd& d_max)
+	void MotionPlatformModelPredictiveController::PathConstraints(unsigned i, const Eigen::VectorXd& x, const Eigen::VectorXd& u, Eigen::MatrixXd& D, Eigen::VectorXd& d_min, Eigen::VectorXd& d_max) const
 	{
 		auto Dx = D.leftCols(nX());
 		SRConstraints(x, Dx, d_min, d_max);
 		D.rightCols(nU()).setConstant(0.);
 	}
 
-	void MotionPlatformModelPredictiveController::TerminalConstraints(const Eigen::VectorXd& x, Eigen::MatrixXd& D, Eigen::VectorXd& d_min, Eigen::VectorXd& d_max)
+	void MotionPlatformModelPredictiveController::TerminalConstraints(const Eigen::VectorXd& x, Eigen::MatrixXd& D, Eigen::VectorXd& d_min, Eigen::VectorXd& d_max) const
 	{
 		SRConstraints(x, D, d_min, d_max);
 	}

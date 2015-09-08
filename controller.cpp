@@ -385,8 +385,24 @@ static void mdlOutputs(SimStruct *S, int_T tid)
 		// Prepare for the next step.
 		controller->PrepareForNext();
 	}
+	catch (const camels::CondensingSolverSolveException& e)
+	{
+		{
+			std::ofstream os("failed_qp.m");
+			controller->PrintQP_MATLAB(os);
+			e.getCondensedQP().Print_MATLAB("cond_qp", os);
+		}
+
+		error_status = e.what();
+		ssSetErrorStatus(S, error_status.c_str());
+	}
 	catch (const std::runtime_error& e)
 	{
+		{
+			std::ofstream os("failed_qp.m");
+			controller->PrintQP_MATLAB(os);
+		}
+
 		error_status = e.what();
 		ssSetErrorStatus(S, error_status.c_str());
 	}
