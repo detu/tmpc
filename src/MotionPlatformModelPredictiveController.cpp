@@ -30,7 +30,7 @@ namespace mpmc
 		platform->getDefaultAxesPosition(_washoutPosition.data());
 	}
 
-	void MotionPlatformModelPredictiveController::LagrangeTerm(const Eigen::MatrixXd& z, unsigned i, Eigen::MatrixXd& H, Eigen::VectorXd& g) const
+	void MotionPlatformModelPredictiveController::LagrangeTerm(const Eigen::VectorXd& z, unsigned i, Eigen::MatrixXd& H, Eigen::VectorXd& g) const
 	{
 		using namespace Eigen;
 		
