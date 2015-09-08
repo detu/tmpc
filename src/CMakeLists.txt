@@ -52,7 +52,7 @@ include_directories(${GTEST_INCLUDE_DIRS})
 add_executable(mpc_test mpc_test.cpp condensing_test.cpp)
 #add_executable(mpc_test condensing_test.cpp)
 
-set (LIB mpmc ${GTEST_BOTH_LIBRARIES})
+set (LIB mpmc ${GTEST_BOTH_LIBRARIES} qpOASES)
 if (UNIX)
 	# On UNIX, link to pthread -- gtest requires it.
 	set(LIB ${LIB} pthread)

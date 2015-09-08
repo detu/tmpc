@@ -177,7 +177,8 @@ namespace mpmc
 
 	void MotionPlatformModelPredictiveController::PathConstraints(unsigned i, const Eigen::VectorXd& x, const Eigen::VectorXd& u, Eigen::MatrixXd& D, Eigen::VectorXd& d_min, Eigen::VectorXd& d_max)
 	{
-		SRConstraints(x, D.leftCols(nX()), d_min, d_max);
+		auto Dx = D.leftCols(nX());
+		SRConstraints(x, Dx, d_min, d_max);
 		D.rightCols(nU()).setConstant(0.);
 	}
 
