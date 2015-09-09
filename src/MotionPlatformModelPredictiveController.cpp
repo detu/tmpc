@@ -13,8 +13,12 @@ namespace mpmc
 		_errorWeight(platform->getOutputDim())
 	{
 		// Initialize limits.
-		Eigen::VectorXd x_min(nX()), x_max(nX()), u_min(nU()), u_max(nU());
-		platform->getAxesLimits(x_min.data(), x_max.data(), x_min.data() + _Nq, x_max.data() + _Nq, u_min.data(), u_max.data());
+		Eigen::VectorXd q_min(_Nq), q_max(_Nq), v_min(_Nq), v_max(_Nq), u_min(nU()), u_max(nU());
+		platform->getAxesLimits(q_min, q_max, v_min, v_max, u_min, u_max);
+
+		Eigen::VectorXd x_min(nX()), x_max(nX());
+		x_min << q_min, v_min;
+		x_max << q_max, v_max;
 
 		setXMin(x_min);	// TODO: remove boundary constraints for axes position; they must be handled by the non-linear SR-constraints.
 		setXMax(x_max);
@@ -27,7 +31,7 @@ namespace mpmc
 		_errorWeight.fill(1.);
 
 		// Initialize washout position.
-		platform->getDefaultAxesPosition(_washoutPosition.data());
+		platform->getDefaultAxesPosition();
 	}
 
 	void MotionPlatformModelPredictiveController::LagrangeTerm(const Eigen::VectorXd& z, unsigned i, Eigen::MatrixXd& H, Eigen::VectorXd& g) const
@@ -39,7 +43,7 @@ namespace mpmc
 		MatrixXd ssC(_Ny, nX());
 		MatrixXd ssD(_Ny, nU());
 		VectorXd y(_Ny);
-		_platform->Output(z.data(), z.data() + nX(), y.data(), ssC.data(), ssD.data());
+		_platform->Output(z.topRows(nX()), z.bottomRows(nU()), y, ssC, ssD);
 
 		// G = [C, D]
 		MatrixXd G(_Ny, nX() + nU());

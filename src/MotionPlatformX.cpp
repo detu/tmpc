@@ -9,42 +9,36 @@ namespace mpmc
 	{
 	}
 
-	void MotionPlatformX::Output(const double * x, const double * u, double * y, double * C, double * D) const
+	void MotionPlatformX::Output(const Eigen::VectorXd& x, const Eigen::VectorXd& u, Eigen::VectorXd& y, Eigen::MatrixXd& C, Eigen::MatrixXd& D) const
 	{
 		// Specific force
-		Eigen::Map<Eigen::Vector3d> f(y);
-		f = getGravity();
+		auto f = getGravity();
 		f(0) -= u[0];
 
 		// Rotational velocity
-		Eigen::Map<Eigen::Vector3d> omega(y + 3);
-		omega.fill(0.);
+		static const Eigen::Vector3d omega(0., 0., 0.);
+
+		y << f, omega;
 
 		// C = dy/dx
-		if (C)
-		{
-			Eigen::Map<ColMajorMatrix> map_C(C, getOutputDim(), getStateDim());
-			map_C.fill(0.);
-		}
+		C << Eigen::MatrixXd::Zero(getOutputDim(), getStateDim());
 
 		// D = dy/du
-		if (D)
-		{
-			Eigen::Map<ColMajorMatrix> map_D(D, getOutputDim(), getInputDim());
-			map_D.fill(0.);
-			map_D(0, 0) = -1;
-		}
+		D << Eigen::MatrixXd::Zero(getOutputDim(), getInputDim());
+		D(0, 0) = -1;
 	}
 
-	void MotionPlatformX::getDefaultAxesPosition(double * q) const
+	Eigen::VectorXd MotionPlatformX::getDefaultAxesPosition() const
 	{
-		q[0] = 0;
+		Eigen::VectorXd result(1);
+		result << 0.;
+		return result;
 	}
 
-	void MotionPlatformX::getAxesLimits(double * q_min, double * q_max, double * v_min, double * v_max, double * u_min, double * u_max) const
+	void MotionPlatformX::getAxesLimits(Eigen::VectorXd& q_min, Eigen::VectorXd& q_max, Eigen::VectorXd& v_min, Eigen::VectorXd& v_max, Eigen::VectorXd& u_min, Eigen::VectorXd& u_max) const
 	{
-		q_min[0] = -1;	q_max[0] = 1;
-		v_min[0] = -1;	v_max[0] = 1;
-		u_min[0] = -1;  u_max[0] = 1;
+		q_min << -1;	q_max << 1;
+		v_min << -1;	v_max << 1;
+		u_min << -1;	u_max << 1;
 	}
 }

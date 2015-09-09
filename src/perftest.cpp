@@ -27,24 +27,18 @@ int main(int argc, char * argv[])
 	{
 		const size_t n_iter = 100000;
 
-		std::vector<double> x(nX, 0);
-		std::vector<double> u(nU, 0);
-		std::vector<double> y(nY);
-		std::vector<double> C(nY * nX);
-		std::vector<double> D(nY * nU);
+		Eigen::VectorXd x = Eigen::VectorXd::Zero(nX);
+		Eigen::VectorXd u = Eigen::VectorXd::Zero(nU);
+		Eigen::VectorXd y = Eigen::VectorXd::Zero(nY);
+		Eigen::MatrixXd C = Eigen::MatrixXd::Zero(nY, nX);
+		Eigen::MatrixXd D = Eigen::MatrixXd::Zero(nY, nU);
 
-		double * px = x.data();
-		double * pu = u.data();
-		double * py = y.data();
-		double * pC = C.data();
-		double * pD = D.data();
-
-		cms.getDefaultAxesPosition(px);
+		x.topRows(cms.getNumberOfAxes()) = cms.getDefaultAxesPosition();
 
 		std::cout << "Running single-vector test..." << std::endl;
 		const clock_t t0 = clock();
 		for (size_t i = 0; i < n_iter; ++i)
-			cms.Output(px, pu, py, pC, pD);
+			cms.Output(x, u, y, C, D);
 		const clock_t t1 = clock();
 		const double elapsed_time = (double)(t1 - t0) / CLOCKS_PER_SEC;
 
@@ -55,26 +49,30 @@ int main(int argc, char * argv[])
 		const size_t n_iter = 100;
 		const unsigned nT = 1000;
 
-		std::vector<double> x(nX * nT, 0);
-		std::vector<double> u(nU * nT, 0);
-		std::vector<double> y(nY * nT);
-		std::vector<double> C(nY * nX * nT);
-		std::vector<double> D(nY * nU * nT);
-
-		double * px = x.data();
-		double * pu = u.data();
-		double * py = y.data();
-		double * pC = C.data();
-		double * pD = D.data();
+		Eigen::MatrixXd x = Eigen::MatrixXd::Zero(nX, nT);
+		Eigen::MatrixXd u = Eigen::MatrixXd::Zero(nU, nT);
+		Eigen::MatrixXd y = Eigen::MatrixXd::Zero(nY, nT);
+		Eigen::MatrixXd C = Eigen::MatrixXd::Zero(nY, nX * nT);
+		Eigen::MatrixXd D = Eigen::MatrixXd::Zero(nY, nU * nT);
 
 		for (size_t j = 0; j < nT; ++j)
-			cms.getDefaultAxesPosition(px + j * nX);
+			x.col(j).topRows(cms.getNumberOfAxes()) = cms.getDefaultAxesPosition();
 
 		std::cout << "Running multiple-vector test..." << std::endl;
 		const clock_t t0 = clock();
 		for (size_t i = 0; i < n_iter; ++i)
 			for (size_t j = 0; j < nT; ++j)
-				cms.Output(px + j * nX, pu + j * nU, py + j * nY, pC + j * nY * nX, pD + j * nY * nU);
+			{
+				Eigen::VectorXd yj(nY);
+				Eigen::MatrixXd Cj(nY, nX);
+				Eigen::MatrixXd Dj(nY, nU);
+				cms.Output(x.col(j), u.col(j), yj, Cj, Dj);
+
+				y.col(j) = yj;
+				C.middleCols(nX * j, nX) = Cj;
+				D.middleCols(nU * j, nU) = Dj;
+			}
+
 		const clock_t t1 = clock();
 		const double elapsed_time = (double)(t1 - t0) / CLOCKS_PER_SEC;
 

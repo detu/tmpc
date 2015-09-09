@@ -100,8 +100,18 @@ namespace camels
 
 	MPC_Controller::VectorMap MPC_Controller::w(unsigned i)
 	{
-		assert(i < _Nt + 1);
+		if(!(i < _Nt + 1))
+			throw std::out_of_range("MPC_Controller::w(): index is out of range");
+
 		return VectorMap(_w.data() + i * _Nz, i < _Nt ? _Nz : _Nx);
+	}
+
+	MPC_Controller::VectorConstMap MPC_Controller::w(unsigned i) const
+	{
+		if (!(i < _Nt + 1))
+			throw std::out_of_range("MPC_Controller::w(): index is out of range");
+
+		return VectorConstMap(_w.data() + i * _Nz, i < _Nt ? _Nz : _Nx);
 	}
 
 	void MPC_Controller::InitWorkingPoint( const Eigen::VectorXd& x0 )
@@ -168,16 +178,17 @@ namespace camels
 		UpdateQP();
 	}
 
-	void MPC_Controller::getWorkingU(unsigned i, double * pu) const
+	Eigen::VectorXd MPC_Controller::getWorkingU(unsigned i) const
 	{
-		assert(i < _Nt);
-		std::copy_n(_w.data() + i * _Nz + _Nx, _Nu, pu);
+		if (!(i < _Nt))
+			throw std::out_of_range("MPC_Controller::getWorkingU(): index is out of range");
+
+		return w(i).bottomRows(nU());
 	}
 
-	void MPC_Controller::EmbedInitialValue(const double * px0)
+	void MPC_Controller::EmbedInitialValue(const Eigen::VectorXd& x0)
 	{
 		/** embed current initial value */
-		Eigen::Map<const Eigen::VectorXd> x0(px0, _Nx);
 		_QP.xMin(0) = x0 - w(0).topRows(_Nx);
 		_QP.xMax(0) = x0 - w(0).topRows(_Nx);
 	}

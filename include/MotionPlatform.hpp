@@ -115,11 +115,11 @@ namespace mpmc
 		typedef Eigen::Map<const Eigen::VectorXd> ConstVectorMap;
 		typedef Eigen::Map<Eigen::MatrixXd, 0, DynamicStride> MatrixMap;
 
-		virtual void getAxesLimits(double * q_min, double * q_max, double * v_min, double * v_max, double * u_min, double * u_max) const = 0;
-		virtual void getDefaultAxesPosition(double * q) const = 0;
+		virtual void getAxesLimits(Eigen::VectorXd& q_min, Eigen::VectorXd& q_max, Eigen::VectorXd& v_min, Eigen::VectorXd& v_max, Eigen::VectorXd& u_min, Eigen::VectorXd& u_max) const = 0;
+		virtual Eigen::VectorXd getDefaultAxesPosition() const = 0;
 
 		// Output matrices storage order is column-major.
-		virtual void Output(const double * x, const double * u, double * y, double * C = nullptr, double * D = nullptr) const = 0;
+		virtual void Output(const Eigen::VectorXd& x, const Eigen::VectorXd& u, Eigen::VectorXd& y, Eigen::MatrixXd& C, Eigen::MatrixXd& D) const = 0;
 
 	private:
 		Eigen::Vector3d _gravity;

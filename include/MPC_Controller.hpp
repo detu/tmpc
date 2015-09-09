@@ -26,9 +26,9 @@ namespace camels
 		void InitWorkingPoint(const Eigen::VectorXd& x0);
 		void Solve();
 
-		void EmbedInitialValue(const double * px0);
+		void EmbedInitialValue(const Eigen::VectorXd& x0);
 
-		void getWorkingU(unsigned i, double * pu) const;
+		Eigen::VectorXd getWorkingU(unsigned i) const;
 		void PrepareForNext();
 
 		void PrintQP_C(std::ostream& os) const;
@@ -77,6 +77,7 @@ namespace camels
 		void UpdateQP();
 
 		VectorMap w(unsigned i);
+		VectorConstMap w(unsigned i) const;
 
 		const double _sampleTime;
 

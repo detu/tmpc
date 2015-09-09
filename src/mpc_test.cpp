@@ -1,6 +1,7 @@
 #include <MotionPlatformModelPredictiveController.hpp>
 #include <MotionPlatformX.hpp>
 #include <CyberMotion.hpp>
+#include <CyberMotion1D.hpp>
 
 #include <iostream>
 #include <fstream>
@@ -10,8 +11,12 @@
 //int not_main(int argc, char * argv[])
 TEST(mpc_test, mpc_test_case)
 {
-	const auto platform = std::make_shared<mpmc::MotionPlatformX>();
-	//const auto platform = std::make_shared<mpmc::CyberMotion>();
+	//const auto platform = std::make_shared<mpmc::MotionPlatformX>();
+	const auto platform = std::make_shared<mpmc::CyberMotion1D>();
+
+	const double full_state[] = { 4.8078, 0.1218, -1.5319, 0.4760, 0.0006, 0.1396, -0.0005, 0.7991 };
+	platform->setFullState(mpmc::CyberMotion1D::FullStateVector(full_state));
+
 	const double Ts = 0.05;
 	const unsigned Nt = 1;
 	const unsigned simulation_steps = 20;
@@ -25,7 +30,7 @@ TEST(mpc_test, mpc_test_case)
 
 	Eigen::VectorXd x0(controller.nX());
 	x0.fill(0.);
-	platform->getDefaultAxesPosition(x0.data());
+	x0.topRows(platform->getNumberOfAxes()) = platform->getDefaultAxesPosition();
 	controller.InitWorkingPoint(x0);
 
 	Eigen::MatrixXd y_ref(platform->getOutputDim(), Nt);
@@ -46,7 +51,7 @@ TEST(mpc_test, mpc_test_case)
 		}
 
 		controller.setReference(y_ref);
-		controller.EmbedInitialValue(x0.data());
+		controller.EmbedInitialValue(x0);
 		//controller.PrintQP(std::cout);
 
 		try
@@ -83,7 +88,7 @@ TEST(mpc_test, mpc_test_case)
 			throw;
 		}
 
-		controller.getWorkingU(0, u.data());
+		u = controller.getWorkingU(0);
 		controller.PrepareForNext();
 
 		std::cout << "\tu = " << u << std::endl;

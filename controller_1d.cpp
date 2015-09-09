@@ -73,16 +73,15 @@
 #include "simstruc.h"
 
 #include "MotionPlatformX.hpp"
-#include "CyberMotion.hpp"
+#include "CyberMotion1D.hpp"
 #include "MotionPlatformModelPredictiveController.hpp"
 
 #include <memory>
 #include <fstream>
 
-typedef Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> RowMajorMatrix;
-
 // Motion platform to use
-auto platform = std::make_shared<PLATFORM_TYPE>();
+auto platform = std::make_shared<mpmc::CyberMotion1D>();
+const unsigned n_axes = 8;
 
 // Log stream.
 std::ofstream log_stream;
@@ -119,57 +118,57 @@ void setController(SimStruct * S, mpmc::MotionPlatformModelPredictiveController 
  */
 static void mdlInitializeSizes(SimStruct *S)
 {
-    DECL_AND_INIT_DIMSINFO(inputDimsInfo);
-    DECL_AND_INIT_DIMSINFO(outputDimsInfo);
-    ssSetNumSFcnParams(S, NPARAMS);
-     if (ssGetNumSFcnParams(S) != ssGetSFcnParamsCount(S)) {
+	DECL_AND_INIT_DIMSINFO(inputDimsInfo);
+	DECL_AND_INIT_DIMSINFO(outputDimsInfo);
+	ssSetNumSFcnParams(S, NPARAMS);
+	 if (ssGetNumSFcnParams(S) != ssGetSFcnParamsCount(S)) {
 	 return; /* Parameter mismatch will be reported by Simulink */
-     }
+	 }
 
-    ssSetNumContStates(S, NUM_CONT_STATES);
-    ssSetNumDiscStates(S, NUM_DISC_STATES);
+	ssSetNumContStates(S, NUM_CONT_STATES);
+	ssSetNumDiscStates(S, NUM_DISC_STATES);
 
-    if (!ssSetNumInputPorts(S, NUM_INPUTS)) return;
-    /*Input Port 0 */
-    ssSetInputPortWidth(S,  0, platform->getOutputDim()); /* */
-    ssSetInputPortDataType(S, 0, SS_DOUBLE);
-    ssSetInputPortComplexSignal(S,  0, INPUT_0_COMPLEX);
-    ssSetInputPortDirectFeedThrough(S, 0, INPUT_0_FEEDTHROUGH);
-    ssSetInputPortRequiredContiguous(S, 0, 1); /*direct input signal access*/
+	if (!ssSetNumInputPorts(S, NUM_INPUTS)) return;
+	/*Input Port 0 */
+	ssSetInputPortWidth(S,  0, platform->getOutputDim()); /* */
+	ssSetInputPortDataType(S, 0, SS_DOUBLE);
+	ssSetInputPortComplexSignal(S,  0, INPUT_0_COMPLEX);
+	ssSetInputPortDirectFeedThrough(S, 0, INPUT_0_FEEDTHROUGH);
+	ssSetInputPortRequiredContiguous(S, 0, 1); /*direct input signal access*/
 
-    /*Input Port 1 */
-    ssSetInputPortWidth(S,  1, platform->getStateDim());
-    ssSetInputPortDataType(S, 1, SS_DOUBLE);
-    ssSetInputPortComplexSignal(S, 1, INPUT_1_COMPLEX);
-    ssSetInputPortDirectFeedThrough(S, 1, INPUT_1_FEEDTHROUGH);
-    ssSetInputPortRequiredContiguous(S, 1, 1); /*direct input signal access*/
+	/*Input Port 1 */
+	ssSetInputPortWidth(S, 1, 2 * n_axes);
+	ssSetInputPortDataType(S, 1, SS_DOUBLE);
+	ssSetInputPortComplexSignal(S, 1, INPUT_1_COMPLEX);
+	ssSetInputPortDirectFeedThrough(S, 1, INPUT_1_FEEDTHROUGH);
+	ssSetInputPortRequiredContiguous(S, 1, 1); /*direct input signal access*/
 
 
-    if (!ssSetNumOutputPorts(S, NUM_OUTPUTS)) return;
-    ssSetOutputPortWidth(S, 0, platform->getInputDim());
-    ssSetOutputPortDataType(S, 0, SS_DOUBLE);
-    ssSetOutputPortComplexSignal(S, 0, OUTPUT_0_COMPLEX);
-    ssSetNumSampleTimes(S, 1);
-    ssSetNumRWork(S, 0);
-    ssSetNumIWork(S, 1);	// Reserve 1 IWork for the "Working Point Initialized" flag.
-    
-    // One PWork vector for storing a pointer to MPC_Controller.
-    ssSetNumPWork(S, 1);
-    ssSetNumModes(S, 0);
-    ssSetNumNonsampledZCs(S, 0);
+	if (!ssSetNumOutputPorts(S, NUM_OUTPUTS)) return;
+	ssSetOutputPortWidth(S, 0, n_axes);
+	ssSetOutputPortDataType(S, 0, SS_DOUBLE);
+	ssSetOutputPortComplexSignal(S, 0, OUTPUT_0_COMPLEX);
+	ssSetNumSampleTimes(S, 1);
+	ssSetNumRWork(S, 0);
+	ssSetNumIWork(S, 1);	// Reserve 1 IWork for the "Working Point Initialized" flag.
+	
+	// One PWork vector for storing a pointer to MPC_Controller.
+	ssSetNumPWork(S, 1);
+	ssSetNumModes(S, 0);
+	ssSetNumNonsampledZCs(S, 0);
 
-    ssSetSimulinkVersionGeneratedIn(S, "8.4");
+	ssSetSimulinkVersionGeneratedIn(S, "8.4");
 
-    /* Take care when specifying exception free code - see sfuntmpl_doc.c */
-    ssSetOptions(S, (/*SS_OPTION_EXCEPTION_FREE_CODE |*/ SS_OPTION_WORKS_WITH_CODE_REUSE));
+	/* Take care when specifying exception free code - see sfuntmpl_doc.c */
+	ssSetOptions(S, (/*SS_OPTION_EXCEPTION_FREE_CODE |*/ SS_OPTION_WORKS_WITH_CODE_REUSE));
 }
 
 # define MDL_SET_INPUT_PORT_FRAME_DATA
 static void mdlSetInputPortFrameData(SimStruct  *S, 
-                                     int_T      port,
-                                     Frame_T    frameData)
+									 int_T      port,
+									 Frame_T    frameData)
 {
-    ssSetInputPortFrameData(S, port, frameData);
+	ssSetInputPortFrameData(S, port, frameData);
 }
 /* Function: mdlInitializeSampleTimes =========================================
  * Abstract:
@@ -177,8 +176,8 @@ static void mdlSetInputPortFrameData(SimStruct  *S,
  */
 static void mdlInitializeSampleTimes(SimStruct *S)
 {
-    ssSetSampleTime(S, 0, SAMPLE_TIME_0);
-    ssSetOffsetTime(S, 0, 0.0);
+	ssSetSampleTime(S, 0, SAMPLE_TIME_0);
+	ssSetOffsetTime(S, 0, 0.0);
 }
 #define MDL_INITIALIZE_CONDITIONS
  /* Function: mdlInitializeConditions ========================================
@@ -203,8 +202,8 @@ static void mdlInitializeSampleTimes(SimStruct *S)
 */
 static void mdlStart(SimStruct *S)
 {
-    using Eigen::Map;
-    using Eigen::VectorXd;
+	using Eigen::Map;
+	using Eigen::VectorXd;
 
 	/** Initialize MPC_Controller */
 
@@ -219,44 +218,49 @@ static void mdlStart(SimStruct *S)
 
 	auto controller = std::make_unique<mpmc::MotionPlatformModelPredictiveController>(platform, SAMPLE_TIME_0, static_cast<unsigned>(n_intervals));
 	controller->setLevenbergMarquardt(0.01);
-    
-    // Set motion limits from block parameters.
-    const auto n_axes = platform->getNumberOfAxes();
-    const mxArray * mx_qMin = ssGetSFcnParam(S, 0);
-    if(!mx_qMin || mxGetNumberOfElements(mx_qMin) != n_axes)
-        throw std::runtime_error("Invalid number of elements for parameter qMin");
-    
-    const mxArray * mx_qMax = ssGetSFcnParam(S, 1);
-    if(!mx_qMax || mxGetNumberOfElements(mx_qMax) != n_axes)
-        throw std::runtime_error("Invalid number of elements for parameter qMax");
-    
-    const mxArray * mx_vMin = ssGetSFcnParam(S, 2);
-    if(!mx_vMin || mxGetNumberOfElements(mx_vMin) != n_axes)
-        throw std::runtime_error("Invalid number of elements for parameter vMin");
-    
-    const mxArray * mx_vMax = ssGetSFcnParam(S, 3);
-    if(!mx_vMax || mxGetNumberOfElements(mx_vMax) != n_axes)
-        throw std::runtime_error("Invalid number of elements for parameter vMax");
-    
-    const mxArray * mx_uMin = ssGetSFcnParam(S, 4);
-    if(!mx_uMin || mxGetNumberOfElements(mx_uMin) != n_axes)
-        throw std::runtime_error("Invalid number of elements for parameter uMin");
-    
-    const mxArray * mx_uMax = ssGetSFcnParam(S, 5);
-    if(!mx_uMax || mxGetNumberOfElements(mx_uMax) != n_axes)
-        throw std::runtime_error("Invalid number of elements for parameter uMax");
-    
-    VectorXd x_min(2 * n_axes), x_max(2 * n_axes);
-    x_min << Map<VectorXd>(mxGetPr(mx_qMin), n_axes), Map<VectorXd>(mxGetPr(mx_vMin), n_axes);
-    x_max << Map<VectorXd>(mxGetPr(mx_qMax), n_axes), Map<VectorXd>(mxGetPr(mx_vMax), n_axes);
-    
-    const Map<VectorXd> u_min(mxGetPr(mx_uMin), n_axes);
-    const Map<VectorXd> u_max(mxGetPr(mx_uMax), n_axes);
-    
-    controller->setXMin(x_min);
-    controller->setXMax(x_max);
-    controller->setUMin(u_min);
-    controller->setUMax(u_max);
+	
+	// Set motion limits from block parameters.
+	const mxArray * mx_qMin = ssGetSFcnParam(S, 0);
+	if(!mx_qMin || mxGetNumberOfElements(mx_qMin) != n_axes)
+		throw std::runtime_error("Invalid number of elements for parameter qMin");
+	
+	const mxArray * mx_qMax = ssGetSFcnParam(S, 1);
+	if(!mx_qMax || mxGetNumberOfElements(mx_qMax) != n_axes)
+		throw std::runtime_error("Invalid number of elements for parameter qMax");
+	
+	const mxArray * mx_vMin = ssGetSFcnParam(S, 2);
+	if(!mx_vMin || mxGetNumberOfElements(mx_vMin) != n_axes)
+		throw std::runtime_error("Invalid number of elements for parameter vMin");
+	
+	const mxArray * mx_vMax = ssGetSFcnParam(S, 3);
+	if(!mx_vMax || mxGetNumberOfElements(mx_vMax) != n_axes)
+		throw std::runtime_error("Invalid number of elements for parameter vMax");
+	
+	const mxArray * mx_uMin = ssGetSFcnParam(S, 4);
+	if(!mx_uMin || mxGetNumberOfElements(mx_uMin) != n_axes)
+		throw std::runtime_error("Invalid number of elements for parameter uMin");
+	
+	const mxArray * mx_uMax = ssGetSFcnParam(S, 5);
+	if(!mx_uMax || mxGetNumberOfElements(mx_uMax) != n_axes)
+		throw std::runtime_error("Invalid number of elements for parameter uMax");
+	
+	VectorXd full_x_min(2 * n_axes), full_x_max(2 * n_axes);
+	full_x_min << Map<VectorXd>(mxGetPr(mx_qMin), n_axes), Map<VectorXd>(mxGetPr(mx_vMin), n_axes);
+	full_x_max << Map<VectorXd>(mxGetPr(mx_qMax), n_axes), Map<VectorXd>(mxGetPr(mx_vMax), n_axes);
+	
+	const Map<VectorXd> full_u_min(mxGetPr(mx_uMin), n_axes);
+	const Map<VectorXd> full_u_max(mxGetPr(mx_uMax), n_axes);
+
+	VectorXd x_min(controller->nX()), x_max(controller->nX()), u_min(controller->nU()), u_max(controller->nU());
+	x_min << full_x_min.row(0), full_x_min.row(n_axes);
+	x_max << full_x_max.row(0), full_x_max.row(n_axes);
+	u_min << full_u_min.row(0);
+	u_max << full_u_max.row(0);
+	
+	controller->setXMin(x_min);
+	controller->setXMax(x_max);
+	controller->setUMin(u_min);
+	controller->setUMax(u_max);
 
 	// Setting the washout position and washout factor from block parameters.
 	const mxArray * mx_washoutPos = ssGetSFcnParam(S, 6);
@@ -267,7 +271,7 @@ static void mdlStart(SimStruct *S)
 	if (mxGetNumberOfElements(mx_washoutFactor) != 1)
 		throw std::runtime_error("washoutFactor must be a scalar");
 
-	controller->setWashoutPosition(Map<VectorXd>(mxGetPr(mx_washoutPos), n_axes));
+	controller->setWashoutPosition(Map<VectorXd>(mxGetPr(mx_washoutPos), n_axes).row(0));
 	controller->setWashoutFactor(mxGetScalar(mx_washoutFactor));
 
 	// Initialize weighting matrices.
@@ -284,8 +288,8 @@ static void mdlStart(SimStruct *S)
 	if (mxGetScalar(mx_finalVelocityZero) != 0.)
 	{
 		VectorXd term_x_min = x_min, term_x_max = x_max;
-		term_x_min.bottomRows(n_axes).fill(0.);
-		term_x_max.bottomRows(n_axes).fill(0.);
+		term_x_min.bottomRows(1).fill(0.);
+		term_x_max.bottomRows(1).fill(0.);
 
 		controller->setTerminalXMin(term_x_min);
 		controller->setTerminalXMax(term_x_max);
@@ -295,8 +299,8 @@ static void mdlStart(SimStruct *S)
 		controller->setTerminalXMin(x_min);
 		controller->setTerminalXMax(x_max);
 	}
-	    
-    std::ostringstream os;
+		
+	std::ostringstream os;
 	os << "Controller limits set to:" << std::endl
 		<< "xMin =\t" << controller->getXMin().transpose() << std::endl
 		<< "xMax =\t" << controller->getXMax().transpose() << std::endl
@@ -309,8 +313,8 @@ static void mdlStart(SimStruct *S)
 		<< "washoutFactor =\t" << controller->getWashoutFactor() << std::endl
 		<< "nIntervals =\t" << controller->getNumberOfIntervals() << std::endl
 		<< "errorWeight =\t" << controller->getErrorWeight().transpose() << std::endl;
-    
-    ssPrintf(os.str().c_str());
+	
+	ssPrintf(os.str().c_str());
 
 	setController(S, controller.release());
 }
@@ -319,12 +323,12 @@ static void mdlStart(SimStruct *S)
 #define MDL_SET_INPUT_PORT_DATA_TYPE
 static void mdlSetInputPortDataType(SimStruct *S, int port, DTypeId dType)
 {
-    ssSetInputPortDataType( S, 0, dType);
+	ssSetInputPortDataType( S, 0, dType);
 }
 #define MDL_SET_OUTPUT_PORT_DATA_TYPE
 static void mdlSetOutputPortDataType(SimStruct *S, int port, DTypeId dType)
 {
-    ssSetOutputPortDataType(S, 0, dType);
+	ssSetOutputPortDataType(S, 0, dType);
 }
 
 #define MDL_SET_DEFAULT_PORT_DATA_TYPES
@@ -344,20 +348,27 @@ static void mdlOutputs(SimStruct *S, int_T tid)
 	Map<const VectorXd> x((const real_T*)ssGetInputPortSignal(S, 1), ssGetCurrentInputPortWidth(S, 1));
 	Map<VectorXd> u((real_T *)ssGetOutputPortRealSignal(S, 0), ssGetCurrentOutputPortWidth(S, 0));
 
+	auto * controller = getController(S);
+
+	// Set platform's current state.
+	platform->setFullState(x);
+
+	// Make a "reduced" state vector, containing only axis 0 position and acceleration.
+	VectorXd x0(controller->nX());
+	x0 << x.row(0), x.row(n_axes);
+
 	Map<const VectorXd> y0_ref((const real_T*)ssGetInputPortSignal(S, 0), ssGetCurrentInputPortWidth(S, 0));
 	//Map<const VectorXd> x((const real_T*)ssGetInputPortSignal(S, 1), ssGetCurrentInputPortWidth(S, 1));
 	//Map<VectorXd> u((real_T *)ssGetOutputPortRealSignal(S, 0), ssGetCurrentOutputPortWidth(S, 0));
 
-	auto * controller = getController(S);
-
 	// Initialize working point if needed.
 	if (!getWorkingPointInitialized(S))
 	{
-		controller->InitWorkingPoint(x);
+		controller->InitWorkingPoint(x0);
 		setWorkingPointInitialized(S, true);
 
 		std::ostringstream os;
-		os << "mdlOutputs(): MPC controller working point initialized to " << x.transpose() << std::endl;
+		os << "mdlOutputs(): MPC controller working point initialized to " << x0.transpose() << std::endl;
 		ssPrintf(os.str().c_str());
 	}
 
@@ -369,9 +380,9 @@ static void mdlOutputs(SimStruct *S, int_T tid)
 
 	try
 	{
-        controller->setReference(y_ref);
-		controller->EmbedInitialValue(x);
-        
+		controller->setReference(y_ref);
+		controller->EmbedInitialValue(x0);
+		
 		/** Solve QP */
 		controller->Solve();
 
@@ -379,7 +390,8 @@ static void mdlOutputs(SimStruct *S, int_T tid)
 // 		log_stream << std::flush;
 
 		// Copy u[0] to output.
-		u = controller->getWorkingU(0);
+		u.setConstant(0.);
+		u.row(0) = controller->getWorkingU(0);
 
 		// Prepare for the next step.
 		controller->PrepareForNext();
@@ -417,10 +429,10 @@ static void mdlOutputs(SimStruct *S, int_T tid)
    */
 static void mdlUpdate(SimStruct *S, int_T tid)
 {
-    real_T         *xD  = ssGetDiscStates(S);
-    const real_T   *y_ref  = (const real_T*) ssGetInputPortSignal(S,0);
-    const real_T   *x  = (const real_T*) ssGetInputPortSignal(S,1);
-    real_T        *u  = (real_T *)ssGetOutputPortRealSignal(S,0);
+	real_T         *xD  = ssGetDiscStates(S);
+	const real_T   *y_ref  = (const real_T*) ssGetInputPortSignal(S,0);
+	const real_T   *x  = (const real_T*) ssGetInputPortSignal(S,1);
+	real_T        *u  = (real_T *)ssGetOutputPortRealSignal(S,0);
 }
 
 /* Function: mdlTerminate =====================================================

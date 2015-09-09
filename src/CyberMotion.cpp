@@ -5,8 +5,6 @@
 #include <limits>
 #include <algorithm>
 
-typedef Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> ColMajorMatrix;
-
 namespace CMS_output_jacobian
 {
 	void evaluate(const double * x, const double * u, double * y, double * dy_dx, double * dy_du);
@@ -27,26 +25,60 @@ matrix_size_t getSize(int i)
 namespace mpmc
 {
 	CyberMotion::CyberMotion()
-		: MotionPlatform(8)
+		: MotionPlatform(numberOfAxes)
 	{
 	}
 
-	void CyberMotion::Output(const double * x, const double * u, double * y, double * C, double * D) const
+	void CyberMotion::Output(const Eigen::VectorXd& x, const Eigen::VectorXd& u, Eigen::VectorXd& y, Eigen::MatrixXd& C, Eigen::MatrixXd& D) const
 	{
+		if (x.size() != getStateDim())
+			throw std::invalid_argument("CyberMotion::Output(): x has wrong size.");
+
+		if (u.size() != getInputDim())
+			throw std::invalid_argument("CyberMotion::Output(): u has wrong size.");
+
+		if (y.size() != getOutputDim())
+			throw std::invalid_argument("CyberMotion::Output(): y has wrong size.");
+
+		if (!(C.rows() == getOutputDim() && C.cols() == getStateDim()))
+			throw std::invalid_argument("CyberMotion::Output(): C has wrong size.");
+
+		if (!(D.rows() == getOutputDim() && D.cols() == getInputDim()))
+			throw std::invalid_argument("CyberMotion::Output(): D has wrong size.");
+
 		// Call CasADi-generated code.
-		CMS_output_jacobian::evaluate(x, u, y, C, D);
+		CMS_output_jacobian::evaluate(x.data(), u.data(), y.data(), C.data(), D.data());
 	}
 
-	void CyberMotion::getDefaultAxesPosition(double * q) const
+	Eigen::VectorXd CyberMotion::getDefaultAxesPosition() const
 	{
 		// The "agile" position.
-		const std::array<double, 8> q0 = { 4.8078, 0.1218, -1.5319, 0.4760, 0.0006, 0.1396, -0.0005, 0.7991 };
-		std::copy(q0.begin(), q0.end(), q);
+		Eigen::VectorXd result(numberOfAxes);
+		result << 4.8078, 0.1218, -1.5319, 0.4760, 0.0006, 0.1396, -0.0005, 0.7991;
+		return result;
 	}
 
-	void CyberMotion::getAxesLimits(double * q_min, double * q_max, double * v_min, double * v_max, double * u_min, double * u_max) const
+	void CyberMotion::getAxesLimits(Eigen::VectorXd& q_min, Eigen::VectorXd& q_max, Eigen::VectorXd& v_min, Eigen::VectorXd& v_max, Eigen::VectorXd& u_min, Eigen::VectorXd& u_max) const
 	{
-		static const double data[8][6] = {
+		if (q_min.size() != numberOfAxes)
+			throw std::invalid_argument("CyberMotion::getAxesLimits(): q_min has wrong size.");
+
+		if (q_max.size() != numberOfAxes)
+			throw std::invalid_argument("CyberMotion::getAxesLimits(): q_max has wrong size.");
+
+		if (v_min.size() != numberOfAxes)
+			throw std::invalid_argument("CyberMotion::getAxesLimits(): v_min has wrong size.");
+
+		if (v_max.size() != numberOfAxes)
+			throw std::invalid_argument("CyberMotion::getAxesLimits(): v_max has wrong size.");
+
+		if (u_min.size() != numberOfAxes)
+			throw std::invalid_argument("CyberMotion::getAxesLimits(): u_min has wrong size.");
+
+		if (u_max.size() != numberOfAxes)
+			throw std::invalid_argument("CyberMotion::getAxesLimits(): u_max has wrong size.");
+
+		static const double data[numberOfAxes][6] = {
 			{ 0.2, 9.3, -1.47, 1.47, -1.0780, 1.0780 },
 			{ -std::numeric_limits<double>::infinity(), std::numeric_limits<double>::infinity(), -1.1802, 1.1802, -1.6762, 1.6762 },
 			{ -2.1447, -0.8727, -0.9749, 0.9749, -1.1973, 1.1973 },
@@ -60,11 +92,11 @@ namespace mpmc
 			{ 0.5700, 1.1603, -0.2450, 0.2450, -0.9800, 0.9800 }
 		};
 
-		for (int i = 0; i < 8; ++i)
+		for (int i = 0; i < numberOfAxes; ++i)
 		{
-			q_min[i] = data[i][0];	q_max[i] = data[i][1];
-			v_min[i] = data[i][2];	v_max[i] = data[i][3];
-			u_min[i] = data[i][4];	u_max[i] = data[i][5];
+			q_min(i) = data[i][0];	q_max(i) = data[i][1];
+			v_min(i) = data[i][2];	v_max(i) = data[i][3];
+			u_min(i) = data[i][4];	u_max(i) = data[i][5];
 		}
 	}
 }
