@@ -35,10 +35,6 @@ namespace camels
 		_terminalXMax.fill( std::numeric_limits<double>::infinity());
 	}
 
-	MPC_Controller::~MPC_Controller()
-	{
-	}
-
 	void MPC_Controller::PrintQP_C(std::ostream& log_stream) const
 	{
 		_QP.PrintQP_C(log_stream);
@@ -114,6 +110,11 @@ namespace camels
 		return VectorConstMap(_w.data() + i * _Nz, i < _Nt ? _Nz : _Nx);
 	}
 
+	MPC_Controller::VectorConstMap MPC_Controller::getWorkingPoint(unsigned i) const
+	{
+		return w(i);
+	}
+
 	void MPC_Controller::InitWorkingPoint( const Eigen::VectorXd& x0 )
 	{
 		using namespace Eigen;
@@ -157,6 +158,10 @@ namespace camels
 		// Adding Levenberg-Marquardt term to make H positive-definite.
 		_QP.H(_Nt) = H_T + _levenbergMarquardt * MatrixXd::Identity(_Nx, _Nx);
 		_QP.g(_Nt) = g_T;
+
+		// Call the QP callback, if there is one.
+		if(_QPCallback)
+			_QPCallback(_QP);
 
 		/** solve QP */
 		_Solver.Solve(_QP);
@@ -256,4 +261,8 @@ namespace camels
 		_uMax = val;
 	}
 
+	void MPC_Controller::setQPCallback(const QPCallback& cb)
+	{
+		_QPCallback = cb;
+	}
 }

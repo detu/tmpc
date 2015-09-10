@@ -49,7 +49,7 @@ namespace camels
 
 		void PrintQP_zMin_C(std::ostream& log_stream) const;
 
-		void PrintQP_MATLAB(std::ostream& log_stream) const;
+		void PrintQP_MATLAB(std::ostream& log_stream, const std::string& var_name = "qp") const;
 
 		const MultiStageQPSize& size() const;
 		size_type nT() const;

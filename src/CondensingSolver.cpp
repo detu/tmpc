@@ -143,6 +143,7 @@ namespace camels
 		_problem(size.nIndep(), size.nDep() + size.nConstr())
 	{
 		qpOASES::Options options;
+		options.printLevel = qpOASES::PL_LOW;
 		_problem.setOptions(options);
 	}
 

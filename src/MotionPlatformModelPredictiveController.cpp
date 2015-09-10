@@ -62,6 +62,14 @@ namespace mpmc
 		// g = 2 * (y_bar - y_hat)^T * W * G
 		g = (y - _yRef.col(i)).transpose() * W * G;
 
+		std::clog << "MotionPlatformModelPredictiveController::LagrangeTerm(): " << std::endl
+				<< "z            = " << z.transpose() << std::endl
+				<< "y            = " << y.transpose() << std::endl
+				<< "_yRef.col(i) = " << _yRef.col(i).transpose() << std::endl
+				<< "W = " << Eigen::MatrixXd(W) << std::endl
+				<< "G = " << G << std::endl
+				<< "g = " << g << std::endl;
+
 		/*
 		// Linear term corresponding to washout (penalty for final state deviating from the default position).
 		g.topRows(nX()) += _washoutFactor * (z.topRows(nX()) - getWashoutState());

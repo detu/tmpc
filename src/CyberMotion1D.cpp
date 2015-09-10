@@ -24,7 +24,6 @@ namespace mpmc
 
 		Eigen::MatrixXd tmpC(getOutputDim(), _fullCMS.getStateDim());
 		Eigen::MatrixXd tmpD(getOutputDim(), _fullCMS.getInputDim());
-
 		_fullCMS.Output(X, U, y, tmpC, tmpD);
 
 		C << tmpC.col(0), tmpC.col(CyberMotion::numberOfAxes);
@@ -51,12 +50,12 @@ namespace mpmc
 		u_max << full_u_max(0);
 	}
 
-	CyberMotion1D::FullStateVector CyberMotion1D::getFullState() const
+	const CyberMotion1D::FullStateVector& CyberMotion1D::getFullState() const
 	{
 		return _fullState;
 	}
 
-	void CyberMotion1D::setFullState(FullStateVector val)
+	void CyberMotion1D::setFullState(const FullStateVector& val)
 	{
 		_fullState = val;
 	}
