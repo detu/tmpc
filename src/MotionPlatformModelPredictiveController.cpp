@@ -49,7 +49,7 @@ namespace mpmc
 		MatrixXd G(_Ny, nX() + nU());
 		G << ssC, ssD;
 
-		const auto W = _errorWeight.cwiseAbs2().asDiagonal();
+		const MatrixXd W = _errorWeight.cwiseAbs2().asDiagonal();
 
 		// H = G^T W G + \mu I
 		H = G.transpose() * W * G;
@@ -61,14 +61,6 @@ namespace mpmc
 
 		// g = 2 * (y_bar - y_hat)^T * W * G
 		g = (y - _yRef.col(i)).transpose() * W * G;
-
-		std::clog << "MotionPlatformModelPredictiveController::LagrangeTerm(): " << std::endl
-				<< "z            = " << z.transpose() << std::endl
-				<< "y            = " << y.transpose() << std::endl
-				<< "_yRef.col(i) = " << _yRef.col(i).transpose() << std::endl
-				<< "W = " << Eigen::MatrixXd(W) << std::endl
-				<< "G = " << G << std::endl
-				<< "g = " << g << std::endl;
 
 		/*
 		// Linear term corresponding to washout (penalty for final state deviating from the default position).
