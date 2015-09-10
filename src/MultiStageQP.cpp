@@ -74,27 +74,27 @@ namespace camels
 		PrintQP_zMax_C(log_stream);
 	}
 
-	void MultiStageQP::PrintQP_MATLAB(std::ostream& log_stream) const
+	void MultiStageQP::PrintQP_MATLAB(std::ostream& log_stream, const std::string& var_name) const
 	{
 		using std::endl;
 
 		for (unsigned k = 0; k <= nT(); ++k)
 		{
-			log_stream << "qp.H{" << k + 1 << "} = [..." << endl << H(k) << "];" << endl;
-			log_stream << "qp.g{" << k + 1 << "} = [..." << endl << g(k) << "];" << endl;
+			log_stream << var_name << ".H{" << k + 1 << "} = [..." << endl << H(k) << "];" << endl;
+			log_stream << var_name << ".g{" << k + 1 << "} = [..." << endl << g(k) << "];" << endl;
 			
 			if (k < nT())
 			{
-				log_stream << "qp.C{" << k + 1 << "} = [..." << endl << C(k) << "];" << endl;
-				log_stream << "qp.c{" << k + 1 << "} = [..." << endl << c(k) << "];" << endl;
+				log_stream << var_name << ".C{" << k + 1 << "} = [..." << endl << C(k) << "];" << endl;
+				log_stream << var_name << ".c{" << k + 1 << "} = [..." << endl << c(k) << "];" << endl;
 			}
 
-			log_stream << "qp.D{" << k + 1 << "} = [..." << endl << D(k) << "];" << endl;
-			log_stream << "qp.dMin{" << k + 1 << "} = [..." << endl << dMin(k) << "];" << endl;
-			log_stream << "qp.dMax{" << k + 1 << "} = [..." << endl << dMax(k) << "];" << endl;
+			log_stream << var_name << ".D{" << k + 1 << "} = [..." << endl << D(k) << "];" << endl;
+			log_stream << var_name << ".dMin{" << k + 1 << "} = [..." << endl << dMin(k) << "];" << endl;
+			log_stream << var_name << ".dMax{" << k + 1 << "} = [..." << endl << dMax(k) << "];" << endl;
 
-			log_stream << "qp.zMin{" << k + 1 << "} = [..." << endl << zMin(k) << "];" << endl;
-			log_stream << "qp.zMax{" << k + 1 << "} = [..." << endl << zMax(k) << "];" << endl;
+			log_stream << var_name << ".zMin{" << k + 1 << "} = [..." << endl << zMin(k) << "];" << endl;
+			log_stream << var_name << ".zMax{" << k + 1 << "} = [..." << endl << zMax(k) << "];" << endl;
 		}
 	}
 

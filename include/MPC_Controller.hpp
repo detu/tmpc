@@ -8,6 +8,7 @@
 #include <vector>
 #include <memory>
 #include <ostream>
+#include <functional>
 
 namespace camels
 {
@@ -19,9 +20,9 @@ namespace camels
 		typedef Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> RowMajorMatrix;
 		typedef Eigen::Map<RowMajorMatrix> RowMajorMatrixMap;
 		typedef Eigen::Map<const RowMajorMatrix> RowMajorMatrixConstMap;
+		typedef std::function<void (const MultiStageQP&)> QPCallback;
 
 		MPC_Controller(unsigned state_dim, unsigned input_dim, unsigned n_path_constr, unsigned n_term_constr, double sample_time, unsigned Nt);
-		~MPC_Controller();
 
 		void InitWorkingPoint(const Eigen::VectorXd& x0);
 		void Solve();
@@ -64,6 +65,10 @@ namespace camels
 		const Eigen::VectorXd& getUMax() const { return _uMax; }
 		void setUMax(const Eigen::VectorXd& val);
 
+		void setQPCallback(const QPCallback& cb);
+
+		VectorConstMap getWorkingPoint(unsigned i) const;
+
 	protected:
 		virtual void LagrangeTerm(const Eigen::VectorXd& z, unsigned i, Eigen::MatrixXd& H, Eigen::VectorXd& g) const = 0;
 		virtual void MayerTerm(const Eigen::VectorXd& x, Eigen::MatrixXd& H, Eigen::VectorXd& g) const = 0;
@@ -88,8 +93,11 @@ namespace camels
 		const unsigned _Nd;
 		const unsigned _NdT;
 		
-		camels::MultiStageQP _QP;
-		camels::CondensingSolver _Solver;
+		MultiStageQP _QP;
+		CondensingSolver _Solver;
+
+		// A callback to call back before solving each QP.
+		QPCallback _QPCallback;
 
 		double _levenbergMarquardt;
 

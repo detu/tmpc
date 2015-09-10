@@ -24,8 +24,8 @@ namespace mpmc
 		Eigen::VectorXd getDefaultAxesPosition() const override;
 		void Output(const Eigen::VectorXd& x, const Eigen::VectorXd& u, Eigen::VectorXd& y, Eigen::MatrixXd& C, Eigen::MatrixXd& D) const override;
 
-		FullStateVector getFullState() const;
-		void setFullState(mpmc::CyberMotion1D::FullStateVector val);
+		const FullStateVector& getFullState() const;
+		void setFullState(const FullStateVector& val);
 
 	private:
 		CyberMotion _fullCMS;

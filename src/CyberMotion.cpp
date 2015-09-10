@@ -46,6 +46,14 @@ namespace mpmc
 		if (!(D.rows() == getOutputDim() && D.cols() == getInputDim()))
 			throw std::invalid_argument("CyberMotion::Output(): D has wrong size.");
 
+		if (!(0.5700 <= x(7) && x(7) <= 1.1603))
+		{
+			std::stringstream msg;
+			msg << "CyberMotion::Output(): axis 7 (cabin) position is out of the [0.5700, 1.1603] range. "
+					<< "Only this range is currently supported (both rollers on the curve). The value given was " << std::to_string(x(7));
+			throw std::out_of_range(msg.str());
+		}
+
 		// Call CasADi-generated code.
 		CMS_output_jacobian::evaluate(x.data(), u.data(), y.data(), C.data(), D.data());
 	}
