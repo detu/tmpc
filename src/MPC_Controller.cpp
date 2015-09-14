@@ -45,6 +45,12 @@ namespace camels
 		_QP.PrintQP_MATLAB(log_stream);
 	}
 
+	void MPC_Controller::PrintWorkingPoint_MATLAB(std::ostream& os, const std::string& var_name) const
+	{
+		for (unsigned i = 0; i <= getNumberOfIntervals(); ++i)
+			os << var_name << "{" << i + 1 << "} = [" << getWorkingPoint(i) << "];" << std::endl;
+	}
+
 	void MPC_Controller::UpdateQP()
 	{
 		using namespace Eigen;

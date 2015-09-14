@@ -36,6 +36,9 @@ namespace camels
 		void PrintQP_zMax_C(std::ostream& log_stream) const;
 		void PrintQP_zMin_C(std::ostream& log_stream) const;
 		void PrintQP_MATLAB(std::ostream& log_stream) const;
+
+		// Log working point
+		void PrintWorkingPoint_MATLAB(std::ostream& os, const std::string& var_name) const;
 		
 		double getLevenbergMarquardt() const { return _levenbergMarquardt; }
 		void setLevenbergMarquardt(double val) { _levenbergMarquardt = val; }
