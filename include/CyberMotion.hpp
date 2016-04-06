@@ -12,6 +12,6 @@ namespace mpmc
 		Eigen::VectorXd getDefaultAxesPosition() const override;
 		void Output(const Eigen::VectorXd& x, const Eigen::VectorXd& u, Eigen::VectorXd& y, Eigen::MatrixXd& C, Eigen::MatrixXd& D) const override;
 
-		static const unsigned numberOfAxes = 8;
+		static const unsigned numberOfAxes;
 	};
 }
