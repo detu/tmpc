@@ -84,6 +84,8 @@ namespace camels
 		// Does not initialize g.
 		void UpdateQP();
 
+		void UpdateStage(unsigned i);
+
 		VectorMap w(unsigned i);
 		VectorConstMap w(unsigned i) const;
 

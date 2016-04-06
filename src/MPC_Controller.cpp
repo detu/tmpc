@@ -55,38 +55,8 @@ namespace camels
 	{
 		using namespace Eigen;
 
-		VectorXd z_min(_Nz), z_max(_Nz);
-		z_min << _xMin, _uMin;
-		z_max << _xMax, _uMax;
-		
 		for (unsigned i = 0; i < _Nt; ++i)
-		{
-			// C = [ssA, ssB];
-			// x_{k+1} = C * z_k + c_k
-			MatrixXd ssA(_Nx, _Nx);
-			MatrixXd ssB(_Nx, _Nu);
-			VectorXd x_plus(_Nx);
-			Integrate(w(i).topRows(nX()), w(i).bottomRows(nU()), x_plus, ssA, ssB);
-			_QP.C(i) << ssA, ssB;
-
-			// \Delta x_{k+1} = C \Delta z_k + f(z_k) - x_{k+1}
-			// c = f(z_k) - x_{k+1}
-			_QP.c(i) = x_plus - w(i + 1).topRows(_Nx);
-
-			MatrixXd D(_Nd, _Nz);
-			VectorXd d_min(_Nd);
-			VectorXd d_max(_Nd);
-			PathConstraints(i, w(i).topRows(nX()), w(i).bottomRows(nU()), D, d_min, d_max);
-			_QP.D(i) = D;
-			_QP.dMin(i) = d_min;
-			_QP.dMax(i) = d_max;
-
-			// z_min stores _Nt vectors of size _Nz and 1 vector of size _Nx
-			_QP.zMin(i) = z_min - w(i);
-
-			// z_max stores _Nt vectors of size _Nz and 1 vector of size _Nx
-			_QP.zMax(i) = z_max - w(i);
-		}
+			UpdateStage(i);
 
 		MatrixXd D(_NdT, _Nx);
 		VectorXd d_min(_NdT);
@@ -199,6 +169,10 @@ namespace camels
 
 	void MPC_Controller::EmbedInitialValue(const Eigen::VectorXd& x0)
 	{
+		// Compute linearization at new initial point.
+		w(0).topRows(_Nx) = x0;
+		UpdateStage(0);
+
 		/** embed current initial value */
 		_QP.xMin(0) = x0 - w(0).topRows(_Nx);
 		_QP.xMax(0) = x0 - w(0).topRows(_Nx);
@@ -270,5 +244,40 @@ namespace camels
 	void MPC_Controller::setQPCallback(const QPCallback& cb)
 	{
 		_QPCallback = cb;
+	}
+
+	void MPC_Controller::UpdateStage(unsigned i)
+	{
+		using namespace Eigen;
+
+		VectorXd z_min(_Nz), z_max(_Nz);
+		z_min << _xMin, _uMin;
+		z_max << _xMax, _uMax;
+
+		// C = [ssA, ssB];
+		// x_{k+1} = C * z_k + c_k
+		MatrixXd ssA(_Nx, _Nx);
+		MatrixXd ssB(_Nx, _Nu);
+		VectorXd x_plus(_Nx);
+		Integrate(w(i).topRows(nX()), w(i).bottomRows(nU()), x_plus, ssA, ssB);
+		_QP.C(i) << ssA, ssB;
+
+		// \Delta x_{k+1} = C \Delta z_k + f(z_k) - x_{k+1}
+		// c = f(z_k) - x_{k+1}
+		_QP.c(i) = x_plus - w(i + 1).topRows(_Nx);
+
+		MatrixXd D(_Nd, _Nz);
+		VectorXd d_min(_Nd);
+		VectorXd d_max(_Nd);
+		PathConstraints(i, w(i).topRows(nX()), w(i).bottomRows(nU()), D, d_min, d_max);
+		_QP.D(i) = D;
+		_QP.dMin(i) = d_min;
+		_QP.dMax(i) = d_max;
+
+		// z_min stores _Nt vectors of size _Nz and 1 vector of size _Nx
+		_QP.zMin(i) = z_min - w(i);
+
+		// z_max stores _Nt vectors of size _Nz and 1 vector of size _Nx
+		_QP.zMax(i) = z_max - w(i);
 	}
 }

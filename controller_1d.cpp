@@ -401,6 +401,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
 		{
 			std::ofstream os("failed_qp.m");
 			controller->PrintQP_MATLAB(os);
+			controller->PrintWorkingPoint_MATLAB(os, "wp");
 			e.getCondensedQP().Print_MATLAB("cond_qp", os);
 		}
 
