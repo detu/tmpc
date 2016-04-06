@@ -22,6 +22,10 @@ public:
 		return _outputDim;
 	}
 
+	virtual ~System()
+	{
+	}
+
 protected:
 	System(unsigned nu, unsigned nx, unsigned ny)
 		: _inputDim(nu), _stateDim(nx), _outputDim(ny)
