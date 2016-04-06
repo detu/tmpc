@@ -45,7 +45,7 @@ set (SRC
 
 add_library(mpmc STATIC ${HDR} ${SRC})
 #target_link_libraries(mpmc ${qpDUNES_STATIC_LIBRARIES})
-target_link_libraries(mpmc ${qpOASES_LIBRARIES})
+target_link_libraries(mpmc ${qpOASES_STATIC_LIBRARIES})
 
 add_executable(perftest perftest.cpp)
 target_link_libraries(perftest mpmc)
@@ -54,7 +54,7 @@ include_directories(${GTEST_INCLUDE_DIRS})
 add_executable(mpc_test mpc_test.cpp condensing_test.cpp)
 #add_executable(mpc_test condensing_test.cpp)
 
-set (LIB mpmc ${GTEST_BOTH_LIBRARIES} ${qpOASES_LIBRARIES})
+set (LIB mpmc ${GTEST_BOTH_LIBRARIES})
 if (UNIX)
 	# On UNIX, link to pthread -- gtest requires it.
 	set(LIB ${LIB} pthread)
