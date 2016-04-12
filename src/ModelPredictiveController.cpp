@@ -1,10 +1,9 @@
-#include <MPC_Controller.hpp>
-
+#include <ModelPredictiveController.hpp>
 #include <stdexcept>
 
 namespace camels
 {
-	MPC_Controller::MPC_Controller(unsigned state_dim, unsigned input_dim, unsigned n_path_constr, unsigned n_term_constr, double sample_time, unsigned Nt) : 
+	ModelPredictiveController::ModelPredictiveController(unsigned state_dim, unsigned input_dim, unsigned n_path_constr, unsigned n_term_constr, double sample_time, unsigned Nt) :
 		_QP(state_dim, input_dim, n_path_constr, n_term_constr, Nt),
 		_Solver(MultiStageQPSize(state_dim, input_dim, n_path_constr, n_term_constr, Nt)),
 		_levenbergMarquardt(0.0),
@@ -35,23 +34,27 @@ namespace camels
 		_terminalXMax.fill( std::numeric_limits<double>::infinity());
 	}
 
-	void MPC_Controller::PrintQP_C(std::ostream& log_stream) const
+	ModelPredictiveController::~ModelPredictiveController()
+	{
+	}
+
+	void ModelPredictiveController::PrintQP_C(std::ostream& log_stream) const
 	{
 		_QP.PrintQP_C(log_stream);
 	}
 
-	void MPC_Controller::PrintQP_MATLAB(std::ostream& log_stream) const
+	void ModelPredictiveController::PrintQP_MATLAB(std::ostream& log_stream) const
 	{
 		_QP.PrintQP_MATLAB(log_stream);
 	}
 
-	void MPC_Controller::PrintWorkingPoint_MATLAB(std::ostream& os, const std::string& var_name) const
+	void ModelPredictiveController::PrintWorkingPoint_MATLAB(std::ostream& os, const std::string& var_name) const
 	{
 		for (unsigned i = 0; i <= getNumberOfIntervals(); ++i)
 			os << var_name << "{" << i + 1 << "} = [" << getWorkingPoint(i) << "];" << std::endl;
 	}
 
-	void MPC_Controller::UpdateQP()
+	void ModelPredictiveController::UpdateQP()
 	{
 		using namespace Eigen;
 
@@ -70,28 +73,28 @@ namespace camels
 		_QP.zMax(_Nt) = getTerminalXMax() - w(_Nt);
 	}
 
-	MPC_Controller::VectorMap MPC_Controller::w(unsigned i)
+	ModelPredictiveController::VectorMap ModelPredictiveController::w(unsigned i)
 	{
 		if(!(i < _Nt + 1))
-			throw std::out_of_range("MPC_Controller::w(): index is out of range");
+			throw std::out_of_range("ModelPredictiveController::w(): index is out of range");
 
 		return VectorMap(_w.data() + i * _Nz, i < _Nt ? _Nz : _Nx);
 	}
 
-	MPC_Controller::VectorConstMap MPC_Controller::w(unsigned i) const
+	ModelPredictiveController::VectorConstMap ModelPredictiveController::w(unsigned i) const
 	{
 		if (!(i < _Nt + 1))
-			throw std::out_of_range("MPC_Controller::w(): index is out of range");
+			throw std::out_of_range("ModelPredictiveController::w(): index is out of range");
 
 		return VectorConstMap(_w.data() + i * _Nz, i < _Nt ? _Nz : _Nx);
 	}
 
-	MPC_Controller::VectorConstMap MPC_Controller::getWorkingPoint(unsigned i) const
+	ModelPredictiveController::VectorConstMap ModelPredictiveController::getWorkingPoint(unsigned i) const
 	{
 		return w(i);
 	}
 
-	void MPC_Controller::InitWorkingPoint( const Eigen::VectorXd& x0 )
+	void ModelPredictiveController::InitWorkingPoint( const Eigen::VectorXd& x0 )
 	{
 		using namespace Eigen;
 
@@ -108,7 +111,7 @@ namespace camels
 		UpdateQP();
 	}
 
-	void MPC_Controller::Solve()
+	void ModelPredictiveController::Solve()
 	{
 		using Eigen::MatrixXd;
 		using Eigen::VectorXd;
@@ -146,7 +149,7 @@ namespace camels
 		_w += _Solver.getPrimalSolution();
 	}
 
-	void MPC_Controller::PrepareForNext()
+	void ModelPredictiveController::PrepareForNext()
 	{
 		/** prepare QP for next solution */
 		//qpDUNES_shiftLambda(&_qpData);			/* shift multipliers */
@@ -159,15 +162,15 @@ namespace camels
 		UpdateQP();
 	}
 
-	Eigen::VectorXd MPC_Controller::getWorkingU(unsigned i) const
+	Eigen::VectorXd ModelPredictiveController::getWorkingU(unsigned i) const
 	{
 		if (!(i < _Nt))
-			throw std::out_of_range("MPC_Controller::getWorkingU(): index is out of range");
+			throw std::out_of_range("ModelPredictiveController::getWorkingU(): index is out of range");
 
 		return w(i).bottomRows(nU());
 	}
 
-	void MPC_Controller::EmbedInitialValue(const Eigen::VectorXd& x0)
+	void ModelPredictiveController::EmbedInitialValue(const Eigen::VectorXd& x0)
 	{
 		// Compute linearization at new initial point.
 		w(0).topRows(_Nx) = x0;
@@ -178,75 +181,75 @@ namespace camels
 		_QP.xMax(0) = x0 - w(0).topRows(_Nx);
 	}
 
-	double MPC_Controller::getSampleTime() const
+	double ModelPredictiveController::getSampleTime() const
 	{
 		return _sampleTime;
 	}
 
-	unsigned MPC_Controller::nU() const
+	unsigned ModelPredictiveController::nU() const
 	{
 		return _Nu;
 	}
 
-	unsigned MPC_Controller::nX() const
+	unsigned ModelPredictiveController::nX() const
 	{
 		return _Nx;
 	}
 
-	void MPC_Controller::setXMin(const Eigen::VectorXd& val)
+	void ModelPredictiveController::setXMin(const Eigen::VectorXd& val)
 	{
 		if (val.size() != nX())
-			throw std::invalid_argument("MPC_Controller::setXMin(): val has a wrong size");
+			throw std::invalid_argument("ModelPredictiveController::setXMin(): val has a wrong size");
 
 		_xMin = val;
 	}
 
-	void MPC_Controller::setXMax(const Eigen::VectorXd& val)
+	void ModelPredictiveController::setXMax(const Eigen::VectorXd& val)
 	{
 		if (val.size() != nX())
-			throw std::invalid_argument("MPC_Controller::setXMax(): val has a wrong size");
+			throw std::invalid_argument("ModelPredictiveController::setXMax(): val has a wrong size");
 
 		_xMax = val;
 	}
 
-	void MPC_Controller::setTerminalXMin(const Eigen::VectorXd& val)
+	void ModelPredictiveController::setTerminalXMin(const Eigen::VectorXd& val)
 	{
 		if (val.size() != nX())
-			throw std::invalid_argument("MPC_Controller::setTerminalXMin(): val has a wrong size");
+			throw std::invalid_argument("ModelPredictiveController::setTerminalXMin(): val has a wrong size");
 
 		_terminalXMin = val;
 	}
 
-	void MPC_Controller::setTerminalXMax(const Eigen::VectorXd& val)
+	void ModelPredictiveController::setTerminalXMax(const Eigen::VectorXd& val)
 	{
 		if (val.size() != nX())
-			throw std::invalid_argument("MPC_Controller::setTerminalXMax(): val has a wrong size");
+			throw std::invalid_argument("ModelPredictiveController::setTerminalXMax(): val has a wrong size");
 
 		_terminalXMax = val;
 	}
 
-	void MPC_Controller::setUMin(const Eigen::VectorXd& val)
+	void ModelPredictiveController::setUMin(const Eigen::VectorXd& val)
 	{
 		if (val.size() != nU())
-			throw std::invalid_argument("MPC_Controller::setUMin(): val has a wrong size");
+			throw std::invalid_argument("ModelPredictiveController::setUMin(): val has a wrong size");
 
 		_uMin = val;
 	}
 
-	void MPC_Controller::setUMax(const Eigen::VectorXd& val)
+	void ModelPredictiveController::setUMax(const Eigen::VectorXd& val)
 	{
 		if (val.size() != nU())
-			throw std::invalid_argument("MPC_Controller::setUMax(): val has a wrong size");
+			throw std::invalid_argument("ModelPredictiveController::setUMax(): val has a wrong size");
 
 		_uMax = val;
 	}
 
-	void MPC_Controller::setQPCallback(const QPCallback& cb)
+	void ModelPredictiveController::setQPCallback(const QPCallback& cb)
 	{
 		_QPCallback = cb;
 	}
 
-	void MPC_Controller::UpdateStage(unsigned i)
+	void ModelPredictiveController::UpdateStage(unsigned i)
 	{
 		using namespace Eigen;
 

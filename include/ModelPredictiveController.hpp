@@ -12,7 +12,7 @@
 
 namespace camels
 {
-	class MPC_Controller
+	class ModelPredictiveController
 	{
 	public:
 		typedef Eigen::Map<Eigen::VectorXd> VectorMap;
@@ -22,7 +22,8 @@ namespace camels
 		typedef Eigen::Map<const RowMajorMatrix> RowMajorMatrixConstMap;
 		typedef std::function<void (const MultiStageQP&)> QPCallback;
 
-		MPC_Controller(unsigned state_dim, unsigned input_dim, unsigned n_path_constr, unsigned n_term_constr, double sample_time, unsigned Nt);
+		ModelPredictiveController(unsigned state_dim, unsigned input_dim, unsigned n_path_constr, unsigned n_term_constr, double sample_time, unsigned Nt);
+		virtual ~ModelPredictiveController();
 
 		void InitWorkingPoint(const Eigen::VectorXd& x0);
 		void Solve();

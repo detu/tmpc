@@ -1,4 +1,4 @@
-#include <MotionPlatformModelPredictiveController.hpp>
+#include <MotionCueingController.hpp>
 #include <MotionPlatformX.hpp>
 #include <CyberMotion.hpp>
 #include <CyberMotion1D.hpp>
@@ -25,7 +25,7 @@ TEST(mpc_test, mpc_test_case)
 	const double freq = 1.0;
 	std::ofstream out("out.txt");
 
-	mpmc::MotionPlatformModelPredictiveController controller(platform, Ts, Nt);
+	mpmc::MotionCueingController controller(platform, Ts, Nt);
 	controller.setWashoutFactor(0.1);
 
 	Eigen::VectorXd x0(controller.nX());

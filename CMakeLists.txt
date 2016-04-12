@@ -26,4 +26,7 @@ include_directories(${qpOASES_INCLUDE_DIRS})
 
 include_directories(${RTMC_INCLUDE_DIR})
 
+include(CompilerOptions.cmake)
+
 add_subdirectory(src)
+add_subdirectory(test)

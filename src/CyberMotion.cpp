@@ -24,7 +24,7 @@ matrix_size_t getSize(int i)
 
 namespace mpmc
 {
-	const unsigned CyberMotion::numberOfAxes = 8;
+	const unsigned CyberMotion::numberOfAxes;
 
 	CyberMotion::CyberMotion()
 		: MotionPlatform(numberOfAxes)

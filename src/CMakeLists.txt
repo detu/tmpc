@@ -2,11 +2,6 @@
 # RTMC/src
 #
 
-enable_testing()
-find_package(GTest REQUIRED)
-
-include(CompilerOptions.cmake)
-
 # Disable alignment of fixed-sized Eigen matrices.
 # With alignment enabled, this error appears in the 32-bit version:
 #
@@ -23,24 +18,27 @@ set(HDR
 	${RTMC_INCLUDE_DIR}/MotionPlatformX.hpp
 	${RTMC_INCLUDE_DIR}/CyberMotion.hpp
 	${RTMC_INCLUDE_DIR}/CyberMotion1D.hpp
-	${RTMC_INCLUDE_DIR}/MPC_Controller.hpp
-	${RTMC_INCLUDE_DIR}/MotionPlatformModelPredictiveController.hpp
+	${RTMC_INCLUDE_DIR}/ModelPredictiveController.hpp
+	${RTMC_INCLUDE_DIR}/MotionCueingController.hpp
 	${RTMC_INCLUDE_DIR}/MultiStageQP.hpp
 	${RTMC_INCLUDE_DIR}/MultiStageQPSize.hpp
 	${RTMC_INCLUDE_DIR}/QuadraticProgram.hpp
 	${RTMC_INCLUDE_DIR}/CondensingSolver.hpp
+	${RTMC_INCLUDE_DIR}/OptimalControlProblem.hpp
+	${RTMC_INCLUDE_DIR}/CyberMotionOCP.hpp
 )
 
 set (SRC
 	MotionPlatformX.cpp
 	CyberMotion.cpp
 	CyberMotion1D.cpp
-	MPC_Controller.cpp
-	MotionPlatformModelPredictiveController.cpp
+	ModelPredictiveController.cpp
+	MotionCueingController.cpp
 	CMS_output_jacobian.cpp
 	MultiStageQP.cpp
 	MultiStageQPSize.cpp
 	CondensingSolver.cpp
+	CyberMotionOCP.cpp
 )
 
 add_library(mpmc STATIC ${HDR} ${SRC})
@@ -50,16 +48,3 @@ target_link_libraries(mpmc ${qpOASES_STATIC_LIBRARIES})
 add_executable(perftest perftest.cpp)
 target_link_libraries(perftest mpmc)
 
-include_directories(${GTEST_INCLUDE_DIRS})
-add_executable(mpc_test mpc_test.cpp condensing_test.cpp)
-#add_executable(mpc_test condensing_test.cpp)
-
-set (LIB mpmc ${GTEST_BOTH_LIBRARIES})
-if (UNIX)
-	# On UNIX, link to pthread -- gtest requires it.
-	set(LIB ${LIB} pthread)
-endif (UNIX)
-
-target_link_libraries(mpc_test ${LIB})
-
-add_test(AllTests mpc_test)

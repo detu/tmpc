@@ -1,0 +1,23 @@
+#
+# RTMC/test
+#
+
+enable_testing()
+find_package(GTest REQUIRED)
+
+include_directories(${GTEST_INCLUDE_DIRS})
+add_executable(mpc_test 
+    mpc_test.cpp 
+    condensing_test.cpp
+    cybermotion_ocp_test.cpp)
+#add_executable(mpc_test condensing_test.cpp)
+
+set (LIB mpmc ${GTEST_BOTH_LIBRARIES})
+if (UNIX)
+	# On UNIX, link to pthread -- gtest requires it.
+	set(LIB ${LIB} pthread)
+endif (UNIX)
+
+target_link_libraries(mpc_test ${LIB})
+
+add_test(AllTests mpc_test)

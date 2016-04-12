@@ -1,14 +1,14 @@
 #pragma once
 
-#include "MPC_Controller.hpp"
+#include <ModelPredictiveController.hpp>
 #include "MotionPlatform.hpp"
 
 namespace mpmc
 {
-	class MotionPlatformModelPredictiveController : public camels::MPC_Controller
+	class MotionCueingController : public camels::ModelPredictiveController
 	{
 	public:
-		MotionPlatformModelPredictiveController(const std::shared_ptr<MotionPlatform>& platform, double sample_time, unsigned Nt);
+		MotionCueingController(const std::shared_ptr<MotionPlatform>& platform, double sample_time, unsigned Nt);
 
 		unsigned nY() const;
 

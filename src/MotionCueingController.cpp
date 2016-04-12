@@ -1,9 +1,9 @@
-#include "MotionPlatformModelPredictiveController.hpp"
+#include "MotionCueingController.hpp"
 
 namespace mpmc
 {
-	MotionPlatformModelPredictiveController::MotionPlatformModelPredictiveController(const std::shared_ptr<MotionPlatform>& platform, double sample_time, unsigned Nt) :
-		camels::MPC_Controller(platform->getStateDim(), platform->getInputDim(), 2 * platform->getNumberOfAxes(), 2 * platform->getNumberOfAxes(), sample_time, Nt),
+	MotionCueingController::MotionCueingController(const std::shared_ptr<MotionPlatform>& platform, double sample_time, unsigned Nt) :
+		camels::ModelPredictiveController(platform->getStateDim(), platform->getInputDim(), 2 * platform->getNumberOfAxes(), 2 * platform->getNumberOfAxes(), sample_time, Nt),
 		_platform(platform),
 		_Nq(platform->getNumberOfAxes()),
 		_Ny(platform->getOutputDim()),
@@ -34,7 +34,7 @@ namespace mpmc
 		platform->getDefaultAxesPosition();
 	}
 
-	void MotionPlatformModelPredictiveController::LagrangeTerm(const Eigen::VectorXd& z, unsigned i, Eigen::MatrixXd& H, Eigen::VectorXd& g) const
+	void MotionCueingController::LagrangeTerm(const Eigen::VectorXd& z, unsigned i, Eigen::MatrixXd& H, Eigen::VectorXd& g) const
 	{
 		using namespace Eigen;
 		
@@ -68,7 +68,7 @@ namespace mpmc
 		*/
 	}
 
-	void MotionPlatformModelPredictiveController::MayerTerm(const Eigen::VectorXd& x, Eigen::MatrixXd& H, Eigen::VectorXd& g) const
+	void MotionCueingController::MayerTerm(const Eigen::VectorXd& x, Eigen::MatrixXd& H, Eigen::VectorXd& g) const
 	{
 		using namespace Eigen;
 
@@ -79,20 +79,20 @@ namespace mpmc
 		g = _washoutFactor * (x - getWashoutState()) * getNumberOfIntervals();
 	}
 
-	void MotionPlatformModelPredictiveController::setReference(unsigned i, const Eigen::VectorXd& y_ref)
+	void MotionCueingController::setReference(unsigned i, const Eigen::VectorXd& y_ref)
 	{
 		_yRef.col(i) = y_ref;
 	}
 
-	void MotionPlatformModelPredictiveController::setReference(const Eigen::MatrixXd& y_ref)
+	void MotionCueingController::setReference(const Eigen::MatrixXd& y_ref)
 	{
 		if (!(y_ref.rows() == nY() && y_ref.cols() == getNumberOfIntervals()))
-			throw std::invalid_argument("MotionPlatformModelPredictiveController::setReference(): y_ref has wrong size.");
+			throw std::invalid_argument("MotionCueingController::setReference(): y_ref has wrong size.");
 
 		_yRef = y_ref;
 	}
 
-	Eigen::VectorXd MotionPlatformModelPredictiveController::getWashoutState() const
+	Eigen::VectorXd MotionCueingController::getWashoutState() const
 	{
 		// The "washout" state.
 		Eigen::VectorXd x_washout(nX());
@@ -101,7 +101,7 @@ namespace mpmc
 		return x_washout;
 	}
 
-	void MotionPlatformModelPredictiveController::Integrate(const Eigen::VectorXd& x, const Eigen::VectorXd& u, Eigen::VectorXd& x_next, Eigen::MatrixXd& A, Eigen::MatrixXd& B) const
+	void MotionCueingController::Integrate(const Eigen::VectorXd& x, const Eigen::VectorXd& u, Eigen::VectorXd& x_next, Eigen::MatrixXd& A, Eigen::MatrixXd& B) const
 	{
 		getStateSpaceA(A);
 		getStateSpaceB(B);
@@ -109,7 +109,7 @@ namespace mpmc
 		x_next = A * x + B * u;		
 	}
 
-	void MotionPlatformModelPredictiveController::getStateSpaceA( Eigen::MatrixXd& A ) const
+	void MotionCueingController::getStateSpaceA( Eigen::MatrixXd& A ) const
 	{
 		using namespace Eigen;
 
@@ -117,7 +117,7 @@ namespace mpmc
 			MatrixXd::Zero(_Nq, _Nq), MatrixXd::Identity(_Nq, _Nq);
 	}
 
-	void MotionPlatformModelPredictiveController::getStateSpaceB( Eigen::MatrixXd& B ) const
+	void MotionCueingController::getStateSpaceB( Eigen::MatrixXd& B ) const
 	{
 		using namespace Eigen;
 
@@ -125,34 +125,34 @@ namespace mpmc
 			getSampleTime() * MatrixXd::Identity(_Nq, _Nq);
 	}
 
-	unsigned MotionPlatformModelPredictiveController::nY() const
+	unsigned MotionCueingController::nY() const
 	{
 		return _Ny;
 	}
 
-	void MotionPlatformModelPredictiveController::setErrorWeight(const Eigen::VectorXd& val)
+	void MotionCueingController::setErrorWeight(const Eigen::VectorXd& val)
 	{
 		if (val.size() != nY())
-			throw std::invalid_argument("MotionPlatformModelPredictiveController::setErrorWeight(): val has invalid size.");
+			throw std::invalid_argument("MotionCueingController::setErrorWeight(): val has invalid size.");
 
 		_errorWeight = val;
 	}
 
-	const Eigen::VectorXd& MotionPlatformModelPredictiveController::getErrorWeight() const
+	const Eigen::VectorXd& MotionCueingController::getErrorWeight() const
 	{
 		return _errorWeight;
 	}
 
-	void MotionPlatformModelPredictiveController::setWashoutPosition(const Eigen::VectorXd& val)
+	void MotionCueingController::setWashoutPosition(const Eigen::VectorXd& val)
 	{
 		if (val.size() != _Nq)
-			throw std::invalid_argument("MotionPlatformModelPredictiveController::setWashoutPosition(): val has invalid size.");
+			throw std::invalid_argument("MotionCueingController::setWashoutPosition(): val has invalid size.");
 
 		_washoutPosition = val;
 	}
 
 	template<class Vector1, class Matrix, class Vector2>
-	void MotionPlatformModelPredictiveController::SRConstraints(const Eigen::MatrixBase<Vector1>& x, Eigen::MatrixBase<Matrix>& D, Eigen::MatrixBase<Vector2>& d_min, Eigen::MatrixBase<Vector2>& d_max) const
+	void MotionCueingController::SRConstraints(const Eigen::MatrixBase<Vector1>& x, Eigen::MatrixBase<Matrix>& D, Eigen::MatrixBase<Vector2>& d_min, Eigen::MatrixBase<Vector2>& d_max) const
 	{
 		using Eigen::VectorXd;
 		using Eigen::MatrixXd;
@@ -179,14 +179,14 @@ namespace mpmc
 		d_max << -v.cwiseAbs2() - 2. * (q_max - q).cwiseProduct(getUMin()), -v.cwiseAbs2() - 2. * (q_min - q).cwiseProduct(getUMax());
 	}
 
-	void MotionPlatformModelPredictiveController::PathConstraints(unsigned i, const Eigen::VectorXd& x, const Eigen::VectorXd& u, Eigen::MatrixXd& D, Eigen::VectorXd& d_min, Eigen::VectorXd& d_max) const
+	void MotionCueingController::PathConstraints(unsigned i, const Eigen::VectorXd& x, const Eigen::VectorXd& u, Eigen::MatrixXd& D, Eigen::VectorXd& d_min, Eigen::VectorXd& d_max) const
 	{
 		auto Dx = D.leftCols(nX());
 		SRConstraints(x, Dx, d_min, d_max);
 		D.rightCols(nU()).setConstant(0.);
 	}
 
-	void MotionPlatformModelPredictiveController::TerminalConstraints(const Eigen::VectorXd& x, Eigen::MatrixXd& D, Eigen::VectorXd& d_min, Eigen::VectorXd& d_max) const
+	void MotionCueingController::TerminalConstraints(const Eigen::VectorXd& x, Eigen::MatrixXd& D, Eigen::VectorXd& d_min, Eigen::VectorXd& d_max) const
 	{
 		SRConstraints(x, D, d_min, d_max);
 	}
