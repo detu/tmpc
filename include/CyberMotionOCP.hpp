@@ -13,10 +13,10 @@
 
 namespace mpmc
 {
-	class CyberMotionOCP : public camels::OptimalControlProblem<CyberMotionOCP, 2 * CyberMotion::numberOfAxes, CyberMotion::numberOfAxes>
+	class CyberMotionOCP : public camels::OptimalControlProblem<CyberMotionOCP, 2 * CyberMotion::numberOfAxes, CyberMotion::numberOfAxes, 0>
 	{
 	public:
-		ODEOutput ODE(const StateVector& x, const InputVector& u);
+		ODEOutput ODE(unsigned t, const StateVector& x, const InputVector& u, const ParamVector& p);
 
 	private:
 		static const auto N = CyberMotion::numberOfAxes;

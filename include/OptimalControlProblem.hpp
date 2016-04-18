@@ -11,20 +11,32 @@
 
 namespace camels
 {
-	template<class Derived, unsigned NX, unsigned NU, class _Scalar = double>
+	template<class Derived, unsigned NX, unsigned NU, unsigned NP, class _Scalar = double>
 	class OptimalControlProblem
 	{
 	public:
+		static unsigned const NW = NX + NU;
+
 		typedef _Scalar Scalar;
 		typedef Eigen::Matrix<Scalar, NX, 1> StateVector;
 		typedef Eigen::Matrix<Scalar, NU, 1> InputVector;
+		typedef Eigen::Matrix<Scalar, NW, 1> LagrangeGradientVector;
+		typedef Eigen::Matrix<Scalar, NP, 1> ParamVector;
 		typedef Eigen::Matrix<Scalar, NX, NX> StateSensitivityMatrix;
 		typedef Eigen::Matrix<Scalar, NX, NU> InputSensitivityMatrix;
-		class ODEOutput;
+		typedef Eigen::Matrix<Scalar, NW, NW> LagrangeHessianMatrix;
 
-		ODEOutput ODE(const StateVector& x, const InputVector& u)
+		class ODEOutput;
+		class LagrangeTermOutput;
+
+		ODEOutput ODE(unsigned t, const StateVector& x, const InputVector& u, const ParamVector& p)
 		{
-			return derived()->ODE(x, u);
+			return derived()->ODE(t, x, u, p);
+		}
+
+		LagrangeTermOutput LagrangeTerm(unsigned t, const StateVector& x, const InputVector& u, const ParamVector& p)
+		{
+			return derived()->LagrangeTerm(t, x, u, p);
 		}
 
 		/*
@@ -50,8 +62,8 @@ namespace camels
 	};
 
 	// Contains ODE derivatives xdot = f(x, u) and sensitivities d(xdot)/d(x)/ d(xdot)/d(u).
-	template<class Derived, unsigned NX, unsigned NU, class _Scalar>
-	class OptimalControlProblem<Derived, NX, NU, _Scalar>::ODEOutput
+	template<class Derived, unsigned NX, unsigned NU, unsigned NP, class _Scalar>
+	class OptimalControlProblem<Derived, NX, NU, NP, _Scalar>::ODEOutput
 	{
 	public:
 		ODEOutput(const StateVector& xdot, const StateSensitivityMatrix& sens_x, const InputSensitivityMatrix& sens_u)
@@ -78,5 +90,30 @@ namespace camels
 		const StateVector _xdot;
 		const StateSensitivityMatrix _sens_x;
 		const InputSensitivityMatrix _sens_u;
+	};
+
+	// Contains gradient and Hessian of the OCP Lagrange term.
+	template<class Derived, unsigned NX, unsigned NU, unsigned NP, class _Scalar>
+	class OptimalControlProblem<Derived, NX, NU, NP, _Scalar>::LagrangeTermOutput
+	{
+	public:
+		LagrangeTermOutput(const LagrangeGradientVector& gradient, const LagrangeHessianMatrix& hessian)
+		:	_gradient(gradient), _Hessian(hessian)
+		{
+		}
+
+		const LagrangeGradientVector& gradient() const
+		{
+			return _gradient;
+		}
+
+		const LagrangeHessianMatrix& Hessian() const
+		{
+			return _Hessian;
+		}
+
+	private:
+		const LagrangeGradientVector _gradient;
+		const LagrangeHessianMatrix _Hessian;
 	};
 }

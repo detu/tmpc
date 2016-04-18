@@ -4,23 +4,7 @@
 #include <cassert>
 #include <limits>
 #include <algorithm>
-
-namespace CMS_output_jacobian
-{
-	void evaluate(const double * x, const double * u, double * y, double * dy_dx, double * dy_du);
-	int getSparsity(int i, int *nrow, int *ncol, int **colind, int **row);
-}
-
-typedef std::array<int, 2> matrix_size_t;
-matrix_size_t getSize(int i)
-{
-	matrix_size_t sz;
-	int * colind, *row;
-	int code = CMS_output_jacobian::getSparsity(i, &sz[0], &sz[1], &colind, &row);
-	assert(code == 0);
-
-	return sz;
-}
+#include <stdexcept>
 
 namespace mpmc
 {
@@ -57,7 +41,7 @@ namespace mpmc
 		}
 
 		// Call CasADi-generated code.
-		CMS_output_jacobian::evaluate(x.data(), u.data(), y.data(), C.data(), D.data());
+		throw std::logic_error("Not implemented");
 	}
 
 	Eigen::VectorXd CyberMotion::getDefaultAxesPosition() const

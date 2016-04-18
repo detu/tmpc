@@ -16,7 +16,9 @@ TEST(test_1, cybermotion_ocp_test)
 	CyberMotionOCP::StateVector x;
 	x << 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24;
 
-	const auto ode_out = ocp.ODE(x, u);
+	CyberMotionOCP::ParamVector p;
+
+	const auto ode_out = ocp.ODE(0, x, u, p);
 
 	const auto N = mpmc::CyberMotion::numberOfAxes;
 	typedef Eigen::Matrix<CyberMotionOCP::Scalar, N, N> MatrixNN;

@@ -34,11 +34,12 @@ set (SRC
 	CyberMotion1D.cpp
 	ModelPredictiveController.cpp
 	MotionCueingController.cpp
-	CMS_output_jacobian.cpp
 	MultiStageQP.cpp
 	MultiStageQPSize.cpp
 	CondensingSolver.cpp
 	CyberMotionOCP.cpp
+	cablerobot_output.c
+	cablerobot_ode.c
 )
 
 add_library(mpmc STATIC ${HDR} ${SRC})

@@ -9,7 +9,7 @@
 
 namespace mpmc
 {
-	CyberMotionOCP::ODEOutput CyberMotionOCP::ODE(const StateVector& x, const InputVector& u)
+	CyberMotionOCP::ODEOutput CyberMotionOCP::ODE(unsigned t, const StateVector& x, const InputVector& u, const ParamVector& p)
 	{
 		StateVector xdot;
 		xdot << x.bottomRows(N), u;
