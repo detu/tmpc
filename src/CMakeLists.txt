@@ -26,6 +26,8 @@ set(HDR
 	${RTMC_INCLUDE_DIR}/CondensingSolver.hpp
 	${RTMC_INCLUDE_DIR}/OptimalControlProblem.hpp
 	${RTMC_INCLUDE_DIR}/CyberMotionOCP.hpp
+	${RTMC_INCLUDE_DIR}/CableRobotOCP.hpp
+	${RTMC_INCLUDE_DIR}/CasADiGeneratedFunction.hpp
 )
 
 set (SRC
@@ -38,14 +40,14 @@ set (SRC
 	MultiStageQPSize.cpp
 	CondensingSolver.cpp
 	CyberMotionOCP.cpp
-	cablerobot_output.c
-	cablerobot_ode.c
+	CableRobotOCP.cpp
+	CasADiGeneratedFunction.cpp
+	cablerobot_generated.c
+	cablerobot_generated.h
 )
 
 add_library(mpmc STATIC ${HDR} ${SRC})
 #target_link_libraries(mpmc ${qpDUNES_STATIC_LIBRARIES})
 target_link_libraries(mpmc ${qpOASES_STATIC_LIBRARIES})
 
-add_executable(perftest perftest.cpp)
-target_link_libraries(perftest mpmc)
 
