@@ -1,9 +1,11 @@
 #include "MotionCueingController.hpp"
 
+#include <Eigen/Dense>
+
 namespace mpmc
 {
 	MotionCueingController::MotionCueingController(const std::shared_ptr<MotionPlatform>& platform, double sample_time, unsigned Nt) :
-		camels::ModelPredictiveController(platform->getStateDim(), platform->getInputDim(), 2 * platform->getNumberOfAxes(), 2 * platform->getNumberOfAxes(), sample_time, Nt),
+		camels::ModelPredictiveController<CyberMotionOCP>(platform->getStateDim(), platform->getInputDim(), 2 * platform->getNumberOfAxes(), 2 * platform->getNumberOfAxes(), sample_time, Nt),
 		_platform(platform),
 		_Nq(platform->getNumberOfAxes()),
 		_Ny(platform->getOutputDim()),

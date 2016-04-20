@@ -6,12 +6,16 @@
 #include <algorithm>
 #include <stdexcept>
 
+#include "cybermotion_generated.h"
+
 namespace mpmc
 {
 	const unsigned CyberMotion::numberOfAxes;
 
 	CyberMotion::CyberMotion()
-		: MotionPlatform(numberOfAxes)
+	:	MotionPlatform(numberOfAxes)
+	,	_ode(CASADI_GENERATED_FUNCTION_INTERFACE(cybermotion_ode))
+	,	_output(CASADI_GENERATED_FUNCTION_INTERFACE(cybermotion_output))
 	{
 	}
 
@@ -41,7 +45,7 @@ namespace mpmc
 		}
 
 		// Call CasADi-generated code.
-		throw std::logic_error("Not implemented");
+		_output({x.data(), u.data(), nullptr}, {y.data(), C.data(), D.data()});
 	}
 
 	Eigen::VectorXd CyberMotion::getDefaultAxesPosition() const

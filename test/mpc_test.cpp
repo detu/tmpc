@@ -8,7 +8,6 @@
 
 #include <gtest/gtest.h>
 
-//int not_main(int argc, char * argv[])
 TEST(mpc_test, mpc_test_case)
 {
 	//const auto platform = std::make_shared<mpmc::MotionPlatformX>();

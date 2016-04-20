@@ -3,9 +3,11 @@
 #include <ModelPredictiveController.hpp>
 #include "MotionPlatform.hpp"
 
+#include <CyberMotionOCP.hpp>
+
 namespace mpmc
 {
-	class MotionCueingController : public camels::ModelPredictiveController
+	class MotionCueingController : public camels::ModelPredictiveController<CyberMotionOCP>
 	{
 	public:
 		MotionCueingController(const std::shared_ptr<MotionPlatform>& platform, double sample_time, unsigned Nt);

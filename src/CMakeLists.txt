@@ -44,6 +44,8 @@ set (SRC
 	CasADiGeneratedFunction.cpp
 	cablerobot_generated.c
 	cablerobot_generated.h
+	cybermotion_generated.c
+	cybermotion_generated.h
 )
 
 add_library(mpmc STATIC ${HDR} ${SRC})

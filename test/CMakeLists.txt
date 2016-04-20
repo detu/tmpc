@@ -11,6 +11,7 @@ add_executable(mpc_test
     condensing_test.cpp
     cybermotion_ocp_test.cpp
     cablerobot_generated_test.cpp
+    cybermotion_generated_test.cpp
 )
 #add_executable(mpc_test condensing_test.cpp)
 

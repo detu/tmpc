@@ -2,6 +2,8 @@
 
 #include "MotionPlatform.hpp"
 
+#include "CasADiGeneratedFunction.hpp"
+
 namespace mpmc
 {
 	class CyberMotion : public MotionPlatform
@@ -13,5 +15,9 @@ namespace mpmc
 		void Output(const Eigen::VectorXd& x, const Eigen::VectorXd& u, Eigen::VectorXd& y, Eigen::MatrixXd& C, Eigen::MatrixXd& D) const override;
 
 		static const unsigned numberOfAxes = 8;
+
+	private:
+		mutable CasADiGeneratedFunction _ode;
+		mutable CasADiGeneratedFunction _output;
 	};
 }

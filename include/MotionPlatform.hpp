@@ -93,7 +93,7 @@ namespace mpmc
 	{
 	public:
 		MotionPlatform(unsigned Nq)
-			: System(Nq, 2 * Nq, 6)
+			: System(Nq, 2 * Nq, 9)
 			, _gravity(0., 0., -9.81)
 			, _numberOfAxes(Nq)
 		{
