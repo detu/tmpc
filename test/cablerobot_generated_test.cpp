@@ -14,12 +14,13 @@ TEST(test_cablerobot_generated, interface_test)
 {
 	mpmc::CasADiGeneratedFunction ode {CASADI_GENERATED_FUNCTION_INTERFACE(cablerobot_ode)};
 
-	EXPECT_EQ(ode.n_in(), 3);
-	EXPECT_EQ(ode.n_out(), 3);
+	EXPECT_EQ(ode.n_in(), 2);
+	EXPECT_EQ(ode.n_out(), 2);
 	EXPECT_EQ(ode.name(), "cablerobot_ode");
 
 	const unsigned NX = 13;
 	const unsigned NU = 8;
+	unsigned const NZ = NX + NU;
 	const unsigned NP = 13;
 
 	Eigen::Matrix<double, NX, 1> x0;
@@ -27,6 +28,9 @@ TEST(test_cablerobot_generated, interface_test)
 
 	Eigen::Matrix<double, NU, 1> u0;
 	u0 << 100, 200, 300, 400, 500, 600, 700, 800;
+
+	Eigen::Matrix<double, NZ, 1> z0;
+	z0 << x0, u0;
 
 	Eigen::Matrix<double, NP, 1> p;
 	p <<
@@ -45,10 +49,11 @@ TEST(test_cablerobot_generated, interface_test)
 			1.000000000000000000e+02;
 
 	Eigen::Matrix<double, NX, 1> xdot, xdot_expected;
-	Eigen::Matrix<double, NX, NX> A, A_expected;
-	Eigen::Matrix<double, NX, NU> B, B_expected;
+	Eigen::Matrix<double, NX, NZ> ode_jac, ode_jac_expected;
+	Eigen::Matrix<double, NX, NX> A_expected;
+	Eigen::Matrix<double, NX, NU> B_expected;
 
-	ode({x0.data(), u0.data(), p.data()}, {xdot.data(), A.data(), B.data()});
+	ode({z0.data(), p.data()}, {xdot.data(), ode_jac.data()});
 
 	xdot_expected <<
 			3.508514747852236049e+00,
@@ -95,6 +100,8 @@ TEST(test_cablerobot_generated, interface_test)
 			0.000000000000000000e+00,0.000000000000000000e+00,0.000000000000000000e+00,0.000000000000000000e+00,0.000000000000000000e+00,0.000000000000000000e+00,0.000000000000000000e+00,0.000000000000000000e+00,
 			0.000000000000000000e+00,0.000000000000000000e+00,0.000000000000000000e+00,0.000000000000000000e+00,0.000000000000000000e+00,0.000000000000000000e+00,0.000000000000000000e+00,0.000000000000000000e+00;
 
+	ode_jac_expected << A_expected, B_expected;
+
 	/*
 	std::cout << "delta(xdot) = " << std::endl << xdot - xdot_expected << std::endl;
 	std::cout << "delta(A) = " << std::endl << A - A_expected << std::endl;
@@ -102,6 +109,5 @@ TEST(test_cablerobot_generated, interface_test)
 	*/
 
 	EXPECT_TRUE(xdot.isApprox(xdot_expected));
-	EXPECT_TRUE(A.isApprox(A_expected));
-	EXPECT_TRUE(B.isApprox(B_expected));
+	EXPECT_TRUE(ode_jac.isApprox(ode_jac_expected));
 }

@@ -1,8 +1,6 @@
 #pragma once
 
 #include <ModelPredictiveController.hpp>
-#include "MotionPlatform.hpp"
-
 #include <CyberMotionOCP.hpp>
 
 namespace mpmc
@@ -10,7 +8,11 @@ namespace mpmc
 	class MotionCueingController : public camels::ModelPredictiveController<CyberMotionOCP>
 	{
 	public:
-		MotionCueingController(const std::shared_ptr<MotionPlatform>& platform, double sample_time, unsigned Nt);
+		typedef CyberMotionOCP::StateInputVector StateInputVector;
+		typedef CyberMotionOCP::OutputVector OutputVector;
+		typedef CyberMotionOCP::OutputJacobianMatrix OutputJacobianMatrix;
+
+		MotionCueingController(CyberMotionOCP const& ocp, double sample_time, unsigned Nt);
 
 		unsigned nY() const;
 
@@ -26,15 +28,17 @@ namespace mpmc
 		void setReference(const Eigen::MatrixXd& py_ref);
 		void setReference(unsigned i, const Eigen::VectorXd& py_ref);
 
-	protected:
+	private:
 		void LagrangeTerm(const Eigen::VectorXd& z, unsigned i, Eigen::MatrixXd& H, Eigen::VectorXd& g) const override;
+		void LagrangeTerm(unsigned i, StateInputVector const& z, Eigen::VectorXd& g, Eigen::MatrixXd& H) const;
 		void MayerTerm(const Eigen::VectorXd& x, Eigen::MatrixXd& H, Eigen::VectorXd& g) const override;
 		void Integrate(const Eigen::VectorXd& x, const Eigen::VectorXd& u, Eigen::VectorXd& x_next, Eigen::MatrixXd& A, Eigen::MatrixXd& B) const override;
 		void PathConstraints(unsigned i, const Eigen::VectorXd& x, const Eigen::VectorXd& u, Eigen::MatrixXd& D, Eigen::VectorXd& d_min, Eigen::VectorXd& d_max) const override;
 		void TerminalConstraints(const Eigen::VectorXd& x, Eigen::MatrixXd& D, Eigen::VectorXd& d_min, Eigen::VectorXd& d_max) const override;
 
-	private:
-		const std::shared_ptr<MotionPlatform> _platform;
+		// Private data members.
+		CyberMotionOCP const& _ocp;
+
 		const unsigned _Nq;
 		const unsigned _Ny;
 

@@ -7,6 +7,9 @@
 
 #include <CasADiGeneratedFunction.hpp>
 
+#include <stdexcept>
+#include <sstream>
+
 namespace mpmc
 {
 	CasADiGeneratedFunction::CasADiGeneratedFunction(
@@ -20,7 +23,7 @@ namespace mpmc
 		const char* (*fun_name_out)(int i),
 		const int* (*fun_sparsity_in)(int i),
 		const int* (*fun_sparsity_out)(int i),
-		int (*fun_work)(int *sz_arg, int* sz_res, int *sz_iw, int *sz_w)) throw (std::runtime_error)
+		int (*fun_work)(int *sz_arg, int* sz_res, int *sz_iw, int *sz_w))
 	:	_name(name),
 		_fun(fun),
 		_fun_incref(fun_incref),
@@ -65,18 +68,24 @@ namespace mpmc
 		return _fun_n_out();
 	}
 
-	/*
 	void CasADiGeneratedFunction::operator()(std::initializer_list<const real_t *> arg, std::initializer_list<real_t *> res)
 	{
-		std::copy(arg.begin(), arg.end(), _arg.begin());
-		std::copy(res.begin(), res.end(), _res.begin());
+		if (arg.size() != n_in())
+		{
+			std::stringstream msg;
+			msg << "Invalid number of input arguments passed to CasADi function \"" << name() << "\". "
+					<< "Expected " << n_in() << ", got " << arg.size() << ".";
+			throw std::logic_error(msg.str());
+		}
 
-		_fun(_arg.data(), _res.data(), _iw.data(), _w.data(), 0);
-	}
-	*/
+		if (res.size() != n_out())
+		{
+			std::stringstream msg;
+			msg << "Invalid number of output arguments passed to CasADi function \"" << name() << "\". "
+					<< "Expected " << n_out() << ", got " << res.size() << ".";
+			throw std::logic_error(msg.str());
+		}
 
-	void CasADiGeneratedFunction::operator()(std::array<const real_t *, 3> arg, std::array<real_t *, 3> res)
-	{
 		std::copy(arg.begin(), arg.end(), _arg.begin());
 		std::copy(res.begin(), res.end(), _res.begin());
 

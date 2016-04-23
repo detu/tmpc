@@ -9,7 +9,6 @@
 
 #include <vector>
 #include <string>
-#include <stdexcept>
 #include <array>
 #include <initializer_list>
 
@@ -34,7 +33,7 @@ namespace mpmc
 			const char* (*fun_name_out)(int i),
 			const int* (*fun_sparsity_in)(int i),
 			const int* (*fun_sparsity_out)(int i),
-			int (*fun_work)(int *sz_arg, int* sz_res, int *sz_iw, int *sz_w)) throw (std::runtime_error);
+			int (*fun_work)(int *sz_arg, int* sz_res, int *sz_iw, int *sz_w));
 
 		~CasADiGeneratedFunction();
 
@@ -42,8 +41,8 @@ namespace mpmc
 		int n_in() const;
 		int n_out() const;
 
-		void operator()(std::array<const real_t *, 3> arg, std::array<real_t *, 3> res);
-		//void operator()(std::initializer_list<const real_t *> arg, std::initializer_list<real_t *> res);
+		//void operator()(std::array<const real_t *, 3> arg, std::array<real_t *, 3> res);
+		void operator()(std::initializer_list<const real_t *> arg, std::initializer_list<real_t *> res);
 
 	private:
 		const std::string _name;

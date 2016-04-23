@@ -279,114 +279,116 @@ static const int CASADI_PREFIX(s27)[] = {9, 13, 0, 4, 8, 12, 18, 24, 30, 36, 36,
 #define s27 CASADI_PREFIX(s27)
 static const int CASADI_PREFIX(s28)[] = {13, 9, 0, 7, 14, 21, 22, 23, 24, 34, 44, 54, 3, 4, 5, 6, 10, 11, 12, 3, 4, 5, 6, 10, 11, 12, 3, 4, 5, 6, 10, 11, 12, 0, 1, 2, 0, 1, 2, 3, 4, 5, 6, 10, 11, 12, 0, 1, 2, 3, 4, 5, 6, 10, 11, 12, 0, 1, 2, 3, 4, 5, 6, 10, 11, 12};
 #define s28 CASADI_PREFIX(s28)
-static const int CASADI_PREFIX(s29)[] = {9, 13, 0, 9, 18, 27, 36, 45, 54, 63, 72, 81, 90, 99, 108, 117, 0, 1, 2, 3, 4, 5, 6, 7, 8, 0, 1, 2, 3, 4, 5, 6, 7, 8, 0, 1, 2, 3, 4, 5, 6, 7, 8, 0, 1, 2, 3, 4, 5, 6, 7, 8, 0, 1, 2, 3, 4, 5, 6, 7, 8, 0, 1, 2, 3, 4, 5, 6, 7, 8, 0, 1, 2, 3, 4, 5, 6, 7, 8, 0, 1, 2, 3, 4, 5, 6, 7, 8, 0, 1, 2, 3, 4, 5, 6, 7, 8, 0, 1, 2, 3, 4, 5, 6, 7, 8, 0, 1, 2, 3, 4, 5, 6, 7, 8, 0, 1, 2, 3, 4, 5, 6, 7, 8, 0, 1, 2, 3, 4, 5, 6, 7, 8};
+static const int CASADI_PREFIX(s29)[] = {8, 1, 0, 8, 0, 1, 2, 3, 4, 5, 6, 7};
 #define s29 CASADI_PREFIX(s29)
-static const int CASADI_PREFIX(s30)[] = {8, 1, 0, 8, 0, 1, 2, 3, 4, 5, 6, 7};
+static const int CASADI_PREFIX(s30)[] = {3, 8, 0, 3, 3, 3, 3, 3, 3, 3, 3, 0, 1, 2};
 #define s30 CASADI_PREFIX(s30)
-static const int CASADI_PREFIX(s31)[] = {3, 8, 0, 3, 3, 3, 3, 3, 3, 3, 3, 0, 1, 2};
+static const int CASADI_PREFIX(s31)[] = {1, 8, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0};
 #define s31 CASADI_PREFIX(s31)
-static const int CASADI_PREFIX(s32)[] = {1, 8, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0};
+static const int CASADI_PREFIX(s32)[] = {1, 8, 0, 1, 2, 3, 4, 5, 6, 7, 8, 0, 0, 0, 0, 0, 0, 0, 0};
 #define s32 CASADI_PREFIX(s32)
-static const int CASADI_PREFIX(s33)[] = {1, 8, 0, 1, 2, 3, 4, 5, 6, 7, 8, 0, 0, 0, 0, 0, 0, 0, 0};
+static const int CASADI_PREFIX(s33)[] = {8, 3, 0, 1, 2, 3, 0, 0, 0};
 #define s33 CASADI_PREFIX(s33)
-static const int CASADI_PREFIX(s34)[] = {8, 3, 0, 1, 2, 3, 0, 0, 0};
+static const int CASADI_PREFIX(s34)[] = {3, 8, 0, 3, 6, 9, 12, 15, 18, 21, 24, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2};
 #define s34 CASADI_PREFIX(s34)
-static const int CASADI_PREFIX(s35)[] = {3, 8, 0, 3, 6, 9, 12, 15, 18, 21, 24, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2};
+static const int CASADI_PREFIX(s35)[] = {3, 8, 0, 0, 3, 3, 3, 3, 3, 3, 3, 0, 1, 2};
 #define s35 CASADI_PREFIX(s35)
-static const int CASADI_PREFIX(s36)[] = {3, 8, 0, 0, 3, 3, 3, 3, 3, 3, 3, 0, 1, 2};
+static const int CASADI_PREFIX(s36)[] = {1, 8, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0};
 #define s36 CASADI_PREFIX(s36)
-static const int CASADI_PREFIX(s37)[] = {1, 8, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0};
+static const int CASADI_PREFIX(s37)[] = {8, 3, 0, 1, 2, 3, 1, 1, 1};
 #define s37 CASADI_PREFIX(s37)
-static const int CASADI_PREFIX(s38)[] = {8, 3, 0, 1, 2, 3, 1, 1, 1};
+static const int CASADI_PREFIX(s38)[] = {3, 8, 0, 0, 0, 3, 3, 3, 3, 3, 3, 0, 1, 2};
 #define s38 CASADI_PREFIX(s38)
-static const int CASADI_PREFIX(s39)[] = {3, 8, 0, 0, 0, 3, 3, 3, 3, 3, 3, 0, 1, 2};
+static const int CASADI_PREFIX(s39)[] = {1, 8, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0};
 #define s39 CASADI_PREFIX(s39)
-static const int CASADI_PREFIX(s40)[] = {1, 8, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0};
+static const int CASADI_PREFIX(s40)[] = {8, 3, 0, 1, 2, 3, 2, 2, 2};
 #define s40 CASADI_PREFIX(s40)
-static const int CASADI_PREFIX(s41)[] = {8, 3, 0, 1, 2, 3, 2, 2, 2};
+static const int CASADI_PREFIX(s41)[] = {3, 8, 0, 0, 0, 0, 3, 3, 3, 3, 3, 0, 1, 2};
 #define s41 CASADI_PREFIX(s41)
-static const int CASADI_PREFIX(s42)[] = {3, 8, 0, 0, 0, 0, 3, 3, 3, 3, 3, 0, 1, 2};
+static const int CASADI_PREFIX(s42)[] = {1, 8, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0};
 #define s42 CASADI_PREFIX(s42)
-static const int CASADI_PREFIX(s43)[] = {1, 8, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0};
+static const int CASADI_PREFIX(s43)[] = {8, 3, 0, 1, 2, 3, 3, 3, 3};
 #define s43 CASADI_PREFIX(s43)
-static const int CASADI_PREFIX(s44)[] = {8, 3, 0, 1, 2, 3, 3, 3, 3};
+static const int CASADI_PREFIX(s44)[] = {3, 8, 0, 0, 0, 0, 0, 3, 3, 3, 3, 0, 1, 2};
 #define s44 CASADI_PREFIX(s44)
-static const int CASADI_PREFIX(s45)[] = {3, 8, 0, 0, 0, 0, 0, 3, 3, 3, 3, 0, 1, 2};
+static const int CASADI_PREFIX(s45)[] = {1, 8, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0};
 #define s45 CASADI_PREFIX(s45)
-static const int CASADI_PREFIX(s46)[] = {1, 8, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0};
+static const int CASADI_PREFIX(s46)[] = {8, 3, 0, 1, 2, 3, 4, 4, 4};
 #define s46 CASADI_PREFIX(s46)
-static const int CASADI_PREFIX(s47)[] = {8, 3, 0, 1, 2, 3, 4, 4, 4};
+static const int CASADI_PREFIX(s47)[] = {3, 8, 0, 0, 0, 0, 0, 0, 3, 3, 3, 0, 1, 2};
 #define s47 CASADI_PREFIX(s47)
-static const int CASADI_PREFIX(s48)[] = {3, 8, 0, 0, 0, 0, 0, 0, 3, 3, 3, 0, 1, 2};
+static const int CASADI_PREFIX(s48)[] = {1, 8, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0};
 #define s48 CASADI_PREFIX(s48)
-static const int CASADI_PREFIX(s49)[] = {1, 8, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0};
+static const int CASADI_PREFIX(s49)[] = {8, 3, 0, 1, 2, 3, 5, 5, 5};
 #define s49 CASADI_PREFIX(s49)
-static const int CASADI_PREFIX(s50)[] = {8, 3, 0, 1, 2, 3, 5, 5, 5};
+static const int CASADI_PREFIX(s50)[] = {3, 8, 0, 0, 0, 0, 0, 0, 0, 3, 3, 0, 1, 2};
 #define s50 CASADI_PREFIX(s50)
-static const int CASADI_PREFIX(s51)[] = {3, 8, 0, 0, 0, 0, 0, 0, 0, 3, 3, 0, 1, 2};
+static const int CASADI_PREFIX(s51)[] = {1, 8, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0};
 #define s51 CASADI_PREFIX(s51)
-static const int CASADI_PREFIX(s52)[] = {1, 8, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0};
+static const int CASADI_PREFIX(s52)[] = {8, 3, 0, 1, 2, 3, 6, 6, 6};
 #define s52 CASADI_PREFIX(s52)
-static const int CASADI_PREFIX(s53)[] = {8, 3, 0, 1, 2, 3, 6, 6, 6};
+static const int CASADI_PREFIX(s53)[] = {3, 8, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 1, 2};
 #define s53 CASADI_PREFIX(s53)
-static const int CASADI_PREFIX(s54)[] = {3, 8, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 1, 2};
+static const int CASADI_PREFIX(s54)[] = {1, 8, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0};
 #define s54 CASADI_PREFIX(s54)
-static const int CASADI_PREFIX(s55)[] = {1, 8, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0};
+static const int CASADI_PREFIX(s55)[] = {8, 3, 0, 1, 2, 3, 7, 7, 7};
 #define s55 CASADI_PREFIX(s55)
-static const int CASADI_PREFIX(s56)[] = {8, 3, 0, 1, 2, 3, 7, 7, 7};
+static const int CASADI_PREFIX(s56)[] = {9, 8, 0, 6, 12, 18, 24, 30, 36, 42, 48, 0, 1, 2, 6, 7, 8, 0, 1, 2, 6, 7, 8, 0, 1, 2, 6, 7, 8, 0, 1, 2, 6, 7, 8, 0, 1, 2, 6, 7, 8, 0, 1, 2, 6, 7, 8, 0, 1, 2, 6, 7, 8, 0, 1, 2, 6, 7, 8};
 #define s56 CASADI_PREFIX(s56)
-static const int CASADI_PREFIX(s57)[] = {9, 8, 0, 6, 12, 18, 24, 30, 36, 42, 48, 0, 1, 2, 6, 7, 8, 0, 1, 2, 6, 7, 8, 0, 1, 2, 6, 7, 8, 0, 1, 2, 6, 7, 8, 0, 1, 2, 6, 7, 8, 0, 1, 2, 6, 7, 8, 0, 1, 2, 6, 7, 8, 0, 1, 2, 6, 7, 8};
+static const int CASADI_PREFIX(s57)[] = {8, 9, 0, 8, 16, 24, 24, 24, 24, 32, 40, 48, 0, 1, 2, 3, 4, 5, 6, 7, 0, 1, 2, 3, 4, 5, 6, 7, 0, 1, 2, 3, 4, 5, 6, 7, 0, 1, 2, 3, 4, 5, 6, 7, 0, 1, 2, 3, 4, 5, 6, 7, 0, 1, 2, 3, 4, 5, 6, 7};
 #define s57 CASADI_PREFIX(s57)
-static const int CASADI_PREFIX(s58)[] = {8, 9, 0, 8, 16, 24, 24, 24, 24, 32, 40, 48, 0, 1, 2, 3, 4, 5, 6, 7, 0, 1, 2, 3, 4, 5, 6, 7, 0, 1, 2, 3, 4, 5, 6, 7, 0, 1, 2, 3, 4, 5, 6, 7, 0, 1, 2, 3, 4, 5, 6, 7, 0, 1, 2, 3, 4, 5, 6, 7};
+static const int CASADI_PREFIX(s58)[] = {9, 21, 0, 9, 18, 27, 36, 45, 54, 63, 72, 81, 90, 99, 108, 117, 126, 135, 144, 153, 162, 171, 180, 189, 0, 1, 2, 3, 4, 5, 6, 7, 8, 0, 1, 2, 3, 4, 5, 6, 7, 8, 0, 1, 2, 3, 4, 5, 6, 7, 8, 0, 1, 2, 3, 4, 5, 6, 7, 8, 0, 1, 2, 3, 4, 5, 6, 7, 8, 0, 1, 2, 3, 4, 5, 6, 7, 8, 0, 1, 2, 3, 4, 5, 6, 7, 8, 0, 1, 2, 3, 4, 5, 6, 7, 8, 0, 1, 2, 3, 4, 5, 6, 7, 8, 0, 1, 2, 3, 4, 5, 6, 7, 8, 0, 1, 2, 3, 4, 5, 6, 7, 8, 0, 1, 2, 3, 4, 5, 6, 7, 8, 0, 1, 2, 3, 4, 5, 6, 7, 8, 0, 1, 2, 3, 4, 5, 6, 7, 8, 0, 1, 2, 3, 4, 5, 6, 7, 8, 0, 1, 2, 3, 4, 5, 6, 7, 8, 0, 1, 2, 3, 4, 5, 6, 7, 8, 0, 1, 2, 3, 4, 5, 6, 7, 8, 0, 1, 2, 3, 4, 5, 6, 7, 8, 0, 1, 2, 3, 4, 5, 6, 7, 8, 0, 1, 2, 3, 4, 5, 6, 7, 8};
 #define s58 CASADI_PREFIX(s58)
-static const int CASADI_PREFIX(s59)[] = {9, 8, 0, 9, 18, 27, 36, 45, 54, 63, 72, 0, 1, 2, 3, 4, 5, 6, 7, 8, 0, 1, 2, 3, 4, 5, 6, 7, 8, 0, 1, 2, 3, 4, 5, 6, 7, 8, 0, 1, 2, 3, 4, 5, 6, 7, 8, 0, 1, 2, 3, 4, 5, 6, 7, 8, 0, 1, 2, 3, 4, 5, 6, 7, 8, 0, 1, 2, 3, 4, 5, 6, 7, 8, 0, 1, 2, 3, 4, 5, 6, 7, 8};
+static const int CASADI_PREFIX(s59)[] = {9, 21, 0, 4, 8, 12, 18, 24, 30, 36, 36, 36, 36, 42, 48, 54, 60, 66, 72, 78, 84, 90, 96, 102, 3, 6, 7, 8, 4, 6, 7, 8, 5, 6, 7, 8, 0, 1, 2, 6, 7, 8, 0, 1, 2, 6, 7, 8, 0, 1, 2, 6, 7, 8, 0, 1, 2, 6, 7, 8, 0, 1, 2, 6, 7, 8, 0, 1, 2, 6, 7, 8, 0, 1, 2, 6, 7, 8, 0, 1, 2, 6, 7, 8, 0, 1, 2, 6, 7, 8, 0, 1, 2, 6, 7, 8, 0, 1, 2, 6, 7, 8, 0, 1, 2, 6, 7, 8, 0, 1, 2, 6, 7, 8, 0, 1, 2, 6, 7, 8, 0, 1, 2, 6, 7, 8};
 #define s59 CASADI_PREFIX(s59)
-static const int CASADI_PREFIX(s60)[] = {13, 1, 0, 13, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12};
+static const int CASADI_PREFIX(s60)[] = {21, 1, 0, 21, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20};
 #define s60 CASADI_PREFIX(s60)
-static const int CASADI_PREFIX(s61)[] = {9, 1, 0, 9, 0, 1, 2, 3, 4, 5, 6, 7, 8};
+static const int CASADI_PREFIX(s61)[] = {13, 1, 0, 13, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12};
 #define s61 CASADI_PREFIX(s61)
-static const int CASADI_PREFIX(s62)[] = {4, 1, 0, 4, 0, 1, 2, 3};
+static const int CASADI_PREFIX(s62)[] = {9, 1, 0, 9, 0, 1, 2, 3, 4, 5, 6, 7, 8};
 #define s62 CASADI_PREFIX(s62)
-static const int CASADI_PREFIX(s63)[] = {0, 10, 20, 30, 36, 42, 48, 75, 76, 77};
+static const int CASADI_PREFIX(s63)[] = {4, 1, 0, 4, 0, 1, 2, 3};
 #define s63 CASADI_PREFIX(s63)
-static const int CASADI_PREFIX(s64)[] = {1, 11, 21, 31, 37, 43, 49};
+static const int CASADI_PREFIX(s64)[] = {0, 10, 20, 30, 36, 42, 48, 75, 76, 77};
 #define s64 CASADI_PREFIX(s64)
-static const int CASADI_PREFIX(s65)[] = {2, 12, 22, 32, 38, 44, 50};
+static const int CASADI_PREFIX(s65)[] = {1, 11, 21, 31, 37, 43, 49};
 #define s65 CASADI_PREFIX(s65)
-static const int CASADI_PREFIX(s66)[] = {0, 1, 2, 4, 5, 6, 7, 8, 9};
+static const int CASADI_PREFIX(s66)[] = {2, 12, 22, 32, 38, 44, 50};
 #define s66 CASADI_PREFIX(s66)
-static const int CASADI_PREFIX(s67)[] = {3, 13, 23, 39, 45, 51, 54, 61, 68};
+static const int CASADI_PREFIX(s67)[] = {0, 1, 2, 4, 5, 6, 7, 8, 9};
 #define s67 CASADI_PREFIX(s67)
-static const int CASADI_PREFIX(s68)[] = {0, 1, 2, 3, 5, 6, 7, 8, 9};
+static const int CASADI_PREFIX(s68)[] = {3, 13, 23, 39, 45, 51, 54, 61, 68};
 #define s68 CASADI_PREFIX(s68)
-static const int CASADI_PREFIX(s69)[] = {4, 14, 24, 33, 46, 52, 55, 62, 69};
+static const int CASADI_PREFIX(s69)[] = {0, 1, 2, 3, 5, 6, 7, 8, 9};
 #define s69 CASADI_PREFIX(s69)
-static const int CASADI_PREFIX(s70)[] = {0, 1, 2, 3, 4, 6, 7, 8, 9};
+static const int CASADI_PREFIX(s70)[] = {4, 14, 24, 33, 46, 52, 55, 62, 69};
 #define s70 CASADI_PREFIX(s70)
-static const int CASADI_PREFIX(s71)[] = {5, 15, 25, 34, 40, 53, 56, 63, 70};
+static const int CASADI_PREFIX(s71)[] = {0, 1, 2, 3, 4, 6, 7, 8, 9};
 #define s71 CASADI_PREFIX(s71)
-static const int CASADI_PREFIX(s72)[] = {0, 1, 2, 3, 4, 5, 7, 8, 9};
+static const int CASADI_PREFIX(s72)[] = {5, 15, 25, 34, 40, 53, 56, 63, 70};
 #define s72 CASADI_PREFIX(s72)
-static const int CASADI_PREFIX(s73)[] = {6, 16, 26, 35, 41, 47, 57, 64, 71};
+static const int CASADI_PREFIX(s73)[] = {0, 1, 2, 3, 4, 5, 7, 8, 9};
 #define s73 CASADI_PREFIX(s73)
-static const int CASADI_PREFIX(s74)[] = {7, 17, 27, 58, 65, 72};
+static const int CASADI_PREFIX(s74)[] = {6, 16, 26, 35, 41, 47, 57, 64, 71};
 #define s74 CASADI_PREFIX(s74)
-static const int CASADI_PREFIX(s75)[] = {8, 18, 28, 59, 66, 73};
+static const int CASADI_PREFIX(s75)[] = {7, 17, 27, 58, 65, 72};
 #define s75 CASADI_PREFIX(s75)
-static const int CASADI_PREFIX(s76)[] = {9, 19, 29, 60, 67, 74};
+static const int CASADI_PREFIX(s76)[] = {8, 18, 28, 59, 66, 73};
 #define s76 CASADI_PREFIX(s76)
-static const int CASADI_PREFIX(s77)[] = {13, 13, 0, 7, 14, 21, 30, 39, 48, 57, 58, 59, 60, 66, 72, 78, 0, 1, 2, 3, 4, 5, 6, 0, 1, 2, 3, 4, 5, 6, 0, 1, 2, 3, 4, 5, 6, 0, 1, 2, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5, 7, 8, 9, 10, 11, 12, 0, 1, 2, 7, 8, 9, 0, 1, 2, 7, 8, 9, 0, 1, 2, 7, 8, 9};
+static const int CASADI_PREFIX(s77)[] = {9, 19, 29, 60, 67, 74};
 #define s77 CASADI_PREFIX(s77)
-static const int CASADI_PREFIX(s78)[] = {13, 13, 0, 10, 20, 30, 36, 42, 48, 54, 61, 68, 75, 76, 77, 78, 0, 1, 2, 3, 4, 5, 6, 10, 11, 12, 0, 1, 2, 3, 4, 5, 6, 10, 11, 12, 0, 1, 2, 3, 4, 5, 6, 10, 11, 12, 0, 1, 2, 4, 5, 6, 0, 1, 2, 3, 5, 6, 0, 1, 2, 3, 4, 6, 0, 1, 2, 3, 4, 5, 3, 4, 5, 6, 10, 11, 12, 3, 4, 5, 6, 10, 11, 12, 3, 4, 5, 6, 10, 11, 12, 7, 8, 9};
+static const int CASADI_PREFIX(s78)[] = {13, 13, 0, 7, 14, 21, 30, 39, 48, 57, 58, 59, 60, 66, 72, 78, 0, 1, 2, 3, 4, 5, 6, 0, 1, 2, 3, 4, 5, 6, 0, 1, 2, 3, 4, 5, 6, 0, 1, 2, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5, 7, 8, 9, 10, 11, 12, 0, 1, 2, 7, 8, 9, 0, 1, 2, 7, 8, 9, 0, 1, 2, 7, 8, 9};
 #define s78 CASADI_PREFIX(s78)
-static const int CASADI_PREFIX(s79)[] = {13, 13, 0, 13, 26, 39, 52, 65, 78, 91, 104, 117, 130, 143, 156, 169, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12};
+static const int CASADI_PREFIX(s79)[] = {13, 13, 0, 10, 20, 30, 36, 42, 48, 54, 61, 68, 75, 76, 77, 78, 0, 1, 2, 3, 4, 5, 6, 10, 11, 12, 0, 1, 2, 3, 4, 5, 6, 10, 11, 12, 0, 1, 2, 3, 4, 5, 6, 10, 11, 12, 0, 1, 2, 4, 5, 6, 0, 1, 2, 3, 5, 6, 0, 1, 2, 3, 4, 6, 0, 1, 2, 3, 4, 5, 3, 4, 5, 6, 10, 11, 12, 3, 4, 5, 6, 10, 11, 12, 3, 4, 5, 6, 10, 11, 12, 7, 8, 9};
 #define s79 CASADI_PREFIX(s79)
 static const int CASADI_PREFIX(s80)[] = {13, 8, 0, 6, 12, 18, 24, 30, 36, 42, 48, 0, 1, 2, 7, 8, 9, 0, 1, 2, 7, 8, 9, 0, 1, 2, 7, 8, 9, 0, 1, 2, 7, 8, 9, 0, 1, 2, 7, 8, 9, 0, 1, 2, 7, 8, 9, 0, 1, 2, 7, 8, 9, 0, 1, 2, 7, 8, 9};
 #define s80 CASADI_PREFIX(s80)
 static const int CASADI_PREFIX(s81)[] = {8, 13, 0, 8, 16, 24, 24, 24, 24, 24, 32, 40, 48, 48, 48, 48, 0, 1, 2, 3, 4, 5, 6, 7, 0, 1, 2, 3, 4, 5, 6, 7, 0, 1, 2, 3, 4, 5, 6, 7, 0, 1, 2, 3, 4, 5, 6, 7, 0, 1, 2, 3, 4, 5, 6, 7, 0, 1, 2, 3, 4, 5, 6, 7};
 #define s81 CASADI_PREFIX(s81)
-static const int CASADI_PREFIX(s82)[] = {13, 8, 0, 13, 26, 39, 52, 65, 78, 91, 104, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12};
+static const int CASADI_PREFIX(s82)[] = {13, 21, 0, 13, 26, 39, 52, 65, 78, 91, 104, 117, 130, 143, 156, 169, 182, 195, 208, 221, 234, 247, 260, 273, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12};
 #define s82 CASADI_PREFIX(s82)
+static const int CASADI_PREFIX(s83)[] = {13, 21, 0, 7, 14, 21, 30, 39, 48, 57, 58, 59, 60, 66, 72, 78, 84, 90, 96, 102, 108, 114, 120, 126, 0, 1, 2, 3, 4, 5, 6, 0, 1, 2, 3, 4, 5, 6, 0, 1, 2, 3, 4, 5, 6, 0, 1, 2, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5, 7, 8, 9, 10, 11, 12, 0, 1, 2, 7, 8, 9, 0, 1, 2, 7, 8, 9, 0, 1, 2, 7, 8, 9, 0, 1, 2, 7, 8, 9, 0, 1, 2, 7, 8, 9, 0, 1, 2, 7, 8, 9, 0, 1, 2, 7, 8, 9, 0, 1, 2, 7, 8, 9, 0, 1, 2, 7, 8, 9, 0, 1, 2, 7, 8, 9, 0, 1, 2, 7, 8, 9};
+#define s83 CASADI_PREFIX(s83)
 static const real_t CASADI_PREFIX(c0)[] = {-1.3830000000000000e+00, 5.2800000000000002e-01, -7.4700000000000000e-01, -7.9900000000000004e-01, 1.2447999999999999e+00, 7.4570000000000003e-01, 1.4535000000000000e+00, 3.6969999999999997e-01, -7.4819999999999998e-01, 9.5389999999999997e-01, 1.1471000000000000e+00, 7.4500000000000000e-01, 8.1869999999999998e-01, -1.2676000000000001e+00, -7.4650000000000005e-01, 1.4027000000000001e+00, -5.5069999999999997e-01, 7.4639999999999995e-01, -9.3459999999999999e-01, -1.1698000000000000e+00, -7.4580000000000002e-01, -1.4341999999999999e+00, -3.9250000000000002e-01, 7.4750000000000005e-01};
 #define c0 CASADI_PREFIX(c0)
 static const real_t CASADI_PREFIX(c1)[] = {-5.2469999999999999e+00, 7.8650000000000002e+00, 6.2619999999999996e+00, -5.2460000000000004e+00, 7.8529999999999998e+00, -1.0349999999999999e+00, 5.2630000000000008e+00, 7.5809999999999995e+00, 6.3090000000000002e+00, 5.2670000000000003e+00, 7.5679999999999996e+00, -4.8599999999999999e-01, 5.1399999999999997e+00, -6.4150000000000000e+00, 6.3380000000000001e+00, 5.1480000000000006e+00, -6.4299999999999997e+00, -4.5799999999999996e-01, -5.6379999999999999e+00, -6.5030000000000001e+00, 6.3259999999999996e+00, -5.6360000000000001e+00, -6.5169999999999995e+00, -9.6899999999999986e-01};
@@ -399,11 +401,11 @@ int cablerobot_output(const real_t** arg, real_t** res, int* iw, real_t* w, int 
   const int *cii;
   real_t r, s, t, *rr, *ss, *tt;
   const real_t *cr, *cs, *ct;
-  const real_t** arg1=arg+3;
-  real_t** res1=res+3;
-  real_t *w0=w+9, w1, *w2=w+18, *w3=w+31, *w4=w+34, *w5=w+38, w6, w7, w8, w9, *w10=w+45, *w11=w+49, *w12=w+53, *w13=w+57, *w14=w+69, *w15=w+81, *w16=w+93, *w17=w+102, *w18=w+126, *w19=w+150, *w20=w+174, *w21=w+198, *w22=w+201, *w23=w+204, *w24=w+207, *w25=w+210, *w26=w+213, *w27=w+216, *w28=w+219, w29, w30, *w31=w+224, *w32=w+227, *w33=w+230, w34, w35, *w36=w+235, *w37=w+238, *w38=w+241, w39, w40, *w41=w+246, *w42=w+249, *w43=w+252, w44, w45, *w46=w+257, *w47=w+260, *w48=w+263, w49, w50, *w51=w+268, *w52=w+271, *w53=w+274, w54, *w55=w+278, *w56=w+281, *w57=w+287, w58, *w59=w+294, *w60=w+297, *w61=w+306, *w62=w+312, *w63=w+321, *w64=w+330, *w65=w+338, *w66=w+346, *w67=w+354, *w68=w+362, *w69=w+370, *w70=w+378, *w71=w+386, *w72=w+394, *w73=w+402, *w74=w+410, w75, *w76=w+414, *w77=w+423, w78, w79, w80, w81, w82, w83, w84, w85, w86, *w87=w+435, w88, w89, w90, w91, *w93=w+448, *w96=w+502, *w97=w+505, *w98=w+508, *w99=w+511, *w100=w+514, *w101=w+517, *w102=w+520, *w103=w+528, *w104=w+536, *w105=w+544, *w106=w+552, *w107=w+560, *w108=w+614, *w113=w+731, *w114=w+779, *w115=w+827;
-  if (arg[1])
-    copy(arg[1], 8, w0);
+  const real_t** arg1=arg+2;
+  real_t** res1=res+2;
+  real_t *w0=w+9, w1, *w2=w+18, *w3=w+31, *w4=w+34, *w5=w+38, w6, w7, w8, w9, *w10=w+45, *w11=w+49, *w12=w+53, *w13=w+57, *w14=w+69, *w15=w+81, *w16=w+93, *w17=w+102, *w18=w+126, *w19=w+150, *w20=w+174, *w21=w+198, *w22=w+201, *w23=w+204, *w24=w+207, *w25=w+210, *w26=w+213, *w27=w+216, *w28=w+219, w29, w30, *w31=w+224, *w32=w+227, *w33=w+230, w34, w35, *w36=w+235, *w37=w+238, *w38=w+241, w39, w40, *w41=w+246, *w42=w+249, *w43=w+252, w44, w45, *w46=w+257, *w47=w+260, *w48=w+263, w49, w50, *w51=w+268, *w52=w+271, *w53=w+274, w54, *w55=w+278, *w56=w+281, *w57=w+287, w58, *w59=w+294, *w60=w+297, *w61=w+306, *w62=w+312, *w63=w+321, *w64=w+330, *w65=w+338, *w66=w+346, *w67=w+354, *w68=w+362, *w69=w+370, *w70=w+378, *w71=w+386, *w72=w+394, *w73=w+402, *w74=w+410, w75, *w76=w+414, *w77=w+423, w78, w79, w80, w81, w82, w83, w84, w85, w86, *w87=w+435, w88, w89, w90, w91, *w93=w+448, *w96=w+502, *w97=w+505, *w98=w+508, *w99=w+511, *w100=w+514, *w101=w+517, *w102=w+520, *w103=w+528, *w104=w+536, *w105=w+544, *w106=w+552, *w107=w+560, *w112=w+614, *w113=w+662, *w114=w+710, *w115=w+812;
+  if (arg[0])
+    copy(arg[0]+13, 8, w0);
   else 
     fill(w0, 8, 0);
   for (rr=(&w1), ss=w0+0; ss!=w0+1; ss+=1) *rr++ = *ss;
@@ -559,8 +561,8 @@ int cablerobot_output(const real_t** arg, real_t** res, int* iw, real_t* w, int 
   fill(w55, 3, 0.);
   fill(w0, 8, 1.);
   for (i=0, rr=w55; i<1; ++i) for (j=0; j<3; ++j, ++rr) for (k=0, ss=w20+j, tt=w0+i*8; k<8; ++k) *rr += ss[k*3]**tt++;
-  if (arg[2])
-    copy(arg[2], 13, w2);
+  if (arg[1])
+    copy(arg[1], 13, w2);
   else 
     fill(w2, 13, 0);
   copy(w2, 6, w56);
@@ -1862,44 +1864,42 @@ int cablerobot_output(const real_t** arg, real_t** res, int* iw, real_t* w, int 
   for (rr=w61, ss=w56+0; ss!=w56+6; ss+=1) *rr++ = *ss;
   for (cii=s26, rr=w93, ss=w61; cii!=s26+6; ++cii, ++ss) if (*cii>=0) rr[*cii] = *ss;
   trans(w93, s28, w107, s27, iw);
-    project(w107, s27, w108, s29, w);
-  if (res[1]) copy(w108, 117, res[1]);
   w6 = (1./ w6 );
   for (i=0, rr=w5, cs=w5; i<3; ++i) (*rr++)  = (w6*(*cs++));
   rr=w21;
   for (i=0, cs=w5; i<3; ++i) *rr++ = *cs++;
   fill(w55, 3, 0.);
-  mtimes(w21, s31, w0, s30, w55, s3, w, 0);
+  mtimes(w21, s30, w0, s29, w55, s3, w, 0);
   w58 = (1./ w58 );
   for (i=0, rr=w55, cs=w55; i<3; ++i) (*rr++)  = (w58*(*cs++));
   for (i=0, rr=w55, cs=w55; i<3; ++i) *rr++ = (- *cs++ );
   fill(w21, 3, 0.);
   for (i=0, rr=w21; i<1; ++i) for (j=0; j<3; ++j, ++rr) for (k=0, ss=w60+j, tt=w55+i*3; k<3; ++k) *rr += ss[k*3]**tt++;
-    project(w64, s33, (&w6), s32, w);
+    project(w64, s32, (&w6), s31, w);
   for (rr=(&w80), ss=w5+2; ss!=w5+3; ss+=1) *rr++ = *ss;
   w6 *= w80;
-    project(w67, s33, (&w91), s32, w);
+    project(w67, s32, (&w91), s31, w);
   for (rr=(&w85), ss=w5+1; ss!=w5+2; ss+=1) *rr++ = *ss;
   w91 *= w85;
   w6 -= w91;
-    project(w67, s33, (&w91), s32, w);
+    project(w67, s32, (&w91), s31, w);
   for (rr=(&w50), ss=w5+0; ss!=w5+1; ss+=1) *rr++ = *ss;
   w91 *= w50;
-    project(w71, s33, (&w79), s32, w);
+    project(w71, s32, (&w79), s31, w);
   w79 *= w80;
   w91 -= w79;
-    project(w71, s33, (&w79), s32, w);
+    project(w71, s32, (&w79), s31, w);
   w79 *= w85;
-    project(w64, s33, (&w85), s32, w);
+    project(w64, s32, (&w85), s31, w);
   w85 *= w50;
   w79 -= w85;
   rr=w5;
   *rr++ = w6;
   *rr++ = w91;
   *rr++ = w79;
-  trans(w5, s34, w55, s31, iw);
+  trans(w5, s33, w55, s30, iw);
   fill(w17, 24, 0.);
-  mtimes(w63, s2, w55, s31, w17, s35, w, 0);
+  mtimes(w63, s2, w55, s30, w17, s34, w, 0);
   fill(w55, 3, 0.);
   for (i=0, rr=w55; i<1; ++i) for (j=0; j<3; ++j, ++rr) for (k=0, ss=w17+j, tt=w66+i*8; k<8; ++k) *rr += ss[k*3]**tt++;
   fill(w5, 3, 0.);
@@ -1910,43 +1910,43 @@ int cablerobot_output(const real_t** arg, real_t** res, int* iw, real_t* w, int 
   for (i=0, cs=w21; i<3; ++i) *rr++ = *cs++;
   for (i=0, cs=w55; i<3; ++i) *rr++ = *cs++;
   for (rr=w56, ss=w61+0; ss!=w61+6; ss+=1) *rr++ = *ss;
-  fill(w113, 48, 0.);
-  for (rr=w113+0, ss=w56; rr!=w113+48; rr+=8) *rr = *ss++;
+  fill(w112, 48, 0.);
+  for (rr=w112+0, ss=w56; rr!=w112+48; rr+=8) *rr = *ss++;
   w8 = (1./ w8 );
   for (i=0, rr=w23, cs=w23; i<3; ++i) (*rr++)  = (w8*(*cs++));
   rr=w21;
   for (i=0, cs=w23; i<3; ++i) *rr++ = *cs++;
   fill(w55, 3, 0.);
-  mtimes(w21, s36, w0, s30, w55, s3, w, 0);
+  mtimes(w21, s35, w0, s29, w55, s3, w, 0);
   for (i=0, rr=w55, cs=w55; i<3; ++i) (*rr++)  = (w58*(*cs++));
   for (i=0, rr=w55, cs=w55; i<3; ++i) *rr++ = (- *cs++ );
   fill(w21, 3, 0.);
   for (i=0, rr=w21; i<1; ++i) for (j=0; j<3; ++j, ++rr) for (k=0, ss=w60+j, tt=w55+i*3; k<3; ++k) *rr += ss[k*3]**tt++;
-    project(w64, s33, (&w8), s37, w);
+    project(w64, s32, (&w8), s36, w);
   for (rr=(&w6), ss=w23+2; ss!=w23+3; ss+=1) *rr++ = *ss;
   w8 *= w6;
-    project(w67, s33, (&w91), s37, w);
+    project(w67, s32, (&w91), s36, w);
   for (rr=(&w79), ss=w23+1; ss!=w23+2; ss+=1) *rr++ = *ss;
   w91 *= w79;
   w8 -= w91;
-    project(w67, s33, (&w91), s37, w);
+    project(w67, s32, (&w91), s36, w);
   for (rr=(&w85), ss=w23+0; ss!=w23+1; ss+=1) *rr++ = *ss;
   w91 *= w85;
-    project(w71, s33, (&w50), s37, w);
+    project(w71, s32, (&w50), s36, w);
   w50 *= w6;
   w91 -= w50;
-    project(w71, s33, (&w50), s37, w);
+    project(w71, s32, (&w50), s36, w);
   w50 *= w79;
-    project(w64, s33, (&w79), s37, w);
+    project(w64, s32, (&w79), s36, w);
   w79 *= w85;
   w50 -= w79;
   rr=w23;
   *rr++ = w8;
   *rr++ = w91;
   *rr++ = w50;
-  trans(w23, s38, w55, s36, iw);
+  trans(w23, s37, w55, s35, iw);
   fill(w17, 24, 0.);
-  mtimes(w63, s2, w55, s36, w17, s35, w, 0);
+  mtimes(w63, s2, w55, s35, w17, s34, w, 0);
   fill(w55, 3, 0.);
   for (i=0, rr=w55; i<1; ++i) for (j=0; j<3; ++j, ++rr) for (k=0, ss=w17+j, tt=w66+i*8; k<8; ++k) *rr += ss[k*3]**tt++;
   fill(w23, 3, 0.);
@@ -1957,42 +1957,42 @@ int cablerobot_output(const real_t** arg, real_t** res, int* iw, real_t* w, int 
   for (i=0, cs=w21; i<3; ++i) *rr++ = *cs++;
   for (i=0, cs=w55; i<3; ++i) *rr++ = *cs++;
   for (rr=w61, ss=w56+0; ss!=w56+6; ss+=1) *rr++ = *ss;
-  for (rr=w113+1, ss=w61; rr!=w113+49; rr+=8) *rr = *ss++;
+  for (rr=w112+1, ss=w61; rr!=w112+49; rr+=8) *rr = *ss++;
   w29 = (1./ w29 );
   for (i=0, rr=w26, cs=w26; i<3; ++i) (*rr++)  = (w29*(*cs++));
   rr=w21;
   for (i=0, cs=w26; i<3; ++i) *rr++ = *cs++;
   fill(w55, 3, 0.);
-  mtimes(w21, s39, w0, s30, w55, s3, w, 0);
+  mtimes(w21, s38, w0, s29, w55, s3, w, 0);
   for (i=0, rr=w55, cs=w55; i<3; ++i) (*rr++)  = (w58*(*cs++));
   for (i=0, rr=w55, cs=w55; i<3; ++i) *rr++ = (- *cs++ );
   fill(w21, 3, 0.);
   for (i=0, rr=w21; i<1; ++i) for (j=0; j<3; ++j, ++rr) for (k=0, ss=w60+j, tt=w55+i*3; k<3; ++k) *rr += ss[k*3]**tt++;
-    project(w64, s33, (&w29), s40, w);
+    project(w64, s32, (&w29), s39, w);
   for (rr=(&w8), ss=w26+2; ss!=w26+3; ss+=1) *rr++ = *ss;
   w29 *= w8;
-    project(w67, s33, (&w91), s40, w);
+    project(w67, s32, (&w91), s39, w);
   for (rr=(&w50), ss=w26+1; ss!=w26+2; ss+=1) *rr++ = *ss;
   w91 *= w50;
   w29 -= w91;
-    project(w67, s33, (&w91), s40, w);
+    project(w67, s32, (&w91), s39, w);
   for (rr=(&w79), ss=w26+0; ss!=w26+1; ss+=1) *rr++ = *ss;
   w91 *= w79;
-    project(w71, s33, (&w85), s40, w);
+    project(w71, s32, (&w85), s39, w);
   w85 *= w8;
   w91 -= w85;
-    project(w71, s33, (&w85), s40, w);
+    project(w71, s32, (&w85), s39, w);
   w85 *= w50;
-    project(w64, s33, (&w50), s40, w);
+    project(w64, s32, (&w50), s39, w);
   w50 *= w79;
   w85 -= w50;
   rr=w26;
   *rr++ = w29;
   *rr++ = w91;
   *rr++ = w85;
-  trans(w26, s41, w55, s39, iw);
+  trans(w26, s40, w55, s38, iw);
   fill(w17, 24, 0.);
-  mtimes(w63, s2, w55, s39, w17, s35, w, 0);
+  mtimes(w63, s2, w55, s38, w17, s34, w, 0);
   fill(w55, 3, 0.);
   for (i=0, rr=w55; i<1; ++i) for (j=0; j<3; ++j, ++rr) for (k=0, ss=w17+j, tt=w66+i*8; k<8; ++k) *rr += ss[k*3]**tt++;
   fill(w26, 3, 0.);
@@ -2003,42 +2003,42 @@ int cablerobot_output(const real_t** arg, real_t** res, int* iw, real_t* w, int 
   for (i=0, cs=w21; i<3; ++i) *rr++ = *cs++;
   for (i=0, cs=w55; i<3; ++i) *rr++ = *cs++;
   for (rr=w56, ss=w61+0; ss!=w61+6; ss+=1) *rr++ = *ss;
-  for (rr=w113+2, ss=w56; rr!=w113+50; rr+=8) *rr = *ss++;
+  for (rr=w112+2, ss=w56; rr!=w112+50; rr+=8) *rr = *ss++;
   w34 = (1./ w34 );
   for (i=0, rr=w31, cs=w31; i<3; ++i) (*rr++)  = (w34*(*cs++));
   rr=w21;
   for (i=0, cs=w31; i<3; ++i) *rr++ = *cs++;
   fill(w55, 3, 0.);
-  mtimes(w21, s42, w0, s30, w55, s3, w, 0);
+  mtimes(w21, s41, w0, s29, w55, s3, w, 0);
   for (i=0, rr=w55, cs=w55; i<3; ++i) (*rr++)  = (w58*(*cs++));
   for (i=0, rr=w55, cs=w55; i<3; ++i) *rr++ = (- *cs++ );
   fill(w21, 3, 0.);
   for (i=0, rr=w21; i<1; ++i) for (j=0; j<3; ++j, ++rr) for (k=0, ss=w60+j, tt=w55+i*3; k<3; ++k) *rr += ss[k*3]**tt++;
-    project(w64, s33, (&w34), s43, w);
+    project(w64, s32, (&w34), s42, w);
   for (rr=(&w29), ss=w31+2; ss!=w31+3; ss+=1) *rr++ = *ss;
   w34 *= w29;
-    project(w67, s33, (&w91), s43, w);
+    project(w67, s32, (&w91), s42, w);
   for (rr=(&w85), ss=w31+1; ss!=w31+2; ss+=1) *rr++ = *ss;
   w91 *= w85;
   w34 -= w91;
-    project(w67, s33, (&w91), s43, w);
+    project(w67, s32, (&w91), s42, w);
   for (rr=(&w50), ss=w31+0; ss!=w31+1; ss+=1) *rr++ = *ss;
   w91 *= w50;
-    project(w71, s33, (&w79), s43, w);
+    project(w71, s32, (&w79), s42, w);
   w79 *= w29;
   w91 -= w79;
-    project(w71, s33, (&w79), s43, w);
+    project(w71, s32, (&w79), s42, w);
   w79 *= w85;
-    project(w64, s33, (&w85), s43, w);
+    project(w64, s32, (&w85), s42, w);
   w85 *= w50;
   w79 -= w85;
   rr=w31;
   *rr++ = w34;
   *rr++ = w91;
   *rr++ = w79;
-  trans(w31, s44, w55, s42, iw);
+  trans(w31, s43, w55, s41, iw);
   fill(w17, 24, 0.);
-  mtimes(w63, s2, w55, s42, w17, s35, w, 0);
+  mtimes(w63, s2, w55, s41, w17, s34, w, 0);
   fill(w55, 3, 0.);
   for (i=0, rr=w55; i<1; ++i) for (j=0; j<3; ++j, ++rr) for (k=0, ss=w17+j, tt=w66+i*8; k<8; ++k) *rr += ss[k*3]**tt++;
   fill(w31, 3, 0.);
@@ -2049,42 +2049,42 @@ int cablerobot_output(const real_t** arg, real_t** res, int* iw, real_t* w, int 
   for (i=0, cs=w21; i<3; ++i) *rr++ = *cs++;
   for (i=0, cs=w55; i<3; ++i) *rr++ = *cs++;
   for (rr=w61, ss=w56+0; ss!=w56+6; ss+=1) *rr++ = *ss;
-  for (rr=w113+3, ss=w61; rr!=w113+51; rr+=8) *rr = *ss++;
+  for (rr=w112+3, ss=w61; rr!=w112+51; rr+=8) *rr = *ss++;
   w39 = (1./ w39 );
   for (i=0, rr=w36, cs=w36; i<3; ++i) (*rr++)  = (w39*(*cs++));
   rr=w21;
   for (i=0, cs=w36; i<3; ++i) *rr++ = *cs++;
   fill(w55, 3, 0.);
-  mtimes(w21, s45, w0, s30, w55, s3, w, 0);
+  mtimes(w21, s44, w0, s29, w55, s3, w, 0);
   for (i=0, rr=w55, cs=w55; i<3; ++i) (*rr++)  = (w58*(*cs++));
   for (i=0, rr=w55, cs=w55; i<3; ++i) *rr++ = (- *cs++ );
   fill(w21, 3, 0.);
   for (i=0, rr=w21; i<1; ++i) for (j=0; j<3; ++j, ++rr) for (k=0, ss=w60+j, tt=w55+i*3; k<3; ++k) *rr += ss[k*3]**tt++;
-    project(w64, s33, (&w39), s46, w);
+    project(w64, s32, (&w39), s45, w);
   for (rr=(&w34), ss=w36+2; ss!=w36+3; ss+=1) *rr++ = *ss;
   w39 *= w34;
-    project(w67, s33, (&w91), s46, w);
+    project(w67, s32, (&w91), s45, w);
   for (rr=(&w79), ss=w36+1; ss!=w36+2; ss+=1) *rr++ = *ss;
   w91 *= w79;
   w39 -= w91;
-    project(w67, s33, (&w91), s46, w);
+    project(w67, s32, (&w91), s45, w);
   for (rr=(&w85), ss=w36+0; ss!=w36+1; ss+=1) *rr++ = *ss;
   w91 *= w85;
-    project(w71, s33, (&w50), s46, w);
+    project(w71, s32, (&w50), s45, w);
   w50 *= w34;
   w91 -= w50;
-    project(w71, s33, (&w50), s46, w);
+    project(w71, s32, (&w50), s45, w);
   w50 *= w79;
-    project(w64, s33, (&w79), s46, w);
+    project(w64, s32, (&w79), s45, w);
   w79 *= w85;
   w50 -= w79;
   rr=w36;
   *rr++ = w39;
   *rr++ = w91;
   *rr++ = w50;
-  trans(w36, s47, w55, s45, iw);
+  trans(w36, s46, w55, s44, iw);
   fill(w17, 24, 0.);
-  mtimes(w63, s2, w55, s45, w17, s35, w, 0);
+  mtimes(w63, s2, w55, s44, w17, s34, w, 0);
   fill(w55, 3, 0.);
   for (i=0, rr=w55; i<1; ++i) for (j=0; j<3; ++j, ++rr) for (k=0, ss=w17+j, tt=w66+i*8; k<8; ++k) *rr += ss[k*3]**tt++;
   fill(w36, 3, 0.);
@@ -2095,42 +2095,42 @@ int cablerobot_output(const real_t** arg, real_t** res, int* iw, real_t* w, int 
   for (i=0, cs=w21; i<3; ++i) *rr++ = *cs++;
   for (i=0, cs=w55; i<3; ++i) *rr++ = *cs++;
   for (rr=w56, ss=w61+0; ss!=w61+6; ss+=1) *rr++ = *ss;
-  for (rr=w113+4, ss=w56; rr!=w113+52; rr+=8) *rr = *ss++;
+  for (rr=w112+4, ss=w56; rr!=w112+52; rr+=8) *rr = *ss++;
   w44 = (1./ w44 );
   for (i=0, rr=w41, cs=w41; i<3; ++i) (*rr++)  = (w44*(*cs++));
   rr=w21;
   for (i=0, cs=w41; i<3; ++i) *rr++ = *cs++;
   fill(w55, 3, 0.);
-  mtimes(w21, s48, w0, s30, w55, s3, w, 0);
+  mtimes(w21, s47, w0, s29, w55, s3, w, 0);
   for (i=0, rr=w55, cs=w55; i<3; ++i) (*rr++)  = (w58*(*cs++));
   for (i=0, rr=w55, cs=w55; i<3; ++i) *rr++ = (- *cs++ );
   fill(w21, 3, 0.);
   for (i=0, rr=w21; i<1; ++i) for (j=0; j<3; ++j, ++rr) for (k=0, ss=w60+j, tt=w55+i*3; k<3; ++k) *rr += ss[k*3]**tt++;
-    project(w64, s33, (&w44), s49, w);
+    project(w64, s32, (&w44), s48, w);
   for (rr=(&w39), ss=w41+2; ss!=w41+3; ss+=1) *rr++ = *ss;
   w44 *= w39;
-    project(w67, s33, (&w91), s49, w);
+    project(w67, s32, (&w91), s48, w);
   for (rr=(&w50), ss=w41+1; ss!=w41+2; ss+=1) *rr++ = *ss;
   w91 *= w50;
   w44 -= w91;
-    project(w67, s33, (&w91), s49, w);
+    project(w67, s32, (&w91), s48, w);
   for (rr=(&w79), ss=w41+0; ss!=w41+1; ss+=1) *rr++ = *ss;
   w91 *= w79;
-    project(w71, s33, (&w85), s49, w);
+    project(w71, s32, (&w85), s48, w);
   w85 *= w39;
   w91 -= w85;
-    project(w71, s33, (&w85), s49, w);
+    project(w71, s32, (&w85), s48, w);
   w85 *= w50;
-    project(w64, s33, (&w50), s49, w);
+    project(w64, s32, (&w50), s48, w);
   w50 *= w79;
   w85 -= w50;
   rr=w41;
   *rr++ = w44;
   *rr++ = w91;
   *rr++ = w85;
-  trans(w41, s50, w55, s48, iw);
+  trans(w41, s49, w55, s47, iw);
   fill(w17, 24, 0.);
-  mtimes(w63, s2, w55, s48, w17, s35, w, 0);
+  mtimes(w63, s2, w55, s47, w17, s34, w, 0);
   fill(w55, 3, 0.);
   for (i=0, rr=w55; i<1; ++i) for (j=0; j<3; ++j, ++rr) for (k=0, ss=w17+j, tt=w66+i*8; k<8; ++k) *rr += ss[k*3]**tt++;
   fill(w41, 3, 0.);
@@ -2141,42 +2141,42 @@ int cablerobot_output(const real_t** arg, real_t** res, int* iw, real_t* w, int 
   for (i=0, cs=w21; i<3; ++i) *rr++ = *cs++;
   for (i=0, cs=w55; i<3; ++i) *rr++ = *cs++;
   for (rr=w61, ss=w56+0; ss!=w56+6; ss+=1) *rr++ = *ss;
-  for (rr=w113+5, ss=w61; rr!=w113+53; rr+=8) *rr = *ss++;
+  for (rr=w112+5, ss=w61; rr!=w112+53; rr+=8) *rr = *ss++;
   w49 = (1./ w49 );
   for (i=0, rr=w46, cs=w46; i<3; ++i) (*rr++)  = (w49*(*cs++));
   rr=w21;
   for (i=0, cs=w46; i<3; ++i) *rr++ = *cs++;
   fill(w55, 3, 0.);
-  mtimes(w21, s51, w0, s30, w55, s3, w, 0);
+  mtimes(w21, s50, w0, s29, w55, s3, w, 0);
   for (i=0, rr=w55, cs=w55; i<3; ++i) (*rr++)  = (w58*(*cs++));
   for (i=0, rr=w55, cs=w55; i<3; ++i) *rr++ = (- *cs++ );
   fill(w21, 3, 0.);
   for (i=0, rr=w21; i<1; ++i) for (j=0; j<3; ++j, ++rr) for (k=0, ss=w60+j, tt=w55+i*3; k<3; ++k) *rr += ss[k*3]**tt++;
-    project(w64, s33, (&w49), s52, w);
+    project(w64, s32, (&w49), s51, w);
   for (rr=(&w44), ss=w46+2; ss!=w46+3; ss+=1) *rr++ = *ss;
   w49 *= w44;
-    project(w67, s33, (&w91), s52, w);
+    project(w67, s32, (&w91), s51, w);
   for (rr=(&w85), ss=w46+1; ss!=w46+2; ss+=1) *rr++ = *ss;
   w91 *= w85;
   w49 -= w91;
-    project(w67, s33, (&w91), s52, w);
+    project(w67, s32, (&w91), s51, w);
   for (rr=(&w50), ss=w46+0; ss!=w46+1; ss+=1) *rr++ = *ss;
   w91 *= w50;
-    project(w71, s33, (&w79), s52, w);
+    project(w71, s32, (&w79), s51, w);
   w79 *= w44;
   w91 -= w79;
-    project(w71, s33, (&w79), s52, w);
+    project(w71, s32, (&w79), s51, w);
   w79 *= w85;
-    project(w64, s33, (&w85), s52, w);
+    project(w64, s32, (&w85), s51, w);
   w85 *= w50;
   w79 -= w85;
   rr=w46;
   *rr++ = w49;
   *rr++ = w91;
   *rr++ = w79;
-  trans(w46, s53, w55, s51, iw);
+  trans(w46, s52, w55, s50, iw);
   fill(w17, 24, 0.);
-  mtimes(w63, s2, w55, s51, w17, s35, w, 0);
+  mtimes(w63, s2, w55, s50, w17, s34, w, 0);
   fill(w55, 3, 0.);
   for (i=0, rr=w55; i<1; ++i) for (j=0; j<3; ++j, ++rr) for (k=0, ss=w17+j, tt=w66+i*8; k<8; ++k) *rr += ss[k*3]**tt++;
   fill(w46, 3, 0.);
@@ -2187,42 +2187,42 @@ int cablerobot_output(const real_t** arg, real_t** res, int* iw, real_t* w, int 
   for (i=0, cs=w21; i<3; ++i) *rr++ = *cs++;
   for (i=0, cs=w55; i<3; ++i) *rr++ = *cs++;
   for (rr=w56, ss=w61+0; ss!=w61+6; ss+=1) *rr++ = *ss;
-  for (rr=w113+6, ss=w56; rr!=w113+54; rr+=8) *rr = *ss++;
+  for (rr=w112+6, ss=w56; rr!=w112+54; rr+=8) *rr = *ss++;
   w54 = (1./ w54 );
   for (i=0, rr=w51, cs=w51; i<3; ++i) (*rr++)  = (w54*(*cs++));
   rr=w21;
   for (i=0, cs=w51; i<3; ++i) *rr++ = *cs++;
   fill(w55, 3, 0.);
-  mtimes(w21, s54, w0, s30, w55, s3, w, 0);
+  mtimes(w21, s53, w0, s29, w55, s3, w, 0);
   for (i=0, rr=w55, cs=w55; i<3; ++i) (*rr++)  = (w58*(*cs++));
   for (i=0, rr=w55, cs=w55; i<3; ++i) *rr++ = (- *cs++ );
   fill(w21, 3, 0.);
   for (i=0, rr=w21; i<1; ++i) for (j=0; j<3; ++j, ++rr) for (k=0, ss=w60+j, tt=w55+i*3; k<3; ++k) *rr += ss[k*3]**tt++;
-    project(w64, s33, (&w58), s55, w);
+    project(w64, s32, (&w58), s54, w);
   for (rr=(&w54), ss=w51+2; ss!=w51+3; ss+=1) *rr++ = *ss;
   w58 *= w54;
-    project(w67, s33, (&w49), s55, w);
+    project(w67, s32, (&w49), s54, w);
   for (rr=(&w91), ss=w51+1; ss!=w51+2; ss+=1) *rr++ = *ss;
   w49 *= w91;
   w58 -= w49;
-    project(w67, s33, (&w49), s55, w);
+    project(w67, s32, (&w49), s54, w);
   for (rr=(&w79), ss=w51+0; ss!=w51+1; ss+=1) *rr++ = *ss;
   w49 *= w79;
-    project(w71, s33, (&w85), s55, w);
+    project(w71, s32, (&w85), s54, w);
   w85 *= w54;
   w49 -= w85;
-    project(w71, s33, (&w85), s55, w);
+    project(w71, s32, (&w85), s54, w);
   w85 *= w91;
-    project(w64, s33, (&w91), s55, w);
+    project(w64, s32, (&w91), s54, w);
   w91 *= w79;
   w85 -= w91;
   rr=w51;
   *rr++ = w58;
   *rr++ = w49;
   *rr++ = w85;
-  trans(w51, s56, w55, s54, iw);
+  trans(w51, s55, w55, s53, iw);
   fill(w17, 24, 0.);
-  mtimes(w63, s2, w55, s54, w17, s35, w, 0);
+  mtimes(w63, s2, w55, s53, w17, s34, w, 0);
   fill(w55, 3, 0.);
   for (i=0, rr=w55; i<1; ++i) for (j=0; j<3; ++j, ++rr) for (k=0, ss=w17+j, tt=w66+i*8; k<8; ++k) *rr += ss[k*3]**tt++;
   fill(w51, 3, 0.);
@@ -2233,10 +2233,13 @@ int cablerobot_output(const real_t** arg, real_t** res, int* iw, real_t* w, int 
   for (i=0, cs=w21; i<3; ++i) *rr++ = *cs++;
   for (i=0, cs=w55; i<3; ++i) *rr++ = *cs++;
   for (rr=w61, ss=w56+0; ss!=w56+6; ss+=1) *rr++ = *ss;
-  for (rr=w113+7, ss=w61; rr!=w113+55; rr+=8) *rr = *ss++;
-  trans(w113, s58, w114, s57, iw);
-    project(w114, s57, w115, s59, w);
-  if (res[2]) copy(w115, 72, res[2]);
+  for (rr=w112+7, ss=w61; rr!=w112+55; rr+=8) *rr = *ss++;
+  trans(w112, s57, w113, s56, iw);
+  rr=w114;
+  for (i=0, cs=w107; i<54; ++i) *rr++ = *cs++;
+  for (i=0, cs=w113; i<48; ++i) *rr++ = *cs++;
+    project(w114, s59, w115, s58, w);
+  if (res[1]) copy(w115, 189, res[1]);
   return 0;
 }
 
@@ -2246,24 +2249,22 @@ void cablerobot_output_incref(void) {
 void cablerobot_output_decref(void) {
 }
 
-int cablerobot_output_n_in(void) { return 3;}
+int cablerobot_output_n_in(void) { return 2;}
 
-int cablerobot_output_n_out(void) { return 3;}
+int cablerobot_output_n_out(void) { return 2;}
 
 const char* cablerobot_output_name_in(int i){
   switch (i) {
-  case 0: return "i0";
-  case 1: return "i1";
-  case 2: return "i2";
+  case 0: return "z";
+  case 1: return "p";
   default: return 0;
   }
 }
 
 const char* cablerobot_output_name_out(int i){
   switch (i) {
-  case 0: return "o0";
-  case 1: return "o1";
-  case 2: return "o2";
+  case 0: return "y";
+  case 1: return "jac";
   default: return 0;
   }
 }
@@ -2271,50 +2272,45 @@ const char* cablerobot_output_name_out(int i){
 const int* cablerobot_output_sparsity_in(int i) {
   switch (i) {
   case 0: return s60;
-  case 1: return s30;
-  case 2: return s60;
+  case 1: return s61;
   default: return 0;
   }
 }
 
 const int* cablerobot_output_sparsity_out(int i) {
   switch (i) {
-  case 0: return s61;
-  case 1: return s29;
-  case 2: return s59;
+  case 0: return s62;
+  case 1: return s58;
   default: return 0;
   }
 }
 
 int cablerobot_output_work(int *sz_arg, int* sz_res, int *sz_iw, int *sz_w) {
-  if (sz_arg) *sz_arg = 11;
-  if (sz_res) *sz_res = 7;
+  if (sz_arg) *sz_arg = 10;
+  if (sz_res) *sz_res = 6;
   if (sz_iw) *sz_iw = 14;
-  if (sz_w) *sz_w = 899;
+  if (sz_w) *sz_w = 1001;
   return 0;
 }
 
 #ifdef MATLAB_MEX_FILE
 void mex_cablerobot_output(int resc, mxArray *resv[], int argc, const mxArray *argv[]) {
   int i, j;
-  if (argc>3) mexErrMsgIdAndTxt("Casadi:RuntimeError","Evaluation of \"cablerobot_output\" failed. Too many input arguments (%d, max 3)", argc);
-  if (resc>3) mexErrMsgIdAndTxt("Casadi:RuntimeError","Evaluation of \"cablerobot_output\" failed. Too many output arguments (%d, max 3)", resc);
+  if (argc>2) mexErrMsgIdAndTxt("Casadi:RuntimeError","Evaluation of \"cablerobot_output\" failed. Too many input arguments (%d, max 2)", argc);
+  if (resc>2) mexErrMsgIdAndTxt("Casadi:RuntimeError","Evaluation of \"cablerobot_output\" failed. Too many output arguments (%d, max 2)", resc);
   int iw[14];
-  real_t w[1131];
-  const real_t* arg[3] = {0};
+  real_t w[1233];
+  const real_t* arg[2] = {0};
   if (--argc>=0) arg[0] = from_mex(argv[0], w, s60, w+232);
-  if (--argc>=0) arg[1] = from_mex(argv[1], w+13, s30, w+232);
-  if (--argc>=0) arg[2] = from_mex(argv[2], w+21, s60, w+232);
-  real_t* res[3] = {0};
+  if (--argc>=0) arg[1] = from_mex(argv[1], w+21, s61, w+232);
+  real_t* res[2] = {0};
   --resc;
   res[0] = w+34;
   if (--resc>=0) res[1] = w+43;
-  if (--resc>=0) res[2] = w+160;
   i = cablerobot_output(arg, res, iw, w+232, 0);
   if (i) mexErrMsgIdAndTxt("Casadi:RuntimeError","Evaluation of \"cablerobot_output\" failed.");
-  if (res[0]) resv[0] = to_mex(s61, res[0]);
-  if (res[1]) resv[1] = to_mex(s29, res[1]);
-  if (res[2]) resv[2] = to_mex(s59, res[2]);
+  if (res[0]) resv[0] = to_mex(s62, res[0]);
+  if (res[1]) resv[1] = to_mex(s58, res[1]);
 }
 #endif
 
@@ -2324,11 +2320,11 @@ int cablerobot_ode(const real_t** arg, real_t** res, int* iw, real_t* w, int mem
   const int *cii;
   real_t r, s, t, *rr, *ss, *tt;
   const real_t *cr, *cs, *ct;
-  const real_t** arg1=arg+3;
-  real_t** res1=res+3;
-  real_t *w0=w+13, *w1=w+26, *w2=w+32, w3, *w4=w+39, *w5=w+45, *w6=w+54, *w7=w+57, *w8=w+61, *w9=w+64, w10, w11, w12, w13, *w14=w+71, *w15=w+75, *w16=w+79, *w17=w+83, *w18=w+95, *w19=w+107, *w20=w+119, *w21=w+128, *w22=w+137, *w23=w+161, *w24=w+185, *w25=w+193, *w26=w+201, *w27=w+225, *w28=w+249, *w29=w+252, *w30=w+255, *w31=w+258, *w32=w+261, w33, *w34=w+265, *w35=w+268, *w36=w+271, w37, w38, *w39=w+276, *w40=w+279, *w41=w+282, w42, w43, *w44=w+287, *w45=w+290, *w46=w+293, w47, w48, *w49=w+298, *w50=w+301, *w51=w+304, w52, w53, *w54=w+309, *w55=w+312, *w56=w+315, w57, w58, *w59=w+320, *w60=w+323, *w61=w+326, w62, *w63=w+330, *w64=w+338, *w65=w+346, *w66=w+354, *w67=w+362, *w68=w+370, *w69=w+378, *w70=w+386, *w71=w+394, w72, *w73=w+398, w74, w75, w76, w77, w78, w79, w80, w81, w82, *w83=w+410, w84, w85, w86, w87, *w89=w+417, *w90=w+427, *w91=w+437, *w93=w+515, *w94=w+522, *w96=w+529, *w97=w+538, *w98=w+541, *w99=w+544, *w100=w+547, *w101=w+550, *w102=w+553, *w103=w+561, *w104=w+569, *w105=w+577, *w106=w+585, *w107=w+593, *w108=w+601, w109, *w110=w+626, *w111=w+704, *w116=w+873, *w117=w+921, *w118=w+969;
-  if (arg[2])
-    copy(arg[2], 13, w0);
+  const real_t** arg1=arg+2;
+  real_t** res1=res+2;
+  real_t *w0=w+13, *w1=w+26, *w2=w+32, w3, *w4=w+39, *w5=w+45, *w6=w+54, *w7=w+57, *w8=w+61, *w9=w+64, w10, w11, w12, w13, *w14=w+71, *w15=w+75, *w16=w+79, *w17=w+83, *w18=w+95, *w19=w+107, *w20=w+119, *w21=w+128, *w22=w+137, *w23=w+161, *w24=w+185, *w25=w+193, *w26=w+201, *w27=w+225, *w28=w+249, *w29=w+252, *w30=w+255, *w31=w+258, *w32=w+261, w33, *w34=w+265, *w35=w+268, *w36=w+271, w37, w38, *w39=w+276, *w40=w+279, *w41=w+282, w42, w43, *w44=w+287, *w45=w+290, *w46=w+293, w47, w48, *w49=w+298, *w50=w+301, *w51=w+304, w52, w53, *w54=w+309, *w55=w+312, *w56=w+315, w57, w58, *w59=w+320, *w60=w+323, *w61=w+326, w62, *w63=w+330, *w64=w+338, *w65=w+346, *w66=w+354, *w67=w+362, *w68=w+370, *w69=w+378, *w70=w+386, *w71=w+394, w72, *w73=w+398, w74, w75, w76, w77, w78, w79, w80, w81, w82, *w83=w+410, w84, w85, w86, w87, *w89=w+417, *w90=w+427, *w91=w+437, *w93=w+515, *w94=w+522, *w96=w+529, *w97=w+538, *w98=w+541, *w99=w+544, *w100=w+547, *w101=w+550, *w102=w+553, *w103=w+561, *w104=w+569, *w105=w+577, *w106=w+585, *w107=w+593, *w108=w+601, w109, *w110=w+626, *w115=w+704, *w116=w+752, *w117=w+800, *w118=w+926;
+  if (arg[1])
+    copy(arg[1], 13, w0);
   else 
     fill(w0, 13, 0);
   copy(w0, 6, w1);
@@ -2428,8 +2424,8 @@ int cablerobot_ode(const real_t** arg, real_t** res, int* iw, real_t* w, int mem
   copy(c0, 24, w23);
   for (i=0, rr=w22; i<8; ++i) for (j=0; j<3; ++j, ++rr) for (k=0, ss=w20+j, tt=w23+i*3; k<3; ++k) *rr += ss[k*3]**tt++;
   for (rr=w24, ss=w22+1; ss!=w22+25; ss+=3) *rr++ = *ss;
-  if (arg[1])
-    copy(arg[1], 8, w25);
+  if (arg[0])
+    copy(arg[0]+13, 8, w25);
   else 
     fill(w25, 8, 0);
   for (rr=(&w10), ss=w25+0; ss!=w25+1; ss+=1) *rr++ = *ss;
@@ -2631,7 +2627,7 @@ int cablerobot_ode(const real_t** arg, real_t** res, int* iw, real_t* w, int mem
   fill(w8, 3, 0.);
   for (i=0, rr=w8; i<1; ++i) for (j=0; j<3; ++j, ++rr) for (k=0, ss=w5+j, tt=w71+i*3; k<3; ++k) *rr += ss[k*3]**tt++;
   fill(w14, 4, 0.);
-  mtimes(w18, s13, (&w75), s4, w14, s62, w, 0);
+  mtimes(w18, s13, (&w75), s4, w14, s63, w, 0);
   w75 = 5.0000000000000000e-01;
   for (i=0, rr=w14, cs=w14; i<4; ++i) (*rr++)  = (w75*(*cs++));
   rr=w89;
@@ -2640,7 +2636,7 @@ int cablerobot_ode(const real_t** arg, real_t** res, int* iw, real_t* w, int mem
   for (i=0, cs=w73; i<3; ++i) *rr++ = *cs++;
   for (rr=w90, ss=w89+0; ss!=w89+10; ss+=1) *rr++ = *ss;
   fill(w91, 78, 0.);
-  for (cii=s63, rr=w91, ss=w90; cii!=s63+10; ++cii, ++ss) if (*cii>=0) rr[*cii] = *ss;
+  for (cii=s64, rr=w91, ss=w90; cii!=s64+10; ++cii, ++ss) if (*cii>=0) rr[*cii] = *ss;
   w81 = 1.;
   w85 = w81;
   for (rr=(&w81), ss=(&w85)+0; ss!=(&w85)+1; ss+=1) *rr++ = *ss;
@@ -2670,13 +2666,13 @@ int cablerobot_ode(const real_t** arg, real_t** res, int* iw, real_t* w, int mem
   fill(w73, 3, 0.);
   for (i=0, rr=w73; i<1; ++i) for (j=0; j<3; ++j, ++rr) for (k=0, ss=w5+j, tt=w8+i*3; k<3; ++k) *rr += ss[k*3]**tt++;
   fill(w14, 4, 0.);
-  mtimes(w18, s13, (&w85), s6, w14, s62, w, 0);
+  mtimes(w18, s13, (&w85), s6, w14, s63, w, 0);
   for (i=0, rr=w14, cs=w14; i<4; ++i) (*rr++)  = (w75*(*cs++));
   rr=w93;
   for (i=0, cs=w73; i<3; ++i) *rr++ = *cs++;
   for (i=0, cs=w14; i<4; ++i) *rr++ = *cs++;
   for (rr=w94, ss=w93+0; ss!=w93+7; ss+=1) *rr++ = *ss;
-  for (cii=s64, rr=w91, ss=w94; cii!=s64+7; ++cii, ++ss) if (*cii>=0) rr[*cii] = *ss;
+  for (cii=s65, rr=w91, ss=w94; cii!=s65+7; ++cii, ++ss) if (*cii>=0) rr[*cii] = *ss;
   w85 = 1.;
   w74 = w85;
   fill(w73, 3, 0.);
@@ -2706,13 +2702,13 @@ int cablerobot_ode(const real_t** arg, real_t** res, int* iw, real_t* w, int mem
   fill(w8, 3, 0.);
   for (i=0, rr=w8; i<1; ++i) for (j=0; j<3; ++j, ++rr) for (k=0, ss=w5+j, tt=w73+i*3; k<3; ++k) *rr += ss[k*3]**tt++;
   fill(w14, 4, 0.);
-  mtimes(w18, s13, (&w74), s8, w14, s62, w, 0);
+  mtimes(w18, s13, (&w74), s8, w14, s63, w, 0);
   for (i=0, rr=w14, cs=w14; i<4; ++i) (*rr++)  = (w75*(*cs++));
   rr=w94;
   for (i=0, cs=w8; i<3; ++i) *rr++ = *cs++;
   for (i=0, cs=w14; i<4; ++i) *rr++ = *cs++;
   for (rr=w93, ss=w94+0; ss!=w94+7; ss+=1) *rr++ = *ss;
-  for (cii=s65, rr=w91, ss=w93; cii!=s65+7; ++cii, ++ss) if (*cii>=0) rr[*cii] = *ss;
+  for (cii=s66, rr=w91, ss=w93; cii!=s66+7; ++cii, ++ss) if (*cii>=0) rr[*cii] = *ss;
   w74 = 1.;
   w87 = w74;
   for (rr=(&w74), ss=(&w87)+0; ss!=(&w87)+1; ss+=1) *rr++ = *ss;
@@ -2895,7 +2891,7 @@ int cablerobot_ode(const real_t** arg, real_t** res, int* iw, real_t* w, int mem
   *rr++ = w86;
   *rr++ = w87;
   fill(w14, 4, 0.);
-  mtimes(w73, s10, w6, s3, w14, s62, w, 0);
+  mtimes(w73, s10, w6, s3, w14, s63, w, 0);
   for (i=0, rr=w14, cs=w14; i<4; ++i) (*rr++)  = (w75*(*cs++));
   fill(w73, 3, 0.);
   for (i=0, rr=w73; i<1; ++i) for (j=0; j<3; ++j, ++rr) for (k=0, ss=w22+j, tt=w67+i*8; k<8; ++k) *rr += ss[k*3]**tt++;
@@ -2905,8 +2901,8 @@ int cablerobot_ode(const real_t** arg, real_t** res, int* iw, real_t* w, int mem
   for (i=0, cs=w8; i<3; ++i) *rr++ = *cs++;
   for (i=0, cs=w14; i<4; ++i) *rr++ = *cs++;
   for (i=0, cs=w73; i<3; ++i) *rr++ = *cs++;
-  for (cii=s66, rr=w96, ss=w90; cii!=s66+9; ++cii) *rr++ = *cii>=0 ? ss[*cii] : 0;
-  for (cii=s67, rr=w91, ss=w96; cii!=s67+9; ++cii, ++ss) if (*cii>=0) rr[*cii] = *ss;
+  for (cii=s67, rr=w96, ss=w90; cii!=s67+9; ++cii) *rr++ = *cii>=0 ? ss[*cii] : 0;
+  for (cii=s68, rr=w91, ss=w96; cii!=s68+9; ++cii, ++ss) if (*cii>=0) rr[*cii] = *ss;
   w86 = 1.;
   w87 = w86;
   for (rr=(&w86), ss=(&w87)+0; ss!=(&w87)+1; ss+=1) *rr++ = *ss;
@@ -3079,7 +3075,7 @@ int cablerobot_ode(const real_t** arg, real_t** res, int* iw, real_t* w, int mem
   *rr++ = w86;
   *rr++ = w87;
   fill(w14, 4, 0.);
-  mtimes(w73, s15, w6, s3, w14, s62, w, 0);
+  mtimes(w73, s15, w6, s3, w14, s63, w, 0);
   for (i=0, rr=w14, cs=w14; i<4; ++i) (*rr++)  = (w75*(*cs++));
   fill(w73, 3, 0.);
   for (i=0, rr=w73; i<1; ++i) for (j=0; j<3; ++j, ++rr) for (k=0, ss=w27+j, tt=w67+i*8; k<8; ++k) *rr += ss[k*3]**tt++;
@@ -3088,8 +3084,8 @@ int cablerobot_ode(const real_t** arg, real_t** res, int* iw, real_t* w, int mem
   for (i=0, cs=w8; i<3; ++i) *rr++ = *cs++;
   for (i=0, cs=w14; i<4; ++i) *rr++ = *cs++;
   for (i=0, cs=w73; i<3; ++i) *rr++ = *cs++;
-  for (cii=s68, rr=w20, ss=w90; cii!=s68+9; ++cii) *rr++ = *cii>=0 ? ss[*cii] : 0;
-  for (cii=s69, rr=w91, ss=w20; cii!=s69+9; ++cii, ++ss) if (*cii>=0) rr[*cii] = *ss;
+  for (cii=s69, rr=w20, ss=w90; cii!=s69+9; ++cii) *rr++ = *cii>=0 ? ss[*cii] : 0;
+  for (cii=s70, rr=w91, ss=w20; cii!=s70+9; ++cii, ++ss) if (*cii>=0) rr[*cii] = *ss;
   w109 = 1.;
   w86 = w109;
   for (rr=(&w109), ss=(&w86)+0; ss!=(&w86)+1; ss+=1) *rr++ = *ss;
@@ -3262,7 +3258,7 @@ int cablerobot_ode(const real_t** arg, real_t** res, int* iw, real_t* w, int mem
   *rr++ = w109;
   *rr++ = w86;
   fill(w14, 4, 0.);
-  mtimes(w73, s18, w6, s3, w14, s62, w, 0);
+  mtimes(w73, s18, w6, s3, w14, s63, w, 0);
   for (i=0, rr=w14, cs=w14; i<4; ++i) (*rr++)  = (w75*(*cs++));
   fill(w73, 3, 0.);
   for (i=0, rr=w73; i<1; ++i) for (j=0; j<3; ++j, ++rr) for (k=0, ss=w22+j, tt=w67+i*8; k<8; ++k) *rr += ss[k*3]**tt++;
@@ -3271,8 +3267,8 @@ int cablerobot_ode(const real_t** arg, real_t** res, int* iw, real_t* w, int mem
   for (i=0, cs=w8; i<3; ++i) *rr++ = *cs++;
   for (i=0, cs=w14; i<4; ++i) *rr++ = *cs++;
   for (i=0, cs=w73; i<3; ++i) *rr++ = *cs++;
-  for (cii=s70, rr=w96, ss=w90; cii!=s70+9; ++cii) *rr++ = *cii>=0 ? ss[*cii] : 0;
-  for (cii=s71, rr=w91, ss=w96; cii!=s71+9; ++cii, ++ss) if (*cii>=0) rr[*cii] = *ss;
+  for (cii=s71, rr=w96, ss=w90; cii!=s71+9; ++cii) *rr++ = *cii>=0 ? ss[*cii] : 0;
+  for (cii=s72, rr=w91, ss=w96; cii!=s72+9; ++cii, ++ss) if (*cii>=0) rr[*cii] = *ss;
   w77 = 1.;
   w109 = w77;
   for (rr=(&w77), ss=(&w109)+0; ss!=(&w109)+1; ss+=1) *rr++ = *ss;
@@ -3445,7 +3441,7 @@ int cablerobot_ode(const real_t** arg, real_t** res, int* iw, real_t* w, int mem
   *rr++ = w77;
   *rr++ = w109;
   fill(w14, 4, 0.);
-  mtimes(w73, s21, w6, s3, w14, s62, w, 0);
+  mtimes(w73, s21, w6, s3, w14, s63, w, 0);
   for (i=0, rr=w14, cs=w14; i<4; ++i) (*rr++)  = (w75*(*cs++));
   fill(w73, 3, 0.);
   for (i=0, rr=w73; i<1; ++i) for (j=0; j<3; ++j, ++rr) for (k=0, ss=w23+j, tt=w67+i*8; k<8; ++k) *rr += ss[k*3]**tt++;
@@ -3454,8 +3450,8 @@ int cablerobot_ode(const real_t** arg, real_t** res, int* iw, real_t* w, int mem
   for (i=0, cs=w8; i<3; ++i) *rr++ = *cs++;
   for (i=0, cs=w14; i<4; ++i) *rr++ = *cs++;
   for (i=0, cs=w73; i<3; ++i) *rr++ = *cs++;
-  for (cii=s72, rr=w20, ss=w90; cii!=s72+9; ++cii) *rr++ = *cii>=0 ? ss[*cii] : 0;
-  for (cii=s73, rr=w91, ss=w20; cii!=s73+9; ++cii, ++ss) if (*cii>=0) rr[*cii] = *ss;
+  for (cii=s73, rr=w20, ss=w90; cii!=s73+9; ++cii) *rr++ = *cii>=0 ? ss[*cii] : 0;
+  for (cii=s74, rr=w91, ss=w20; cii!=s74+9; ++cii, ++ss) if (*cii>=0) rr[*cii] = *ss;
   w75 = 1.;
   w87 = w75;
   for (i=0;i<8;++i) {
@@ -3581,7 +3577,7 @@ int cablerobot_ode(const real_t** arg, real_t** res, int* iw, real_t* w, int mem
   for (i=0, cs=w73; i<3; ++i) *rr++ = *cs++;
   for (i=0, cs=w8; i<3; ++i) *rr++ = *cs++;
   for (rr=w4, ss=w1+0; ss!=w1+6; ss+=1) *rr++ = *ss;
-  for (cii=s74, rr=w91, ss=w4; cii!=s74+6; ++cii, ++ss) if (*cii>=0) rr[*cii] = *ss;
+  for (cii=s75, rr=w91, ss=w4; cii!=s75+6; ++cii, ++ss) if (*cii>=0) rr[*cii] = *ss;
   w75 = 1.;
   w77 = w75;
   for (i=0;i<8;++i) {
@@ -3707,7 +3703,7 @@ int cablerobot_ode(const real_t** arg, real_t** res, int* iw, real_t* w, int mem
   for (i=0, cs=w8; i<3; ++i) *rr++ = *cs++;
   for (i=0, cs=w73; i<3; ++i) *rr++ = *cs++;
   for (rr=w1, ss=w4+0; ss!=w4+6; ss+=1) *rr++ = *ss;
-  for (cii=s75, rr=w91, ss=w1; cii!=s75+6; ++cii, ++ss) if (*cii>=0) rr[*cii] = *ss;
+  for (cii=s76, rr=w91, ss=w1; cii!=s76+6; ++cii, ++ss) if (*cii>=0) rr[*cii] = *ss;
   w75 = 1.;
   w87 = w75;
   for (i=0;i<8;++i) {
@@ -3833,37 +3829,35 @@ int cablerobot_ode(const real_t** arg, real_t** res, int* iw, real_t* w, int mem
   for (i=0, cs=w28; i<3; ++i) *rr++ = *cs++;
   for (i=0, cs=w8; i<3; ++i) *rr++ = *cs++;
   for (rr=w4, ss=w1+0; ss!=w1+6; ss+=1) *rr++ = *ss;
-  for (cii=s76, rr=w91, ss=w4; cii!=s76+6; ++cii, ++ss) if (*cii>=0) rr[*cii] = *ss;
-  trans(w91, s78, w110, s77, iw);
-    project(w110, s77, w111, s79, w);
-  if (res[1]) copy(w111, 169, res[1]);
-    project(w24, s33, (&w82), s32, w);
+  for (cii=s77, rr=w91, ss=w4; cii!=s77+6; ++cii, ++ss) if (*cii>=0) rr[*cii] = *ss;
+  trans(w91, s79, w110, s78, iw);
+    project(w24, s32, (&w82), s31, w);
   w11 = (1./ w11 );
   for (i=0, rr=w9, cs=w9; i<3; ++i) (*rr++)  = (w11*(*cs++));
   for (rr=(&w11), ss=w9+2; ss!=w9+3; ss+=1) *rr++ = *ss;
   w82 *= w11;
-    project(w64, s33, (&w87), s32, w);
+    project(w64, s32, (&w87), s31, w);
   for (rr=(&w76), ss=w9+1; ss!=w9+2; ss+=1) *rr++ = *ss;
   w87 *= w76;
   w82 -= w87;
-    project(w64, s33, (&w87), s32, w);
+    project(w64, s32, (&w87), s31, w);
   for (rr=(&w58), ss=w9+0; ss!=w9+1; ss+=1) *rr++ = *ss;
   w87 *= w58;
-    project(w68, s33, (&w85), s32, w);
+    project(w68, s32, (&w85), s31, w);
   w85 *= w11;
   w87 -= w85;
-    project(w68, s33, (&w85), s32, w);
+    project(w68, s32, (&w85), s31, w);
   w85 *= w76;
-    project(w24, s33, (&w76), s32, w);
+    project(w24, s32, (&w76), s31, w);
   w76 *= w58;
   w85 -= w76;
   rr=w28;
   *rr++ = w82;
   *rr++ = w87;
   *rr++ = w85;
-  trans(w28, s34, w8, s31, iw);
+  trans(w28, s33, w8, s30, iw);
   fill(w23, 24, 0.);
-  mtimes(w21, s2, w8, s31, w23, s35, w, 0);
+  mtimes(w21, s2, w8, s30, w23, s34, w, 0);
   fill(w8, 3, 0.);
   for (i=0, rr=w8; i<1; ++i) for (j=0; j<3; ++j, ++rr) for (k=0, ss=w23+j, tt=w63+i*8; k<8; ++k) *rr += ss[k*3]**tt++;
   fill(w28, 3, 0.);
@@ -3871,42 +3865,42 @@ int cablerobot_ode(const real_t** arg, real_t** res, int* iw, real_t* w, int mem
   rr=w8;
   for (i=0, cs=w9; i<3; ++i) *rr++ = *cs++;
   fill(w9, 3, 0.);
-  mtimes(w8, s31, w67, s30, w9, s3, w, 0);
+  mtimes(w8, s30, w67, s29, w9, s3, w, 0);
   w3 = (1./ w3 );
   for (i=0, rr=w9, cs=w9; i<3; ++i) (*rr++)  = (w3*(*cs++));
   rr=w4;
   for (i=0, cs=w28; i<3; ++i) *rr++ = *cs++;
   for (i=0, cs=w9; i<3; ++i) *rr++ = *cs++;
   for (rr=w1, ss=w4+0; ss!=w4+6; ss+=1) *rr++ = *ss;
-  fill(w116, 48, 0.);
-  for (rr=w116+0, ss=w1; rr!=w116+48; rr+=8) *rr = *ss++;
-    project(w24, s33, (&w82), s37, w);
+  fill(w115, 48, 0.);
+  for (rr=w115+0, ss=w1; rr!=w115+48; rr+=8) *rr = *ss++;
+    project(w24, s32, (&w82), s36, w);
   w13 = (1./ w13 );
   for (i=0, rr=w30, cs=w30; i<3; ++i) (*rr++)  = (w13*(*cs++));
   for (rr=(&w13), ss=w30+2; ss!=w30+3; ss+=1) *rr++ = *ss;
   w82 *= w13;
-    project(w64, s33, (&w87), s37, w);
+    project(w64, s32, (&w87), s36, w);
   for (rr=(&w85), ss=w30+1; ss!=w30+2; ss+=1) *rr++ = *ss;
   w87 *= w85;
   w82 -= w87;
-    project(w64, s33, (&w87), s37, w);
+    project(w64, s32, (&w87), s36, w);
   for (rr=(&w76), ss=w30+0; ss!=w30+1; ss+=1) *rr++ = *ss;
   w87 *= w76;
-    project(w68, s33, (&w58), s37, w);
+    project(w68, s32, (&w58), s36, w);
   w58 *= w13;
   w87 -= w58;
-    project(w68, s33, (&w58), s37, w);
+    project(w68, s32, (&w58), s36, w);
   w58 *= w85;
-    project(w24, s33, (&w85), s37, w);
+    project(w24, s32, (&w85), s36, w);
   w85 *= w76;
   w58 -= w85;
   rr=w28;
   *rr++ = w82;
   *rr++ = w87;
   *rr++ = w58;
-  trans(w28, s38, w9, s36, iw);
+  trans(w28, s37, w9, s35, iw);
   fill(w23, 24, 0.);
-  mtimes(w21, s2, w9, s36, w23, s35, w, 0);
+  mtimes(w21, s2, w9, s35, w23, s34, w, 0);
   fill(w9, 3, 0.);
   for (i=0, rr=w9; i<1; ++i) for (j=0; j<3; ++j, ++rr) for (k=0, ss=w23+j, tt=w63+i*8; k<8; ++k) *rr += ss[k*3]**tt++;
   fill(w28, 3, 0.);
@@ -3914,40 +3908,40 @@ int cablerobot_ode(const real_t** arg, real_t** res, int* iw, real_t* w, int mem
   rr=w9;
   for (i=0, cs=w30; i<3; ++i) *rr++ = *cs++;
   fill(w30, 3, 0.);
-  mtimes(w9, s36, w67, s30, w30, s3, w, 0);
+  mtimes(w9, s35, w67, s29, w30, s3, w, 0);
   for (i=0, rr=w30, cs=w30; i<3; ++i) (*rr++)  = (w3*(*cs++));
   rr=w1;
   for (i=0, cs=w28; i<3; ++i) *rr++ = *cs++;
   for (i=0, cs=w30; i<3; ++i) *rr++ = *cs++;
   for (rr=w4, ss=w1+0; ss!=w1+6; ss+=1) *rr++ = *ss;
-  for (rr=w116+1, ss=w4; rr!=w116+49; rr+=8) *rr = *ss++;
-    project(w24, s33, (&w82), s40, w);
+  for (rr=w115+1, ss=w4; rr!=w115+49; rr+=8) *rr = *ss++;
+    project(w24, s32, (&w82), s39, w);
   w37 = (1./ w37 );
   for (i=0, rr=w34, cs=w34; i<3; ++i) (*rr++)  = (w37*(*cs++));
   for (rr=(&w37), ss=w34+2; ss!=w34+3; ss+=1) *rr++ = *ss;
   w82 *= w37;
-    project(w64, s33, (&w87), s40, w);
+    project(w64, s32, (&w87), s39, w);
   for (rr=(&w58), ss=w34+1; ss!=w34+2; ss+=1) *rr++ = *ss;
   w87 *= w58;
   w82 -= w87;
-    project(w64, s33, (&w87), s40, w);
+    project(w64, s32, (&w87), s39, w);
   for (rr=(&w85), ss=w34+0; ss!=w34+1; ss+=1) *rr++ = *ss;
   w87 *= w85;
-    project(w68, s33, (&w76), s40, w);
+    project(w68, s32, (&w76), s39, w);
   w76 *= w37;
   w87 -= w76;
-    project(w68, s33, (&w76), s40, w);
+    project(w68, s32, (&w76), s39, w);
   w76 *= w58;
-    project(w24, s33, (&w58), s40, w);
+    project(w24, s32, (&w58), s39, w);
   w58 *= w85;
   w76 -= w58;
   rr=w28;
   *rr++ = w82;
   *rr++ = w87;
   *rr++ = w76;
-  trans(w28, s41, w30, s39, iw);
+  trans(w28, s40, w30, s38, iw);
   fill(w23, 24, 0.);
-  mtimes(w21, s2, w30, s39, w23, s35, w, 0);
+  mtimes(w21, s2, w30, s38, w23, s34, w, 0);
   fill(w30, 3, 0.);
   for (i=0, rr=w30; i<1; ++i) for (j=0; j<3; ++j, ++rr) for (k=0, ss=w23+j, tt=w63+i*8; k<8; ++k) *rr += ss[k*3]**tt++;
   fill(w28, 3, 0.);
@@ -3955,40 +3949,40 @@ int cablerobot_ode(const real_t** arg, real_t** res, int* iw, real_t* w, int mem
   rr=w30;
   for (i=0, cs=w34; i<3; ++i) *rr++ = *cs++;
   fill(w34, 3, 0.);
-  mtimes(w30, s39, w67, s30, w34, s3, w, 0);
+  mtimes(w30, s38, w67, s29, w34, s3, w, 0);
   for (i=0, rr=w34, cs=w34; i<3; ++i) (*rr++)  = (w3*(*cs++));
   rr=w4;
   for (i=0, cs=w28; i<3; ++i) *rr++ = *cs++;
   for (i=0, cs=w34; i<3; ++i) *rr++ = *cs++;
   for (rr=w1, ss=w4+0; ss!=w4+6; ss+=1) *rr++ = *ss;
-  for (rr=w116+2, ss=w1; rr!=w116+50; rr+=8) *rr = *ss++;
-    project(w24, s33, (&w82), s43, w);
+  for (rr=w115+2, ss=w1; rr!=w115+50; rr+=8) *rr = *ss++;
+    project(w24, s32, (&w82), s42, w);
   w42 = (1./ w42 );
   for (i=0, rr=w39, cs=w39; i<3; ++i) (*rr++)  = (w42*(*cs++));
   for (rr=(&w42), ss=w39+2; ss!=w39+3; ss+=1) *rr++ = *ss;
   w82 *= w42;
-    project(w64, s33, (&w87), s43, w);
+    project(w64, s32, (&w87), s42, w);
   for (rr=(&w76), ss=w39+1; ss!=w39+2; ss+=1) *rr++ = *ss;
   w87 *= w76;
   w82 -= w87;
-    project(w64, s33, (&w87), s43, w);
+    project(w64, s32, (&w87), s42, w);
   for (rr=(&w58), ss=w39+0; ss!=w39+1; ss+=1) *rr++ = *ss;
   w87 *= w58;
-    project(w68, s33, (&w85), s43, w);
+    project(w68, s32, (&w85), s42, w);
   w85 *= w42;
   w87 -= w85;
-    project(w68, s33, (&w85), s43, w);
+    project(w68, s32, (&w85), s42, w);
   w85 *= w76;
-    project(w24, s33, (&w76), s43, w);
+    project(w24, s32, (&w76), s42, w);
   w76 *= w58;
   w85 -= w76;
   rr=w28;
   *rr++ = w82;
   *rr++ = w87;
   *rr++ = w85;
-  trans(w28, s44, w34, s42, iw);
+  trans(w28, s43, w34, s41, iw);
   fill(w23, 24, 0.);
-  mtimes(w21, s2, w34, s42, w23, s35, w, 0);
+  mtimes(w21, s2, w34, s41, w23, s34, w, 0);
   fill(w34, 3, 0.);
   for (i=0, rr=w34; i<1; ++i) for (j=0; j<3; ++j, ++rr) for (k=0, ss=w23+j, tt=w63+i*8; k<8; ++k) *rr += ss[k*3]**tt++;
   fill(w28, 3, 0.);
@@ -3996,40 +3990,40 @@ int cablerobot_ode(const real_t** arg, real_t** res, int* iw, real_t* w, int mem
   rr=w34;
   for (i=0, cs=w39; i<3; ++i) *rr++ = *cs++;
   fill(w39, 3, 0.);
-  mtimes(w34, s42, w67, s30, w39, s3, w, 0);
+  mtimes(w34, s41, w67, s29, w39, s3, w, 0);
   for (i=0, rr=w39, cs=w39; i<3; ++i) (*rr++)  = (w3*(*cs++));
   rr=w1;
   for (i=0, cs=w28; i<3; ++i) *rr++ = *cs++;
   for (i=0, cs=w39; i<3; ++i) *rr++ = *cs++;
   for (rr=w4, ss=w1+0; ss!=w1+6; ss+=1) *rr++ = *ss;
-  for (rr=w116+3, ss=w4; rr!=w116+51; rr+=8) *rr = *ss++;
-    project(w24, s33, (&w82), s46, w);
+  for (rr=w115+3, ss=w4; rr!=w115+51; rr+=8) *rr = *ss++;
+    project(w24, s32, (&w82), s45, w);
   w47 = (1./ w47 );
   for (i=0, rr=w44, cs=w44; i<3; ++i) (*rr++)  = (w47*(*cs++));
   for (rr=(&w47), ss=w44+2; ss!=w44+3; ss+=1) *rr++ = *ss;
   w82 *= w47;
-    project(w64, s33, (&w87), s46, w);
+    project(w64, s32, (&w87), s45, w);
   for (rr=(&w85), ss=w44+1; ss!=w44+2; ss+=1) *rr++ = *ss;
   w87 *= w85;
   w82 -= w87;
-    project(w64, s33, (&w87), s46, w);
+    project(w64, s32, (&w87), s45, w);
   for (rr=(&w76), ss=w44+0; ss!=w44+1; ss+=1) *rr++ = *ss;
   w87 *= w76;
-    project(w68, s33, (&w58), s46, w);
+    project(w68, s32, (&w58), s45, w);
   w58 *= w47;
   w87 -= w58;
-    project(w68, s33, (&w58), s46, w);
+    project(w68, s32, (&w58), s45, w);
   w58 *= w85;
-    project(w24, s33, (&w85), s46, w);
+    project(w24, s32, (&w85), s45, w);
   w85 *= w76;
   w58 -= w85;
   rr=w28;
   *rr++ = w82;
   *rr++ = w87;
   *rr++ = w58;
-  trans(w28, s47, w39, s45, iw);
+  trans(w28, s46, w39, s44, iw);
   fill(w23, 24, 0.);
-  mtimes(w21, s2, w39, s45, w23, s35, w, 0);
+  mtimes(w21, s2, w39, s44, w23, s34, w, 0);
   fill(w39, 3, 0.);
   for (i=0, rr=w39; i<1; ++i) for (j=0; j<3; ++j, ++rr) for (k=0, ss=w23+j, tt=w63+i*8; k<8; ++k) *rr += ss[k*3]**tt++;
   fill(w28, 3, 0.);
@@ -4037,40 +4031,40 @@ int cablerobot_ode(const real_t** arg, real_t** res, int* iw, real_t* w, int mem
   rr=w39;
   for (i=0, cs=w44; i<3; ++i) *rr++ = *cs++;
   fill(w44, 3, 0.);
-  mtimes(w39, s45, w67, s30, w44, s3, w, 0);
+  mtimes(w39, s44, w67, s29, w44, s3, w, 0);
   for (i=0, rr=w44, cs=w44; i<3; ++i) (*rr++)  = (w3*(*cs++));
   rr=w4;
   for (i=0, cs=w28; i<3; ++i) *rr++ = *cs++;
   for (i=0, cs=w44; i<3; ++i) *rr++ = *cs++;
   for (rr=w1, ss=w4+0; ss!=w4+6; ss+=1) *rr++ = *ss;
-  for (rr=w116+4, ss=w1; rr!=w116+52; rr+=8) *rr = *ss++;
-    project(w24, s33, (&w82), s49, w);
+  for (rr=w115+4, ss=w1; rr!=w115+52; rr+=8) *rr = *ss++;
+    project(w24, s32, (&w82), s48, w);
   w52 = (1./ w52 );
   for (i=0, rr=w49, cs=w49; i<3; ++i) (*rr++)  = (w52*(*cs++));
   for (rr=(&w52), ss=w49+2; ss!=w49+3; ss+=1) *rr++ = *ss;
   w82 *= w52;
-    project(w64, s33, (&w87), s49, w);
+    project(w64, s32, (&w87), s48, w);
   for (rr=(&w58), ss=w49+1; ss!=w49+2; ss+=1) *rr++ = *ss;
   w87 *= w58;
   w82 -= w87;
-    project(w64, s33, (&w87), s49, w);
+    project(w64, s32, (&w87), s48, w);
   for (rr=(&w85), ss=w49+0; ss!=w49+1; ss+=1) *rr++ = *ss;
   w87 *= w85;
-    project(w68, s33, (&w76), s49, w);
+    project(w68, s32, (&w76), s48, w);
   w76 *= w52;
   w87 -= w76;
-    project(w68, s33, (&w76), s49, w);
+    project(w68, s32, (&w76), s48, w);
   w76 *= w58;
-    project(w24, s33, (&w58), s49, w);
+    project(w24, s32, (&w58), s48, w);
   w58 *= w85;
   w76 -= w58;
   rr=w28;
   *rr++ = w82;
   *rr++ = w87;
   *rr++ = w76;
-  trans(w28, s50, w44, s48, iw);
+  trans(w28, s49, w44, s47, iw);
   fill(w23, 24, 0.);
-  mtimes(w21, s2, w44, s48, w23, s35, w, 0);
+  mtimes(w21, s2, w44, s47, w23, s34, w, 0);
   fill(w44, 3, 0.);
   for (i=0, rr=w44; i<1; ++i) for (j=0; j<3; ++j, ++rr) for (k=0, ss=w23+j, tt=w63+i*8; k<8; ++k) *rr += ss[k*3]**tt++;
   fill(w28, 3, 0.);
@@ -4078,40 +4072,40 @@ int cablerobot_ode(const real_t** arg, real_t** res, int* iw, real_t* w, int mem
   rr=w44;
   for (i=0, cs=w49; i<3; ++i) *rr++ = *cs++;
   fill(w49, 3, 0.);
-  mtimes(w44, s48, w67, s30, w49, s3, w, 0);
+  mtimes(w44, s47, w67, s29, w49, s3, w, 0);
   for (i=0, rr=w49, cs=w49; i<3; ++i) (*rr++)  = (w3*(*cs++));
   rr=w1;
   for (i=0, cs=w28; i<3; ++i) *rr++ = *cs++;
   for (i=0, cs=w49; i<3; ++i) *rr++ = *cs++;
   for (rr=w4, ss=w1+0; ss!=w1+6; ss+=1) *rr++ = *ss;
-  for (rr=w116+5, ss=w4; rr!=w116+53; rr+=8) *rr = *ss++;
-    project(w24, s33, (&w82), s52, w);
+  for (rr=w115+5, ss=w4; rr!=w115+53; rr+=8) *rr = *ss++;
+    project(w24, s32, (&w82), s51, w);
   w57 = (1./ w57 );
   for (i=0, rr=w54, cs=w54; i<3; ++i) (*rr++)  = (w57*(*cs++));
   for (rr=(&w57), ss=w54+2; ss!=w54+3; ss+=1) *rr++ = *ss;
   w82 *= w57;
-    project(w64, s33, (&w87), s52, w);
+    project(w64, s32, (&w87), s51, w);
   for (rr=(&w76), ss=w54+1; ss!=w54+2; ss+=1) *rr++ = *ss;
   w87 *= w76;
   w82 -= w87;
-    project(w64, s33, (&w87), s52, w);
+    project(w64, s32, (&w87), s51, w);
   for (rr=(&w58), ss=w54+0; ss!=w54+1; ss+=1) *rr++ = *ss;
   w87 *= w58;
-    project(w68, s33, (&w85), s52, w);
+    project(w68, s32, (&w85), s51, w);
   w85 *= w57;
   w87 -= w85;
-    project(w68, s33, (&w85), s52, w);
+    project(w68, s32, (&w85), s51, w);
   w85 *= w76;
-    project(w24, s33, (&w76), s52, w);
+    project(w24, s32, (&w76), s51, w);
   w76 *= w58;
   w85 -= w76;
   rr=w28;
   *rr++ = w82;
   *rr++ = w87;
   *rr++ = w85;
-  trans(w28, s53, w49, s51, iw);
+  trans(w28, s52, w49, s50, iw);
   fill(w23, 24, 0.);
-  mtimes(w21, s2, w49, s51, w23, s35, w, 0);
+  mtimes(w21, s2, w49, s50, w23, s34, w, 0);
   fill(w49, 3, 0.);
   for (i=0, rr=w49; i<1; ++i) for (j=0; j<3; ++j, ++rr) for (k=0, ss=w23+j, tt=w63+i*8; k<8; ++k) *rr += ss[k*3]**tt++;
   fill(w28, 3, 0.);
@@ -4119,40 +4113,40 @@ int cablerobot_ode(const real_t** arg, real_t** res, int* iw, real_t* w, int mem
   rr=w49;
   for (i=0, cs=w54; i<3; ++i) *rr++ = *cs++;
   fill(w54, 3, 0.);
-  mtimes(w49, s51, w67, s30, w54, s3, w, 0);
+  mtimes(w49, s50, w67, s29, w54, s3, w, 0);
   for (i=0, rr=w54, cs=w54; i<3; ++i) (*rr++)  = (w3*(*cs++));
   rr=w4;
   for (i=0, cs=w28; i<3; ++i) *rr++ = *cs++;
   for (i=0, cs=w54; i<3; ++i) *rr++ = *cs++;
   for (rr=w1, ss=w4+0; ss!=w4+6; ss+=1) *rr++ = *ss;
-  for (rr=w116+6, ss=w1; rr!=w116+54; rr+=8) *rr = *ss++;
-    project(w24, s33, (&w82), s55, w);
+  for (rr=w115+6, ss=w1; rr!=w115+54; rr+=8) *rr = *ss++;
+    project(w24, s32, (&w82), s54, w);
   w62 = (1./ w62 );
   for (i=0, rr=w59, cs=w59; i<3; ++i) (*rr++)  = (w62*(*cs++));
   for (rr=(&w62), ss=w59+2; ss!=w59+3; ss+=1) *rr++ = *ss;
   w82 *= w62;
-    project(w64, s33, (&w87), s55, w);
+    project(w64, s32, (&w87), s54, w);
   for (rr=(&w85), ss=w59+1; ss!=w59+2; ss+=1) *rr++ = *ss;
   w87 *= w85;
   w82 -= w87;
-    project(w64, s33, (&w87), s55, w);
+    project(w64, s32, (&w87), s54, w);
   for (rr=(&w76), ss=w59+0; ss!=w59+1; ss+=1) *rr++ = *ss;
   w87 *= w76;
-    project(w68, s33, (&w58), s55, w);
+    project(w68, s32, (&w58), s54, w);
   w58 *= w62;
   w87 -= w58;
-    project(w68, s33, (&w58), s55, w);
+    project(w68, s32, (&w58), s54, w);
   w58 *= w85;
-    project(w24, s33, (&w85), s55, w);
+    project(w24, s32, (&w85), s54, w);
   w85 *= w76;
   w58 -= w85;
   rr=w28;
   *rr++ = w82;
   *rr++ = w87;
   *rr++ = w58;
-  trans(w28, s56, w54, s54, iw);
+  trans(w28, s55, w54, s53, iw);
   fill(w23, 24, 0.);
-  mtimes(w21, s2, w54, s54, w23, s35, w, 0);
+  mtimes(w21, s2, w54, s53, w23, s34, w, 0);
   fill(w54, 3, 0.);
   for (i=0, rr=w54; i<1; ++i) for (j=0; j<3; ++j, ++rr) for (k=0, ss=w23+j, tt=w63+i*8; k<8; ++k) *rr += ss[k*3]**tt++;
   fill(w28, 3, 0.);
@@ -4160,16 +4154,19 @@ int cablerobot_ode(const real_t** arg, real_t** res, int* iw, real_t* w, int mem
   rr=w54;
   for (i=0, cs=w59; i<3; ++i) *rr++ = *cs++;
   fill(w59, 3, 0.);
-  mtimes(w54, s54, w67, s30, w59, s3, w, 0);
+  mtimes(w54, s53, w67, s29, w59, s3, w, 0);
   for (i=0, rr=w59, cs=w59; i<3; ++i) (*rr++)  = (w3*(*cs++));
   rr=w1;
   for (i=0, cs=w28; i<3; ++i) *rr++ = *cs++;
   for (i=0, cs=w59; i<3; ++i) *rr++ = *cs++;
   for (rr=w4, ss=w1+0; ss!=w1+6; ss+=1) *rr++ = *ss;
-  for (rr=w116+7, ss=w4; rr!=w116+55; rr+=8) *rr = *ss++;
-  trans(w116, s81, w117, s80, iw);
-    project(w117, s80, w118, s82, w);
-  if (res[2]) copy(w118, 104, res[2]);
+  for (rr=w115+7, ss=w4; rr!=w115+55; rr+=8) *rr = *ss++;
+  trans(w115, s81, w116, s80, iw);
+  rr=w117;
+  for (i=0, cs=w110; i<78; ++i) *rr++ = *cs++;
+  for (i=0, cs=w116; i<48; ++i) *rr++ = *cs++;
+    project(w117, s83, w118, s82, w);
+  if (res[1]) copy(w118, 273, res[1]);
   return 0;
 }
 
@@ -4179,24 +4176,22 @@ void cablerobot_ode_incref(void) {
 void cablerobot_ode_decref(void) {
 }
 
-int cablerobot_ode_n_in(void) { return 3;}
+int cablerobot_ode_n_in(void) { return 2;}
 
-int cablerobot_ode_n_out(void) { return 3;}
+int cablerobot_ode_n_out(void) { return 2;}
 
 const char* cablerobot_ode_name_in(int i){
   switch (i) {
-  case 0: return "i0";
-  case 1: return "i1";
-  case 2: return "i2";
+  case 0: return "z";
+  case 1: return "p";
   default: return 0;
   }
 }
 
 const char* cablerobot_ode_name_out(int i){
   switch (i) {
-  case 0: return "o0";
-  case 1: return "o1";
-  case 2: return "o2";
+  case 0: return "xdot";
+  case 1: return "jac";
   default: return 0;
   }
 }
@@ -4204,50 +4199,45 @@ const char* cablerobot_ode_name_out(int i){
 const int* cablerobot_ode_sparsity_in(int i) {
   switch (i) {
   case 0: return s60;
-  case 1: return s30;
-  case 2: return s60;
+  case 1: return s61;
   default: return 0;
   }
 }
 
 const int* cablerobot_ode_sparsity_out(int i) {
   switch (i) {
-  case 0: return s60;
-  case 1: return s79;
-  case 2: return s82;
+  case 0: return s61;
+  case 1: return s82;
   default: return 0;
   }
 }
 
 int cablerobot_ode_work(int *sz_arg, int* sz_res, int *sz_iw, int *sz_w) {
-  if (sz_arg) *sz_arg = 11;
-  if (sz_res) *sz_res = 7;
+  if (sz_arg) *sz_arg = 10;
+  if (sz_res) *sz_res = 6;
   if (sz_iw) *sz_iw = 14;
-  if (sz_w) *sz_w = 1073;
+  if (sz_w) *sz_w = 1199;
   return 0;
 }
 
 #ifdef MATLAB_MEX_FILE
 void mex_cablerobot_ode(int resc, mxArray *resv[], int argc, const mxArray *argv[]) {
   int i, j;
-  if (argc>3) mexErrMsgIdAndTxt("Casadi:RuntimeError","Evaluation of \"cablerobot_ode\" failed. Too many input arguments (%d, max 3)", argc);
-  if (resc>3) mexErrMsgIdAndTxt("Casadi:RuntimeError","Evaluation of \"cablerobot_ode\" failed. Too many output arguments (%d, max 3)", resc);
+  if (argc>2) mexErrMsgIdAndTxt("Casadi:RuntimeError","Evaluation of \"cablerobot_ode\" failed. Too many input arguments (%d, max 2)", argc);
+  if (resc>2) mexErrMsgIdAndTxt("Casadi:RuntimeError","Evaluation of \"cablerobot_ode\" failed. Too many output arguments (%d, max 2)", resc);
   int iw[14];
-  real_t w[1393];
-  const real_t* arg[3] = {0};
+  real_t w[1519];
+  const real_t* arg[2] = {0};
   if (--argc>=0) arg[0] = from_mex(argv[0], w, s60, w+320);
-  if (--argc>=0) arg[1] = from_mex(argv[1], w+13, s30, w+320);
-  if (--argc>=0) arg[2] = from_mex(argv[2], w+21, s60, w+320);
-  real_t* res[3] = {0};
+  if (--argc>=0) arg[1] = from_mex(argv[1], w+21, s61, w+320);
+  real_t* res[2] = {0};
   --resc;
   res[0] = w+34;
   if (--resc>=0) res[1] = w+47;
-  if (--resc>=0) res[2] = w+216;
   i = cablerobot_ode(arg, res, iw, w+320, 0);
   if (i) mexErrMsgIdAndTxt("Casadi:RuntimeError","Evaluation of \"cablerobot_ode\" failed.");
-  if (res[0]) resv[0] = to_mex(s60, res[0]);
-  if (res[1]) resv[1] = to_mex(s79, res[1]);
-  if (res[2]) resv[2] = to_mex(s82, res[2]);
+  if (res[0]) resv[0] = to_mex(s61, res[0]);
+  if (res[1]) resv[1] = to_mex(s82, res[1]);
 }
 #endif
 

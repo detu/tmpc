@@ -12,27 +12,14 @@
 namespace mpmc
 {
 	CableRobotOCP::CableRobotOCP()
+	:	_ode(CASADI_GENERATED_FUNCTION_INTERFACE(cablerobot_ode))
+	,	_output(CASADI_GENERATED_FUNCTION_INTERFACE(cablerobot_output))
 	{
-		cablerobot_ode_incref();
-		cablerobot_output_incref();
+
 	}
 
-	CableRobotOCP::~CableRobotOCP()
+	void CableRobotOCP::ODE(unsigned t, StateInputVector const& z, StateVector& xdot, ODEJacobianMatrix& jac)
 	{
-		cablerobot_ode_decref();
-		cablerobot_output_decref();
+		_ode({z.data(), nullptr}, {xdot.data(), jac.data()});
 	}
-
-	/*
-	CableRobotOCP::ODEOutput CableRobotOCP::ODE(unsigned t, const StateVector& x, const InputVector& u, const ParamVector& p)
-	{
-		StateVector xdot;
-		xdot << x.bottomRows(N), u;
-
-		static const StateSensitivityMatrix sens_x = SensX();
-		static const InputSensitivityMatrix sens_u = SensU();
-
-		return ODEOutput(xdot, sens_x, sens_u);
-	}
-	*/
 } /* namespace mpmc */

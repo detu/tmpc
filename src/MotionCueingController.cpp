@@ -4,23 +4,21 @@
 
 namespace mpmc
 {
-	MotionCueingController::MotionCueingController(const std::shared_ptr<MotionPlatform>& platform, double sample_time, unsigned Nt) :
-		camels::ModelPredictiveController<CyberMotionOCP>(platform->getStateDim(), platform->getInputDim(), 2 * platform->getNumberOfAxes(), 2 * platform->getNumberOfAxes(), sample_time, Nt),
-		_platform(platform),
-		_Nq(platform->getNumberOfAxes()),
-		_Ny(platform->getOutputDim()),
-		_yRef(platform->getOutputDim(), Nt),
-		_washoutPosition(platform->getNumberOfAxes()),
+	MotionCueingController::MotionCueingController(CyberMotionOCP const& ocp, double sample_time, unsigned Nt) :
+		camels::ModelPredictiveController<CyberMotionOCP>(CyberMotionOCP::NX, CyberMotionOCP::NU, 2 * CyberMotionOCP::NU, 2 * CyberMotionOCP::NU, sample_time, Nt),
+		_ocp(ocp),
+		_Nq(CyberMotionOCP::NU),
+		_Ny(CyberMotionOCP::NY),
+		_yRef(Eigen::Index(CyberMotionOCP::NY), Nt),
+		_washoutPosition(Eigen::Index(CyberMotionOCP::NU)),
 		_washoutFactor(0.),
-		_errorWeight(platform->getOutputDim())
+		_errorWeight(Eigen::Index(CyberMotionOCP::NY))
 	{
 		// Initialize limits.
-		Eigen::VectorXd q_min(_Nq), q_max(_Nq), v_min(_Nq), v_max(_Nq), u_min(nU()), u_max(nU());
-		platform->getAxesLimits(q_min, q_max, v_min, v_max, u_min, u_max);
-
-		Eigen::VectorXd x_min(nX()), x_max(nX());
-		x_min << q_min, v_min;
-		x_max << q_max, v_max;
+		auto const x_min = _ocp.getStateMin();
+		auto const x_max = _ocp.getStateMax();
+		auto const u_min = _ocp.getInputMin();
+		auto const u_max = _ocp.getInputMax();
 
 		setXMin(x_min);	// TODO: remove boundary constraints for axes position; they must be handled by the non-linear SR-constraints.
 		setXMax(x_max);
@@ -31,27 +29,21 @@ namespace mpmc
 
 		// Initialize weights
 		_errorWeight.fill(1.);
-
-		// Initialize washout position.
-		platform->getDefaultAxesPosition();
 	}
 
 	void MotionCueingController::LagrangeTerm(const Eigen::VectorXd& z, unsigned i, Eigen::MatrixXd& H, Eigen::VectorXd& g) const
 	{
-		using namespace Eigen;
-		
+		LagrangeTerm(i, z, g, H);
+	}
+	
+	void MotionCueingController::LagrangeTerm(unsigned i, StateInputVector const& z, Eigen::VectorXd& g, Eigen::MatrixXd& H) const
+	{
 		// Output vector and derivatives.
-		// Output() returns derivative matrices in column-major format.
-		MatrixXd ssC(_Ny, nX());
-		MatrixXd ssD(_Ny, nU());
-		VectorXd y(_Ny);
-		_platform->Output(z.topRows(nX()), z.bottomRows(nU()), y, ssC, ssD);
+		OutputVector y;
+		OutputJacobianMatrix G;	// G = [C, D]
+		_ocp.Output(i, z, y, G);
 
-		// G = [C, D]
-		MatrixXd G(_Ny, nX() + nU());
-		G << ssC, ssD;
-
-		const MatrixXd W = _errorWeight.cwiseAbs2().asDiagonal();
+		const auto W = _errorWeight.cwiseAbs2().asDiagonal();
 
 		// H = G^T W G + \mu I
 		H = G.transpose() * W * G;

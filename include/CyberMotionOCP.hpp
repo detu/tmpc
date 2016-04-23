@@ -10,20 +10,39 @@
 #include <OptimalControlProblem.hpp>
 
 #include "CyberMotion.hpp"
+#include "CasADiGeneratedFunction.hpp"
+
+#include <Eigen/Dense>
 
 namespace mpmc
 {
-	class CyberMotionOCP : public camels::OptimalControlProblem<CyberMotionOCP, 2 * CyberMotion::numberOfAxes, CyberMotion::numberOfAxes, 0>
+	class CyberMotionOCP : public camels::OptimalControlProblem<CyberMotionOCP, 2 * CyberMotion::numberOfAxes, CyberMotion::numberOfAxes>
 	{
 	public:
-		ODEOutput ODE(unsigned t, const StateVector& x, const InputVector& u, const ParamVector& p);
+		static unsigned constexpr NY = 9;
+		typedef Eigen::Matrix<Scalar, NY, 1> OutputVector;
+		typedef Eigen::Matrix<Scalar, NY, NW> OutputJacobianMatrix;
+
+		CyberMotionOCP();
+
+		void ODE(unsigned t, StateInputVector const& z, StateVector& xdot, ODEJacobianMatrix& jac) const;
+		void Output(unsigned t, StateInputVector const& z, OutputVector& y, OutputJacobianMatrix& jac) const;
+
+		StateVector const& getStateMin() const;
+		StateVector const& getStateMax() const;
+		InputVector const& getInputMin() const;
+		InputVector const& getInputMax() const;
+		StateVector const& getDefaultState() const;
 
 	private:
-		static const auto N = CyberMotion::numberOfAxes;
-		typedef Eigen::Matrix<Scalar, N, N> MatrixNN;
+		mutable CasADiGeneratedFunction _ode;
+		mutable CasADiGeneratedFunction _output;
 
-		static StateSensitivityMatrix SensX();
-		static InputSensitivityMatrix SensU();
+		StateVector _x_min;
+		StateVector _x_max;
+		InputVector _u_min;
+		InputVector _u_max;
+		StateVector _x_default;
 	};
 } /* namespace mpmc */
 

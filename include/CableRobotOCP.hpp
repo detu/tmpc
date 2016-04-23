@@ -9,16 +9,20 @@
 
 #include <OptimalControlProblem.hpp>
 
+#include "CasADiGeneratedFunction.hpp"
+
 namespace mpmc
 {
-	class CableRobotOCP : public camels::OptimalControlProblem<CableRobotOCP, 13, 8, 13>
+	class CableRobotOCP : public camels::OptimalControlProblem<CableRobotOCP, 13, 8>
 	{
 	public:
 		CableRobotOCP();
-		~CableRobotOCP();
-		ODEOutput ODE(unsigned t, const StateVector& x, const InputVector& u, const ParamVector& p);
+
+		void ODE(unsigned t, StateInputVector const& z, StateVector& xdot, ODEJacobianMatrix& jac);
 
 	private:
+		mutable CasADiGeneratedFunction _ode;
+		mutable CasADiGeneratedFunction _output;
 	};
 } /* namespace mpmc */
 

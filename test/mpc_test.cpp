@@ -1,7 +1,5 @@
 #include <MotionCueingController.hpp>
-#include <MotionPlatformX.hpp>
-#include <CyberMotion.hpp>
-#include <CyberMotion1D.hpp>
+#include <CyberMotionOCP.hpp>
 
 #include <iostream>
 #include <fstream>
@@ -10,11 +8,15 @@
 
 TEST(mpc_test, mpc_test_case)
 {
-	//const auto platform = std::make_shared<mpmc::MotionPlatformX>();
-	const auto platform = std::make_shared<mpmc::CyberMotion1D>();
+	using mpmc::CyberMotionOCP;
 
+	//const auto platform = std::make_shared<mpmc::MotionPlatformX>();
+	CyberMotionOCP const ocp;
+
+	/*
 	const double full_state[] = { 4.8078, 0.1218, -1.5319, 0.4760, 0.0006, 0.1396, -0.0005, 0.7991 };
 	platform->setFullState(mpmc::CyberMotion1D::FullStateVector(full_state));
+	*/
 
 	const double Ts = 0.05;
 	const unsigned Nt = 1;
@@ -24,18 +26,16 @@ TEST(mpc_test, mpc_test_case)
 	const double freq = 1.0;
 	std::ofstream out("out.txt");
 
-	mpmc::MotionCueingController controller(platform, Ts, Nt);
+	mpmc::MotionCueingController controller(ocp, Ts, Nt);
 	controller.setWashoutFactor(0.1);
 
-	Eigen::VectorXd x0(controller.nX());
-	x0.fill(0.);
-	x0.topRows(platform->getNumberOfAxes()) = platform->getDefaultAxesPosition();
+	auto x0 = ocp.getDefaultState();
 	controller.InitWorkingPoint(x0);
 
-	Eigen::MatrixXd y_ref(platform->getOutputDim(), Nt);
+	Eigen::MatrixXd y_ref(Eigen::Index(CyberMotionOCP::NY), Nt);
 	y_ref.fill(0.);
 
-	Eigen::VectorXd u(platform->getInputDim());
+	CyberMotionOCP::InputVector u;
 	u.fill(0.);
 
 	for (unsigned i = 0; i < simulation_steps; ++i)
@@ -93,8 +93,8 @@ TEST(mpc_test, mpc_test_case)
 		std::cout << "\tu = " << u << std::endl;
 		out << y_ref(0, 0) << "\t" << u.transpose() << std::endl << std::flush;
 
-		auto q = x0.topRows(platform->getNumberOfAxes());
-		auto v = x0.bottomRows(platform->getNumberOfAxes());
+		auto q = x0.topRows<CyberMotionOCP::NU>();
+		auto v = x0.bottomRows<CyberMotionOCP::NU>();
 		x0 << q + v * Ts + u * Ts * Ts / 2., v + u * Ts;
 	}
 }

@@ -14,12 +14,13 @@ TEST(test_cybermotion_generated, ode_test)
 {
 	mpmc::CasADiGeneratedFunction ode {CASADI_GENERATED_FUNCTION_INTERFACE(cybermotion_ode)};
 
-	EXPECT_EQ(ode.n_in(), 3);
-	EXPECT_EQ(ode.n_out(), 3);
+	EXPECT_EQ(ode.n_in(), 2);
+	EXPECT_EQ(ode.n_out(), 2);
 	EXPECT_EQ(ode.name(), "cybermotion_ode");
 
 	const unsigned NX = 16;
 	const unsigned NU = 8;
+	unsigned const NZ = NX + NU;
 	const unsigned NP = 0;
 
 	Eigen::Matrix<double, NX, 1> x0;
@@ -28,13 +29,17 @@ TEST(test_cybermotion_generated, ode_test)
 	Eigen::Matrix<double, NU, 1> u0;
 	u0 << 0, 0, 0, 0, 0, 0, 0, 0;
 
+	Eigen::Matrix<double, NX + NU, 1> z0;
+	z0 << x0, u0;
+
 	Eigen::Matrix<double, NP, 1> p;
 
 	Eigen::Matrix<double, NX, 1> xdot, xdot_expected;
-	Eigen::Matrix<double, NX, NX> A, A_expected;
-	Eigen::Matrix<double, NX, NU> B, B_expected;
+	Eigen::Matrix<double, NX, NZ> ode_jac, ode_jac_expected;
+	Eigen::Matrix<double, NX, NX> A_expected;
+	Eigen::Matrix<double, NX, NU> B_expected;
 
-	ode({x0.data(), u0.data(), p.data()}, {xdot.data(), A.data(), B.data()});
+	ode({z0.data(), p.data()}, {xdot.data(), ode_jac.data()});
 
 	/*
 	xdot_expected <<
@@ -90,8 +95,7 @@ TEST(test_cybermotion_generated, ode_test)
 	*/
 
 	std::cout << "xdot = " << std::endl << xdot << std::endl;
-	std::cout << "A = " << std::endl << A << std::endl;
-	std::cout << "B = " << std::endl << B << std::endl;
+	std::cout << "ode_jac = " << std::endl << ode_jac << std::endl;
 
 	/*
 	EXPECT_TRUE(xdot.isApprox(xdot_expected));
@@ -104,12 +108,13 @@ TEST(test_cybermotion_generated, output_test)
 {
 	mpmc::CasADiGeneratedFunction output {CASADI_GENERATED_FUNCTION_INTERFACE(cybermotion_output)};
 
-	EXPECT_EQ(output.n_in(), 3);
-	EXPECT_EQ(output.n_out(), 3);
+	EXPECT_EQ(output.n_in(), 2);
+	EXPECT_EQ(output.n_out(), 2);
 	EXPECT_EQ(output.name(), "cybermotion_output");
 
 	const unsigned NX = 16;
 	const unsigned NU = 8;
+	unsigned const NZ = NX + NU;
 	const unsigned NP = 0;
 	const unsigned NY = 9;
 
@@ -119,13 +124,17 @@ TEST(test_cybermotion_generated, output_test)
 	Eigen::Matrix<double, NU, 1> u0;
 	u0 << 0, 0, 0, 0, 0, 0, 0, 0;
 
+	Eigen::Matrix<double, NX + NU, 1> z0;
+	z0 << x0, u0;
+
 	Eigen::Matrix<double, NP, 1> p;
 
 	Eigen::Matrix<double, NY, 1> y, y_expected;
-	Eigen::Matrix<double, NY, NX> C, C_expected;
-	Eigen::Matrix<double, NY, NU> D, D_expected;
+	Eigen::Matrix<double, NY, NZ> jac, jac_expected;
+	Eigen::Matrix<double, NY, NX> C_expected;
+	Eigen::Matrix<double, NY, NU> D_expected;
 
-	output({x0.data(), u0.data(), p.data()}, {y.data(), C.data(), D.data()});
+	output({z0.data(), p.data()}, {y.data(), jac.data()});
 
 	/*
 	xdot_expected <<
@@ -181,8 +190,7 @@ TEST(test_cybermotion_generated, output_test)
 	*/
 
 	std::cout << "y = " << std::endl << y << std::endl;
-	std::cout << "C = " << std::endl << C << std::endl;
-	std::cout << "D = " << std::endl << D << std::endl;
+	std::cout << "jac = " << std::endl << jac << std::endl;
 
 	/*
 	EXPECT_TRUE(xdot.isApprox(xdot_expected));
