@@ -8,7 +8,7 @@
 TEST(test_1, cybermotion_ocp_test)
 {
 	using mpmc::CyberMotionOCP;
-	CyberMotionOCP ocp;
+	CyberMotionOCP ocp(1);
 
 	CyberMotionOCP::InputVector u;
 	u << 1, 2, 3, 4, 5, 6, 7, 8;

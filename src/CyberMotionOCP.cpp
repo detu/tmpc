@@ -11,9 +11,10 @@
 
 namespace mpmc
 {
-	CyberMotionOCP::CyberMotionOCP()
+	CyberMotionOCP::CyberMotionOCP(unsigned Nt)
 	:	_ode(CASADI_GENERATED_FUNCTION_INTERFACE(cybermotion_ode))
 	,	_output(CASADI_GENERATED_FUNCTION_INTERFACE(cybermotion_output))
+	,	_yRef(Nt + 1)
 	{
 		// Initialize state and input limits.
 
@@ -40,6 +41,9 @@ namespace mpmc
 
 		// The "agile" position and zero velocity.
 		_x_default << 4.8078, 0.1218, -1.5319, 0.4760, 0.0006, 0.1396, -0.0005, 0.7991, 0., 0., 0., 0., 0., 0., 0., 0.;
+
+		// Initialize error weights
+		_errorWeight.fill(1.);
 	}
 
 	void CyberMotionOCP::ODE(unsigned t, StateInputVector const& z, StateVector& xdot, ODEJacobianMatrix& jac) const
@@ -75,6 +79,47 @@ namespace mpmc
 	CyberMotionOCP::StateVector const& CyberMotionOCP::getDefaultState() const
 	{
 		return _x_default;
+	}
+
+	void CyberMotionOCP::LagrangeTerm(unsigned i, StateInputVector const& z, StateInputVector& g, LagrangeHessianMatrix& H) const
+	{
+		// Output vector and derivatives.
+		OutputVector y;
+		OutputJacobianMatrix G;	// G = [C, D]
+		Output(i, z, y, G);
+
+		const auto W = _errorWeight.cwiseAbs2().asDiagonal();
+
+		// H = G^T W G + \mu I
+		H = G.transpose() * W * G;
+
+		/*
+		// Quadratic term corresponding to washout (penalty for final state deviating from the default position).
+		H.topLeftCorner(nX(), nX()) += _washoutFactor * MatrixXd::Identity(nX(), nX());
+		*/
+
+		// g = 2 * (y_bar - y_hat)^T * W * G
+		g = (y - _yRef[i]).transpose() * W * G;
+
+		/*
+		// Linear term corresponding to washout (penalty for final state deviating from the default position).
+		g.topRows(nX()) += _washoutFactor * (z.topRows(nX()) - getWashoutState());
+		*/
+	}
+
+	void CyberMotionOCP::setErrorWeight(const OutputVector& val)
+	{
+		_errorWeight = val;
+	}
+
+	const CyberMotionOCP::OutputVector& CyberMotionOCP::getErrorWeight() const
+	{
+		return _errorWeight;
+	}
+
+	void CyberMotionOCP::setReference(unsigned i, const OutputVector& y_ref)
+	{
+		_yRef.at(i) = y_ref;
 	}
 
 	//unsigned const CyberMotionOCP::NY;

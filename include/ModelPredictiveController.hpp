@@ -17,6 +17,11 @@ namespace camels
 	{
 	public:
 		typedef _Problem Problem;
+		typedef typename Problem::StateVector StateVector;
+		typedef typename Problem::StateInputVector StateInputVector;
+		typedef typename Problem::ODEJacobianMatrix ODEJacobianMatrix;
+		typedef typename Problem::LagrangeHessianMatrix LagrangeHessianMatrix;
+
 		typedef Eigen::Map<Eigen::VectorXd> VectorMap;
 		typedef Eigen::Map<const Eigen::VectorXd> VectorConstMap;
 		typedef Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> RowMajorMatrix;
@@ -24,7 +29,7 @@ namespace camels
 		typedef Eigen::Map<const RowMajorMatrix> RowMajorMatrixConstMap;
 		typedef std::function<void (const MultiStageQP&)> QPCallback;
 
-		ModelPredictiveController(unsigned state_dim, unsigned input_dim, unsigned n_path_constr, unsigned n_term_constr, double sample_time, unsigned Nt);
+		ModelPredictiveController(Problem const& ocp, unsigned state_dim, unsigned input_dim, unsigned n_path_constr, unsigned n_term_constr, double sample_time, unsigned Nt);
 		virtual ~ModelPredictiveController();
 
 		void InitWorkingPoint(const Eigen::VectorXd& x0);
@@ -53,34 +58,23 @@ namespace camels
 		unsigned nX() const;
 		unsigned nZ() const { return _Nz; }
 
-		const Eigen::VectorXd& getXMin() const { return _xMin; }
-		void setXMin(const Eigen::VectorXd& val);
-
-		const Eigen::VectorXd& getXMax() const { return _xMax; }
-		void setXMax(const Eigen::VectorXd& val);
-
-		const Eigen::VectorXd& getTerminalXMin() const { return _terminalXMin; }
-		void setTerminalXMin(const Eigen::VectorXd& val);
-
-		const Eigen::VectorXd& getTerminalXMax() const { return _terminalXMax; }
-		void setTerminalXMax(const Eigen::VectorXd& val);
-
-		const Eigen::VectorXd& getUMin() const { return _uMin; }
-		void setUMin(const Eigen::VectorXd& val);
-
-		const Eigen::VectorXd& getUMax() const { return _uMax; }
-		void setUMax(const Eigen::VectorXd& val);
-
 		void setQPCallback(const QPCallback& cb);
 
 		VectorConstMap getWorkingPoint(unsigned i) const;
 
 	protected:
-		virtual void LagrangeTerm(const Eigen::VectorXd& z, unsigned i, Eigen::MatrixXd& H, Eigen::VectorXd& g) const = 0;
+		// TODO: get rid of these functions, call directly from _ocp.
+		const Eigen::VectorXd getXMin() const { return _ocp.getStateMin(); }
+		const Eigen::VectorXd getXMax() const { return _ocp.getStateMax(); }
+		const Eigen::VectorXd getTerminalXMin() const { return _ocp.getStateMin(); }
+		const Eigen::VectorXd getTerminalXMax() const { return _ocp.getStateMax(); }
+		const Eigen::VectorXd getUMin() const { return _ocp.getInputMin(); }
+		const Eigen::VectorXd getUMax() const { return _ocp.getInputMax(); }
+
 		virtual void MayerTerm(const Eigen::VectorXd& x, Eigen::MatrixXd& H, Eigen::VectorXd& g) const = 0;
 		virtual void PathConstraints(unsigned i, const Eigen::VectorXd& x, const Eigen::VectorXd& u, Eigen::MatrixXd& D, Eigen::VectorXd& d_min, Eigen::VectorXd& d_max) const = 0;
 		virtual void TerminalConstraints(const Eigen::VectorXd& x, Eigen::MatrixXd& D, Eigen::VectorXd& d_min, Eigen::VectorXd& d_max) const = 0;
-		virtual void Integrate(const Eigen::VectorXd& x, const Eigen::VectorXd& u, Eigen::VectorXd& x_next, Eigen::MatrixXd& A, Eigen::MatrixXd& B) const = 0;
+		void Integrate(const StateInputVector& z, StateVector& x_next, ODEJacobianMatrix& J) const;
 
 	private:
 		// Initialized _G, _y, _C, _c, _zMin, _zMax based on current working point _w.
@@ -91,6 +85,9 @@ namespace camels
 
 		VectorMap w(unsigned i);
 		VectorConstMap w(unsigned i) const;
+
+		// Private data membets.
+		Problem const& _ocp;
 
 		const double _sampleTime;
 
@@ -117,37 +114,16 @@ namespace camels
 		// _w stores _Nt vectors of size _Nz and 1 vector of size _Nx
 		Eigen::VectorXd _w;
 
-		// Lower state limit.
-		Eigen::VectorXd _xMin;
-		
-		// Upper state limit.
-		Eigen::VectorXd _xMax;
-
-		// Lower terminal state limit.
-		Eigen::VectorXd _terminalXMin;
-
-		// Upper terminal state limit.
-		Eigen::VectorXd _terminalXMax;
-		
-		// Lower input limit
-		Eigen::VectorXd _uMin;
-		
-		// Upper input limit
-		Eigen::VectorXd _uMax;		
 	};
 
 	template<class _Problem>
-	ModelPredictiveController<_Problem>::ModelPredictiveController(unsigned state_dim, unsigned input_dim, unsigned n_path_constr, unsigned n_term_constr, double sample_time, unsigned Nt) :
-		_QP(state_dim, input_dim, n_path_constr, n_term_constr, Nt),
+	ModelPredictiveController<_Problem>::ModelPredictiveController(Problem const& ocp,
+			unsigned state_dim, unsigned input_dim, unsigned n_path_constr, unsigned n_term_constr, double sample_time, unsigned Nt)
+	:	_ocp(ocp)
+	,	_QP(state_dim, input_dim, n_path_constr, n_term_constr, Nt),
 		_Solver(MultiStageQPSize(state_dim, input_dim, n_path_constr, n_term_constr, Nt)),
 		_levenbergMarquardt(0.0),
 		_sampleTime(sample_time),
-		_xMin(state_dim),
-		_xMax(state_dim),
-		_uMin(input_dim),
-		_uMax(input_dim),
-		_terminalXMin(state_dim),
-		_terminalXMax(state_dim),
 		_Nu(input_dim),
 		_Nx(state_dim),
 		_Nz(input_dim + state_dim),
@@ -158,14 +134,6 @@ namespace camels
 		// Allocate arrays.
 		_zOpt.resize(_Nz * _Nt + _Nx);
 		_w.resize(_Nz * _Nt + _Nx);
-
-		// Initialize limits.
-		_xMin.fill(-std::numeric_limits<double>::infinity());
-		_xMax.fill( std::numeric_limits<double>::infinity());
-		_uMin.fill(-std::numeric_limits<double>::infinity());
-		_uMax.fill( std::numeric_limits<double>::infinity());
-		_terminalXMin.fill(-std::numeric_limits<double>::infinity());
-		_terminalXMax.fill( std::numeric_limits<double>::infinity());
 	}
 
 	template<class _Problem>
@@ -260,15 +228,16 @@ namespace camels
 		using Eigen::MatrixXd;
 		using Eigen::VectorXd;
 
-		MatrixXd H_i(nZ(), nZ());
-		VectorXd g_i(nZ());
+		LagrangeHessianMatrix H_i;
+		StateInputVector g_i;
 
 		// Hessians and gradients of Lagrange terms.
 		for (unsigned i = 0; i < _Nt; ++i)
 		{
-			LagrangeTerm(w(i), i, H_i, g_i);
+			_ocp.LagrangeTerm(i, w(i), g_i, H_i);
 
 			// Adding Levenberg-Marquardt term to make H positive-definite.
+			// TODO: Move it to the OCP class.
 			_QP.H(i) = H_i + _levenbergMarquardt * MatrixXd::Identity(_Nz, _Nz);
 			_QP.g(i) = g_i;
 		}
@@ -347,60 +316,6 @@ namespace camels
 	}
 
 	template<class _Problem>
-	void ModelPredictiveController<_Problem>::setXMin(const Eigen::VectorXd& val)
-	{
-		if (val.size() != nX())
-			throw std::invalid_argument("ModelPredictiveController<_Problem>::setXMin(): val has a wrong size");
-
-		_xMin = val;
-	}
-
-	template<class _Problem>
-	void ModelPredictiveController<_Problem>::setXMax(const Eigen::VectorXd& val)
-	{
-		if (val.size() != nX())
-			throw std::invalid_argument("ModelPredictiveController<_Problem>::setXMax(): val has a wrong size");
-
-		_xMax = val;
-	}
-
-	template<class _Problem>
-	void ModelPredictiveController<_Problem>::setTerminalXMin(const Eigen::VectorXd& val)
-	{
-		if (val.size() != nX())
-			throw std::invalid_argument("ModelPredictiveController<_Problem>::setTerminalXMin(): val has a wrong size");
-
-		_terminalXMin = val;
-	}
-
-	template<class _Problem>
-	void ModelPredictiveController<_Problem>::setTerminalXMax(const Eigen::VectorXd& val)
-	{
-		if (val.size() != nX())
-			throw std::invalid_argument("ModelPredictiveController<_Problem>::setTerminalXMax(): val has a wrong size");
-
-		_terminalXMax = val;
-	}
-
-	template<class _Problem>
-	void ModelPredictiveController<_Problem>::setUMin(const Eigen::VectorXd& val)
-	{
-		if (val.size() != nU())
-			throw std::invalid_argument("ModelPredictiveController<_Problem>::setUMin(): val has a wrong size");
-
-		_uMin = val;
-	}
-
-	template<class _Problem>
-	void ModelPredictiveController<_Problem>::setUMax(const Eigen::VectorXd& val)
-	{
-		if (val.size() != nU())
-			throw std::invalid_argument("ModelPredictiveController<_Problem>::setUMax(): val has a wrong size");
-
-		_uMax = val;
-	}
-
-	template<class _Problem>
 	void ModelPredictiveController<_Problem>::setQPCallback(const QPCallback& cb)
 	{
 		_QPCallback = cb;
@@ -409,27 +324,24 @@ namespace camels
 	template<class _Problem>
 	void ModelPredictiveController<_Problem>::UpdateStage(unsigned i)
 	{
-		using namespace Eigen;
-
-		VectorXd z_min(_Nz), z_max(_Nz);
-		z_min << _xMin, _uMin;
-		z_max << _xMax, _uMax;
+		StateInputVector z_min, z_max;
+		z_min << _ocp.getStateMin(), _ocp.getInputMin();
+		z_max << _ocp.getStateMax(), _ocp.getInputMax();
 
 		// C = [ssA, ssB];
 		// x_{k+1} = C * z_k + c_k
-		MatrixXd ssA(_Nx, _Nx);
-		MatrixXd ssB(_Nx, _Nu);
-		VectorXd x_plus(_Nx);
-		Integrate(w(i).topRows(nX()), w(i).bottomRows(nU()), x_plus, ssA, ssB);
-		_QP.C(i) << ssA, ssB;
+		ODEJacobianMatrix ssAB;
+		StateVector x_plus;
+		Integrate(w(i), x_plus, ssAB);
+		_QP.C(i) = ssAB;
 
 		// \Delta x_{k+1} = C \Delta z_k + f(z_k) - x_{k+1}
 		// c = f(z_k) - x_{k+1}
 		_QP.c(i) = x_plus - w(i + 1).topRows(_Nx);
 
-		MatrixXd D(_Nd, _Nz);
-		VectorXd d_min(_Nd);
-		VectorXd d_max(_Nd);
+		Eigen::MatrixXd D(_Nd, _Nz);
+		Eigen::VectorXd d_min(_Nd);
+		Eigen::VectorXd d_max(_Nd);
 		PathConstraints(i, w(i).topRows(nX()), w(i).bottomRows(nU()), D, d_min, d_max);
 		_QP.D(i) = D;
 		_QP.dMin(i) = d_min;
@@ -440,5 +352,18 @@ namespace camels
 
 		// z_max stores _Nt vectors of size _Nz and 1 vector of size _Nx
 		_QP.zMax(i) = z_max - w(i);
+	}
+
+	template<class _Problem>
+	void ModelPredictiveController<_Problem>::Integrate(const StateInputVector& z, StateVector& x_next, ODEJacobianMatrix& J) const
+	{
+		// TODO: Implement proper integration
+		auto const I = Eigen::Matrix<double, 8, 8>::Identity();
+		auto const O = Eigen::Matrix<double, 8, 8>::Zero();
+
+		J << I, getSampleTime() * I, std::pow(getSampleTime(), 2) / 2. * I,
+			 O,                   I,                   getSampleTime() * I;
+
+		x_next = J * z;
 	}
 }

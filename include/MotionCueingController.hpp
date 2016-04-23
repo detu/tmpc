@@ -16,40 +16,21 @@ namespace mpmc
 
 		unsigned nY() const;
 
-		const Eigen::VectorXd& getErrorWeight() const;
-		void setErrorWeight(const Eigen::VectorXd& val);
-
 		const Eigen::VectorXd& getWashoutPosition() const { return _washoutPosition; }
 		void setWashoutPosition(const Eigen::VectorXd& val);
 
 		double getWashoutFactor() const { return _washoutFactor; }
 		void setWashoutFactor(double val) { _washoutFactor = val; }
 
-		void setReference(const Eigen::MatrixXd& py_ref);
-		void setReference(unsigned i, const Eigen::VectorXd& py_ref);
-
 	private:
-		void LagrangeTerm(const Eigen::VectorXd& z, unsigned i, Eigen::MatrixXd& H, Eigen::VectorXd& g) const override;
-		void LagrangeTerm(unsigned i, StateInputVector const& z, Eigen::VectorXd& g, Eigen::MatrixXd& H) const;
 		void MayerTerm(const Eigen::VectorXd& x, Eigen::MatrixXd& H, Eigen::VectorXd& g) const override;
-		void Integrate(const Eigen::VectorXd& x, const Eigen::VectorXd& u, Eigen::VectorXd& x_next, Eigen::MatrixXd& A, Eigen::MatrixXd& B) const override;
 		void PathConstraints(unsigned i, const Eigen::VectorXd& x, const Eigen::VectorXd& u, Eigen::MatrixXd& D, Eigen::VectorXd& d_min, Eigen::VectorXd& d_max) const override;
 		void TerminalConstraints(const Eigen::VectorXd& x, Eigen::MatrixXd& D, Eigen::VectorXd& d_min, Eigen::VectorXd& d_max) const override;
 
 		// Private data members.
-		CyberMotionOCP const& _ocp;
-
 		const unsigned _Nq;
 		const unsigned _Ny;
 
-		// Reference trajectory.
-		// _yRef stores _Nt vectors of size _Ny.
-		// Important: _yRef is column-major.
-		Eigen::MatrixXd _yRef;
-
-		// Tracking error weights for all components of output.
-		Eigen::VectorXd _errorWeight;
-		
 		// Washout position.
 		Eigen::VectorXd _washoutPosition;
 

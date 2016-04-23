@@ -11,7 +11,7 @@ TEST(mpc_test, mpc_test_case)
 	using mpmc::CyberMotionOCP;
 
 	//const auto platform = std::make_shared<mpmc::MotionPlatformX>();
-	CyberMotionOCP const ocp;
+	CyberMotionOCP ocp(1);
 
 	/*
 	const double full_state[] = { 4.8078, 0.1218, -1.5319, 0.4760, 0.0006, 0.1396, -0.0005, 0.7991 };
@@ -32,9 +32,6 @@ TEST(mpc_test, mpc_test_case)
 	auto x0 = ocp.getDefaultState();
 	controller.InitWorkingPoint(x0);
 
-	Eigen::MatrixXd y_ref(Eigen::Index(CyberMotionOCP::NY), Nt);
-	y_ref.fill(0.);
-
 	CyberMotionOCP::InputVector u;
 	u.fill(0.);
 
@@ -42,14 +39,19 @@ TEST(mpc_test, mpc_test_case)
 	{
 		std::cout << "step " << i << ", x0=" << x0 << std::endl;
 
-		for (unsigned k = 0; k < y_ref.cols(); ++k)
+		for (unsigned k = 0; k < Nt + 1; ++k)
 		{
-			y_ref(0, k) = sin(2 * M_PI * freq * i * Ts);
+			CyberMotionOCP::OutputVector y_ref = CyberMotionOCP::OutputVector::Zero();
+			y_ref[0] = sin(2 * M_PI * freq * i * Ts);
 			//y_ref(0, k) = 1;
-			y_ref(2, k) = -g;
+			y_ref[2] = -g;
+
+			ocp.setReference(k, y_ref);
+
+			if (k == 0)
+				out << y_ref[0] << "\t";
 		}
 
-		controller.setReference(y_ref);
 		controller.EmbedInitialValue(x0);
 		//controller.PrintQP(std::cout);
 
@@ -91,7 +93,7 @@ TEST(mpc_test, mpc_test_case)
 		controller.PrepareForNext();
 
 		std::cout << "\tu = " << u << std::endl;
-		out << y_ref(0, 0) << "\t" << u.transpose() << std::endl << std::flush;
+		out << u.transpose() << std::endl << std::flush;
 
 		auto q = x0.topRows<CyberMotionOCP::NU>();
 		auto v = x0.bottomRows<CyberMotionOCP::NU>();
