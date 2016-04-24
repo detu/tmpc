@@ -1,4 +1,4 @@
-#include <MotionCueingController.hpp>
+#include <ModelPredictiveController.hpp>
 #include <CyberMotionOCP.hpp>
 
 #include <iostream>
@@ -21,7 +21,7 @@ TEST(mpc_test, mpc_test_case)
 	CyberMotionOCP ocp(Nt);
 	ocp.setWashoutFactor(0.1);
 
-	mpmc::MotionCueingController controller(ocp, Ts);
+	camels::ModelPredictiveController<CyberMotionOCP> controller(ocp, Ts);
 
 	auto x0 = ocp.getDefaultState();
 	controller.InitWorkingPoint(x0);

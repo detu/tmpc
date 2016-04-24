@@ -19,7 +19,6 @@ set(HDR
 	${RTMC_INCLUDE_DIR}/CyberMotion.hpp
 	${RTMC_INCLUDE_DIR}/CyberMotion1D.hpp
 	${RTMC_INCLUDE_DIR}/ModelPredictiveController.hpp
-	${RTMC_INCLUDE_DIR}/MotionCueingController.hpp
 	${RTMC_INCLUDE_DIR}/MultiStageQP.hpp
 	${RTMC_INCLUDE_DIR}/MultiStageQPSize.hpp
 	${RTMC_INCLUDE_DIR}/QuadraticProgram.hpp
@@ -35,7 +34,6 @@ set (SRC
 	CyberMotion.cpp
 	CyberMotion1D.cpp
 	ModelPredictiveController.cpp
-	MotionCueingController.cpp
 	MultiStageQP.cpp
 	MultiStageQPSize.cpp
 	CondensingSolver.cpp

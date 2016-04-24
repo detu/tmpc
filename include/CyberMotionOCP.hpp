@@ -21,9 +21,15 @@ namespace mpmc
 	class CyberMotionOCP : public camels::OptimalControlProblem<CyberMotionOCP, 2 * CyberMotion::numberOfAxes, CyberMotion::numberOfAxes>
 	{
 	public:
-		static unsigned constexpr NY = 9;
+		static unsigned const NY = 9;
+		static unsigned const NC  = 2 * NU; 	// Number of non-linear constraints
+		static unsigned const NCT = 2 * NU; 	// Number of non-linear terminal constraints
 		typedef Eigen::Matrix<Scalar, NY, 1> OutputVector;
 		typedef Eigen::Matrix<Scalar, NY, NW> OutputJacobianMatrix;
+		typedef Eigen::Matrix<Scalar, NC, 1> ConstraintVector;
+		typedef Eigen::Matrix<Scalar, NC, NW> ConstraintJacobianMatrix;
+		typedef Eigen::Matrix<Scalar, NCT, 1> TerminalConstraintVector;
+		typedef Eigen::Matrix<Scalar, NCT, NX> TerminalConstraintJacobianMatrix;
 
 		CyberMotionOCP(unsigned Nt);
 
@@ -49,8 +55,15 @@ namespace mpmc
 
 		void MayerTerm(const StateVector& x, StateVector& g, MayerHessianMatrix& H) const;
 
+		void PathConstraints(unsigned i, const StateInputVector& z,
+			ConstraintJacobianMatrix& D, ConstraintVector& d_min, ConstraintVector& d_max) const;
+		void TerminalConstraints(const StateVector& x, TerminalConstraintJacobianMatrix& D,
+			TerminalConstraintVector& d_min, TerminalConstraintVector& d_max) const;
+
 	private:
 		void Output(unsigned t, StateInputVector const& z, OutputVector& y, OutputJacobianMatrix& jac) const;
+		void SRConstraints(const StateVector& x, Eigen::Matrix<Scalar, NC, NX>& D,
+			ConstraintVector& d_min, ConstraintVector& d_max) const;
 
 		// Private data members
 

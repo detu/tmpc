@@ -146,5 +146,43 @@ namespace mpmc
 		_washoutState = val;
 	}
 
-	//unsigned const CyberMotionOCP::NY;
+	void CyberMotionOCP::SRConstraints(const StateVector& x, Eigen::Matrix<Scalar, NC, NX>& D, ConstraintVector& d_min, ConstraintVector& d_max) const
+	{
+		const auto q = x.topRows<NU>();
+		const auto v = x.bottomRows<NU>();
+		const auto q_min = _x_min.topRows<NU>();
+		const auto q_max = _x_max.topRows<NU>();
+
+		typedef Eigen::Matrix<Scalar, NU, NU> MatrixUU;
+
+		/*
+		Stoppability-reachability equations:
+		v^2 + 2 * (q_max - q) * a_min <= 0
+		v^2 + 2 * (q_min - q) * a_max <= 0
+
+		Linearization:
+		-inf <= 2 * (-a_min * dq + v * dv) <= -v^2 - 2 * (q_max - q) * a_min
+		-inf <= 2 * (-a_min * dq + v * dv) <= -v^2 - 2 * (q_min - q) * a_max
+		*/
+		D << -2. * MatrixUU(_u_min.asDiagonal()), 2. * MatrixUU(q.asDiagonal()),
+			 -2. * MatrixUU(_u_max.asDiagonal()), 2. * MatrixUU(q.asDiagonal());
+
+		const auto inf = InputVector::Constant(std::numeric_limits<double>::infinity());
+		d_min << -inf, -inf;
+		d_max << -v.cwiseAbs2() - 2. * (q_max - q).cwiseProduct(getInputMin()), -v.cwiseAbs2() - 2. * (q_min - q).cwiseProduct(getInputMax());
+	}
+
+	void CyberMotionOCP::PathConstraints(unsigned i, const StateInputVector& z,
+		ConstraintJacobianMatrix& D, ConstraintVector& d_min, ConstraintVector& d_max) const
+	{
+		Eigen::Matrix<Scalar, NC, NX> Dx;
+		SRConstraints(z.topRows<NX>(), Dx, d_min, d_max);
+		D << Dx, Eigen::Matrix<Scalar, NC, NU>::Zero();
+	}
+
+	void CyberMotionOCP::TerminalConstraints(const StateVector& x, TerminalConstraintJacobianMatrix& D,
+		TerminalConstraintVector& d_min, TerminalConstraintVector& d_max) const
+	{
+		SRConstraints(x, D, d_min, d_max);
+	}
 } /* namespace mpmc */

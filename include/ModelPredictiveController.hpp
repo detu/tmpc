@@ -18,6 +18,7 @@ namespace camels
 	public:
 		typedef _Problem Problem;
 		typedef typename Problem::StateVector StateVector;
+		typedef typename Problem::InputVector InputVector;
 		typedef typename Problem::StateInputVector StateInputVector;
 		typedef typename Problem::ODEJacobianMatrix ODEJacobianMatrix;
 		typedef typename Problem::LagrangeHessianMatrix LagrangeHessianMatrix;
@@ -30,7 +31,7 @@ namespace camels
 		typedef Eigen::Map<const RowMajorMatrix> RowMajorMatrixConstMap;
 		typedef std::function<void (const MultiStageQP&)> QPCallback;
 
-		ModelPredictiveController(Problem const& ocp, unsigned state_dim, unsigned input_dim, unsigned n_path_constr, unsigned n_term_constr, double sample_time);
+		ModelPredictiveController(Problem const& ocp, double sample_time);
 		virtual ~ModelPredictiveController();
 
 		void InitWorkingPoint(const Eigen::VectorXd& x0);
@@ -72,8 +73,6 @@ namespace camels
 		const Eigen::VectorXd getUMin() const { return _ocp.getInputMin(); }
 		const Eigen::VectorXd getUMax() const { return _ocp.getInputMax(); }
 
-		virtual void PathConstraints(unsigned i, const Eigen::VectorXd& x, const Eigen::VectorXd& u, Eigen::MatrixXd& D, Eigen::VectorXd& d_min, Eigen::VectorXd& d_max) const = 0;
-		virtual void TerminalConstraints(const Eigen::VectorXd& x, Eigen::MatrixXd& D, Eigen::VectorXd& d_min, Eigen::VectorXd& d_max) const = 0;
 		void Integrate(const StateInputVector& z, StateVector& x_next, ODEJacobianMatrix& J) const;
 
 	private:
@@ -91,11 +90,11 @@ namespace camels
 
 		const double _sampleTime;
 
-		const unsigned _Nu;
-		const unsigned _Nx;
-		const unsigned _Nz;
-		const unsigned _Nd;
-		const unsigned _NdT;
+		static const unsigned _Nu = Problem::NU;
+		static const unsigned _Nx = Problem::NX;
+		static const unsigned _Nz = Problem::NW;
+		static const unsigned _Nd = Problem::NC;
+		static const unsigned _NdT = Problem::NCT;
 		
 		MultiStageQP _QP;
 		CondensingSolver _Solver;
@@ -116,18 +115,12 @@ namespace camels
 	};
 
 	template<class _Problem>
-	ModelPredictiveController<_Problem>::ModelPredictiveController(Problem const& ocp,
-			unsigned state_dim, unsigned input_dim, unsigned n_path_constr, unsigned n_term_constr, double sample_time)
+	ModelPredictiveController<_Problem>::ModelPredictiveController(Problem const& ocp, double sample_time)
 	:	_ocp(ocp)
-	,	_QP(state_dim, input_dim, n_path_constr, n_term_constr, ocp.getNumberOfIntervals()),
-		_Solver(MultiStageQPSize(state_dim, input_dim, n_path_constr, n_term_constr, ocp.getNumberOfIntervals())),
+	,	_QP(_Nx, _Nu, _Nd, _NdT, ocp.getNumberOfIntervals()),
+		_Solver(MultiStageQPSize(_Nx, _Nu, _Nd, _NdT, ocp.getNumberOfIntervals())),
 		_levenbergMarquardt(0.0),
-		_sampleTime(sample_time),
-		_Nu(input_dim),
-		_Nx(state_dim),
-		_Nz(input_dim + state_dim),
-		_Nd(n_path_constr),
-		_NdT(n_term_constr)
+		_sampleTime(sample_time)
 	{
 		// Allocate arrays.
 		_zOpt.resize(_Nz * ocp.getNumberOfIntervals() + _Nx);
@@ -166,10 +159,9 @@ namespace camels
 		for (unsigned i = 0; i < _ocp.getNumberOfIntervals(); ++i)
 			UpdateStage(i);
 
-		MatrixXd D(_NdT, _Nx);
-		VectorXd d_min(_NdT);
-		VectorXd d_max(_NdT);
-		TerminalConstraints(w(_ocp.getNumberOfIntervals()), D, d_min, d_max);
+		typename Problem::TerminalConstraintJacobianMatrix D;
+		typename Problem::TerminalConstraintVector d_min, d_max;
+		_ocp.TerminalConstraints(w(_ocp.getNumberOfIntervals()), D, d_min, d_max);
 		_QP.D(getNumberOfIntervals()) = D;
 		_QP.dMin(getNumberOfIntervals()) = d_min;
 		_QP.dMax(getNumberOfIntervals()) = d_max;
@@ -208,8 +200,7 @@ namespace camels
 		using namespace Eigen;
 
 		// u0 = 0;
-		VectorXd u0(_Nu);
-		u0.fill(0.);
+		InputVector const u0 = InputVector::Zero();
 
 		for (unsigned i = 0; i < _ocp.getNumberOfIntervals(); ++i)
 			w(i) << x0, u0;
@@ -337,10 +328,9 @@ namespace camels
 		// c = f(z_k) - x_{k+1}
 		_QP.c(i) = x_plus - w(i + 1).topRows(_Nx);
 
-		Eigen::MatrixXd D(_Nd, _Nz);
-		Eigen::VectorXd d_min(_Nd);
-		Eigen::VectorXd d_max(_Nd);
-		PathConstraints(i, w(i).topRows(nX()), w(i).bottomRows(nU()), D, d_min, d_max);
+		typename Problem::ConstraintJacobianMatrix D;
+		typename Problem::ConstraintVector d_min, d_max;
+		_ocp.PathConstraints(i, w(i), D, d_min, d_max);
 		_QP.D(i) = D;
 		_QP.dMin(i) = d_min;
 		_QP.dMax(i) = d_max;
