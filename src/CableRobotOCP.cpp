@@ -11,8 +11,9 @@
 
 namespace mpmc
 {
-	CableRobotOCP::CableRobotOCP()
-	:	_ode(CASADI_GENERATED_FUNCTION_INTERFACE(cablerobot_ode))
+	CableRobotOCP::CableRobotOCP(unsigned Nt)
+	:	camels::OptimalControlProblem<CableRobotOCP, 13, 8>(Nt)
+	,	_ode(CASADI_GENERATED_FUNCTION_INTERFACE(cablerobot_ode))
 	,	_output(CASADI_GENERATED_FUNCTION_INTERFACE(cablerobot_output))
 	{
 

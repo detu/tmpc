@@ -25,6 +25,12 @@ namespace camels
 		typedef Eigen::Matrix<Scalar, NW, 1> StateInputVector;
 		typedef Eigen::Matrix<Scalar, NX, NW> ODEJacobianMatrix;
 		typedef Eigen::Matrix<Scalar, NW, NW> LagrangeHessianMatrix;
+		typedef Eigen::Matrix<Scalar, NX, NX> MayerHessianMatrix;
+
+		OptimalControlProblem(unsigned nt)
+		:	_Nt(nt)
+		{
+		}
 
 		void ODE(unsigned t, StateInputVector const& z, StateVector& xdot, ODEJacobianMatrix& jac)
 		{
@@ -35,6 +41,8 @@ namespace camels
 		{
 			return derived()->LagrangeTerm(t, z, grad, hess);
 		}
+
+		unsigned getNumberOfIntervals() const { return _Nt; }
 
 		/*
 		OptimalControlProblem();
@@ -56,5 +64,8 @@ namespace camels
 		{
 			return static_cast<const Derived&>(*this);
 		}
+
+		// Private data members
+		const unsigned _Nt;
 	};
 }

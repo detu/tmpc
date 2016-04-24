@@ -10,14 +10,6 @@ TEST(mpc_test, mpc_test_case)
 {
 	using mpmc::CyberMotionOCP;
 
-	//const auto platform = std::make_shared<mpmc::MotionPlatformX>();
-	CyberMotionOCP ocp(1);
-
-	/*
-	const double full_state[] = { 4.8078, 0.1218, -1.5319, 0.4760, 0.0006, 0.1396, -0.0005, 0.7991 };
-	platform->setFullState(mpmc::CyberMotion1D::FullStateVector(full_state));
-	*/
-
 	const double Ts = 0.05;
 	const unsigned Nt = 1;
 	const unsigned simulation_steps = 20;
@@ -26,8 +18,10 @@ TEST(mpc_test, mpc_test_case)
 	const double freq = 1.0;
 	std::ofstream out("out.txt");
 
-	mpmc::MotionCueingController controller(ocp, Ts, Nt);
-	controller.setWashoutFactor(0.1);
+	CyberMotionOCP ocp(Nt);
+	ocp.setWashoutFactor(0.1);
+
+	mpmc::MotionCueingController controller(ocp, Ts);
 
 	auto x0 = ocp.getDefaultState();
 	controller.InitWorkingPoint(x0);

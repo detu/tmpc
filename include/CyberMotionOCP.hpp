@@ -41,6 +41,14 @@ namespace mpmc
 
 		void setReference(unsigned i, const OutputVector& py_ref);
 
+		const StateVector& getWashoutState() const;
+		void setWashoutState(const StateVector& val);
+
+		double getWashoutFactor() const { return _washoutFactor; }
+		void setWashoutFactor(double val) { _washoutFactor = val; }
+
+		void MayerTerm(const StateVector& x, StateVector& g, MayerHessianMatrix& H) const;
+
 	private:
 		void Output(unsigned t, StateInputVector const& z, OutputVector& y, OutputJacobianMatrix& jac) const;
 
@@ -62,6 +70,12 @@ namespace mpmc
 		// _yRef stores _Nt vectors of size _Ny.
 		// Important: _yRef is column-major.
 		std::vector<OutputVector> _yRef;
+
+		// Washout state.
+		StateVector _washoutState;
+
+		// The more the washout factor, the more penalty for the terminal state to be far from the default (washout) position.
+		double _washoutFactor;
 	};
 } /* namespace mpmc */
 

@@ -4,48 +4,13 @@
 
 namespace mpmc
 {
-	MotionCueingController::MotionCueingController(CyberMotionOCP const& ocp, double sample_time, unsigned Nt) :
-		camels::ModelPredictiveController<CyberMotionOCP>(ocp, CyberMotionOCP::NX, CyberMotionOCP::NU, 2 * CyberMotionOCP::NU, 2 * CyberMotionOCP::NU, sample_time, Nt),
+	MotionCueingController::MotionCueingController(CyberMotionOCP const& ocp, double sample_time) :
+		camels::ModelPredictiveController<CyberMotionOCP>(ocp, CyberMotionOCP::NX, CyberMotionOCP::NU, 2 * CyberMotionOCP::NU, 2 * CyberMotionOCP::NU, sample_time),
 		_Nq(CyberMotionOCP::NU),
-		_Ny(CyberMotionOCP::NY),
-		_washoutPosition(Eigen::Index(CyberMotionOCP::NU)),
-		_washoutFactor(0.)
+		_Ny(CyberMotionOCP::NY)
 	{
 	}
 	
-	void MotionCueingController::MayerTerm(const Eigen::VectorXd& x, Eigen::MatrixXd& H, Eigen::VectorXd& g) const
-	{
-		using namespace Eigen;
-
-		// Quadratic term corresponding to washout (penalty for final state deviating from the default position).
-		H = _washoutFactor * MatrixXd::Identity(nX(), nX()) * getNumberOfIntervals();
-
-		// Linear term corresponding to washout (penalty for final state deviating from the default position).
-		g = _washoutFactor * (x - getWashoutState()) * getNumberOfIntervals();
-	}
-
-	Eigen::VectorXd MotionCueingController::getWashoutState() const
-	{
-		// The "washout" state.
-		Eigen::VectorXd x_washout(nX());
-		x_washout << _washoutPosition, Eigen::VectorXd::Zero(_Nq);
-
-		return x_washout;
-	}
-
-	unsigned MotionCueingController::nY() const
-	{
-		return _Ny;
-	}
-
-	void MotionCueingController::setWashoutPosition(const Eigen::VectorXd& val)
-	{
-		if (val.size() != _Nq)
-			throw std::invalid_argument("MotionCueingController::setWashoutPosition(): val has invalid size.");
-
-		_washoutPosition = val;
-	}
-
 	template<class Vector1, class Matrix, class Vector2>
 	void MotionCueingController::SRConstraints(const Eigen::MatrixBase<Vector1>& x, Eigen::MatrixBase<Matrix>& D, Eigen::MatrixBase<Vector2>& d_min, Eigen::MatrixBase<Vector2>& d_max) const
 	{

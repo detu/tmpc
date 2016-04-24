@@ -21,6 +21,7 @@ namespace camels
 		typedef typename Problem::StateInputVector StateInputVector;
 		typedef typename Problem::ODEJacobianMatrix ODEJacobianMatrix;
 		typedef typename Problem::LagrangeHessianMatrix LagrangeHessianMatrix;
+		typedef typename Problem::MayerHessianMatrix MayerHessianMatrix;
 
 		typedef Eigen::Map<Eigen::VectorXd> VectorMap;
 		typedef Eigen::Map<const Eigen::VectorXd> VectorConstMap;
@@ -29,7 +30,7 @@ namespace camels
 		typedef Eigen::Map<const RowMajorMatrix> RowMajorMatrixConstMap;
 		typedef std::function<void (const MultiStageQP&)> QPCallback;
 
-		ModelPredictiveController(Problem const& ocp, unsigned state_dim, unsigned input_dim, unsigned n_path_constr, unsigned n_term_constr, double sample_time, unsigned Nt);
+		ModelPredictiveController(Problem const& ocp, unsigned state_dim, unsigned input_dim, unsigned n_path_constr, unsigned n_term_constr, double sample_time);
 		virtual ~ModelPredictiveController();
 
 		void InitWorkingPoint(const Eigen::VectorXd& x0);
@@ -51,7 +52,7 @@ namespace camels
 		double getLevenbergMarquardt() const { return _levenbergMarquardt; }
 		void setLevenbergMarquardt(double val) { _levenbergMarquardt = val; }
 
-		unsigned getNumberOfIntervals() const { return _Nt; }
+		unsigned getNumberOfIntervals() const { return _ocp.getNumberOfIntervals(); }
 		double getSampleTime() const;
 
 		unsigned nU() const;
@@ -71,7 +72,6 @@ namespace camels
 		const Eigen::VectorXd getUMin() const { return _ocp.getInputMin(); }
 		const Eigen::VectorXd getUMax() const { return _ocp.getInputMax(); }
 
-		virtual void MayerTerm(const Eigen::VectorXd& x, Eigen::MatrixXd& H, Eigen::VectorXd& g) const = 0;
 		virtual void PathConstraints(unsigned i, const Eigen::VectorXd& x, const Eigen::VectorXd& u, Eigen::MatrixXd& D, Eigen::VectorXd& d_min, Eigen::VectorXd& d_max) const = 0;
 		virtual void TerminalConstraints(const Eigen::VectorXd& x, Eigen::MatrixXd& D, Eigen::VectorXd& d_min, Eigen::VectorXd& d_max) const = 0;
 		void Integrate(const StateInputVector& z, StateVector& x_next, ODEJacobianMatrix& J) const;
@@ -94,7 +94,6 @@ namespace camels
 		const unsigned _Nu;
 		const unsigned _Nx;
 		const unsigned _Nz;
-		const unsigned _Nt;
 		const unsigned _Nd;
 		const unsigned _NdT;
 		
@@ -118,22 +117,21 @@ namespace camels
 
 	template<class _Problem>
 	ModelPredictiveController<_Problem>::ModelPredictiveController(Problem const& ocp,
-			unsigned state_dim, unsigned input_dim, unsigned n_path_constr, unsigned n_term_constr, double sample_time, unsigned Nt)
+			unsigned state_dim, unsigned input_dim, unsigned n_path_constr, unsigned n_term_constr, double sample_time)
 	:	_ocp(ocp)
-	,	_QP(state_dim, input_dim, n_path_constr, n_term_constr, Nt),
-		_Solver(MultiStageQPSize(state_dim, input_dim, n_path_constr, n_term_constr, Nt)),
+	,	_QP(state_dim, input_dim, n_path_constr, n_term_constr, ocp.getNumberOfIntervals()),
+		_Solver(MultiStageQPSize(state_dim, input_dim, n_path_constr, n_term_constr, ocp.getNumberOfIntervals())),
 		_levenbergMarquardt(0.0),
 		_sampleTime(sample_time),
 		_Nu(input_dim),
 		_Nx(state_dim),
 		_Nz(input_dim + state_dim),
-		_Nt(Nt),
 		_Nd(n_path_constr),
 		_NdT(n_term_constr)
 	{
 		// Allocate arrays.
-		_zOpt.resize(_Nz * _Nt + _Nx);
-		_w.resize(_Nz * _Nt + _Nx);
+		_zOpt.resize(_Nz * ocp.getNumberOfIntervals() + _Nx);
+		_w.resize(_Nz * ocp.getNumberOfIntervals() + _Nx);
 	}
 
 	template<class _Problem>
@@ -165,37 +163,37 @@ namespace camels
 	{
 		using namespace Eigen;
 
-		for (unsigned i = 0; i < _Nt; ++i)
+		for (unsigned i = 0; i < _ocp.getNumberOfIntervals(); ++i)
 			UpdateStage(i);
 
 		MatrixXd D(_NdT, _Nx);
 		VectorXd d_min(_NdT);
 		VectorXd d_max(_NdT);
-		TerminalConstraints(w(_Nt), D, d_min, d_max);
-		_QP.D(_Nt) = D;
-		_QP.dMin(_Nt) = d_min;
-		_QP.dMax(_Nt) = d_max;
+		TerminalConstraints(w(_ocp.getNumberOfIntervals()), D, d_min, d_max);
+		_QP.D(getNumberOfIntervals()) = D;
+		_QP.dMin(getNumberOfIntervals()) = d_min;
+		_QP.dMax(getNumberOfIntervals()) = d_max;
 
-		_QP.zMin(_Nt) = getTerminalXMin() - w(_Nt);
-		_QP.zMax(_Nt) = getTerminalXMax() - w(_Nt);
+		_QP.zMin(getNumberOfIntervals()) = getTerminalXMin() - w(getNumberOfIntervals());
+		_QP.zMax(getNumberOfIntervals()) = getTerminalXMax() - w(getNumberOfIntervals());
 	}
 
 	template<class _Problem>
 	typename ModelPredictiveController<_Problem>::VectorMap ModelPredictiveController<_Problem>::w(unsigned i)
 	{
-		if(!(i < _Nt + 1))
+		if(!(i < _ocp.getNumberOfIntervals() + 1))
 			throw std::out_of_range("ModelPredictiveController<_Problem>::w(): index is out of range");
 
-		return VectorMap(_w.data() + i * _Nz, i < _Nt ? _Nz : _Nx);
+		return VectorMap(_w.data() + i * _Nz, i < _ocp.getNumberOfIntervals() ? _Nz : _Nx);
 	}
 
 	template<class _Problem>
 	typename ModelPredictiveController<_Problem>::VectorConstMap ModelPredictiveController<_Problem>::w(unsigned i) const
 	{
-		if (!(i < _Nt + 1))
+		if (!(i < _ocp.getNumberOfIntervals() + 1))
 			throw std::out_of_range("ModelPredictiveController<_Problem>::w(): index is out of range");
 
-		return VectorConstMap(_w.data() + i * _Nz, i < _Nt ? _Nz : _Nx);
+		return VectorConstMap(_w.data() + i * _Nz, i < _ocp.getNumberOfIntervals() ? _Nz : _Nx);
 	}
 
 	template<class _Problem>
@@ -213,10 +211,10 @@ namespace camels
 		VectorXd u0(_Nu);
 		u0.fill(0.);
 
-		for (unsigned i = 0; i < _Nt; ++i)
+		for (unsigned i = 0; i < _ocp.getNumberOfIntervals(); ++i)
 			w(i) << x0, u0;
 
-		w(_Nt) = x0;
+		w(_ocp.getNumberOfIntervals()) = x0;
 
 		// Initialize QP
 		UpdateQP();
@@ -232,7 +230,7 @@ namespace camels
 		StateInputVector g_i;
 
 		// Hessians and gradients of Lagrange terms.
-		for (unsigned i = 0; i < _Nt; ++i)
+		for (unsigned i = 0; i < _ocp.getNumberOfIntervals(); ++i)
 		{
 			_ocp.LagrangeTerm(i, w(i), g_i, H_i);
 
@@ -243,13 +241,13 @@ namespace camels
 		}
 
 		// Hessian and gradient of Mayer term.
-		MatrixXd H_T(nX(), nX());
-		VectorXd g_T(nX());
-		MayerTerm(w(_Nt), H_T, g_T);
+		typename Problem::MayerHessianMatrix H_T;
+		typename Problem::StateVector g_T;
+		_ocp.MayerTerm(w(_ocp.getNumberOfIntervals()), g_T, H_T);
 
 		// Adding Levenberg-Marquardt term to make H positive-definite.
-		_QP.H(_Nt) = H_T + _levenbergMarquardt * MatrixXd::Identity(_Nx, _Nx);
-		_QP.g(_Nt) = g_T;
+		_QP.H(getNumberOfIntervals()) = H_T + _levenbergMarquardt * MayerHessianMatrix::Identity();
+		_QP.g(getNumberOfIntervals()) = g_T;
 
 		// Call the QP callback, if there is one.
 		if(_QPCallback)
@@ -270,7 +268,7 @@ namespace camels
 		//qpDUNES_shiftIntervals(&_qpData);		/* shift intervals (particularly important when using qpOASES for underlying local QPs) */
 
 		// Shift working point
-		std::copy_n(_w.data() + _Nz, (_Nt - 1) * _Nz + _Nx, _w.data());
+		std::copy_n(_w.data() + _Nz, (_ocp.getNumberOfIntervals() - 1) * _Nz + _Nx, _w.data());
 
 		// Calculate new matrices.
 		UpdateQP();
@@ -279,7 +277,7 @@ namespace camels
 	template<class _Problem>
 	Eigen::VectorXd ModelPredictiveController<_Problem>::getWorkingU(unsigned i) const
 	{
-		if (!(i < _Nt))
+		if (!(i < _ocp.getNumberOfIntervals()))
 			throw std::out_of_range("ModelPredictiveController<_Problem>::getWorkingU(): index is out of range");
 
 		return w(i).bottomRows(nU());

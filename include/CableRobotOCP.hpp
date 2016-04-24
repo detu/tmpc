@@ -16,7 +16,7 @@ namespace mpmc
 	class CableRobotOCP : public camels::OptimalControlProblem<CableRobotOCP, 13, 8>
 	{
 	public:
-		CableRobotOCP();
+		CableRobotOCP(unsigned Nt);
 
 		void ODE(unsigned t, StateInputVector const& z, StateVector& xdot, ODEJacobianMatrix& jac);
 

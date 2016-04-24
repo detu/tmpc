@@ -12,9 +12,11 @@
 namespace mpmc
 {
 	CyberMotionOCP::CyberMotionOCP(unsigned Nt)
-	:	_ode(CASADI_GENERATED_FUNCTION_INTERFACE(cybermotion_ode))
+	:	camels::OptimalControlProblem<CyberMotionOCP, 2 * CyberMotion::numberOfAxes, CyberMotion::numberOfAxes>(Nt)
+	,	_ode(CASADI_GENERATED_FUNCTION_INTERFACE(cybermotion_ode))
 	,	_output(CASADI_GENERATED_FUNCTION_INTERFACE(cybermotion_output))
 	,	_yRef(Nt + 1)
+	,	_washoutFactor(0.)
 	{
 		// Initialize state and input limits.
 
@@ -44,6 +46,9 @@ namespace mpmc
 
 		// Initialize error weights
 		_errorWeight.fill(1.);
+
+		// Init washout state.
+		_washoutState = _x_default;
 	}
 
 	void CyberMotionOCP::ODE(unsigned t, StateInputVector const& z, StateVector& xdot, ODEJacobianMatrix& jac) const
@@ -120,6 +125,25 @@ namespace mpmc
 	void CyberMotionOCP::setReference(unsigned i, const OutputVector& y_ref)
 	{
 		_yRef.at(i) = y_ref;
+	}
+
+	void CyberMotionOCP::MayerTerm(const StateVector& x, StateVector& g, MayerHessianMatrix& H) const
+	{
+		// Quadratic term corresponding to washout (penalty for final state deviating from the default position).
+		H = _washoutFactor * MayerHessianMatrix::Identity() * getNumberOfIntervals();
+
+		// Linear term corresponding to washout (penalty for final state deviating from the default position).
+		g = _washoutFactor * (x - getWashoutState()) * getNumberOfIntervals();
+	}
+
+	CyberMotionOCP::StateVector const& CyberMotionOCP::getWashoutState() const
+	{
+		return _washoutState;
+	}
+
+	void CyberMotionOCP::setWashoutState(const StateVector& val)
+	{
+		_washoutState = val;
 	}
 
 	//unsigned const CyberMotionOCP::NY;

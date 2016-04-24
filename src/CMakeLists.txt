@@ -11,7 +11,7 @@
 # ******************************************************************************************************************
 #
 # See this link for more details: http://eigen.tuxfamily.org/dox-devel/group__TopicStructHavingEigenMembers.html
-add_definitions(-DEIGEN_DONT_ALIGN_STATICALLY)
+#add_definitions(-DEIGEN_DONT_ALIGN_STATICALLY)
 
 set(HDR 
 	${RTMC_INCLUDE_DIR}/MotionPlatform.hpp
