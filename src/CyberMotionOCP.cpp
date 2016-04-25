@@ -185,4 +185,15 @@ namespace mpmc
 	{
 		SRConstraints(x, D, d_min, d_max);
 	}
+
+	void CyberMotionOCP::Integrate(const StateInputVector& z, Scalar const t, StateVector& x_next, ODEJacobianMatrix& J) const
+	{
+		static auto const I = Eigen::Matrix<double, 8, 8>::Identity();
+		static auto const O = Eigen::Matrix<double, 8, 8>::Zero();
+
+		J << I, t * I, std::pow(t, 2) / 2. * I,
+			 O,     I,                   t * I;
+
+		x_next = J * z;
+	}
 } /* namespace mpmc */

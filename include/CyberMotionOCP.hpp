@@ -33,7 +33,8 @@ namespace mpmc
 
 		CyberMotionOCP(unsigned Nt);
 
-		void ODE(unsigned t, StateInputVector const& z, StateVector& xdot, ODEJacobianMatrix& jac) const;
+		// TODO: Consider moving integration responsibility to a separate class.
+		void Integrate(const StateInputVector& z, Scalar t, StateVector& x_next, ODEJacobianMatrix& J) const;
 		void LagrangeTerm(unsigned i, StateInputVector const& z, StateInputVector& g, LagrangeHessianMatrix& H) const;
 
 		StateVector const& getStateMin() const;
@@ -61,6 +62,7 @@ namespace mpmc
 			TerminalConstraintVector& d_min, TerminalConstraintVector& d_max) const;
 
 	private:
+		void ODE(unsigned t, StateInputVector const& z, StateVector& xdot, ODEJacobianMatrix& jac) const;
 		void Output(unsigned t, StateInputVector const& z, OutputVector& y, OutputJacobianMatrix& jac) const;
 		void SRConstraints(const StateVector& x, Eigen::Matrix<Scalar, NC, NX>& D,
 			ConstraintVector& d_min, ConstraintVector& d_max) const;

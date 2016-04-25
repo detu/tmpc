@@ -73,8 +73,6 @@ namespace camels
 		const Eigen::VectorXd getUMin() const { return _ocp.getInputMin(); }
 		const Eigen::VectorXd getUMax() const { return _ocp.getInputMax(); }
 
-		void Integrate(const StateInputVector& z, StateVector& x_next, ODEJacobianMatrix& J) const;
-
 	private:
 		// Initialized _G, _y, _C, _c, _zMin, _zMax based on current working point _w.
 		// Does not initialize g.
@@ -319,10 +317,10 @@ namespace camels
 
 		// C = [ssA, ssB];
 		// x_{k+1} = C * z_k + c_k
-		ODEJacobianMatrix ssAB;
-		StateVector x_plus;
-		Integrate(w(i), x_plus, ssAB);
-		_QP.C(i) = ssAB;
+		typename Problem::StateVector x_plus;
+		typename Problem::ODEJacobianMatrix J;
+		_ocp.Integrate(w(i), getSampleTime(), x_plus, J);
+		_QP.C(i) = J;
 
 		// \Delta x_{k+1} = C \Delta z_k + f(z_k) - x_{k+1}
 		// c = f(z_k) - x_{k+1}
@@ -340,18 +338,5 @@ namespace camels
 
 		// z_max stores _Nt vectors of size _Nz and 1 vector of size _Nx
 		_QP.zMax(i) = z_max - w(i);
-	}
-
-	template<class _Problem>
-	void ModelPredictiveController<_Problem>::Integrate(const StateInputVector& z, StateVector& x_next, ODEJacobianMatrix& J) const
-	{
-		// TODO: Implement proper integration
-		auto const I = Eigen::Matrix<double, 8, 8>::Identity();
-		auto const O = Eigen::Matrix<double, 8, 8>::Zero();
-
-		J << I, getSampleTime() * I, std::pow(getSampleTime(), 2) / 2. * I,
-			 O,                   I,                   getSampleTime() * I;
-
-		x_next = J * z;
 	}
 }

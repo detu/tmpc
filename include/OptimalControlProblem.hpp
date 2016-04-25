@@ -34,12 +34,12 @@ namespace camels
 
 		void ODE(unsigned t, StateInputVector const& z, StateVector& xdot, ODEJacobianMatrix& jac)
 		{
-			return derived()->ODE(t, z, xdot, jac);
+			derived()->ODE(t, z, xdot, jac);
 		}
 
 		void LagrangeTerm(unsigned t, StateInputVector const& z, StateInputVector& grad, LagrangeHessianMatrix& hess)
 		{
-			return derived()->LagrangeTerm(t, z, grad, hess);
+			derived()->LagrangeTerm(t, z, grad, hess);
 		}
 
 		unsigned getNumberOfIntervals() const { return _Nt; }
