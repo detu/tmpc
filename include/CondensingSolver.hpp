@@ -5,14 +5,24 @@
 
 #include <qpOASES.hpp>
 
+#include <ostream>
+
 namespace camels
 {
 	class CondensingSolver
 	{
 	public:
+		// Manages input data of qpOASES
+		typedef camels::MultiStageQP MultiStageQP;
+
+		// Manages output data of qpOASES
+		class Point;
+
 		typedef unsigned size_type;
 		typedef QuadraticProgram<double, Eigen::RowMajor> CondensedQP;
 		typedef Eigen::VectorXd Vector;
+		typedef Eigen::VectorXd StateVector;
+		typedef Eigen::VectorXd StateInputVector;
 
 		CondensingSolver(const MultiStageQPSize& size);
 		CondensingSolver(size_type nx, size_type nu, size_type nt);
@@ -29,12 +39,11 @@ namespace camels
 		size_type nVar() const;
 
 		void Condense(const MultiStageQP& msqp);
-		void Solve(const MultiStageQP& msqp);
-		const Vector& getPrimalSolution() const;
+		void Solve(const MultiStageQP& msqp, Point& solution);
 		const Vector& getPrimalCondensedSolution() const;
 
-		const CondensedQP& getCondensedQP() const { return _condensedQP; }
-		bool getHotStart() const { return _hotStart; }
+		const CondensedQP& getCondensedQP() const noexcept { return _condensedQP; }
+		bool getHotStart() const noexcept { return _hotStart; }
 
 	private:
 		const MultiStageQPSize _size;
@@ -43,7 +52,6 @@ namespace camels
 		size_type nC() const;
 
 		CondensedQP _condensedQP;
-		Vector _primalSolution;
 		Vector _primalCondensedSolution;
 
 		bool _hotStart = false;
@@ -60,4 +68,33 @@ namespace camels
 		const qpOASES::returnValue _code;
 		const CondensingSolver::CondensedQP _CondensedQP;
 	};
+
+	class CondensingSolver::Point
+	{
+	public:
+		typedef Eigen::Map<Eigen::VectorXd> VectorMap;
+		typedef Eigen::Map<const Eigen::VectorXd> VectorConstMap;
+
+		Point(size_type nx, size_type nu, size_type nt);
+
+		VectorMap w(unsigned i);
+		VectorConstMap w(unsigned i) const;
+
+		void shift();
+		Point& operator+=(Point const& rhs);
+
+		size_type const nX() const noexcept { return _nx; }
+		size_type const nU() const noexcept { return _nz - _nx; }
+		size_type const nT() const noexcept { return _nt; }
+
+	private:
+		size_type const _nx;
+		size_type const _nz;
+		size_type const _nt;
+
+		// _data stores _Nt vectors of size _Nz and 1 vector of size _Nx
+		std::vector<double> _data;
+	};
 }
+
+std::ostream& operator<<(std::ostream& os, camels::CondensingSolver::Point const& point);

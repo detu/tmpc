@@ -99,9 +99,10 @@ TEST(test_1, consending_test)
 	std::cout << "-- lb ---" << std::endl << solver.getCondensedQP().lb() << std::endl;
 	std::cout << "-- ub ---" << std::endl << solver.getCondensedQP().ub() << std::endl;
 
-	solver.Solve(qp);
+	camels::CondensingSolver::Point solution(solver.nX(), solver.nU(), solver.nT());
+	solver.Solve(qp, solution);
 	std::cout << "-- sol (condensed ) --" << std::endl << solver.getPrimalCondensedSolution() << std::endl;
-	std::cout << "-- sol (multistage) --" << std::endl << solver.getPrimalSolution() << std::endl;
+	std::cout << "-- sol (multistage) --" << std::endl << solution << std::endl;
 
 	//return 0;
  }

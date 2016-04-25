@@ -1,6 +1,5 @@
 #pragma once
 
-#include <MultiStageQP.hpp>
 #include <CondensingSolver.hpp>
 
 #include <Eigen/Dense>
@@ -9,14 +8,17 @@
 #include <memory>
 #include <ostream>
 #include <functional>
+#include <stdexcept>
 
 namespace camels
 {
-	template<class _Problem>
+	template<class _Problem, class QPSolver_ = CondensingSolver>
 	class ModelPredictiveController
 	{
 	public:
 		typedef _Problem Problem;
+		typedef QPSolver_ QPSolver;
+
 		typedef typename Problem::StateVector StateVector;
 		typedef typename Problem::InputVector InputVector;
 		typedef typename Problem::StateInputVector StateInputVector;
@@ -62,7 +64,7 @@ namespace camels
 
 		void setQPCallback(const QPCallback& cb);
 
-		VectorConstMap getWorkingPoint(unsigned i) const;
+		typename QPSolver::StateInputVector getWorkingPoint(unsigned i) const;
 
 	private:
 		// Initialized _G, _y, _C, _c, _zMin, _zMax based on current working point _w.
@@ -71,10 +73,7 @@ namespace camels
 
 		void UpdateStage(unsigned i);
 
-		VectorMap w(unsigned i);
-		VectorConstMap w(unsigned i) const;
-
-		// Private data membets.
+		// Private data members.
 		Problem const& _ocp;
 
 		const double _sampleTime;
@@ -85,63 +84,57 @@ namespace camels
 		static const unsigned _Nd = Problem::NC;
 		static const unsigned _NdT = Problem::NCT;
 		
-		MultiStageQP _QP;
-		CondensingSolver _Solver;
+		typename QPSolver::MultiStageQP _QP;
+		typename QPSolver::Point _solution;
+		QPSolver _Solver;
 
 		// A callback to call back before solving each QP.
 		QPCallback _QPCallback;
 
 		double _levenbergMarquardt;
 
-		// Primal optimal solution.
-		// _zOpt stores _Nt vectors of size _Nz and 1 vector of size _Nx
-		std::vector<double> _zOpt;
-
 		// Working point (linearization point).
-		// _w stores _Nt vectors of size _Nz and 1 vector of size _Nx
-		Eigen::VectorXd _w;
-
+		typename QPSolver::Point _workingPoint;
 	};
 
-	template<class _Problem>
-	ModelPredictiveController<_Problem>::ModelPredictiveController(Problem const& ocp, double sample_time)
+	template<class _Problem, class QPSolver_>
+	ModelPredictiveController<_Problem, QPSolver_>::ModelPredictiveController(Problem const& ocp, double sample_time)
 	:	_ocp(ocp)
-	,	_QP(_Nx, _Nu, _Nd, _NdT, ocp.getNumberOfIntervals()),
-		_Solver(MultiStageQPSize(_Nx, _Nu, _Nd, _NdT, ocp.getNumberOfIntervals())),
+	,	_QP(_Nx, _Nu, _Nd, _NdT, ocp.getNumberOfIntervals())
+	,	_workingPoint(_Nx, _Nu, ocp.getNumberOfIntervals())
+	,	_solution(_Nx, _Nu, ocp.getNumberOfIntervals())
+	,	_Solver(MultiStageQPSize(_Nx, _Nu, _Nd, _NdT, ocp.getNumberOfIntervals())),
 		_levenbergMarquardt(0.0),
 		_sampleTime(sample_time)
 	{
-		// Allocate arrays.
-		_zOpt.resize(_Nz * ocp.getNumberOfIntervals() + _Nx);
-		_w.resize(_Nz * ocp.getNumberOfIntervals() + _Nx);
 	}
 
-	template<class _Problem>
-	ModelPredictiveController<_Problem>::~ModelPredictiveController()
+	template<class _Problem, class QPSolver_>
+	ModelPredictiveController<_Problem, QPSolver_>::~ModelPredictiveController()
 	{
 	}
 
-	template<class _Problem>
-	void ModelPredictiveController<_Problem>::PrintQP_C(std::ostream& log_stream) const
+	template<class _Problem, class QPSolver_>
+	void ModelPredictiveController<_Problem, QPSolver_>::PrintQP_C(std::ostream& log_stream) const
 	{
 		_QP.PrintQP_C(log_stream);
 	}
 
-	template<class _Problem>
-	void ModelPredictiveController<_Problem>::PrintQP_MATLAB(std::ostream& log_stream) const
+	template<class _Problem, class QPSolver_>
+	void ModelPredictiveController<_Problem, QPSolver_>::PrintQP_MATLAB(std::ostream& log_stream) const
 	{
 		_QP.PrintQP_MATLAB(log_stream);
 	}
 
-	template<class _Problem>
-	void ModelPredictiveController<_Problem>::PrintWorkingPoint_MATLAB(std::ostream& os, const std::string& var_name) const
+	template<class _Problem, class QPSolver_>
+	void ModelPredictiveController<_Problem, QPSolver_>::PrintWorkingPoint_MATLAB(std::ostream& os, const std::string& var_name) const
 	{
 		for (unsigned i = 0; i <= getNumberOfIntervals(); ++i)
 			os << var_name << "{" << i + 1 << "} = [" << getWorkingPoint(i) << "];" << std::endl;
 	}
 
-	template<class _Problem>
-	void ModelPredictiveController<_Problem>::UpdateQP()
+	template<class _Problem, class QPSolver_>
+	void ModelPredictiveController<_Problem, QPSolver_>::UpdateQP()
 	{
 		using namespace Eigen;
 
@@ -150,41 +143,23 @@ namespace camels
 
 		typename Problem::TerminalConstraintJacobianMatrix D;
 		typename Problem::TerminalConstraintVector d_min, d_max;
-		_ocp.TerminalConstraints(w(_ocp.getNumberOfIntervals()), D, d_min, d_max);
+		_ocp.TerminalConstraints(_workingPoint.w(_ocp.getNumberOfIntervals()), D, d_min, d_max);
 		_QP.D(getNumberOfIntervals()) = D;
 		_QP.dMin(getNumberOfIntervals()) = d_min;
 		_QP.dMax(getNumberOfIntervals()) = d_max;
 
-		_QP.zMin(getNumberOfIntervals()) = _ocp.getTerminalStateMin() - w(getNumberOfIntervals());
-		_QP.zMax(getNumberOfIntervals()) = _ocp.getTerminalStateMax() - w(getNumberOfIntervals());
+		_QP.zMin(getNumberOfIntervals()) = _ocp.getTerminalStateMin() - _workingPoint.w(getNumberOfIntervals());
+		_QP.zMax(getNumberOfIntervals()) = _ocp.getTerminalStateMax() - _workingPoint.w(getNumberOfIntervals());
 	}
 
-	template<class _Problem>
-	typename ModelPredictiveController<_Problem>::VectorMap ModelPredictiveController<_Problem>::w(unsigned i)
+	template<class _Problem, class QPSolver_>
+	typename ModelPredictiveController<_Problem, QPSolver_>::QPSolver::StateInputVector ModelPredictiveController<_Problem, QPSolver_>::getWorkingPoint(unsigned i) const
 	{
-		if(!(i < _ocp.getNumberOfIntervals() + 1))
-			throw std::out_of_range("ModelPredictiveController<_Problem>::w(): index is out of range");
-
-		return VectorMap(_w.data() + i * _Nz, i < _ocp.getNumberOfIntervals() ? _Nz : _Nx);
+		return _workingPoint.w(i);
 	}
 
-	template<class _Problem>
-	typename ModelPredictiveController<_Problem>::VectorConstMap ModelPredictiveController<_Problem>::w(unsigned i) const
-	{
-		if (!(i < _ocp.getNumberOfIntervals() + 1))
-			throw std::out_of_range("ModelPredictiveController<_Problem>::w(): index is out of range");
-
-		return VectorConstMap(_w.data() + i * _Nz, i < _ocp.getNumberOfIntervals() ? _Nz : _Nx);
-	}
-
-	template<class _Problem>
-	typename ModelPredictiveController<_Problem>::VectorConstMap ModelPredictiveController<_Problem>::getWorkingPoint(unsigned i) const
-	{
-		return w(i);
-	}
-
-	template<class _Problem>
-	void ModelPredictiveController<_Problem>::InitWorkingPoint( const Eigen::VectorXd& x0 )
+	template<class _Problem, class QPSolver_>
+	void ModelPredictiveController<_Problem, QPSolver_>::InitWorkingPoint( const Eigen::VectorXd& x0 )
 	{
 		using namespace Eigen;
 
@@ -192,16 +167,16 @@ namespace camels
 		InputVector const u0 = InputVector::Zero();
 
 		for (unsigned i = 0; i < _ocp.getNumberOfIntervals(); ++i)
-			w(i) << x0, u0;
+			_workingPoint.w(i) << x0, u0;
 
-		w(_ocp.getNumberOfIntervals()) = x0;
+		_workingPoint.w(_ocp.getNumberOfIntervals()) = x0;
 
 		// Initialize QP
 		UpdateQP();
 	}
 
-	template<class _Problem>
-	void ModelPredictiveController<_Problem>::Solve()
+	template<class _Problem, class QPSolver_>
+	void ModelPredictiveController<_Problem, QPSolver_>::Solve()
 	{
 		using Eigen::MatrixXd;
 		using Eigen::VectorXd;
@@ -212,10 +187,9 @@ namespace camels
 		// Hessians and gradients of Lagrange terms.
 		for (unsigned i = 0; i < _ocp.getNumberOfIntervals(); ++i)
 		{
-			_ocp.LagrangeTerm(i, w(i), g_i, H_i);
+			_ocp.LagrangeTerm(i, _workingPoint.w(i), g_i, H_i);
 
 			// Adding Levenberg-Marquardt term to make H positive-definite.
-			// TODO: Move it to the OCP class.
 			_QP.H(i) = H_i + _levenbergMarquardt * MatrixXd::Identity(_Nz, _Nz);
 			_QP.g(i) = g_i;
 		}
@@ -223,7 +197,7 @@ namespace camels
 		// Hessian and gradient of Mayer term.
 		typename Problem::MayerHessianMatrix H_T;
 		typename Problem::StateVector g_T;
-		_ocp.MayerTerm(w(_ocp.getNumberOfIntervals()), g_T, H_T);
+		_ocp.MayerTerm(_workingPoint.w(_ocp.getNumberOfIntervals()), g_T, H_T);
 
 		// Adding Levenberg-Marquardt term to make H positive-definite.
 		_QP.H(getNumberOfIntervals()) = H_T + _levenbergMarquardt * MayerHessianMatrix::Identity();
@@ -234,73 +208,73 @@ namespace camels
 			_QPCallback(_QP);
 
 		/** solve QP */
-		_Solver.Solve(_QP);
+		_Solver.Solve(_QP, _solution);
 
 		// Add QP step to the working point.
-		_w += _Solver.getPrimalSolution();
+		_workingPoint += _solution;
 	}
 
-	template<class _Problem>
-	void ModelPredictiveController<_Problem>::PrepareForNext()
+	template<class _Problem, class QPSolver_>
+	void ModelPredictiveController<_Problem, QPSolver_>::PrepareForNext()
 	{
 		/** prepare QP for next solution */
 		//qpDUNES_shiftLambda(&_qpData);			/* shift multipliers */
 		//qpDUNES_shiftIntervals(&_qpData);		/* shift intervals (particularly important when using qpOASES for underlying local QPs) */
 
 		// Shift working point
-		std::copy_n(_w.data() + _Nz, (_ocp.getNumberOfIntervals() - 1) * _Nz + _Nx, _w.data());
+		_workingPoint.shift();
 
 		// Calculate new matrices.
 		UpdateQP();
 	}
 
-	template<class _Problem>
-	Eigen::VectorXd ModelPredictiveController<_Problem>::getWorkingU(unsigned i) const
+	template<class _Problem, class QPSolver_>
+	Eigen::VectorXd ModelPredictiveController<_Problem, QPSolver_>::getWorkingU(unsigned i) const
 	{
 		if (!(i < _ocp.getNumberOfIntervals()))
-			throw std::out_of_range("ModelPredictiveController<_Problem>::getWorkingU(): index is out of range");
+			throw std::out_of_range("ModelPredictiveController<_Problem, QPSolver_>::getWorkingU(): index is out of range");
 
-		return w(i).bottomRows(nU());
+		return _workingPoint.w(i).bottomRows(nU());
 	}
 
-	template<class _Problem>
-	void ModelPredictiveController<_Problem>::EmbedInitialValue(const Eigen::VectorXd& x0)
+	template<class _Problem, class QPSolver_>
+	void ModelPredictiveController<_Problem, QPSolver_>::EmbedInitialValue(const Eigen::VectorXd& x0)
 	{
 		// Compute linearization at new initial point.
-		w(0).topRows(_Nx) = x0;
+		_workingPoint.w(0).topRows(_Nx) = x0;
 		UpdateStage(0);
 
 		/** embed current initial value */
-		_QP.xMin(0) = x0 - w(0).topRows(_Nx);
-		_QP.xMax(0) = x0 - w(0).topRows(_Nx);
+		_QP.xMin(0) = x0 - _workingPoint.w(0).topRows(_Nx);
+		_QP.xMax(0) = x0 - _workingPoint.w(0).topRows(_Nx);
 	}
 
-	template<class _Problem>
-	double ModelPredictiveController<_Problem>::getSampleTime() const
+	template<class _Problem, class QPSolver_>
+	double ModelPredictiveController<_Problem, QPSolver_>::getSampleTime() const
 	{
 		return _sampleTime;
 	}
 
-	template<class _Problem>
-	unsigned ModelPredictiveController<_Problem>::nU() const
+	template<class _Problem, class QPSolver_>
+	unsigned ModelPredictiveController<_Problem, QPSolver_>::nU() const
 	{
 		return _Nu;
 	}
 
-	template<class _Problem>
-	unsigned ModelPredictiveController<_Problem>::nX() const
+	template<class _Problem, class QPSolver_>
+	unsigned ModelPredictiveController<_Problem, QPSolver_>::nX() const
 	{
 		return _Nx;
 	}
 
-	template<class _Problem>
-	void ModelPredictiveController<_Problem>::setQPCallback(const QPCallback& cb)
+	template<class _Problem, class QPSolver_>
+	void ModelPredictiveController<_Problem, QPSolver_>::setQPCallback(const QPCallback& cb)
 	{
 		_QPCallback = cb;
 	}
 
-	template<class _Problem>
-	void ModelPredictiveController<_Problem>::UpdateStage(unsigned i)
+	template<class _Problem, class QPSolver_>
+	void ModelPredictiveController<_Problem, QPSolver_>::UpdateStage(unsigned i)
 	{
 		StateInputVector z_min, z_max;
 		z_min << _ocp.getStateMin(), _ocp.getInputMin();
@@ -310,24 +284,24 @@ namespace camels
 		// x_{k+1} = C * z_k + c_k
 		typename Problem::StateVector x_plus;
 		typename Problem::ODEJacobianMatrix J;
-		_ocp.Integrate(w(i), getSampleTime(), x_plus, J);
+		_ocp.Integrate(_workingPoint.w(i), getSampleTime(), x_plus, J);
 		_QP.C(i) = J;
 
 		// \Delta x_{k+1} = C \Delta z_k + f(z_k) - x_{k+1}
 		// c = f(z_k) - x_{k+1}
-		_QP.c(i) = x_plus - w(i + 1).topRows(_Nx);
+		_QP.c(i) = x_plus - _workingPoint.w(i + 1).topRows(_Nx);
 
 		typename Problem::ConstraintJacobianMatrix D;
 		typename Problem::ConstraintVector d_min, d_max;
-		_ocp.PathConstraints(i, w(i), D, d_min, d_max);
+		_ocp.PathConstraints(i, _workingPoint.w(i), D, d_min, d_max);
 		_QP.D(i) = D;
 		_QP.dMin(i) = d_min;
 		_QP.dMax(i) = d_max;
 
 		// z_min stores _Nt vectors of size _Nz and 1 vector of size _Nx
-		_QP.zMin(i) = z_min - w(i);
+		_QP.zMin(i) = z_min - _workingPoint.w(i);
 
 		// z_max stores _Nt vectors of size _Nz and 1 vector of size _Nx
-		_QP.zMax(i) = z_max - w(i);
+		_QP.zMax(i) = z_max - _workingPoint.w(i);
 	}
 }
