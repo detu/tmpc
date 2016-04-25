@@ -71,6 +71,16 @@ namespace mpmc
 		return _x_max;
 	}
 
+	CyberMotionOCP::StateVector const& CyberMotionOCP::getTerminalStateMin() const
+	{
+		return _x_min;
+	}
+
+	CyberMotionOCP::StateVector const& CyberMotionOCP::getTerminalStateMax() const
+	{
+		return _x_max;
+	}
+
 	CyberMotionOCP::InputVector const& CyberMotionOCP::getInputMin() const
 	{
 		return _u_min;

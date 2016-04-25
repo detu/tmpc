@@ -64,15 +64,6 @@ namespace camels
 
 		VectorConstMap getWorkingPoint(unsigned i) const;
 
-	protected:
-		// TODO: get rid of these functions, call directly from _ocp.
-		const Eigen::VectorXd getXMin() const { return _ocp.getStateMin(); }
-		const Eigen::VectorXd getXMax() const { return _ocp.getStateMax(); }
-		const Eigen::VectorXd getTerminalXMin() const { return _ocp.getStateMin(); }
-		const Eigen::VectorXd getTerminalXMax() const { return _ocp.getStateMax(); }
-		const Eigen::VectorXd getUMin() const { return _ocp.getInputMin(); }
-		const Eigen::VectorXd getUMax() const { return _ocp.getInputMax(); }
-
 	private:
 		// Initialized _G, _y, _C, _c, _zMin, _zMax based on current working point _w.
 		// Does not initialize g.
@@ -164,8 +155,8 @@ namespace camels
 		_QP.dMin(getNumberOfIntervals()) = d_min;
 		_QP.dMax(getNumberOfIntervals()) = d_max;
 
-		_QP.zMin(getNumberOfIntervals()) = getTerminalXMin() - w(getNumberOfIntervals());
-		_QP.zMax(getNumberOfIntervals()) = getTerminalXMax() - w(getNumberOfIntervals());
+		_QP.zMin(getNumberOfIntervals()) = _ocp.getTerminalStateMin() - w(getNumberOfIntervals());
+		_QP.zMax(getNumberOfIntervals()) = _ocp.getTerminalStateMax() - w(getNumberOfIntervals());
 	}
 
 	template<class _Problem>

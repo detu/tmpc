@@ -39,6 +39,8 @@ namespace mpmc
 
 		StateVector const& getStateMin() const;
 		StateVector const& getStateMax() const;
+		StateVector const& getTerminalStateMin() const;
+		StateVector const& getTerminalStateMax() const;
 		InputVector const& getInputMin() const;
 		InputVector const& getInputMax() const;
 		StateVector const& getDefaultState() const;
