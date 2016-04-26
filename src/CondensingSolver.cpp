@@ -4,7 +4,7 @@
 
 namespace camels
 {
-	void CondensingSolver::Solve(const MultiStageQP& msqp, Point& solution)
+	void CondensingSolver::Solve(MultiStageQP const& msqp, Point& solution)
 	{
 		// Check argument sizes.
 		if (!(msqp.nX() == nX() && msqp.nU() == nU() && msqp.nT() == nT()))

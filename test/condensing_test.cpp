@@ -1,12 +1,11 @@
 #include <CondensingSolver.hpp>
+#include <Condensing.hpp>
 
 #include <gtest/gtest.h>
-//#define EXPECT_TRUE(X) assert(X)
 
 #include <iostream>
 
 TEST(test_1, consending_test)
-//int main(int, char **)
 {
 	camels::MultiStageQP qp(2, 1, 0, 0, 2);
 	qp.zMin(0).setConstant(-1);	qp.zMax(0).setConstant(1);
@@ -81,7 +80,10 @@ TEST(test_1, consending_test)
 		S1.transpose() * A0 + B1.transpose() * Q2 * A1 * A0,										S1.transpose() * B0 + B1.transpose() * Q2 * A1 * B0,							B1.transpose() * Q2 * B1 + R1;
 
 	EXPECT_TRUE(Hc_expected == Hc);
-	//std::cout << Hc_expected << std::endl;
+	std::cout << "************** Hc **************" << std::endl;
+	std::cout << Hc << std::endl;
+	std::cout << "********* Hc_expected **********" << std::endl;
+	std::cout << Hc_expected << std::endl;
 	//qp.PrintQP_C(std::cout);
 
 	const auto gc = condensed.g();
@@ -104,6 +106,4 @@ TEST(test_1, consending_test)
 	solver.Solve(qp, solution);
 	std::cout << "-- sol (condensed ) --" << std::endl << solver.getPrimalCondensedSolution() << std::endl;
 	std::cout << "-- sol (multistage) --" << std::endl << solution << std::endl;
-
-	//return 0;
  }

@@ -1,7 +1,7 @@
 #pragma once
 
 #include <MultiStageQP.hpp>
-#include <Condensing.hpp>
+#include <QuadraticProgram.hpp>
 
 #include <qpOASES.hpp>
 
@@ -9,6 +9,8 @@
 
 namespace camels
 {
+	typedef QuadraticProgram<double, Eigen::RowMajor> CondensedQP;
+
 	class CondensingSolver
 	{
 	public:

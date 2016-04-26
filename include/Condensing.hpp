@@ -1,14 +1,11 @@
 #pragma once
 
-#include <MultiStageQP.hpp>
-#include <QuadraticProgram.hpp>
+#include <Eigen/Dense>
 
 namespace camels
 {
-	typedef QuadraticProgram<double, Eigen::RowMajor> CondensedQP;
-
-	//template<typename MultiStageQP_, typename CondensedQP_>
-	inline void Condense(MultiStageQP const& msqp, CondensedQP& condensed_qp)
+	template<typename MultiStageQP_, typename CondensedQP_>
+	void Condense(MultiStageQP_ const& msqp, CondensedQP_& condensed_qp)
 	{
 		using namespace Eigen;
 
@@ -56,15 +53,15 @@ namespace camels
 			const auto H_k = msqp.H(k);
 			const auto g_k = msqp.g(k);
 
-			const auto Q = H_k.topLeftCorner(nX, nX).selfadjointView<Eigen::Upper>();
+			const auto Q = H_k.topLeftCorner(nX, nX).template selfadjointView<Upper>();
 			const auto S = H_k.topRightCorner(nX, nU);
 			const auto R = H_k.bottomRightCorner(nU, nU);
 
 			const auto nn = M_k.cols();
 			auto Hc_k = Hc.topLeftCorner(nn + nU, nn + nU);
-			Hc_k.topLeftCorner(nn, nn).triangularView<Eigen::Upper>() += M_k.transpose() * Q * M_k;
+			Hc_k.topLeftCorner(nn, nn).template triangularView<Upper>() += M_k.transpose() * Q * M_k;
 			Hc_k.topRightCorner(nn, nU) += M_k.transpose() * S;
-			Hc_k.bottomRightCorner(nU, nU).triangularView<Eigen::Upper>() += R;
+			Hc_k.bottomRightCorner(nU, nU).template triangularView<Upper>() += R;
 
 			auto gc_k = gc.topRows(nn + nU);
 			gc_k.topRows(nn) += M_k.transpose() * (g_k.topRows(nX) + Q * v);
@@ -109,9 +106,9 @@ namespace camels
 		condensed_qp.ubA().bottomRows(nDT) = msqp.dMax(nT) - d_ofs;
 
 		// Cost of final state.
-		Hc.triangularView<Eigen::Upper>() += M.transpose() * msqp.H(nT).selfadjointView<Eigen::Upper>() * M;
+		Hc.template triangularView<Upper>() += M.transpose() * msqp.H(nT).template selfadjointView<Upper>() * M;
 		gc += M.transpose() * (msqp.g(nT) + msqp.H(nT) * v);
 
-		Hc = Hc.selfadjointView<Eigen::Upper>();
+		Hc = Hc.template selfadjointView<Upper>();
 	}
 }
