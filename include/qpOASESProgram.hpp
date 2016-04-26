@@ -6,17 +6,21 @@
 
 namespace camels
 {
-	template<class Scalar = double, int Options = Eigen::ColMajor>
-	class QuadraticProgram
+	// Manages input data for qpOASES solver.
+	// Implements concept: QuadraticProgram.
+	class qpOASESProgram
 	{
+		// Matrix storage option for Eigen -- important!
+		// Must be ColMajor, because qpOASES expects input matrices in column-major format.
+		static const int Options = Eigen::ColMajor;
+
 	public:
 		typedef unsigned int size_type;
+		typedef double Scalar;
 		typedef Eigen::Matrix<Scalar, Eigen::Dynamic, Eigen::Dynamic, Options> Matrix;
-		typedef Eigen::SelfAdjointView<Matrix, Eigen::Upper> SelfAdjointView;
-		typedef Eigen::SelfAdjointView<const Matrix, Eigen::Upper> ConstSelfAdjointView;
 		typedef Eigen::Matrix<Scalar, Eigen::Dynamic, 1> Vector;
 		
-		QuadraticProgram(size_type nx, size_type nc)
+		qpOASESProgram(size_type nx, size_type nc)
 			: _H(nx, nx), _g(nx), _A(nc, nx), _lbA(nc), _ubA(nc), _lb(nx), _ub(nx)
 		{
 		}

@@ -1,7 +1,7 @@
 #pragma once
 
-#include <MultiStageQP.hpp>
-#include <QuadraticProgram.hpp>
+#include "MultiStageQP.hpp"
+#include "qpOASESProgram.hpp"
 
 #include <qpOASES.hpp>
 
@@ -9,11 +9,11 @@
 
 namespace camels
 {
-	typedef QuadraticProgram<double, Eigen::RowMajor> CondensedQP;
-
 	class CondensingSolver
 	{
 	public:
+		typedef qpOASESProgram CondensedQP;
+
 		// Manages input data of qpOASES
 		typedef camels::MultiStageQP MultiStageQP;
 
@@ -28,7 +28,7 @@ namespace camels
 		CondensingSolver(const MultiStageQPSize& size) :
 			_condensedQP(size.nIndep(), size.nDep() + size.nConstr()),
 			_size(size),
-			_primalCondensedSolution(size.nIndep()),
+			_condensedSolution(size.nIndep()),
 			_problem(size.nIndep(), size.nDep() + size.nConstr())
 		{
 			qpOASES::Options options;
@@ -53,7 +53,7 @@ namespace camels
 		size_type nVar() const { return _size.nVar(); }
 
 		void Solve(const MultiStageQP& msqp, Point& solution);
-		const Vector& getPrimalCondensedSolution() const { return _primalCondensedSolution;	}
+		const Vector& getCondensedSolution() const { return _condensedSolution;	}
 
 		const CondensedQP& getCondensedQP() const noexcept { return _condensedQP; }
 		bool getHotStart() const noexcept { return _hotStart; }
@@ -64,8 +64,11 @@ namespace camels
 		// Number of constraints per stage = nX() + nD().
 		size_type nC() const { return nX() + nD(); }
 
+		// Input data for qpOASES
 		CondensedQP _condensedQP;
-		Vector _primalCondensedSolution;
+
+		// Output data from qpOASES
+		Vector _condensedSolution;
 
 		bool _hotStart = false;
 		qpOASES::SQProblem _problem;
@@ -73,13 +76,13 @@ namespace camels
 
 	struct CondensingSolverSolveException : public std::runtime_error
 	{
-		CondensingSolverSolveException(qpOASES::returnValue code, const CondensedQP& cqp);
-		const qpOASES::returnValue getCode() const;
-		const CondensedQP& getCondensedQP() const;
+		CondensingSolverSolveException(qpOASES::returnValue code, qpOASESProgram const& cqp);
+		qpOASES::returnValue getCode() const;
+		qpOASESProgram const& getCondensedQP() const;
 
 	private:
-		const qpOASES::returnValue _code;
-		const CondensedQP _CondensedQP;
+		qpOASES::returnValue const _code;
+		qpOASESProgram const _CondensedQP;
 	};
 
 	class CondensingSolver::Point

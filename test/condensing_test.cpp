@@ -1,5 +1,6 @@
 #include <CondensingSolver.hpp>
 #include <Condensing.hpp>
+#include <qpOASESProgram.hpp>
 
 #include <gtest/gtest.h>
 
@@ -68,7 +69,7 @@ TEST(test_1, consending_test)
 	qp.c(1) << a1;
 
 	// Condense
-	camels::CondensedQP condensed(qp.nIndep(), qp.nDep() + qp.nConstr());
+	camels::qpOASESProgram condensed(qp.nIndep(), qp.nDep() + qp.nConstr());
 	camels::Condense(qp, condensed);
 
 	const auto Hc = condensed.H();
@@ -104,6 +105,6 @@ TEST(test_1, consending_test)
 	camels::CondensingSolver solver(qp.nX(), qp.nU(), qp.nT());
 	camels::CondensingSolver::Point solution(solver.nX(), solver.nU(), solver.nT());
 	solver.Solve(qp, solution);
-	std::cout << "-- sol (condensed ) --" << std::endl << solver.getPrimalCondensedSolution() << std::endl;
+	std::cout << "-- sol (condensed ) --" << std::endl << solver.getCondensedSolution() << std::endl;
 	std::cout << "-- sol (multistage) --" << std::endl << solution << std::endl;
  }

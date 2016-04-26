@@ -30,11 +30,11 @@ namespace camels
 		_hotStart = true;
 
 		/* Get solution of the condensed QP. */
-		_problem.getPrimalSolution(_primalCondensedSolution.data());
+		_problem.getPrimalSolution(_condensedSolution.data());
 		//problem.getDualSolution(yOpt);
 
 		// Calculate the solution of the multi-stage QP.
-		solution.w(0).topRows(nX()) = _primalCondensedSolution.topRows(nX());
+		solution.w(0).topRows(nX()) = _condensedSolution.topRows(nX());
 		for (size_type i = 0; i < nT(); ++i)
 		{
 			auto z_i = solution.w(i);
@@ -42,25 +42,25 @@ namespace camels
 			auto u_i = z_i.bottomRows(nU());
 			auto x_i_plus = solution.w(i + 1).topRows(nX());
 
-			u_i = _primalCondensedSolution.middleRows(nX() + i * nU(), nU());
+			u_i = _condensedSolution.middleRows(nX() + i * nU(), nU());
 			x_i_plus = msqp.C(i) * z_i + msqp.c(i);
 		}
 	}
 
 
-	CondensingSolverSolveException::CondensingSolverSolveException(qpOASES::returnValue code, const CondensedQP& cqp) :
+	CondensingSolverSolveException::CondensingSolverSolveException(qpOASES::returnValue code, qpOASESProgram const& cqp) :
 		std::runtime_error("CondensingSolver::Solve() failed. qpOASES return code " + std::to_string(code)),
 		_code(code), _CondensedQP(cqp)
 	{
 
 	}
 
-	const qpOASES::returnValue CondensingSolverSolveException::getCode() const
+	qpOASES::returnValue CondensingSolverSolveException::getCode() const
 	{
 		return _code;
 	}
 
-	const CondensedQP& CondensingSolverSolveException::getCondensedQP() const
+	qpOASESProgram const& CondensingSolverSolveException::getCondensedQP() const
 	{
 		return _CondensedQP;
 	}
