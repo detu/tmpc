@@ -6,17 +6,21 @@
 
 namespace camels
 {
-	template<class Scalar = double, int Options = Eigen::ColMajor>
-	class QuadraticProgram
+	// Manages input data for qpOASES solver.
+	// Implements concept: QuadraticProgram.
+	class qpOASESProgram
 	{
+		// Matrix storage option for Eigen -- important!
+		// Must be RowMajor, because qpOASES expects input matrices in column-major format.
+		static const int Options = Eigen::RowMajor;
+
 	public:
 		typedef unsigned int size_type;
+		typedef double Scalar;
 		typedef Eigen::Matrix<Scalar, Eigen::Dynamic, Eigen::Dynamic, Options> Matrix;
-		typedef Eigen::SelfAdjointView<Matrix, Eigen::Upper> SelfAdjointView;
-		typedef Eigen::SelfAdjointView<const Matrix, Eigen::Upper> ConstSelfAdjointView;
 		typedef Eigen::Matrix<Scalar, Eigen::Dynamic, 1> Vector;
 		
-		QuadraticProgram(size_type nx, size_type nc)
+		qpOASESProgram(size_type nx, size_type nc)
 			: _H(nx, nx), _g(nx), _A(nc, nx), _lbA(nc), _ubA(nc), _lb(nx), _ub(nx)
 		{
 		}
@@ -45,19 +49,6 @@ namespace camels
 		Vector& ub() { return _ub; }
 		const Vector& ub() const { return _ub; }
 
-		void Print_MATLAB(const std::string& var_name, std::ostream& log_stream) const
-		{
-			using std::endl;
-
-			log_stream << var_name << ".H = [..." << endl << H() << "];" << endl;
-			log_stream << var_name << ".g = [..." << endl << g() << "];" << endl;
-			log_stream << var_name << ".A = [..." << endl << A() << "];" << endl;
-			log_stream << var_name << ".lbA = [..." << endl << lbA() << "];" << endl;
-			log_stream << var_name << ".ubA = [..." << endl << ubA() << "];" << endl;
-			log_stream << var_name << ".lb = [..." << endl << lb() << "];" << endl;
-			log_stream << var_name << ".ub = [..." << endl << ub() << "];" << endl;
-		}
-
 	private:
 		Matrix _H;
 		Vector _g;
@@ -69,4 +60,6 @@ namespace camels
 		Vector _lbA;
 		Vector _ubA;
 	};
+
+	void Print_MATLAB(std::ostream& log_stream, qpOASESProgram const& qp, std::string const& var_name);
 }
