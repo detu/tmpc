@@ -28,6 +28,9 @@ namespace camels
 		size_type nx() const { return static_cast<size_type>(_H.rows()); }
 		size_type nc() const { return static_cast<size_type>(_A.rows()); }
 
+		//
+		// Matrix and vector access functions.
+		//
 		Matrix& H() { return _H; }
 		const Matrix& H() const { return _H; }
 		
@@ -48,6 +51,17 @@ namespace camels
 
 		Vector& ub() { return _ub; }
 		const Vector& ub() const { return _ub; }
+
+		//
+		// Raw data access functions for qpOASES.
+		//
+		double const * H_data() const noexcept { return _H.data(); }
+		double const * g_data() const noexcept { return _g.data(); }
+		double const * A_data() const noexcept { return _A.data(); }
+		double const * lbA_data() const noexcept { return _lbA.data(); }
+		double const * ubA_data() const noexcept { return _ubA.data(); }
+		double const * lb_data() const noexcept { return _lb.data(); }
+		double const * ub_data() const noexcept { return _ub.data(); }
 
 	private:
 		Matrix _H;

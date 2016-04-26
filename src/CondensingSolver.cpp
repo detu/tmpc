@@ -19,10 +19,10 @@ namespace camels
 		/* Solve the condensed QP. */
 		int nWSR = 1000;
 		const auto res = _hotStart ?
-			_problem.hotstart(_condensedQP.H().data(), _condensedQP.g().data(), _condensedQP.A().data(),
-			_condensedQP.lb().data(), _condensedQP.ub().data(), _condensedQP.lbA().data(), _condensedQP.ubA().data(), nWSR) :
-			_problem.init    (_condensedQP.H().data(), _condensedQP.g().data(), _condensedQP.A().data(),
-			_condensedQP.lb().data(), _condensedQP.ub().data(), _condensedQP.lbA().data(), _condensedQP.ubA().data(), nWSR);
+			_problem.hotstart(_condensedQP.H_data(), _condensedQP.g_data(), _condensedQP.A_data(),
+					_condensedQP.lb_data(), _condensedQP.ub_data(), _condensedQP.lbA_data(), _condensedQP.ubA_data(), nWSR) :
+			_problem.init    (_condensedQP.H_data(), _condensedQP.g_data(), _condensedQP.A_data(),
+					_condensedQP.lb_data(), _condensedQP.ub_data(), _condensedQP.lbA_data(), _condensedQP.ubA_data(), nWSR);
 
 		if (res != qpOASES::SUCCESSFUL_RETURN)
 			throw CondensingSolverSolveException(res, _condensedQP);
