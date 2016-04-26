@@ -1,11 +1,12 @@
 #include <CondensingSolver.hpp>
 #include <Condensing.hpp>
+//#include <qpOASESProgram.hpp>
 
 #include <gtest/gtest.h>
 
 #include <iostream>
 
-TEST(test_1, consending_test)
+TEST(test_1, condensing_test)
 {
 	camels::MultiStageQP qp(2, 1, 0, 0, 2);
 	qp.zMin(0).setConstant(-1);	qp.zMax(0).setConstant(1);
@@ -80,8 +81,8 @@ TEST(test_1, consending_test)
 		S1.transpose() * A0 + B1.transpose() * Q2 * A1 * A0,										S1.transpose() * B0 + B1.transpose() * Q2 * A1 * B0,							B1.transpose() * Q2 * B1 + R1;
 
 	EXPECT_TRUE(Hc_expected == Hc);
-	std::cout << "************** Hc **************" << std::endl;
-	std::cout << Hc << std::endl;
+	std::clog << "****** Condensed problem *******" << std::endl;
+	condensed.Print_MATLAB("qp", std::clog);
 	std::cout << "********* Hc_expected **********" << std::endl;
 	std::cout << Hc_expected << std::endl;
 	//qp.PrintQP_C(std::cout);
@@ -103,7 +104,18 @@ TEST(test_1, consending_test)
 
 	camels::CondensingSolver solver(qp.nX(), qp.nU(), qp.nT());
 	camels::CondensingSolver::Point solution(solver.nX(), solver.nU(), solver.nT());
-	solver.Solve(qp, solution);
+
+	try
+	{
+		solver.Solve(qp, solution);
+	}
+	catch(camels::CondensingSolverSolveException const& x)
+	{
+		std::cerr << "+++++++ Condensed QP that failed: ++++++++" << std::endl;
+		x.getCondensedQP().Print_MATLAB("qp", std::cerr);
+		throw;
+	}
+
 	std::cout << "-- sol (condensed ) --" << std::endl << solver.getPrimalCondensedSolution() << std::endl;
 	std::cout << "-- sol (multistage) --" << std::endl << solution << std::endl;
  }
