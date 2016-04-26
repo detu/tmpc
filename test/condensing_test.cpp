@@ -81,8 +81,8 @@ TEST(test_1, condensing_test)
 		S1.transpose() * A0 + B1.transpose() * Q2 * A1 * A0,										S1.transpose() * B0 + B1.transpose() * Q2 * A1 * B0,							B1.transpose() * Q2 * B1 + R1;
 
 	EXPECT_TRUE(Hc_expected == Hc);
-	std::clog << "****** Condensed problem *******" << std::endl;
-	condensed.Print_MATLAB("qp", std::clog);
+	std::cout << "****** Condensed problem *******" << std::endl;
+	Print_MATLAB(std::cout, condensed, "qp");
 	std::cout << "********* Hc_expected **********" << std::endl;
 	std::cout << Hc_expected << std::endl;
 	//qp.PrintQP_C(std::cout);
@@ -112,7 +112,7 @@ TEST(test_1, condensing_test)
 	catch(camels::CondensingSolverSolveException const& x)
 	{
 		std::cerr << "+++++++ Condensed QP that failed: ++++++++" << std::endl;
-		x.getCondensedQP().Print_MATLAB("qp", std::cerr);
+		Print_MATLAB(std::cerr, x.getCondensedQP(), "qp");
 		throw;
 	}
 

@@ -11,8 +11,8 @@ namespace camels
 	class qpOASESProgram
 	{
 		// Matrix storage option for Eigen -- important!
-		// Must be ColMajor, because qpOASES expects input matrices in column-major format.
-		static const int Options = Eigen::ColMajor;
+		// Must be RowMajor, because qpOASES expects input matrices in column-major format.
+		static const int Options = Eigen::RowMajor;
 
 	public:
 		typedef unsigned int size_type;
@@ -49,19 +49,6 @@ namespace camels
 		Vector& ub() { return _ub; }
 		const Vector& ub() const { return _ub; }
 
-		void Print_MATLAB(const std::string& var_name, std::ostream& log_stream) const
-		{
-			using std::endl;
-
-			log_stream << var_name << ".H = [..." << endl << H() << "];" << endl;
-			log_stream << var_name << ".g = [..." << endl << g() << "];" << endl;
-			log_stream << var_name << ".A = [..." << endl << A() << "];" << endl;
-			log_stream << var_name << ".lbA = [..." << endl << lbA() << "];" << endl;
-			log_stream << var_name << ".ubA = [..." << endl << ubA() << "];" << endl;
-			log_stream << var_name << ".lb = [..." << endl << lb() << "];" << endl;
-			log_stream << var_name << ".ub = [..." << endl << ub() << "];" << endl;
-		}
-
 	private:
 		Matrix _H;
 		Vector _g;
@@ -73,4 +60,6 @@ namespace camels
 		Vector _lbA;
 		Vector _ubA;
 	};
+
+	void Print_MATLAB(std::ostream& log_stream, qpOASESProgram const& qp, std::string const& var_name);
 }

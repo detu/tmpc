@@ -44,6 +44,7 @@ set (SRC
 	cablerobot_generated.h
 	cybermotion_generated.c
 	cybermotion_generated.h
+	qpOASESProgram.cpp
 )
 
 add_library(mpmc STATIC ${HDR} ${SRC})

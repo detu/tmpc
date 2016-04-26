@@ -58,7 +58,7 @@ TEST(mpc_test, mpc_test_case)
 			{
 				std::ofstream os("failed_qp.m");
 				controller.PrintQP_MATLAB(os);
-				e.getCondensedQP().Print_MATLAB("cond_qp", os);
+				Print_MATLAB(os, e.getCondensedQP(), "cond_qp");
 			}
 
 			{
