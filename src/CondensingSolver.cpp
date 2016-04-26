@@ -132,83 +132,8 @@ namespace camels
 		}
 	}
 
-	CondensingSolver::CondensingSolver(size_type nx, size_type nu, size_type nt) :
-		CondensingSolver(MultiStageQPSize(nx, nu, 0, 0, nt))
-	{		
-	}
 
-	CondensingSolver::CondensingSolver(const MultiStageQPSize& size) :
-		_condensedQP(size.nIndep(), size.nDep() + size.nConstr()),
-		_size(size),
-		_primalCondensedSolution(size.nIndep()),
-		_problem(size.nIndep(), size.nDep() + size.nConstr())
-	{
-		qpOASES::Options options;
-		options.printLevel = qpOASES::PL_LOW;
-		_problem.setOptions(options);
-	}
-
-	const CondensingSolver::Vector& CondensingSolver::getPrimalCondensedSolution() const
-	{
-		return _primalCondensedSolution;
-	}
-
-	camels::CondensingSolver::size_type CondensingSolver::nT() const
-	{
-		return _size.nT();
-	}
-
-	camels::CondensingSolver::size_type CondensingSolver::nX() const
-	{
-		return _size.nX();
-	}
-
-	camels::CondensingSolver::size_type CondensingSolver::nZ() const
-	{
-		return _size.nZ();
-	}
-
-	camels::CondensingSolver::size_type CondensingSolver::nU() const
-	{
-		return _size.nU();
-	}
-
-	camels::CondensingSolver::size_type CondensingSolver::nD() const
-	{
-		return _size.nD();
-	}
-
-	camels::CondensingSolver::size_type CondensingSolver::nDT() const
-	{
-		return _size.nDT();
-	}
-
-	camels::CondensingSolver::size_type CondensingSolver::nIndep() const
-	{
-		return _size.nIndep();
-	}
-
-	camels::CondensingSolver::size_type CondensingSolver::nDep() const
-	{
-		return _size.nDep();
-	}
-
-	camels::CondensingSolver::size_type CondensingSolver::nVar() const
-	{
-		return _size.nVar();
-	}
-
-	const MultiStageQPSize& CondensingSolver::size() const
-	{
-		return _size;
-	}
-
-	CondensingSolver::size_type CondensingSolver::nC() const
-	{
-		return nX() + nD();
-	}
-
-	CondensingSolverSolveException::CondensingSolverSolveException(qpOASES::returnValue code, const CondensingSolver::CondensedQP& cqp) :
+	CondensingSolverSolveException::CondensingSolverSolveException(qpOASES::returnValue code, const CondensedQP& cqp) :
 		std::runtime_error("CondensingSolver::Solve() failed. qpOASES return code " + std::to_string(code)),
 		_code(code), _CondensedQP(cqp)
 	{
@@ -220,7 +145,7 @@ namespace camels
 		return _code;
 	}
 
-	const CondensingSolver::CondensedQP& CondensingSolverSolveException::getCondensedQP() const
+	const CondensedQP& CondensingSolverSolveException::getCondensedQP() const
 	{
 		return _CondensedQP;
 	}

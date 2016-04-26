@@ -9,6 +9,8 @@
 
 namespace camels
 {
+	typedef QuadraticProgram<double, Eigen::RowMajor> CondensedQP;
+
 	class CondensingSolver
 	{
 	public:
@@ -19,28 +21,40 @@ namespace camels
 		class Point;
 
 		typedef unsigned size_type;
-		typedef QuadraticProgram<double, Eigen::RowMajor> CondensedQP;
 		typedef Eigen::VectorXd Vector;
 		typedef Eigen::VectorXd StateVector;
 		typedef Eigen::VectorXd StateInputVector;
 
-		CondensingSolver(const MultiStageQPSize& size);
-		CondensingSolver(size_type nx, size_type nu, size_type nt);
+		CondensingSolver(const MultiStageQPSize& size) :
+			_condensedQP(size.nIndep(), size.nDep() + size.nConstr()),
+			_size(size),
+			_primalCondensedSolution(size.nIndep()),
+			_problem(size.nIndep(), size.nDep() + size.nConstr())
+		{
+			qpOASES::Options options;
+			options.printLevel = qpOASES::PL_LOW;
+			_problem.setOptions(options);
+		}
+		
+		CondensingSolver(size_type nx, size_type nu, size_type nt)
+		:	CondensingSolver(MultiStageQPSize(nx, nu, 0, 0, nt))
+		{
+		}		
 
-		const MultiStageQPSize& size() const;
-		size_type nT() const;
-		size_type nX() const;
-		size_type nZ() const;
-		size_type nU() const;
-		size_type nD() const;
-		size_type nDT() const;
-		size_type nIndep() const;
-		size_type nDep() const;
-		size_type nVar() const;
+		const MultiStageQPSize& size() const { return _size; }
+		size_type nT() const { return _size.nT(); }
+		size_type nX() const { return _size.nX(); }
+		size_type nZ() const { return _size.nZ(); }
+		size_type nU() const { return _size.nU(); }
+		size_type nD() const { return _size.nD(); }
+		size_type nDT() const {	return _size.nDT();	}
+		size_type nIndep() const { return _size.nIndep(); }
+		size_type nDep() const { return _size.nDep(); }
+		size_type nVar() const { return _size.nVar(); }
 
 		void Condense(const MultiStageQP& msqp);
 		void Solve(const MultiStageQP& msqp, Point& solution);
-		const Vector& getPrimalCondensedSolution() const;
+		const Vector& getPrimalCondensedSolution() const { return _primalCondensedSolution;	}
 
 		const CondensedQP& getCondensedQP() const noexcept { return _condensedQP; }
 		bool getHotStart() const noexcept { return _hotStart; }
@@ -49,7 +63,7 @@ namespace camels
 		const MultiStageQPSize _size;
 
 		// Number of constraints per stage = nX() + nD().
-		size_type nC() const;
+		size_type nC() const { return nX() + nD(); }
 
 		CondensedQP _condensedQP;
 		Vector _primalCondensedSolution;
@@ -60,13 +74,13 @@ namespace camels
 
 	struct CondensingSolverSolveException : public std::runtime_error
 	{
-		CondensingSolverSolveException(qpOASES::returnValue code, const CondensingSolver::CondensedQP& cqp);
+		CondensingSolverSolveException(qpOASES::returnValue code, const CondensedQP& cqp);
 		const qpOASES::returnValue getCode() const;
-		const CondensingSolver::CondensedQP& getCondensedQP() const;
+		const CondensedQP& getCondensedQP() const;
 
 	private:
 		const qpOASES::returnValue _code;
-		const CondensingSolver::CondensedQP _CondensedQP;
+		const CondensedQP _CondensedQP;
 	};
 
 	class CondensingSolver::Point
