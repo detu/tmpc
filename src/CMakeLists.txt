@@ -27,6 +27,7 @@ set(HDR
 	${RTMC_INCLUDE_DIR}/CyberMotionOCP.hpp
 	${RTMC_INCLUDE_DIR}/CableRobotOCP.hpp
 	${RTMC_INCLUDE_DIR}/CasADiGeneratedFunction.hpp
+	${RTMC_INCLUDE_DIR}/Condensing.hpp
 )
 
 set (SRC
