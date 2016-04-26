@@ -69,11 +69,11 @@ TEST(test_1, consending_test)
 	qp.c(1) << a1;
 
 	// Condense
-	camels::CondensingSolver solver(qp.nX(), qp.nU(), qp.nT());
-	solver.Condense(qp);
+	camels::CondensedQP condensed(qp.nIndep(), qp.nDep() + qp.nConstr());
+	camels::Condense(qp, condensed);
 
-	const auto Hc = solver.getCondensedQP().H();
-	Eigen::MatrixXd Hc_expected(solver.nIndep(), solver.nIndep());
+	const auto Hc = condensed.H();
+	Eigen::MatrixXd Hc_expected(qp.nIndep(), qp.nIndep());
 	
 	Hc_expected <<
 		A0.transpose() * Q1 * A0 + A0.transpose() * A1.transpose() * Q2 * A1 * A0 + Q0,				A0.transpose() * Q1 * B0 + A0.transpose() * A1.transpose() * Q2 * A1 * B0 + S0,	A0.transpose() * S1 + A0.transpose() * A1.transpose() * Q2 * B1,
@@ -84,7 +84,7 @@ TEST(test_1, consending_test)
 	//std::cout << Hc_expected << std::endl;
 	//qp.PrintQP_C(std::cout);
 
-	const auto gc = solver.getCondensedQP().g();
+	const auto gc = condensed.g();
 	Eigen::VectorXd gc_expected(qp.nIndep());
 	gc_expected <<
 		A0.transpose() * Q1 * a0					+ A0.transpose() * A1.transpose() * Q2 * a1			+ A0.transpose() * A1.transpose() * Q2 * A1 * a0,
@@ -93,12 +93,13 @@ TEST(test_1, consending_test)
 
 	EXPECT_TRUE(gc_expected == gc);
 
-	std::cout << "--- A ---" << std::endl << solver.getCondensedQP().A() << std::endl;
-	std::cout << "-- lbA --" << std::endl << solver.getCondensedQP().lbA() << std::endl;
-	std::cout << "-- ubA --" << std::endl << solver.getCondensedQP().ubA() << std::endl;
-	std::cout << "-- lb ---" << std::endl << solver.getCondensedQP().lb() << std::endl;
-	std::cout << "-- ub ---" << std::endl << solver.getCondensedQP().ub() << std::endl;
+	std::cout << "--- A ---" << std::endl << condensed.A() << std::endl;
+	std::cout << "-- lbA --" << std::endl << condensed.lbA() << std::endl;
+	std::cout << "-- ubA --" << std::endl << condensed.ubA() << std::endl;
+	std::cout << "-- lb ---" << std::endl << condensed.lb() << std::endl;
+	std::cout << "-- ub ---" << std::endl << condensed.ub() << std::endl;
 
+	camels::CondensingSolver solver(qp.nX(), qp.nU(), qp.nT());
 	camels::CondensingSolver::Point solution(solver.nX(), solver.nU(), solver.nT());
 	solver.Solve(qp, solution);
 	std::cout << "-- sol (condensed ) --" << std::endl << solver.getPrimalCondensedSolution() << std::endl;

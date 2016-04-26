@@ -61,6 +61,7 @@ namespace camels
 		size_type nIndep() const;
 		size_type nDep() const;
 		size_type nVar() const;
+		size_type nConstr() const { return _size.nConstr(); }
 
 		RowMajorMatrixMap H(unsigned i);
 		RowMajorMatrixConstMap H(unsigned i) const;

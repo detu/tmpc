@@ -11,6 +11,8 @@ namespace camels
 {
 	typedef QuadraticProgram<double, Eigen::RowMajor> CondensedQP;
 
+	void Condense(const MultiStageQP& msqp, CondensedQP& condensed_qp);
+
 	class CondensingSolver
 	{
 	public:
@@ -52,7 +54,6 @@ namespace camels
 		size_type nDep() const { return _size.nDep(); }
 		size_type nVar() const { return _size.nVar(); }
 
-		void Condense(const MultiStageQP& msqp);
 		void Solve(const MultiStageQP& msqp, Point& solution);
 		const Vector& getPrimalCondensedSolution() const { return _primalCondensedSolution;	}
 
