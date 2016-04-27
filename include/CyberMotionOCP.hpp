@@ -10,7 +10,7 @@
 #include <OptimalControlProblem.hpp>
 
 #include "CyberMotion.hpp"
-#include "CasADiGeneratedFunction.hpp"
+#include "casadi_interface/GeneratedFunction.hpp"
 
 #include <Eigen/Dense>
 
@@ -71,8 +71,8 @@ namespace mpmc
 
 		// Private data members
 
-		mutable CasADiGeneratedFunction _ode;
-		mutable CasADiGeneratedFunction _output;
+		casadi_interface::GeneratedFunction mutable _ode;
+		casadi_interface::GeneratedFunction mutable _output;
 
 		StateVector _x_min;
 		StateVector _x_max;

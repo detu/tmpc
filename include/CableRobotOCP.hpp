@@ -9,7 +9,7 @@
 
 #include <OptimalControlProblem.hpp>
 
-#include "CasADiGeneratedFunction.hpp"
+#include "casadi_interface/GeneratedFunction.hpp"
 
 namespace mpmc
 {
@@ -21,8 +21,8 @@ namespace mpmc
 		void ODE(unsigned t, StateInputVector const& z, StateVector& xdot, ODEJacobianMatrix& jac);
 
 	private:
-		mutable CasADiGeneratedFunction _ode;
-		mutable CasADiGeneratedFunction _output;
+		casadi_interface::GeneratedFunction mutable _ode;
+		casadi_interface::GeneratedFunction mutable _output;
 	};
 } /* namespace mpmc */
 

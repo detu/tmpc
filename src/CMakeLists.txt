@@ -26,7 +26,7 @@ set(HDR
 	${RTMC_INCLUDE_DIR}/OptimalControlProblem.hpp
 	${RTMC_INCLUDE_DIR}/CyberMotionOCP.hpp
 	${RTMC_INCLUDE_DIR}/CableRobotOCP.hpp
-	${RTMC_INCLUDE_DIR}/CasADiGeneratedFunction.hpp
+	${RTMC_INCLUDE_DIR}/casadi_interface/GeneratedFunction.hpp
 	${RTMC_INCLUDE_DIR}/Condensing.hpp
 )
 
@@ -39,7 +39,7 @@ set (SRC
 	CondensingSolver.cpp
 	CyberMotionOCP.cpp
 	CableRobotOCP.cpp
-	CasADiGeneratedFunction.cpp
+	casadi_interface/CasADiGeneratedFunction.cpp
 	cablerobot_generated.c
 	cablerobot_generated.h
 	cybermotion_generated.c

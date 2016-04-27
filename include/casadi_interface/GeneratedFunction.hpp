@@ -12,17 +12,21 @@
 #include <array>
 #include <initializer_list>
 
+#ifdef real_t
+#undef real_t
+#endif
+
 #define CASADI_GENERATED_FUNCTION_INTERFACE(name) #name, name, name##_incref, name##_decref, name##_n_in, name##_n_out, \
 	name##_name_in, name##_name_out, name##_sparsity_in, name##_sparsity_out, name##_work
 
-namespace mpmc
+namespace casadi_interface
 {
-	class CasADiGeneratedFunction
+	class GeneratedFunction
 	{
 	public:
 		typedef double real_t;
 
-		CasADiGeneratedFunction(
+		GeneratedFunction(
 			const std::string& name,
 			int (*fun)(const real_t** arg, real_t** res, int* iw, real_t* w, int mem),
 			void (*fun_incref)(void),
@@ -35,7 +39,7 @@ namespace mpmc
 			const int* (*fun_sparsity_out)(int i),
 			int (*fun_work)(int *sz_arg, int* sz_res, int *sz_iw, int *sz_w));
 
-		~CasADiGeneratedFunction();
+		~GeneratedFunction();
 
 		const std::string& name() const;
 		int n_in() const;

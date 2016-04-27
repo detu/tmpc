@@ -1,7 +1,6 @@
-#include <CasADiGeneratedFunction.hpp>
-
 #include <../src/cablerobot_generated.h>
 
+#include <casadi_interface/GeneratedFunction.hpp>
 #include <gtest/gtest.h>
 //#define EXPECT_TRUE(X) assert(X)
 
@@ -12,7 +11,7 @@
 
 TEST(test_cablerobot_generated, interface_test)
 {
-	mpmc::CasADiGeneratedFunction ode {CASADI_GENERATED_FUNCTION_INTERFACE(cablerobot_ode)};
+	casadi_interface::GeneratedFunction ode {CASADI_GENERATED_FUNCTION_INTERFACE(cablerobot_ode)};
 
 	EXPECT_EQ(ode.n_in(), 2);
 	EXPECT_EQ(ode.n_out(), 2);

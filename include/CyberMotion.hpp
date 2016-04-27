@@ -2,7 +2,7 @@
 
 #include "MotionPlatform.hpp"
 
-#include "CasADiGeneratedFunction.hpp"
+#include "casadi_interface/GeneratedFunction.hpp"
 
 namespace mpmc
 {
@@ -17,7 +17,7 @@ namespace mpmc
 		static const unsigned numberOfAxes = 8;
 
 	private:
-		mutable CasADiGeneratedFunction _ode;
-		mutable CasADiGeneratedFunction _output;
+		mutable casadi_interface::GeneratedFunction _ode;
+		mutable casadi_interface::GeneratedFunction _output;
 	};
 }

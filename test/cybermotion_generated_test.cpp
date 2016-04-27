@@ -1,4 +1,4 @@
-#include <CasADiGeneratedFunction.hpp>
+#include <casadi_interface/GeneratedFunction.hpp>
 
 #include <../src/cybermotion_generated.h>
 
@@ -12,7 +12,7 @@
 
 TEST(test_cybermotion_generated, ode_test)
 {
-	mpmc::CasADiGeneratedFunction ode {CASADI_GENERATED_FUNCTION_INTERFACE(cybermotion_ode)};
+	casadi_interface::GeneratedFunction ode {CASADI_GENERATED_FUNCTION_INTERFACE(cybermotion_ode)};
 
 	EXPECT_EQ(ode.n_in(), 2);
 	EXPECT_EQ(ode.n_out(), 2);
@@ -106,7 +106,7 @@ TEST(test_cybermotion_generated, ode_test)
 
 TEST(test_cybermotion_generated, output_test)
 {
-	mpmc::CasADiGeneratedFunction output {CASADI_GENERATED_FUNCTION_INTERFACE(cybermotion_output)};
+	casadi_interface::GeneratedFunction output {CASADI_GENERATED_FUNCTION_INTERFACE(cybermotion_output)};
 
 	EXPECT_EQ(output.n_in(), 2);
 	EXPECT_EQ(output.n_out(), 2);

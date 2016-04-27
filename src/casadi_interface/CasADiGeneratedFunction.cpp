@@ -1,18 +1,18 @@
 /*
- * CasADiGeneratedFunction.cpp
+ * GeneratedFunction.cpp
  *
  *  Created on: Apr 19, 2016
  *      Author: kotlyar
  */
 
-#include <CasADiGeneratedFunction.hpp>
+#include <casadi_interface/GeneratedFunction.hpp>
 
 #include <stdexcept>
 #include <sstream>
 
-namespace mpmc
+namespace casadi_interface
 {
-	CasADiGeneratedFunction::CasADiGeneratedFunction(
+	GeneratedFunction::GeneratedFunction(
 		const std::string& name,
 		int (*fun)(const real_t** arg, real_t** res, int* iw, real_t* w, int mem),
 		void (*fun_incref)(void),
@@ -48,27 +48,27 @@ namespace mpmc
 		_w.resize(sz_w);
 	}
 
-	CasADiGeneratedFunction::~CasADiGeneratedFunction()
+	GeneratedFunction::~GeneratedFunction()
 	{
 		_fun_decref();
 	}
 
-	const std::string& CasADiGeneratedFunction::name() const
+	const std::string& GeneratedFunction::name() const
 	{
 		return _name;
 	}
 
-	int CasADiGeneratedFunction::n_in() const
+	int GeneratedFunction::n_in() const
 	{
 		return _fun_n_in();
 	}
 
-	int CasADiGeneratedFunction::n_out() const
+	int GeneratedFunction::n_out() const
 	{
 		return _fun_n_out();
 	}
 
-	void CasADiGeneratedFunction::operator()(std::initializer_list<const real_t *> arg, std::initializer_list<real_t *> res)
+	void GeneratedFunction::operator()(std::initializer_list<const real_t *> arg, std::initializer_list<real_t *> res)
 	{
 		if (arg.size() != n_in())
 		{
