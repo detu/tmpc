@@ -1,18 +1,14 @@
 #pragma once
 
-#include <CondensingSolver.hpp>
-
 #include <Eigen/Dense>
 
-#include <vector>
-#include <memory>
 #include <ostream>
 #include <functional>
 #include <stdexcept>
 
 namespace camels
 {
-	template<class _Problem, class QPSolver_ = CondensingSolver>
+	template<class _Problem, class QPSolver_>
 	class ModelPredictiveController
 	{
 	public:
@@ -31,7 +27,7 @@ namespace camels
 		typedef Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> RowMajorMatrix;
 		typedef Eigen::Map<RowMajorMatrix> RowMajorMatrixMap;
 		typedef Eigen::Map<const RowMajorMatrix> RowMajorMatrixConstMap;
-		typedef std::function<void (const MultiStageQP&)> QPCallback;
+		typedef std::function<void (typename QPSolver::MultiStageQP const&)> QPCallback;
 
 		ModelPredictiveController(Problem const& ocp, double sample_time);
 		virtual ~ModelPredictiveController();
@@ -101,9 +97,9 @@ namespace camels
 	ModelPredictiveController<_Problem, QPSolver_>::ModelPredictiveController(Problem const& ocp, double sample_time)
 	:	_ocp(ocp)
 	,	_QP(_Nx, _Nu, _Nd, _NdT, ocp.getNumberOfIntervals())
-	,	_workingPoint(_Nx, _Nu, ocp.getNumberOfIntervals())
-	,	_solution(_Nx, _Nu, ocp.getNumberOfIntervals())
-	,	_Solver(MultiStageQPSize(_Nx, _Nu, _Nd, _NdT, ocp.getNumberOfIntervals())),
+	,	_workingPoint(ocp.getNumberOfIntervals())
+	,	_solution(ocp.getNumberOfIntervals())
+	,	_Solver(ocp.getNumberOfIntervals()),
 		_levenbergMarquardt(0.0),
 		_sampleTime(sample_time)
 	{

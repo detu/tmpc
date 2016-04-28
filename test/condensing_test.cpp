@@ -6,9 +6,27 @@
 
 #include <iostream>
 
+unsigned const NX = 2;
+unsigned const NU = 1;
+unsigned const NC = 0;
+unsigned const NCT = 0;
+unsigned const NT = 2;
+
+typedef camels::CondensingSolver<NX, NU, NC, NCT> Solver;
+
+std::ostream& operator<<(std::ostream& os, typename Solver::Point const& point)
+{
+	//typedef typename camels::CondensingSolver<NX_, NU_, NC_, NCT_>::size_type size_type;
+	typedef unsigned size_type;
+	for (size_type i = 0; i <= point.nT(); ++i)
+		os << point.w(i) << std::endl;
+
+	return os;
+}
+
 TEST(test_1, condensing_test)
 {
-	camels::MultiStageQP qp(2, 1, 0, 0, 2);
+	camels::MultiStageQP qp(NX, NU, NC, NCT, NT);
 	qp.zMin(0).setConstant(-1);	qp.zMax(0).setConstant(1);
 	qp.zMin(1).setConstant(-1);	qp.zMax(1).setConstant(1);
 	qp.zMin(2).setConstant(-1);	qp.zMax(2).setConstant(1);
@@ -102,14 +120,14 @@ TEST(test_1, condensing_test)
 	std::cout << "-- lb ---" << std::endl << condensed.lb() << std::endl;
 	std::cout << "-- ub ---" << std::endl << condensed.ub() << std::endl;
 
-	camels::CondensingSolver solver(qp.nX(), qp.nU(), qp.nT());
-	camels::CondensingSolver::Point solution(solver.nX(), solver.nU(), solver.nT());
+	Solver solver(qp.nT());
+	Solver::Point solution(solver.nT());
 
 	try
 	{
 		solver.Solve(qp, solution);
 	}
-	catch(camels::CondensingSolver::SolveException const& x)
+	catch(Solver::SolveException const& x)
 	{
 		std::cerr << "+++++++ Condensed QP that failed: ++++++++" << std::endl;
 		Print_MATLAB(std::cerr, x.getCondensedQP(), "qp");

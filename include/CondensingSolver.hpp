@@ -10,9 +10,16 @@
 
 namespace camels
 {
+	template<unsigned NX_, unsigned NU_, unsigned NC_, unsigned NCT_>
 	class CondensingSolver
 	{
 	public:
+		static unsigned const NX = NX_;
+		static unsigned const NU = NU_;
+		static unsigned const NZ = NX + NU;
+		static unsigned const NC = NC_;
+		static unsigned const NCT = NCT_;
+
 		typedef qpOASESProgram CondensedQP;
 
 		// Manages input data of qpOASES
@@ -29,19 +36,8 @@ namespace camels
 		typedef Eigen::VectorXd StateVector;
 		typedef Eigen::VectorXd StateInputVector;
 
-		CondensingSolver(const MultiStageQPSize& size) :
-			_condensedQP(size.nIndep(), size.nDep() + size.nConstr()),
-			_size(size),
-			_condensedSolution(size.nIndep()),
-			_problem(size.nIndep(), size.nDep() + size.nConstr())
-		{
-			qpOASES::Options options;
-			options.printLevel = qpOASES::PL_LOW;
-			_problem.setOptions(options);
-		}
-		
-		CondensingSolver(size_type nx, size_type nu, size_type nt)
-		:	CondensingSolver(MultiStageQPSize(nx, nu, 0, 0, nt))
+		CondensingSolver(size_type nt)
+		:	CondensingSolver(MultiStageQPSize(NX, NU, NC, NCT, nt))
 		{
 		}		
 
@@ -63,6 +59,19 @@ namespace camels
 		bool getHotStart() const noexcept { return _hotStart; }
 
 	private:
+		CondensingSolver(const MultiStageQPSize& size) :
+			_condensedQP(size.nIndep(), size.nDep() + size.nConstr()),
+			_size(size),
+			_condensedSolution(size.nIndep()),
+			_problem(size.nIndep(), size.nDep() + size.nConstr())
+		{
+			qpOASES::Options options;
+			options.printLevel = qpOASES::PL_LOW;
+			_problem.setOptions(options);
+		}
+
+		// Private data members.
+		//
 		const MultiStageQPSize _size;
 
 		// Number of constraints per stage = nX() + nD().
@@ -78,7 +87,8 @@ namespace camels
 		qpOASES::SQProblem _problem;
 	};
 
-	struct CondensingSolver::SolveException : public std::runtime_error
+	template<unsigned NX_, unsigned NU_, unsigned NC_, unsigned NCT_>
+	struct CondensingSolver<NX_, NU_, NC_, NCT_>::SolveException : public std::runtime_error
 	{
 		SolveException(qpOASES::returnValue code, qpOASESProgram const& cqp) :
 			std::runtime_error("CondensingSolver::Solve() failed. qpOASES return code " + std::to_string(code)),
@@ -94,16 +104,15 @@ namespace camels
 		qpOASESProgram const _CondensedQP;
 	};
 
-	class CondensingSolver::Point
+	template<unsigned NX_, unsigned NU_, unsigned NC_, unsigned NCT_>
+	class CondensingSolver<NX_, NU_, NC_, NCT_>::Point
 	{
 	public:
 		typedef Eigen::Map<Eigen::VectorXd> VectorMap;
 		typedef Eigen::Map<const Eigen::VectorXd> VectorConstMap;
 
-		Point(size_type nx, size_type nu, size_type nt)
-		:	_data((nx + nu) * nt + nx)
-		,	_nx(nx)
-		,	_nz(nx + nu)
+		Point(size_type nt)
+		:	_data(NZ * nt + NX)
 		,	_nt(nt)
 		{
 		}
@@ -113,7 +122,7 @@ namespace camels
 			if(!(i < _nt + 1))
 				throw std::out_of_range("CondensingSolver::Point::w(): index is out of range");
 
-			return VectorMap(_data.data() + i * _nz, i < _nt ? _nz : _nx);
+			return VectorMap(_data.data() + i * NZ, i < _nt ? NZ : NX);
 		}
 
 		VectorConstMap w(unsigned i) const
@@ -121,12 +130,12 @@ namespace camels
 			if (!(i < _nt + 1))
 				throw std::out_of_range("CondensingSolver::Point::w(): index is out of range");
 
-			return VectorConstMap(_data.data() + i * _nz, i < _nt ? _nz : _nx);
+			return VectorConstMap(_data.data() + i * NZ, i < _nt ? NZ : NX);
 		}
 
 		void shift()
 		{
-			std::copy_n(_data.begin() + _nz, (_nt - 1) * _nz + _nx, _data.begin());
+			std::copy_n(_data.begin() + NZ, (_nt - 1) * NZ + NX, _data.begin());
 		}
 
 		Point& operator+=(Point const& rhs)
@@ -139,20 +148,19 @@ namespace camels
 			return *this;
 		}
 
-		size_type const nX() const noexcept { return _nx; }
-		size_type const nU() const noexcept { return _nz - _nx; }
+		size_type const nX() const noexcept { return NX; }
+		size_type const nU() const noexcept { return NU; }
 		size_type const nT() const noexcept { return _nt; }
 
 	private:
-		size_type const _nx;
-		size_type const _nz;
 		size_type const _nt;
 
 		// _data stores _Nt vectors of size _Nz and 1 vector of size _Nx
 		std::vector<double> _data;
 	};
 
-	inline void CondensingSolver::Solve(MultiStageQP const& msqp, Point& solution)
+	template<unsigned NX_, unsigned NU_, unsigned NC_, unsigned NCT_>
+	void CondensingSolver<NX_, NU_, NC_, NCT_>::Solve(MultiStageQP const& msqp, Point& solution)
 	{
 		// Check argument sizes.
 		if (!(msqp.nX() == nX() && msqp.nU() == nU() && msqp.nT() == nT()))
@@ -196,10 +204,17 @@ namespace camels
 	}
 }
 
-inline std::ostream& operator<<(std::ostream& os, camels::CondensingSolver::Point const& point)
+// TODO: failed to write a templated version of this function.
+// The following gives me "unable to deduce template arguments" error:
+/*
+template<unsigned NX_, unsigned NU_, unsigned NC_, unsigned NCT_>
+inline std::ostream& operator<<(std::ostream& os, typename camels::CondensingSolver<NX_, NU_, NC_, NCT_>::Point const& point)
 {
-	for (camels::CondensingSolver::size_type i = 0; i <= point.nT(); ++i)
+	//typedef typename camels::CondensingSolver<NX_, NU_, NC_, NCT_>::size_type size_type;
+	typedef unsigned size_type;
+	for (size_type i = 0; i <= point.nT(); ++i)
 		os << point.w(i) << std::endl;
 
 	return os;
 }
+*/

@@ -1,5 +1,6 @@
 #include <ModelPredictiveController.hpp>
 #include <CyberMotionOCP.hpp>
+#include <CondensingSolver.hpp>
 
 #include <iostream>
 #include <fstream>
@@ -8,7 +9,9 @@
 
 TEST(mpc_test, mpc_test_case)
 {
-	using mpmc::CyberMotionOCP;
+	typedef mpmc::CyberMotionOCP OCP;
+	typedef camels::CondensingSolver<OCP::NX, OCP::NU, OCP::NC, OCP::NCT> QPSolver;
+	typedef camels::ModelPredictiveController<OCP, QPSolver> Controller;
 
 	const double Ts = 0.05;
 	const unsigned Nt = 1;
@@ -18,15 +21,15 @@ TEST(mpc_test, mpc_test_case)
 	const double freq = 1.0;
 	std::ofstream out("out.txt");
 
-	CyberMotionOCP ocp(Nt);
+	OCP ocp(Nt);
 	ocp.setWashoutFactor(0.1);
 
-	camels::ModelPredictiveController<CyberMotionOCP> controller(ocp, Ts);
+	Controller controller(ocp, Ts);
 
 	auto x0 = ocp.getDefaultState();
 	controller.InitWorkingPoint(x0);
 
-	CyberMotionOCP::InputVector u;
+	OCP::InputVector u;
 	u.fill(0.);
 
 	for (unsigned i = 0; i < simulation_steps; ++i)
@@ -35,7 +38,7 @@ TEST(mpc_test, mpc_test_case)
 
 		for (unsigned k = 0; k < Nt + 1; ++k)
 		{
-			CyberMotionOCP::OutputVector y_ref = CyberMotionOCP::OutputVector::Zero();
+			OCP::OutputVector y_ref = OCP::OutputVector::Zero();
 			y_ref[0] = sin(2 * M_PI * freq * i * Ts);
 			//y_ref(0, k) = 1;
 			y_ref[2] = -g;
@@ -53,7 +56,7 @@ TEST(mpc_test, mpc_test_case)
 		{
 			controller.Solve();
 		}
-		catch (const camels::CondensingSolver::SolveException& e)
+		catch (const QPSolver::SolveException& e)
 		{
 			{
 				std::ofstream os("failed_qp.m");
@@ -89,8 +92,8 @@ TEST(mpc_test, mpc_test_case)
 		std::cout << "\tu = " << u << std::endl;
 		out << u.transpose() << std::endl << std::flush;
 
-		auto q = x0.topRows<CyberMotionOCP::NU>();
-		auto v = x0.bottomRows<CyberMotionOCP::NU>();
+		auto q = x0.topRows<OCP::NU>();
+		auto v = x0.bottomRows<OCP::NU>();
 		x0 << q + v * Ts + u * Ts * Ts / 2., v + u * Ts;
 	}
 }
