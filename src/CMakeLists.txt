@@ -36,7 +36,6 @@ set (SRC
 	CyberMotion1D.cpp
 	MultiStageQP.cpp
 	MultiStageQPSize.cpp
-	CondensingSolver.cpp
 	CyberMotionOCP.cpp
 	CableRobotOCP.cpp
 	casadi_interface/CasADiGeneratedFunction.cpp
