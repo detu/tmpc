@@ -109,7 +109,7 @@ TEST(test_1, condensing_test)
 	{
 		solver.Solve(qp, solution);
 	}
-	catch(camels::CondensingSolverSolveException const& x)
+	catch(camels::CondensingSolver::SolveException const& x)
 	{
 		std::cerr << "+++++++ Condensed QP that failed: ++++++++" << std::endl;
 		Print_MATLAB(std::cerr, x.getCondensedQP(), "qp");

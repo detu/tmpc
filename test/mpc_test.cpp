@@ -53,7 +53,7 @@ TEST(mpc_test, mpc_test_case)
 		{
 			controller.Solve();
 		}
-		catch (const camels::CondensingSolverSolveException& e)
+		catch (const camels::CondensingSolver::SolveException& e)
 		{
 			{
 				std::ofstream os("failed_qp.m");

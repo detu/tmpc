@@ -21,6 +21,9 @@ namespace camels
 		// Manages output data of qpOASES
 		class Point;
 
+		// Exception that can be thrown from the Solve() member function.
+		class SolveException;
+
 		typedef unsigned size_type;
 		typedef Eigen::VectorXd Vector;
 		typedef Eigen::VectorXd StateVector;
@@ -75,11 +78,16 @@ namespace camels
 		qpOASES::SQProblem _problem;
 	};
 
-	struct CondensingSolverSolveException : public std::runtime_error
+	struct CondensingSolver::SolveException : public std::runtime_error
 	{
-		CondensingSolverSolveException(qpOASES::returnValue code, qpOASESProgram const& cqp);
-		qpOASES::returnValue getCode() const;
-		qpOASESProgram const& getCondensedQP() const;
+		SolveException(qpOASES::returnValue code, qpOASESProgram const& cqp) :
+			std::runtime_error("CondensingSolver::Solve() failed. qpOASES return code " + std::to_string(code)),
+			_code(code), _CondensedQP(cqp)
+		{
+		}
+
+		qpOASES::returnValue getCode() const	{ return _code;	}
+		qpOASESProgram const& getCondensedQP() const { return _CondensedQP; }
 
 	private:
 		qpOASES::returnValue const _code;
@@ -134,7 +142,7 @@ namespace camels
 					_condensedQP.lb_data(), _condensedQP.ub_data(), _condensedQP.lbA_data(), _condensedQP.ubA_data(), nWSR);
 
 		if (res != qpOASES::SUCCESSFUL_RETURN)
-			throw CondensingSolverSolveException(res, _condensedQP);
+			throw SolveException(res, _condensedQP);
 
 		_hotStart = true;
 
@@ -156,23 +164,6 @@ namespace camels
 		}
 	}
 
-
-	inline CondensingSolverSolveException::CondensingSolverSolveException(qpOASES::returnValue code, qpOASESProgram const& cqp) :
-		std::runtime_error("CondensingSolver::Solve() failed. qpOASES return code " + std::to_string(code)),
-		_code(code), _CondensedQP(cqp)
-	{
-
-	}
-
-	inline qpOASES::returnValue CondensingSolverSolveException::getCode() const
-	{
-		return _code;
-	}
-
-	inline qpOASESProgram const& CondensingSolverSolveException::getCondensedQP() const
-	{
-		return _CondensedQP;
-	}
 
 	inline CondensingSolver::Point::Point(size_type nx, size_type nu, size_type nt)
 	:	_data((nx + nu) * nt + nx)
