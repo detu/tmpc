@@ -100,13 +100,44 @@ namespace camels
 		typedef Eigen::Map<Eigen::VectorXd> VectorMap;
 		typedef Eigen::Map<const Eigen::VectorXd> VectorConstMap;
 
-		Point(size_type nx, size_type nu, size_type nt);
+		Point(size_type nx, size_type nu, size_type nt)
+		:	_data((nx + nu) * nt + nx)
+		,	_nx(nx)
+		,	_nz(nx + nu)
+		,	_nt(nt)
+		{
+		}
 
-		VectorMap w(unsigned i);
-		VectorConstMap w(unsigned i) const;
+		VectorMap w(unsigned i)
+		{
+			if(!(i < _nt + 1))
+				throw std::out_of_range("CondensingSolver::Point::w(): index is out of range");
 
-		void shift();
-		Point& operator+=(Point const& rhs);
+			return VectorMap(_data.data() + i * _nz, i < _nt ? _nz : _nx);
+		}
+
+		VectorConstMap w(unsigned i) const
+		{
+			if (!(i < _nt + 1))
+				throw std::out_of_range("CondensingSolver::Point::w(): index is out of range");
+
+			return VectorConstMap(_data.data() + i * _nz, i < _nt ? _nz : _nx);
+		}
+
+		void shift()
+		{
+			std::copy_n(_data.begin() + _nz, (_nt - 1) * _nz + _nx, _data.begin());
+		}
+
+		Point& operator+=(Point const& rhs)
+		{
+			if (rhs.nT() != nT())
+				throw std::invalid_argument("CondensingSolver::Point::operator+=(): arguments have different sizes!");
+
+			std::transform(_data.cbegin(), _data.cend(), rhs._data.cbegin(), _data.begin(), std::plus<double>());
+
+			return *this;
+		}
 
 		size_type const nX() const noexcept { return _nx; }
 		size_type const nU() const noexcept { return _nz - _nx; }
@@ -162,46 +193,6 @@ namespace camels
 			u_i = _condensedSolution.middleRows(nX() + i * nU(), nU());
 			x_i_plus = msqp.C(i) * z_i + msqp.c(i);
 		}
-	}
-
-
-	inline CondensingSolver::Point::Point(size_type nx, size_type nu, size_type nt)
-	:	_data((nx + nu) * nt + nx)
-	,	_nx(nx)
-	,	_nz(nx + nu)
-	,	_nt(nt)
-	{
-	}
-
-	inline CondensingSolver::Point::VectorMap CondensingSolver::Point::w(unsigned i)
-	{
-		if(!(i < _nt + 1))
-			throw std::out_of_range("CondensingSolver::Point::w(): index is out of range");
-
-		return VectorMap(_data.data() + i * _nz, i < _nt ? _nz : _nx);
-	}
-
-	inline CondensingSolver::Point::VectorConstMap CondensingSolver::Point::w(unsigned i) const
-	{
-		if (!(i < _nt + 1))
-			throw std::out_of_range("CondensingSolver::Point::w(): index is out of range");
-
-		return VectorConstMap(_data.data() + i * _nz, i < _nt ? _nz : _nx);
-	}
-
-	inline void CondensingSolver::Point::shift()
-	{
-		std::copy_n(_data.begin() + _nz, (_nt - 1) * _nz + _nx, _data.begin());
-	}
-
-	inline CondensingSolver::Point& CondensingSolver::Point::operator+=(Point const& rhs)
-	{
-		if (rhs.nT() != nT())
-			throw std::invalid_argument("CondensingSolver::Point::operator+=(): arguments have different sizes!");
-
-		std::transform(_data.cbegin(), _data.cend(), rhs._data.cbegin(), _data.begin(), std::plus<double>());
-
-		return *this;
 	}
 }
 
