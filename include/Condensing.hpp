@@ -107,7 +107,7 @@ namespace camels
 
 		// Cost of final state.
 		Hc.template triangularView<Upper>() += M.transpose() * msqp.Hend().template selfadjointView<Upper>() * M;
-		gc += M.transpose() * (msqp.g(nT) + msqp.Hend() * v);
+		gc += M.transpose() * (msqp.gend() + msqp.Hend() * v);
 
 		Hc = Hc.template selfadjointView<Upper>();
 	}

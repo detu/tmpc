@@ -197,7 +197,7 @@ namespace camels
 
 		// Adding Levenberg-Marquardt term to make H positive-definite.
 		_QP.Hend() = H_T + _levenbergMarquardt * MayerHessianMatrix::Identity();
-		_QP.g(getNumberOfIntervals()) = g_T;
+		_QP.gend() = g_T;
 
 		// Call the QP callback, if there is one.
 		if(_QPCallback)

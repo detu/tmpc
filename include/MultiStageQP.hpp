@@ -45,6 +45,8 @@ namespace camels
 		typedef Eigen::Matrix<double, NZ, 1> StateInputVector;
 		typedef Eigen::Matrix<double, NZ, NZ, Eigen::RowMajor> StageHessianMatrix;
 		typedef Eigen::Matrix<double, NX, NX, Eigen::RowMajor> EndStageHessianMatrix;
+		typedef Eigen::Matrix<double, NZ, 1> StageGradientVector;
+		typedef Eigen::Matrix<double, NX, 1> EndStageGradientVector;
 
 		typedef Eigen::Map<Eigen::VectorXd> VectorMap;
 		typedef Eigen::Map<const Eigen::VectorXd> VectorConstMap;
@@ -64,8 +66,6 @@ namespace camels
 		void PrintQP_zMin_C(std::ostream& log_stream) const;
 
 		void PrintQP_MATLAB(std::ostream& log_stream, const std::string& var_name = "qp") const;
-
-		const MultiStageQPSize& size() const;
 
 		size_type nT() const { return _size.nT(); }
 		size_type nX() const { return _size.nX(); }
@@ -101,16 +101,26 @@ namespace camels
 			return Eigen::Map<EndStageHessianMatrix const>(_H.data() + nT() * nZ() * nZ());
 		}
 
-		VectorMap g(unsigned i)
+		Eigen::Map<StageGradientVector> g(unsigned i)
 		{
-			assert(i < nT() + 1);
-			return VectorMap(_g.data() + i * nZ(), i < nT() ? nZ() : nX());
+			assert(i < nT());
+			return Eigen::Map<StageGradientVector>(_g.data() + i * nZ());
 		}
 
-		VectorConstMap g(unsigned i) const
+		Eigen::Map<StageGradientVector const> g(unsigned i) const
 		{
-			assert(i < nT() + 1);
-			return VectorConstMap(_g.data() + i * nZ(), i < nT() ? nZ() : nX());
+			assert(i < nT());
+			return Eigen::Map<StageGradientVector const>(_g.data() + i * nZ());
+		}
+
+		Eigen::Map<EndStageGradientVector> gend()
+		{
+			return Eigen::Map<EndStageGradientVector>(_g.data() + nT() * nZ());
+		}
+
+		Eigen::Map<EndStageGradientVector const> gend() const
+		{
+			return Eigen::Map<EndStageGradientVector const>(_g.data() + nT() * nZ());
 		}
 		
 		RowMajorMatrixMap C(unsigned i)
