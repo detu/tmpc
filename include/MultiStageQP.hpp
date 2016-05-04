@@ -28,10 +28,18 @@ namespace camels
 	*	nX < nZ
 	*	nU = nZ - nX
 	*/
+	//template<unsigned NX_, unsigned NU_, unsigned NC_, unsigned NCT_>
 	class MultiStageQP
 	{
 	public:
 		typedef unsigned int size_type;
+
+		/*
+		static unsigned const NX = NX_;
+		static unsigned const NU = NU_;
+		static unsigned const NC = NC_;
+		static unsigned const NCT = NCT_;
+		*/
 
 		typedef Eigen::Map<Eigen::VectorXd> VectorMap;
 		typedef Eigen::Map<const Eigen::VectorXd> VectorConstMap;
@@ -39,9 +47,10 @@ namespace camels
 		typedef Eigen::Map<RowMajorMatrix> RowMajorMatrixMap;
 		typedef Eigen::Map<const RowMajorMatrix> RowMajorMatrixConstMap;
 
-		MultiStageQP(const MultiStageQPSize& size);
-		MultiStageQP(size_type nx, size_type nu, size_type nd, size_type ndt, size_type nt);
-		~MultiStageQP();
+		MultiStageQP(size_type nx, size_type nu, size_type nd, size_type ndt, size_type nt)
+		:	MultiStageQP(MultiStageQPSize(nx, nu, nd, ndt, nt))
+		{
+		}
 
 		void PrintQP_C(std::ostream& os) const;
 
@@ -52,57 +61,193 @@ namespace camels
 		void PrintQP_MATLAB(std::ostream& log_stream, const std::string& var_name = "qp") const;
 
 		const MultiStageQPSize& size() const;
-		size_type nT() const;
-		size_type nX() const;
-		size_type nZ() const;
-		size_type nU() const;
-		size_type nD() const;
-		size_type nDT() const;
-		size_type nIndep() const;
-		size_type nDep() const;
-		size_type nVar() const;
+
+		size_type nT() const { return _size.nT(); }
+		size_type nX() const { return _size.nX(); }
+		size_type nZ() const { return _size.nZ(); }
+		size_type nU() const { return _size.nU(); }
+		size_type nD() const { return _size.nD(); }
+		size_type nDT() const { return _size.nDT(); }
+
+		size_type nIndep() const { return _size.nIndep(); }
+		size_type nDep() const { return _size.nDep(); }
+		size_type nVar() const { return _size.nVar(); }
 		size_type nConstr() const { return _size.nConstr(); }
 
-		RowMajorMatrixMap H(unsigned i);
-		RowMajorMatrixConstMap H(unsigned i) const;
+		RowMajorMatrixMap H(unsigned i)
+		{
+			assert(i < nT() + 1);
+			const auto sz = i < nT() ? nZ() : nX();
+			return RowMajorMatrixMap(_H.data() + i * nZ() * nZ(), sz, sz);
+		}
+
+		RowMajorMatrixConstMap H(unsigned i) const
+		{
+			assert(i < nT() + 1);
+			const auto sz = i < nT() ? nZ() : nX();
+			return RowMajorMatrixConstMap(_H.data() + i * nZ() * nZ(), sz, sz);
+		}
+
+		VectorMap g(unsigned i)
+		{
+			assert(i < nT() + 1);
+			return VectorMap(_g.data() + i * nZ(), i < nT() ? nZ() : nX());
+		}
+
+		VectorConstMap g(unsigned i) const
+		{
+			assert(i < nT() + 1);
+			return VectorConstMap(_g.data() + i * nZ(), i < nT() ? nZ() : nX());
+		}
 		
-		VectorMap g(unsigned i);
-		VectorConstMap g(unsigned i) const;
-		
-		RowMajorMatrixMap C(unsigned i);
-		RowMajorMatrixConstMap C(unsigned i) const;
+		RowMajorMatrixMap C(unsigned i)
+		{
+			return RowMajorMatrixMap(_C.data() + i * nX() * nZ(), nX(), nZ());
+		}
 
-		RowMajorMatrixMap D(unsigned i);
-		RowMajorMatrixConstMap D(unsigned i) const;
+		RowMajorMatrixConstMap C(unsigned i) const
+		{
+			return RowMajorMatrixConstMap(_C.data() + i * nX() * nZ(), nX(), nZ());
+		}
 
-		VectorMap dMin(unsigned i);
-		VectorConstMap dMin(unsigned i) const;
+		RowMajorMatrixMap D(unsigned i)
+		{
+			assert(i <= nT());
+			return RowMajorMatrixMap(_D.data() + i * nD() * nZ(), i < nT() ? nD() : nDT(), i < nT() ? nZ() : nX());
+		}
 
-		VectorMap dMax(unsigned i);
-		VectorConstMap dMax(unsigned i) const;
+		RowMajorMatrixConstMap D(unsigned i) const
+		{
+			assert(i <= nT());
+			return RowMajorMatrixConstMap(_D.data() + i * nD() * nZ(), i < nT() ? nD() : nDT(), i < nT() ? nZ() : nX());
+		}
+
+		VectorMap dMin(unsigned i)
+		{
+			assert(i <= nT());
+			return VectorMap(_dMin.data() + i * nD(), i < nT() ? nD() : nDT());
+		}
+
+		VectorConstMap dMin(unsigned i) const
+		{
+			assert(i <= nT());
+			return VectorConstMap(_dMin.data() + i * nD(), i < nT() ? nD() : nDT());
+		}
+
+		VectorMap dMax(unsigned i)
+		{
+			assert(i <= nT());
+			return VectorMap(_dMax.data() + i * nD(), i < nT() ? nD() : nDT());
+		}
+
+		VectorConstMap dMax(unsigned i) const
+		{
+			assert(i <= nT());
+			return VectorConstMap(_dMax.data() + i * nD(), i < nT() ? nD() : nDT());
+		}
 				
-		VectorMap c(unsigned i);
-		VectorConstMap c(unsigned i) const;
+		VectorMap c(unsigned i)
+		{
+			return VectorMap(_c.data() + i * nX(), nX());
+		}
+
+		VectorConstMap c(unsigned i) const
+		{
+			return VectorConstMap(_c.data() + i * nX(), nX());
+		}
 		
-		VectorMap zMin(unsigned i);
-		VectorConstMap zMin(unsigned i) const;
+		VectorMap zMin(unsigned i)
+		{
+			assert(i < nT() + 1);
+			return VectorMap(_zMin.data() + i * nZ(), i < nT() ? nZ() : nX());
+		}
+
+		VectorConstMap zMin(unsigned i) const
+		{
+			assert(i < nT() + 1);
+			return VectorConstMap(_zMin.data() + i * nZ(), i < nT() ? nZ() : nX());
+		}
 		
-		VectorMap zMax(unsigned i);
-		VectorConstMap zMax(unsigned i) const;
+		VectorMap zMax(unsigned i)
+		{
+			assert(i < nT() + 1);
+			return VectorMap(_zMax.data() + i * nZ(), i < nT() ? nZ() : nX());
+		}
 
-		VectorMap xMin(unsigned i);
-		VectorConstMap xMin(unsigned i) const;
+		VectorConstMap zMax(unsigned i) const
+		{
+			assert(i < nT() + 1);
+			return VectorConstMap(_zMax.data() + i * nZ(), i < nT() ? nZ() : nX());
+		}
 
-		VectorMap xMax(unsigned i);
-		VectorConstMap xMax(unsigned i) const;
+		VectorMap xMin(unsigned i)
+		{
+			assert(i < nT() + 1);
+			return VectorMap(_zMin.data() + i * nZ(), nX());
+		}
 
-		VectorMap uMin(unsigned i);
-		VectorConstMap uMin(unsigned i) const;
+		VectorConstMap xMin(unsigned i) const
+		{
+			assert(i < nT() + 1);
+			return VectorConstMap(_zMin.data() + i * nZ(), nX());
+		}
 
-		VectorMap uMax(unsigned i);
-		VectorConstMap uMax(unsigned i) const;
+		VectorMap xMax(unsigned i)
+		{
+			assert(i < nT() + 1);
+			return VectorMap(_zMax.data() + i * nZ(), nX());
+		}
+
+		VectorConstMap xMax(unsigned i) const
+		{
+			assert(i < nT() + 1);
+			return VectorConstMap(_zMax.data() + i * nZ(), nX());
+		}
+
+		VectorMap uMin(unsigned i)
+		{
+			assert(i < nT());
+			return VectorMap(_zMin.data() + i * nZ() + nX(), nU());
+		}
+
+		VectorConstMap uMin(unsigned i) const
+		{
+			assert(i < nT());
+			return VectorConstMap(_zMin.data() + i * nZ() + nX(), nU());
+		}
+
+		VectorMap uMax(unsigned i)
+		{
+			assert(i < nT());
+			return VectorMap(_zMax.data() + i * nZ() + nX(), nU());
+		}
+
+		VectorConstMap uMax(unsigned i) const
+		{
+			assert(i < nT());
+			return VectorConstMap(_zMax.data() + i * nZ() + nX(), nU());
+		}
 
 	private:
+		MultiStageQP(const MultiStageQPSize& size)
+		:	_size(size)
+		{
+			// Allocate arrays.
+			_H.resize(nZ() * nZ() * nT() + nX() * nX());
+			_g.resize(nZ() * nT() + nX());
+			_C.resize(nX() * nZ() * nT());
+			_c.resize(nX() * nT());
+			_D.resize(nD() * nZ() * nT() + nDT() * nX());
+			_dMin.resize(nD() * nT() + nDT());
+			_dMax.resize(nD() * nT() + nDT());
+			_zMin.resize(nZ() * nT() + nX());
+			_zMax.resize(nZ() * nT() + nX());
+			_zOpt.resize(nZ() * nT() + nX());
+		}
+
+		// Private data members.
+		//
+
 		const MultiStageQPSize _size;
 
 		// _H stores _Nt row-major matrices of size _Nz x _Nz and 1 matrix of size _Nx x _Nx.
@@ -136,4 +281,97 @@ namespace camels
 		// _zOpt stores _Nt vectors of size _Nz and 1 vector of size _Nx
 		std::vector<double> _zOpt;
 	};
+
+	inline void MultiStageQP::PrintQP_C(std::ostream& log_stream) const
+	{
+		using std::endl;
+
+		Eigen::IOFormat C_format(Eigen::StreamPrecision, 0, ", ", ",\n", "", "", "", "");
+
+		log_stream << "const double H[] = {" << endl;
+		for (unsigned i = 0; i <= nT(); ++i)
+			log_stream << H(i).format(C_format) << "," << endl;
+		log_stream << "};" << endl << endl;
+
+		log_stream << "const double g[] = {" << endl;
+		for (unsigned i = 0; i <= nT(); ++i)
+			log_stream << g(i).transpose().format(C_format) << "," << endl;
+		log_stream << "};" << endl << endl;
+
+		log_stream << "const double C[] = {" << endl;
+		for (unsigned i = 0; i < nT(); ++i)
+			log_stream << C(i).format(C_format) << "," << endl;
+		log_stream << "};" << endl << endl;
+
+		log_stream << "const double c[] = {" << endl;
+		for (unsigned i = 0; i < nT(); ++i)
+			log_stream << c(i).transpose().format(C_format) << "," << endl;
+		log_stream << "};" << endl << endl;
+
+		log_stream << "const double D[] = {" << endl;
+		for (unsigned i = 0; i <= nT(); ++i)
+			log_stream << D(i).format(C_format) << "," << endl;
+		log_stream << "};" << endl << endl;
+
+		log_stream << "const double dMin[] = {" << endl;
+		for (unsigned i = 0; i <= nT(); ++i)
+			log_stream << dMin(i).transpose().format(C_format) << ",";
+		log_stream << "};" << endl << endl;
+
+		log_stream << "const double dMax[] = {" << endl;
+		for (unsigned i = 0; i <= nT(); ++i)
+			log_stream << dMax(i).transpose().format(C_format) << ",";
+		log_stream << "};" << endl << endl;
+
+		PrintQP_zMin_C(log_stream);
+		PrintQP_zMax_C(log_stream);
+	}
+
+	inline void MultiStageQP::PrintQP_MATLAB(std::ostream& log_stream, const std::string& var_name) const
+	{
+		using std::endl;
+
+		for (unsigned k = 0; k <= nT(); ++k)
+		{
+			log_stream << var_name << ".H{" << k + 1 << "} = [..." << endl << H(k) << "];" << endl;
+			log_stream << var_name << ".g{" << k + 1 << "} = [..." << endl << g(k) << "];" << endl;
+
+			if (k < nT())
+			{
+				log_stream << var_name << ".C{" << k + 1 << "} = [..." << endl << C(k) << "];" << endl;
+				log_stream << var_name << ".c{" << k + 1 << "} = [..." << endl << c(k) << "];" << endl;
+			}
+
+			log_stream << var_name << ".D{" << k + 1 << "} = [..." << endl << D(k) << "];" << endl;
+			log_stream << var_name << ".dMin{" << k + 1 << "} = [..." << endl << dMin(k) << "];" << endl;
+			log_stream << var_name << ".dMax{" << k + 1 << "} = [..." << endl << dMax(k) << "];" << endl;
+
+			log_stream << var_name << ".zMin{" << k + 1 << "} = [..." << endl << zMin(k) << "];" << endl;
+			log_stream << var_name << ".zMax{" << k + 1 << "} = [..." << endl << zMax(k) << "];" << endl;
+		}
+	}
+
+	inline void MultiStageQP::PrintQP_zMin_C(std::ostream& log_stream) const
+	{
+		using std::endl;
+
+		Eigen::IOFormat C_format(Eigen::StreamPrecision, 0, ", ", ",\n", "", "", "", "");
+
+		log_stream << "const double zLow[] = {" << endl;
+		for (unsigned i = 0; i <= nT(); ++i)
+			log_stream << zMin(i).transpose().format(C_format) << "," << endl;
+		log_stream << endl << "};" << endl << endl;
+	}
+
+	inline void MultiStageQP::PrintQP_zMax_C(std::ostream& log_stream) const
+	{
+		using std::endl;
+
+		Eigen::IOFormat C_format(Eigen::StreamPrecision, 0, ", ", ",\n", "", "", "", "");
+
+		log_stream << "const double zUpp[] = {" << endl;
+		for (unsigned i = 0; i <= nT(); ++i)
+			log_stream << zMax(i).transpose().format(C_format) << "," << endl;
+		log_stream << endl << "};" << endl << endl;
+	}
 }

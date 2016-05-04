@@ -34,7 +34,6 @@ set (SRC
 	MotionPlatformX.cpp
 	CyberMotion.cpp
 	CyberMotion1D.cpp
-	MultiStageQP.cpp
 	MultiStageQPSize.cpp
 	CyberMotionOCP.cpp
 	CableRobotOCP.cpp
