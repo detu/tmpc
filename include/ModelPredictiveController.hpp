@@ -37,12 +37,69 @@ namespace camels
 		// Feed current state x0, get back control input u.
 		InputVector Feedback(const StateVector& x0)
 		{
-			EmbedInitialValue(x0);
-			Solve();
-			return getWorkingU(0);
+			// Compute linearization at new initial point.
+			{
+				_workingPoint.w(0).topRows(_Nx) = x0;
+				UpdateStage(0);
+
+				/** embed current initial value */
+				_QP.xMin(0) = x0 - _workingPoint.w(0).topRows(_Nx);
+				_QP.xMax(0) = x0 - _workingPoint.w(0).topRows(_Nx);
+			}
+
+			//
+			// Solve the QP.
+			//
+			{
+				LagrangeHessianMatrix H_i;
+				StateInputVector g_i;
+
+				// Hessians and gradients of Lagrange terms.
+				for (unsigned i = 0; i < _ocp.getNumberOfIntervals(); ++i)
+				{
+					_ocp.LagrangeTerm(i, _workingPoint.w(i), g_i, H_i);
+
+					// Adding Levenberg-Marquardt term to make H positive-definite.
+					_QP.H(i) = H_i + _levenbergMarquardt * LagrangeHessianMatrix::Identity();
+					_QP.g(i) = g_i;
+				}
+
+				// Hessian and gradient of Mayer term.
+				typename Problem::MayerHessianMatrix H_T;
+				typename Problem::StateVector g_T;
+				_ocp.MayerTerm(_workingPoint.wend(), g_T, H_T);
+
+				// Adding Levenberg-Marquardt term to make H positive-definite.
+				_QP.Hend() = H_T + _levenbergMarquardt * MayerHessianMatrix::Identity();
+				_QP.gend() = g_T;
+
+				// Call the QP callback, if there is one.
+				if(_QPCallback)
+					_QPCallback(_QP);
+
+				/** solve QP */
+				_Solver.Solve(_QP, _solution);
+			}
+
+			// Return the calculated control input.
+			return _workingPoint.w(0).bottomRows(nU()) + _solution.w(0).template bottomRows<_Nu>();
 		}
 
-		void PrepareForNext();
+		void PrepareForNext()
+		{
+			// Add QP step to the working point.
+			_workingPoint += _solution;
+
+			/** prepare QP for next solution */
+			//qpDUNES_shiftLambda(&_qpData);			/* shift multipliers */
+			//qpDUNES_shiftIntervals(&_qpData);		/* shift intervals (particularly important when using qpOASES for underlying local QPs) */
+
+			// Shift working point
+			_workingPoint.shift();
+
+			// Calculate new matrices.
+			UpdateQP();
+		}
 
 		void PrintQP_C(std::ostream& os) const;
 		void PrintQP_zMax_C(std::ostream& log_stream) const;
@@ -67,28 +124,8 @@ namespace camels
 		typename QPSolver::StateInputVector getWorkingPoint(unsigned i) const;
 
 	private:
-		void EmbedInitialValue(const StateVector& x0)
-		{
-			// Compute linearization at new initial point.
-			_workingPoint.w(0).topRows(_Nx) = x0;
-			UpdateStage(0);
 
-			/** embed current initial value */
-			_QP.xMin(0) = x0 - _workingPoint.w(0).topRows(_Nx);
-			_QP.xMax(0) = x0 - _workingPoint.w(0).topRows(_Nx);
-		}
-
-		void Solve();
-
-		InputVector getWorkingU(unsigned i) const
-		{
-			if (!(i < _ocp.getNumberOfIntervals()))
-				throw std::out_of_range("ModelPredictiveController<Problem_, QPSolver_>::getWorkingU(): index is out of range");
-
-			return _workingPoint.w(i).bottomRows(nU());
-		}
-
-		// Initialized _G, _y, _C, _c, _zMin, _zMax based on current working point _w.
+		// Initializes _G, _y, _C, _c, _zMin, _zMax based on current working point _w.
 		// Does not initialize g.
 		void UpdateQP();
 
@@ -157,8 +194,6 @@ namespace camels
 	template<class _Problem, class QPSolver_>
 	void ModelPredictiveController<_Problem, QPSolver_>::UpdateQP()
 	{
-		using namespace Eigen;
-
 		for (unsigned i = 0; i < _ocp.getNumberOfIntervals(); ++i)
 			UpdateStage(i);
 
@@ -191,56 +226,6 @@ namespace camels
 		_workingPoint.wend() = x0;
 
 		// Initialize QP
-		UpdateQP();
-	}
-
-	template<class _Problem, class QPSolver_>
-	void ModelPredictiveController<_Problem, QPSolver_>::Solve()
-	{
-		LagrangeHessianMatrix H_i;
-		StateInputVector g_i;
-
-		// Hessians and gradients of Lagrange terms.
-		for (unsigned i = 0; i < _ocp.getNumberOfIntervals(); ++i)
-		{
-			_ocp.LagrangeTerm(i, _workingPoint.w(i), g_i, H_i);
-
-			// Adding Levenberg-Marquardt term to make H positive-definite.
-			_QP.H(i) = H_i + _levenbergMarquardt * LagrangeHessianMatrix::Identity();
-			_QP.g(i) = g_i;
-		}
-
-		// Hessian and gradient of Mayer term.
-		typename Problem::MayerHessianMatrix H_T;
-		typename Problem::StateVector g_T;
-		_ocp.MayerTerm(_workingPoint.wend(), g_T, H_T);
-
-		// Adding Levenberg-Marquardt term to make H positive-definite.
-		_QP.Hend() = H_T + _levenbergMarquardt * MayerHessianMatrix::Identity();
-		_QP.gend() = g_T;
-
-		// Call the QP callback, if there is one.
-		if(_QPCallback)
-			_QPCallback(_QP);
-
-		/** solve QP */
-		_Solver.Solve(_QP, _solution);
-
-		// Add QP step to the working point.
-		_workingPoint += _solution;
-	}
-
-	template<class _Problem, class QPSolver_>
-	void ModelPredictiveController<_Problem, QPSolver_>::PrepareForNext()
-	{
-		/** prepare QP for next solution */
-		//qpDUNES_shiftLambda(&_qpData);			/* shift multipliers */
-		//qpDUNES_shiftIntervals(&_qpData);		/* shift intervals (particularly important when using qpOASES for underlying local QPs) */
-
-		// Shift working point
-		_workingPoint.shift();
-
-		// Calculate new matrices.
 		UpdateQP();
 	}
 
