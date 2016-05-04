@@ -42,49 +42,15 @@ namespace camels
 			if (!_prepared)
 				throw std::logic_error("ModelPredictiveController::Feedback(): controller is not prepared.");
 
-			// Compute linearization at new initial point.
-			{
-				_workingPoint.x(0) = x0;
-				UpdateStage(0);
+			/** embed current initial value */
+			_QP.xMin(0) = _QP.xMax(0) = x0 - _workingPoint.x(0);
 
-				/** embed current initial value */
-				_QP.xMin(0) = x0 - _workingPoint.x(0);
-				_QP.xMax(0) = x0 - _workingPoint.x(0);
-			}
+			// Call the QP callback, if there is one.
+			if(_QPCallback)
+				_QPCallback(_QP);
 
-			//
-			// Solve the QP.
-			//
-			{
-				LagrangeHessianMatrix H_i;
-				StateInputVector g_i;
-
-				// Hessians and gradients of Lagrange terms.
-				for (unsigned i = 0; i < _ocp.getNumberOfIntervals(); ++i)
-				{
-					_ocp.LagrangeTerm(i, _workingPoint.w(i), g_i, H_i);
-
-					// Adding Levenberg-Marquardt term to make H positive-definite.
-					_QP.H(i) = H_i + _levenbergMarquardt * LagrangeHessianMatrix::Identity();
-					_QP.g(i) = g_i;
-				}
-
-				// Hessian and gradient of Mayer term.
-				typename Problem::MayerHessianMatrix H_T;
-				typename Problem::StateVector g_T;
-				_ocp.MayerTerm(_workingPoint.wend(), g_T, H_T);
-
-				// Adding Levenberg-Marquardt term to make H positive-definite.
-				_QP.Hend() = H_T + _levenbergMarquardt * MayerHessianMatrix::Identity();
-				_QP.gend() = g_T;
-
-				// Call the QP callback, if there is one.
-				if(_QPCallback)
-					_QPCallback(_QP);
-
-				/** solve QP */
-				_Solver.Solve(_QP, _solution);
-			}
+			/** solve QP */
+			_Solver.Solve(_QP, _solution);
 
 			_prepared = false;
 
@@ -107,7 +73,7 @@ namespace camels
 			// Shift working point
 			shift(_workingPoint);
 
-			// Calculate new matrices.
+			// Calculate new QP.
 			UpdateQP();
 
 			_prepared = true;
@@ -187,6 +153,7 @@ namespace camels
 		for (unsigned i = 0; i < _ocp.getNumberOfIntervals(); ++i)
 			UpdateStage(i);
 
+		// End state constraints.
 		typename Problem::TerminalConstraintJacobianMatrix D;
 		typename Problem::TerminalConstraintVector d_min, d_max;
 		_ocp.TerminalConstraints(_workingPoint.wend(), D, d_min, d_max);
@@ -196,11 +163,32 @@ namespace camels
 
 		_QP.zendMin() = _ocp.getTerminalStateMin() - _workingPoint.wend();
 		_QP.zendMax() = _ocp.getTerminalStateMax() - _workingPoint.wend();
+
+		// Hessian and gradient of Mayer term.
+		typename Problem::MayerHessianMatrix H_T;
+		typename Problem::StateVector g_T;
+		_ocp.MayerTerm(_workingPoint.wend(), g_T, H_T);
+
+		// Adding Levenberg-Marquardt term to make H positive-definite.
+		_QP.Hend() = H_T + _levenbergMarquardt * MayerHessianMatrix::Identity();
+		_QP.gend() = g_T;
 	}
 
 	template<class _Problem, class QPSolver_>
 	void ModelPredictiveController<_Problem, QPSolver_>::UpdateStage(unsigned i)
 	{
+		// Hessians and gradients of Lagrange terms.
+		//
+		LagrangeHessianMatrix H_i;
+		StateInputVector g_i;
+
+		_ocp.LagrangeTerm(i, _workingPoint.w(i), g_i, H_i);
+
+		// Adding Levenberg-Marquardt term to make H positive-definite.
+		_QP.H(i) = H_i + _levenbergMarquardt * LagrangeHessianMatrix::Identity();
+		_QP.g(i) = g_i;
+
+		// Bound constraints.
 		StateInputVector z_min, z_max;
 		z_min << _ocp.getStateMin(), _ocp.getInputMin();
 		z_max << _ocp.getStateMax(), _ocp.getInputMax();
