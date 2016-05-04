@@ -29,8 +29,16 @@ namespace camels
 		typedef Eigen::Map<const RowMajorMatrix> RowMajorMatrixConstMap;
 		typedef std::function<void (typename QPSolver::MultiStageQP const&)> QPCallback;
 
-		ModelPredictiveController(Problem const& ocp, double sample_time);
-		virtual ~ModelPredictiveController();
+		ModelPredictiveController(Problem const& ocp, double sample_time)
+		:	_ocp(ocp)
+		,	_QP(ocp.getNumberOfIntervals())
+		,	_workingPoint(ocp.getNumberOfIntervals())
+		,	_solution(ocp.getNumberOfIntervals())
+		,	_Solver(ocp.getNumberOfIntervals()),
+			_levenbergMarquardt(0.0),
+			_sampleTime(sample_time)
+		{
+		}
 
 		void InitWorkingPoint(const Eigen::VectorXd& x0);
 
@@ -101,25 +109,38 @@ namespace camels
 			UpdateQP();
 		}
 
-		void PrintQP_C(std::ostream& os) const;
+		void PrintQP_C(std::ostream& log_stream) const
+		{
+			_QP.PrintQP_C(log_stream);
+		}
+
+		void PrintQP_MATLAB(std::ostream& log_stream) const
+		{
+			_QP.PrintQP_MATLAB(log_stream);
+		}
+
 		void PrintQP_zMax_C(std::ostream& log_stream) const;
 		void PrintQP_zMin_C(std::ostream& log_stream) const;
-		void PrintQP_MATLAB(std::ostream& log_stream) const;
 
 		// Log working point
-		void PrintWorkingPoint_MATLAB(std::ostream& os, const std::string& var_name) const;
+		void PrintWorkingPoint_MATLAB(std::ostream& os, const std::string& var_name) const
+		{
+			for (unsigned i = 0; i < nT(); ++i)
+				os << var_name << "{" << i + 1 << "} = [" << _workingPoint.w(i) << "];" << std::endl;
+			os << var_name << "{" << nT() + 1 << "} = [" << _workingPoint.wend() << "];" << std::endl;
+		}
 		
 		double getLevenbergMarquardt() const { return _levenbergMarquardt; }
 		void setLevenbergMarquardt(double val) { _levenbergMarquardt = val; }
 
 		unsigned nT() const { return _ocp.getNumberOfIntervals(); }
-		double getSampleTime() const;
+		double getSampleTime() const { return _sampleTime; }
 
-		unsigned nU() const;
-		unsigned nX() const;
-		unsigned nZ() const { return _Nz; }
+		unsigned nU() const	noexcept { return _Nu; }
+		unsigned nX() const	noexcept { return _Nx; }
+		unsigned nZ() const noexcept { return _Nz; }
 
-		void setQPCallback(const QPCallback& cb);
+		void setQPCallback(const QPCallback& cb) { _QPCallback = cb; }
 
 	private:
 
@@ -154,43 +175,6 @@ namespace camels
 	};
 
 	template<class _Problem, class QPSolver_>
-	ModelPredictiveController<_Problem, QPSolver_>::ModelPredictiveController(Problem const& ocp, double sample_time)
-	:	_ocp(ocp)
-	,	_QP(ocp.getNumberOfIntervals())
-	,	_workingPoint(ocp.getNumberOfIntervals())
-	,	_solution(ocp.getNumberOfIntervals())
-	,	_Solver(ocp.getNumberOfIntervals()),
-		_levenbergMarquardt(0.0),
-		_sampleTime(sample_time)
-	{
-	}
-
-	template<class _Problem, class QPSolver_>
-	ModelPredictiveController<_Problem, QPSolver_>::~ModelPredictiveController()
-	{
-	}
-
-	template<class _Problem, class QPSolver_>
-	void ModelPredictiveController<_Problem, QPSolver_>::PrintQP_C(std::ostream& log_stream) const
-	{
-		_QP.PrintQP_C(log_stream);
-	}
-
-	template<class _Problem, class QPSolver_>
-	void ModelPredictiveController<_Problem, QPSolver_>::PrintQP_MATLAB(std::ostream& log_stream) const
-	{
-		_QP.PrintQP_MATLAB(log_stream);
-	}
-
-	template<class _Problem, class QPSolver_>
-	void ModelPredictiveController<_Problem, QPSolver_>::PrintWorkingPoint_MATLAB(std::ostream& os, const std::string& var_name) const
-	{
-		for (unsigned i = 0; i < nT(); ++i)
-			os << var_name << "{" << i + 1 << "} = [" << _workingPoint.w(i) << "];" << std::endl;
-		os << var_name << "{" << nT() + 1 << "} = [" << _workingPoint.wend() << "];" << std::endl;
-	}
-
-	template<class _Problem, class QPSolver_>
 	void ModelPredictiveController<_Problem, QPSolver_>::UpdateQP()
 	{
 		for (unsigned i = 0; i < _ocp.getNumberOfIntervals(); ++i)
@@ -220,30 +204,6 @@ namespace camels
 
 		// Initialize QP
 		UpdateQP();
-	}
-
-	template<class _Problem, class QPSolver_>
-	double ModelPredictiveController<_Problem, QPSolver_>::getSampleTime() const
-	{
-		return _sampleTime;
-	}
-
-	template<class _Problem, class QPSolver_>
-	unsigned ModelPredictiveController<_Problem, QPSolver_>::nU() const
-	{
-		return _Nu;
-	}
-
-	template<class _Problem, class QPSolver_>
-	unsigned ModelPredictiveController<_Problem, QPSolver_>::nX() const
-	{
-		return _Nx;
-	}
-
-	template<class _Problem, class QPSolver_>
-	void ModelPredictiveController<_Problem, QPSolver_>::setQPCallback(const QPCallback& cb)
-	{
-		_QPCallback = cb;
 	}
 
 	template<class _Problem, class QPSolver_>
