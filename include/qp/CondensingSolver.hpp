@@ -5,6 +5,7 @@
 #include <qpOASES.hpp>
 #include <qp/Condensing.hpp>
 #include <qp/qpDUNESProgram.hpp>
+#include <qp/qpDUNESSolution.hpp>
 
 #include "MultiStageQPSize.hpp"
 
@@ -27,8 +28,8 @@ namespace camels
 		// Manages input data of qpOASES
 		typedef camels::qpDUNESProgram<NX, NU, NC, NCT> MultiStageQP;
 
-		// Manages output data of qpOASES
-		class Point;
+		// Solution data type
+		typedef qpDUNESSolution<NX, NU> Point;
 
 		// Exception that can be thrown from the Solve() member function.
 		class SolveException;
@@ -104,61 +105,6 @@ namespace camels
 	private:
 		qpOASES::returnValue const _code;
 		qpOASESProgram const _CondensedQP;
-	};
-
-	template<unsigned NX_, unsigned NU_, unsigned NC_, unsigned NCT_>
-	class CondensingSolver<NX_, NU_, NC_, NCT_>::Point
-	{
-	public:
-		typedef Eigen::Map<Eigen::VectorXd> VectorMap;
-		typedef Eigen::Map<const Eigen::VectorXd> VectorConstMap;
-
-		Point(size_type nt)
-		:	_data(NZ * nt + NX)
-		,	_nt(nt)
-		{
-		}
-
-		VectorMap w(unsigned i)
-		{
-			if(!(i < _nt + 1))
-				throw std::out_of_range("CondensingSolver::Point::w(): index is out of range");
-
-			return VectorMap(_data.data() + i * NZ, i < _nt ? NZ : NX);
-		}
-
-		VectorConstMap w(unsigned i) const
-		{
-			if (!(i < _nt + 1))
-				throw std::out_of_range("CondensingSolver::Point::w(): index is out of range");
-
-			return VectorConstMap(_data.data() + i * NZ, i < _nt ? NZ : NX);
-		}
-
-		void shift()
-		{
-			std::copy_n(_data.begin() + NZ, (_nt - 1) * NZ + NX, _data.begin());
-		}
-
-		Point& operator+=(Point const& rhs)
-		{
-			if (rhs.nT() != nT())
-				throw std::invalid_argument("CondensingSolver::Point::operator+=(): arguments have different sizes!");
-
-			std::transform(_data.cbegin(), _data.cend(), rhs._data.cbegin(), _data.begin(), std::plus<double>());
-
-			return *this;
-		}
-
-		size_type const nX() const noexcept { return NX; }
-		size_type const nU() const noexcept { return NU; }
-		size_type const nT() const noexcept { return _nt; }
-
-	private:
-		size_type const _nt;
-
-		// _data stores _Nt vectors of size _Nz and 1 vector of size _Nx
-		std::vector<double> _data;
 	};
 
 	template<unsigned NX_, unsigned NU_, unsigned NC_, unsigned NCT_>

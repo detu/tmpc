@@ -10,7 +10,9 @@
 
 namespace camels
 {
-	/* MultiStageQP represents a problem
+	/* qpDUNESProgram manages memory for QP problem as required by qpDUNES solver.
+	 *
+	 *  The problem is stated as following:
 	*
 	*	min  sum_{ k = 0..nI } z_k'*H_k*z_k + g_k'*z_k
 	*	s.t. x_{ k + 1 } = C_k * z_k + c_k				for k = 0..nI - 1
