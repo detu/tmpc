@@ -83,7 +83,7 @@ TEST(mpc_test, mpc_test_case)
 			throw;
 		}
 
-		controller.PrepareForNext();
+		controller.Preparation();
 
 		std::cout << "\tu = " << u << std::endl;
 		out << u.transpose() << std::endl << std::flush;

@@ -85,7 +85,7 @@ namespace camels
 			return _workingPoint.w(0).bottomRows(nU()) + _solution.w(0).template bottomRows<_Nu>();
 		}
 
-		void PrepareForNext()
+		void Preparation()
 		{
 			// Add QP step to the working point.
 			_workingPoint += _solution;
@@ -112,7 +112,7 @@ namespace camels
 		double getLevenbergMarquardt() const { return _levenbergMarquardt; }
 		void setLevenbergMarquardt(double val) { _levenbergMarquardt = val; }
 
-		unsigned getNumberOfIntervals() const { return _ocp.getNumberOfIntervals(); }
+		unsigned nT() const { return _ocp.getNumberOfIntervals(); }
 		double getSampleTime() const;
 
 		unsigned nU() const;
@@ -120,8 +120,6 @@ namespace camels
 		unsigned nZ() const { return _Nz; }
 
 		void setQPCallback(const QPCallback& cb);
-
-		typename QPSolver::StateInputVector getWorkingPoint(unsigned i) const;
 
 	private:
 
@@ -187,8 +185,9 @@ namespace camels
 	template<class _Problem, class QPSolver_>
 	void ModelPredictiveController<_Problem, QPSolver_>::PrintWorkingPoint_MATLAB(std::ostream& os, const std::string& var_name) const
 	{
-		for (unsigned i = 0; i <= getNumberOfIntervals(); ++i)
-			os << var_name << "{" << i + 1 << "} = [" << getWorkingPoint(i) << "];" << std::endl;
+		for (unsigned i = 0; i < nT(); ++i)
+			os << var_name << "{" << i + 1 << "} = [" << _workingPoint.w(i) << "];" << std::endl;
+		os << var_name << "{" << nT() + 1 << "} = [" << _workingPoint.wend() << "];" << std::endl;
 	}
 
 	template<class _Problem, class QPSolver_>
@@ -206,12 +205,6 @@ namespace camels
 
 		_QP.zendMin() = _ocp.getTerminalStateMin() - _workingPoint.wend();
 		_QP.zendMax() = _ocp.getTerminalStateMax() - _workingPoint.wend();
-	}
-
-	template<class _Problem, class QPSolver_>
-	typename ModelPredictiveController<_Problem, QPSolver_>::QPSolver::StateInputVector ModelPredictiveController<_Problem, QPSolver_>::getWorkingPoint(unsigned i) const
-	{
-		return _workingPoint.w(i);
 	}
 
 	template<class _Problem, class QPSolver_>
