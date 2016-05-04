@@ -316,6 +316,18 @@ namespace camels
 		{
 		}
 
+		// Interface for accessing the data in qpDUNES format.
+		//
+		double const * H_data() const { return _H.data(); }
+		double const * g_data() const { return _g.data(); }
+		double const * C_data() const { return _C.data(); }
+		double const * c_data() const { return _c.data(); }
+		double const * D_data() const { return _D.data(); }
+		double const * dMin_data() const { return _dMin.data(); }
+		double const * dMax_data() const { return _dMax.data(); }
+		double const * zMin_data() const { return _zMin.data(); }
+		double const * zMax_data() const { return _zMax.data(); }
+
 	private:
 		// Private data members.
 		//
