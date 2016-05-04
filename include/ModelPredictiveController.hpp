@@ -144,8 +144,8 @@ namespace camels
 		_QP.dMin(getNumberOfIntervals()) = d_min;
 		_QP.dMax(getNumberOfIntervals()) = d_max;
 
-		_QP.zMin(getNumberOfIntervals()) = _ocp.getTerminalStateMin() - _workingPoint.w(getNumberOfIntervals());
-		_QP.zMax(getNumberOfIntervals()) = _ocp.getTerminalStateMax() - _workingPoint.w(getNumberOfIntervals());
+		_QP.zendMin() = _ocp.getTerminalStateMin() - _workingPoint.w(getNumberOfIntervals());
+		_QP.zendMax() = _ocp.getTerminalStateMax() - _workingPoint.w(getNumberOfIntervals());
 	}
 
 	template<class _Problem, class QPSolver_>

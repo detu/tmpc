@@ -172,62 +172,83 @@ namespace camels
 			return VectorConstMap(_dMax.data() + i * nD(), i < nT() ? nD() : nDT());
 		}
 				
-		VectorMap c(unsigned i)
+		Eigen::Map<InterStageVector> c(unsigned i)
 		{
-			return VectorMap(_c.data() + i * nX(), nX());
+			assert(i < nT());
+			return Eigen::Map<InterStageVector>(_c.data() + i * nX());
 		}
 
-		VectorConstMap c(unsigned i) const
+		Eigen::Map<InterStageVector const> c(unsigned i) const
 		{
-			return VectorConstMap(_c.data() + i * nX(), nX());
+			return Eigen::Map<InterStageVector const>(_c.data() + i * nX());
+		}
+
+		Eigen::Map<StateInputVector> zMin(unsigned i)
+		{
+			assert(i < nT());
+			return Eigen::Map<StateInputVector>(_zMin.data() + i * nZ());
+		}
+
+		Eigen::Map<StateInputVector const> zMin(unsigned i) const
+		{
+			assert(i < nT());
+			return Eigen::Map<StateInputVector const>(_zMin.data() + i * nZ());
+		}
+
+		Eigen::Map<StateVector> zendMin()
+		{
+			return Eigen::Map<StateVector>(_zMin.data() + nT() * nZ());
+		}
+
+		Eigen::Map<StateVector const> zendMin() const
+		{
+			return Eigen::Map<StateVector const>(_zMin.data() + nT() * nZ());
 		}
 		
-		VectorMap zMin(unsigned i)
+		Eigen::Map<StateInputVector> zMax(unsigned i)
 		{
-			assert(i < nT() + 1);
-			return VectorMap(_zMin.data() + i * nZ(), i < nT() ? nZ() : nX());
+			assert(i < nT());
+			return Eigen::Map<StateInputVector>(_zMax.data() + i * nZ());
 		}
 
-		VectorConstMap zMin(unsigned i) const
+		Eigen::Map<StateInputVector const> zMax(unsigned i) const
 		{
-			assert(i < nT() + 1);
-			return VectorConstMap(_zMin.data() + i * nZ(), i < nT() ? nZ() : nX());
+			assert(i < nT());
+			return Eigen::Map<StateInputVector const>(_zMax.data() + i * nZ());
 		}
 		
-		VectorMap zMax(unsigned i)
+		Eigen::Map<StateVector> zendMax()
 		{
-			assert(i < nT() + 1);
-			return VectorMap(_zMax.data() + i * nZ(), i < nT() ? nZ() : nX());
+			return Eigen::Map<StateVector>(_zMax.data() + nT() * nZ());
 		}
 
-		VectorConstMap zMax(unsigned i) const
+		Eigen::Map<StateVector const> zendMax() const
 		{
-			assert(i < nT() + 1);
-			return VectorConstMap(_zMax.data() + i * nZ(), i < nT() ? nZ() : nX());
+			return Eigen::Map<StateVector const>(_zMax.data() + nT() * nZ());
 		}
 
-		VectorMap xMin(unsigned i)
+		Eigen::Map<StateVector> xMin(unsigned i)
 		{
 			assert(i < nT() + 1);
-			return VectorMap(_zMin.data() + i * nZ(), nX());
+			return Eigen::Map<StateVector>(_zMin.data() + i * nZ());
 		}
 
-		VectorConstMap xMin(unsigned i) const
+		Eigen::Map<StateVector const> xMin(unsigned i) const
 		{
 			assert(i < nT() + 1);
-			return VectorConstMap(_zMin.data() + i * nZ(), nX());
+			return Eigen::Map<StateVector const>(_zMin.data() + i * nZ());
 		}
 
-		VectorMap xMax(unsigned i)
+		Eigen::Map<StateVector> xMax(unsigned i)
 		{
 			assert(i < nT() + 1);
-			return VectorMap(_zMax.data() + i * nZ(), nX());
+			return Eigen::Map<StateVector>(_zMax.data() + i * nZ());
 		}
 
-		VectorConstMap xMax(unsigned i) const
+		Eigen::Map<StateVector const> xMax(unsigned i) const
 		{
 			assert(i < nT() + 1);
-			return VectorConstMap(_zMax.data() + i * nZ(), nX());
+			return Eigen::Map<StateVector const>(_zMax.data() + i * nZ());
 		}
 
 		VectorMap uMin(unsigned i)
