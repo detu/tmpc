@@ -19,11 +19,6 @@
 
 namespace cms
 {
-	class Integrator
-	{
-
-	};
-
 	class CyberMotionOCP :
 		public camels::OptimalControlProblem<CyberMotionOCP, 2 * CyberMotion::numberOfAxes, CyberMotion::numberOfAxes>,
 		public camels::ODEModel<CyberMotionOCP>
@@ -41,8 +36,6 @@ namespace cms
 
 		CyberMotionOCP(unsigned Nt);
 
-		// TODO: Consider moving integration responsibility to a separate class.
-		void Integrate(const StateInputVector& z, Scalar t, StateVector& x_next, ODEJacobianMatrix& J) const;
 		void LagrangeTerm(unsigned i, StateInputVector const& z, StateInputVector& g, LagrangeHessianMatrix& H) const;
 
 		StateVector const& getStateMin() const;
@@ -104,6 +97,20 @@ namespace cms
 
 		// The more the washout factor, the more penalty for the terminal state to be far from the default (washout) position.
 		double _washoutFactor;
+	};
+
+	class Integrator
+	{
+	public:
+		typedef CyberMotionOCP::StateInputVector StateInputVector;
+		typedef CyberMotionOCP::StateVector StateVector;
+		typedef CyberMotionOCP::ODEJacobianMatrix ODEJacobianMatrix;
+
+		explicit Integrator(double ts);
+		void Integrate(const StateInputVector& z, StateVector& x_next, ODEJacobianMatrix& J) const;
+
+	private:
+		ODEJacobianMatrix _J;
 	};
 } /* namespace mpmc */
 

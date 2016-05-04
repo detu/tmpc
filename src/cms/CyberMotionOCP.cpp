@@ -196,14 +196,17 @@ namespace cms
 		SRConstraints(x, D, d_min, d_max);
 	}
 
-	void CyberMotionOCP::Integrate(const StateInputVector& z, Scalar const t, StateVector& x_next, ODEJacobianMatrix& J) const
+	Integrator::Integrator(double ts)
 	{
 		static auto const I = Eigen::Matrix<double, 8, 8>::Identity();
 		static auto const O = Eigen::Matrix<double, 8, 8>::Zero();
 
-		J << I, t * I, std::pow(t, 2) / 2. * I,
-			 O,     I,                   t * I;
+		_J << I, ts * I, std::pow(ts, 2) / 2. * I,
+		  	  O,      I,                   ts * I;
+	}
 
-		x_next = J * z;
+	void Integrator::Integrate(const StateInputVector& z, StateVector& x_next, ODEJacobianMatrix& J) const
+	{
+		x_next = (J = _J) * z;
 	}
 } /* namespace mpmc */

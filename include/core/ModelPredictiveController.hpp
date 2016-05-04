@@ -6,12 +6,13 @@
 
 namespace camels
 {
-	template<class _Problem, class QPSolver_>
+	template<class _Problem, typename Integrator_, class QPSolver_>
 	class ModelPredictiveController
 	{
 	public:
 		typedef _Problem Problem;
 		typedef QPSolver_ QPSolver;
+		typedef Integrator_ Integrator;
 
 		typedef typename QPSolver::Point Trajectory;
 
@@ -24,14 +25,14 @@ namespace camels
 
 		typedef std::function<void (typename QPSolver::MultiStageQP const&)> QPCallback;
 
-		ModelPredictiveController(Problem const& ocp, double sample_time, Trajectory const& working_point)
+		ModelPredictiveController(Problem const& ocp, Integrator const& integrator, Trajectory const& working_point)
 		:	_ocp(ocp)
 		,	_QP(working_point.nT())
 		,	_workingPoint(working_point)
 		,	_solution(working_point.nT())
 		,	_Solver(working_point.nT())
 		,	_levenbergMarquardt(0.0)
-		,	_sampleTime(sample_time)
+		,	_integrator(integrator)
 		,	_prepared(false)
 		{
 		}
@@ -104,8 +105,6 @@ namespace camels
 		void setLevenbergMarquardt(double val) { _levenbergMarquardt = val; }
 
 		unsigned nT() const { return _ocp.getNumberOfIntervals(); }
-		double getSampleTime() const { return _sampleTime; }
-
 		unsigned nU() const	noexcept { return _Nu; }
 		unsigned nX() const	noexcept { return _Nx; }
 		unsigned nZ() const noexcept { return _Nz; }
@@ -114,16 +113,79 @@ namespace camels
 
 	private:
 
-		// Initializes _G, _y, _C, _c, _zMin, _zMax based on current working point _w.
-		// Does not initialize g.
-		void UpdateQP();
+		// Initializes _G, _g, _y, _C, _c, _zMin, _zMax based on current working point _w.
+		void UpdateQP()
+		{
+			for (unsigned i = 0; i < _ocp.getNumberOfIntervals(); ++i)
+				UpdateStage(i);
 
-		void UpdateStage(unsigned i);
+			// End state constraints.
+			typename Problem::TerminalConstraintJacobianMatrix D;
+			typename Problem::TerminalConstraintVector d_min, d_max;
+			_ocp.TerminalConstraints(_workingPoint.wend(), D, d_min, d_max);
+			_QP.Dend() = D;
+			_QP.dendMin() = d_min;
+			_QP.dendMax() = d_max;
+
+			_QP.zendMin() = _ocp.getTerminalStateMin() - _workingPoint.wend();
+			_QP.zendMax() = _ocp.getTerminalStateMax() - _workingPoint.wend();
+
+			// Hessian and gradient of Mayer term.
+			typename Problem::MayerHessianMatrix H_T;
+			typename Problem::StateVector g_T;
+			_ocp.MayerTerm(_workingPoint.wend(), g_T, H_T);
+
+			// Adding Levenberg-Marquardt term to make H positive-definite.
+			_QP.Hend() = H_T + _levenbergMarquardt * MayerHessianMatrix::Identity();
+			_QP.gend() = g_T;
+		}
+
+		void UpdateStage(unsigned i)
+		{
+			// Hessians and gradients of Lagrange terms.
+			//
+			LagrangeHessianMatrix H_i;
+			StateInputVector g_i;
+
+			_ocp.LagrangeTerm(i, _workingPoint.w(i), g_i, H_i);
+
+			// Adding Levenberg-Marquardt term to make H positive-definite.
+			_QP.H(i) = H_i + _levenbergMarquardt * LagrangeHessianMatrix::Identity();
+			_QP.g(i) = g_i;
+
+			// Bound constraints.
+			StateInputVector z_min, z_max;
+			z_min << _ocp.getStateMin(), _ocp.getInputMin();
+			z_max << _ocp.getStateMax(), _ocp.getInputMax();
+
+			// C = [ssA, ssB];
+			// x_{k+1} = C * z_k + c_k
+			typename Problem::StateVector x_plus;
+			typename Problem::ODEJacobianMatrix J;
+			_integrator.Integrate(_workingPoint.w(i), x_plus, J);
+			_QP.C(i) = J;
+
+			// \Delta x_{k+1} = C \Delta z_k + f(z_k) - x_{k+1}
+			// c = f(z_k) - x_{k+1}
+			_QP.c(i) = x_plus - _workingPoint.x(i + 1);
+
+			typename Problem::ConstraintJacobianMatrix D;
+			typename Problem::ConstraintVector d_min, d_max;
+			_ocp.PathConstraints(i, _workingPoint.w(i), D, d_min, d_max);
+			_QP.D(i) = D;
+			_QP.dMin(i) = d_min;
+			_QP.dMax(i) = d_max;
+
+			// z_min stores _Nt vectors of size _Nz and 1 vector of size _Nx
+			_QP.zMin(i) = z_min - _workingPoint.w(i);
+
+			// z_max stores _Nt vectors of size _Nz and 1 vector of size _Nx
+			_QP.zMax(i) = z_max - _workingPoint.w(i);
+		}
 
 		// Private data members.
 		Problem const& _ocp;
-
-		const double _sampleTime;
+		Integrator const& _integrator;
 
 		static const unsigned _Nu = Problem::NU;
 		static const unsigned _Nx = Problem::NX;
@@ -146,75 +208,4 @@ namespace camels
 		// Preparation() sets this flag to true, Feedback() resets it to false.
 		bool _prepared;
 	};
-
-	template<class _Problem, class QPSolver_>
-	void ModelPredictiveController<_Problem, QPSolver_>::UpdateQP()
-	{
-		for (unsigned i = 0; i < _ocp.getNumberOfIntervals(); ++i)
-			UpdateStage(i);
-
-		// End state constraints.
-		typename Problem::TerminalConstraintJacobianMatrix D;
-		typename Problem::TerminalConstraintVector d_min, d_max;
-		_ocp.TerminalConstraints(_workingPoint.wend(), D, d_min, d_max);
-		_QP.Dend() = D;
-		_QP.dendMin() = d_min;
-		_QP.dendMax() = d_max;
-
-		_QP.zendMin() = _ocp.getTerminalStateMin() - _workingPoint.wend();
-		_QP.zendMax() = _ocp.getTerminalStateMax() - _workingPoint.wend();
-
-		// Hessian and gradient of Mayer term.
-		typename Problem::MayerHessianMatrix H_T;
-		typename Problem::StateVector g_T;
-		_ocp.MayerTerm(_workingPoint.wend(), g_T, H_T);
-
-		// Adding Levenberg-Marquardt term to make H positive-definite.
-		_QP.Hend() = H_T + _levenbergMarquardt * MayerHessianMatrix::Identity();
-		_QP.gend() = g_T;
-	}
-
-	template<class _Problem, class QPSolver_>
-	void ModelPredictiveController<_Problem, QPSolver_>::UpdateStage(unsigned i)
-	{
-		// Hessians and gradients of Lagrange terms.
-		//
-		LagrangeHessianMatrix H_i;
-		StateInputVector g_i;
-
-		_ocp.LagrangeTerm(i, _workingPoint.w(i), g_i, H_i);
-
-		// Adding Levenberg-Marquardt term to make H positive-definite.
-		_QP.H(i) = H_i + _levenbergMarquardt * LagrangeHessianMatrix::Identity();
-		_QP.g(i) = g_i;
-
-		// Bound constraints.
-		StateInputVector z_min, z_max;
-		z_min << _ocp.getStateMin(), _ocp.getInputMin();
-		z_max << _ocp.getStateMax(), _ocp.getInputMax();
-
-		// C = [ssA, ssB];
-		// x_{k+1} = C * z_k + c_k
-		typename Problem::StateVector x_plus;
-		typename Problem::ODEJacobianMatrix J;
-		_ocp.Integrate(_workingPoint.w(i), getSampleTime(), x_plus, J);
-		_QP.C(i) = J;
-
-		// \Delta x_{k+1} = C \Delta z_k + f(z_k) - x_{k+1}
-		// c = f(z_k) - x_{k+1}
-		_QP.c(i) = x_plus - _workingPoint.x(i + 1);
-
-		typename Problem::ConstraintJacobianMatrix D;
-		typename Problem::ConstraintVector d_min, d_max;
-		_ocp.PathConstraints(i, _workingPoint.w(i), D, d_min, d_max);
-		_QP.D(i) = D;
-		_QP.dMin(i) = d_min;
-		_QP.dMax(i) = d_max;
-
-		// z_min stores _Nt vectors of size _Nz and 1 vector of size _Nx
-		_QP.zMin(i) = z_min - _workingPoint.w(i);
-
-		// z_max stores _Nt vectors of size _Nz and 1 vector of size _Nx
-		_QP.zMax(i) = z_max - _workingPoint.w(i);
-	}
 }

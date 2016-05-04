@@ -11,8 +11,9 @@
 TEST(mpc_test, mpc_test_case)
 {
 	typedef cms::CyberMotionOCP OCP;
+	typedef cms::Integrator Integrator;
 	typedef camels::CondensingSolver<OCP::NX, OCP::NU, OCP::NC, OCP::NCT> QPSolver;
-	typedef camels::ModelPredictiveController<OCP, QPSolver> Controller;
+	typedef camels::ModelPredictiveController<OCP, Integrator, QPSolver> Controller;
 
 	const double Ts = 0.05;
 	const unsigned Nt = 1;
@@ -25,9 +26,11 @@ TEST(mpc_test, mpc_test_case)
 	OCP ocp(Nt);
 	ocp.setWashoutFactor(0.1);
 
+	Integrator integrator(Ts);
+
 	auto x0 = ocp.getDefaultState();
 	auto const working_point = camels::ConstantTrajectory<Controller::Trajectory>(Nt, x0, OCP::InputVector::Zero());
-	Controller controller(ocp, Ts, working_point);
+	Controller controller(ocp, integrator, working_point);
 
 	OCP::InputVector u;
 	u.fill(0.);
