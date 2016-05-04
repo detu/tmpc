@@ -14,13 +14,11 @@ namespace camels
 		typedef typename Derived_::StateInputVector StateInputVector;
 		*/
 
+		/*
 		static size_type const NX = NX_;
 		static size_type const NU = NU_;
 		static size_type const NZ = NX + NU;
-
-		typedef Eigen::Matrix<double, NX, 1> StateVector;
-		typedef Eigen::Matrix<double, NU, 1> InputVector;
-		typedef Eigen::Matrix<double, NZ, 1> StateInputVector;
+		*/
 
 		decltype(auto) w(size_type i) const noexcept { return derived().w(i); }
 		decltype(auto) w(size_type i) noexcept { return derived().w(i); }
