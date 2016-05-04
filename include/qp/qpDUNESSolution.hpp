@@ -97,21 +97,6 @@ namespace camels
 			return Eigen::Map<StateVector const>(_data.data() + _nt * NZ);
 		}
 
-		void shift()
-		{
-			std::copy_n(_data.begin() + NZ, (_nt - 1) * NZ + NX, _data.begin());
-		}
-
-		qpDUNESSolution<NX_, NU_>& operator+=(qpDUNESSolution<NX_, NU_> const& rhs)
-		{
-			if (rhs.nT() != nT())
-				throw std::invalid_argument("qpDUNESSolution<>::operator+=(): arguments have different sizes!");
-
-			std::transform(_data.cbegin(), _data.cend(), rhs._data.cbegin(), _data.begin(), std::plus<double>());
-
-			return *this;
-		}
-
 		size_type const nX() const noexcept { return NX; }
 		size_type const nU() const noexcept { return NU; }
 		size_type const nT() const noexcept { return _nt; }

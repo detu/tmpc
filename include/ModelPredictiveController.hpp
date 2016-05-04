@@ -1,7 +1,5 @@
 #pragma once
 
-#include <Eigen/Dense>
-
 #include <ostream>
 #include <functional>
 #include <stdexcept>
@@ -24,14 +22,9 @@ namespace camels
 		typedef typename Problem::LagrangeHessianMatrix LagrangeHessianMatrix;
 		typedef typename Problem::MayerHessianMatrix MayerHessianMatrix;
 
-		typedef Eigen::Map<Eigen::VectorXd> VectorMap;
-		typedef Eigen::Map<const Eigen::VectorXd> VectorConstMap;
-		typedef Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> RowMajorMatrix;
-		typedef Eigen::Map<RowMajorMatrix> RowMajorMatrixMap;
-		typedef Eigen::Map<const RowMajorMatrix> RowMajorMatrixConstMap;
 		typedef std::function<void (typename QPSolver::MultiStageQP const&)> QPCallback;
 
-		ModelPredictiveController(Problem const& ocp, double sample_time, const Trajectory& working_point)
+		ModelPredictiveController(Problem const& ocp, double sample_time, Trajectory const& working_point)
 		:	_ocp(ocp)
 		,	_QP(working_point.nT())
 		,	_workingPoint(working_point)
@@ -105,7 +98,7 @@ namespace camels
 			//qpDUNES_shiftIntervals(&_qpData);		/* shift intervals (particularly important when using qpOASES for underlying local QPs) */
 
 			// Shift working point
-			_workingPoint.shift();
+			shift(_workingPoint);
 
 			// Calculate new matrices.
 			UpdateQP();
