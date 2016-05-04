@@ -96,7 +96,7 @@ namespace camels
 	template<class _Problem, class QPSolver_>
 	ModelPredictiveController<_Problem, QPSolver_>::ModelPredictiveController(Problem const& ocp, double sample_time)
 	:	_ocp(ocp)
-	,	_QP(_Nx, _Nu, _Nd, _NdT, ocp.getNumberOfIntervals())
+	,	_QP(ocp.getNumberOfIntervals())
 	,	_workingPoint(ocp.getNumberOfIntervals())
 	,	_solution(ocp.getNumberOfIntervals())
 	,	_Solver(ocp.getNumberOfIntervals()),
@@ -196,7 +196,7 @@ namespace camels
 		_ocp.MayerTerm(_workingPoint.w(_ocp.getNumberOfIntervals()), g_T, H_T);
 
 		// Adding Levenberg-Marquardt term to make H positive-definite.
-		_QP.H(getNumberOfIntervals()) = H_T + _levenbergMarquardt * MayerHessianMatrix::Identity();
+		_QP.Hend() = H_T + _levenbergMarquardt * MayerHessianMatrix::Identity();
 		_QP.g(getNumberOfIntervals()) = g_T;
 
 		// Call the QP callback, if there is one.

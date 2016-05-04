@@ -23,7 +23,7 @@ namespace camels
 		typedef qpOASESProgram CondensedQP;
 
 		// Manages input data of qpOASES
-		typedef camels::MultiStageQP MultiStageQP;
+		typedef camels::MultiStageQP<NX, NU, NC, NCT> MultiStageQP;
 
 		// Manages output data of qpOASES
 		class Point;

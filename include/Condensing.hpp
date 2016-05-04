@@ -106,8 +106,8 @@ namespace camels
 		condensed_qp.ubA().bottomRows(nDT) = msqp.dMax(nT) - d_ofs;
 
 		// Cost of final state.
-		Hc.template triangularView<Upper>() += M.transpose() * msqp.H(nT).template selfadjointView<Upper>() * M;
-		gc += M.transpose() * (msqp.g(nT) + msqp.H(nT) * v);
+		Hc.template triangularView<Upper>() += M.transpose() * msqp.Hend().template selfadjointView<Upper>() * M;
+		gc += M.transpose() * (msqp.g(nT) + msqp.Hend() * v);
 
 		Hc = Hc.template selfadjointView<Upper>();
 	}

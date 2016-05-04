@@ -28,18 +28,23 @@ namespace camels
 	*	nX < nZ
 	*	nU = nZ - nX
 	*/
-	//template<unsigned NX_, unsigned NU_, unsigned NC_, unsigned NCT_>
+	template<unsigned NX_, unsigned NU_, unsigned NC_, unsigned NCT_>
 	class MultiStageQP
 	{
 	public:
 		typedef unsigned int size_type;
 
-		/*
 		static unsigned const NX = NX_;
 		static unsigned const NU = NU_;
+		static unsigned const NZ = NX + NU;
 		static unsigned const NC = NC_;
 		static unsigned const NCT = NCT_;
-		*/
+
+		typedef Eigen::Matrix<double, NX, 1> StateVector;
+		typedef Eigen::Matrix<double, NU, 1> InputVector;
+		typedef Eigen::Matrix<double, NZ, 1> StateInputVector;
+		typedef Eigen::Matrix<double, NZ, NZ, Eigen::RowMajor> StageHessianMatrix;
+		typedef Eigen::Matrix<double, NX, NX, Eigen::RowMajor> EndStageHessianMatrix;
 
 		typedef Eigen::Map<Eigen::VectorXd> VectorMap;
 		typedef Eigen::Map<const Eigen::VectorXd> VectorConstMap;
@@ -47,8 +52,8 @@ namespace camels
 		typedef Eigen::Map<RowMajorMatrix> RowMajorMatrixMap;
 		typedef Eigen::Map<const RowMajorMatrix> RowMajorMatrixConstMap;
 
-		MultiStageQP(size_type nx, size_type nu, size_type nd, size_type ndt, size_type nt)
-		:	MultiStageQP(MultiStageQPSize(nx, nu, nd, ndt, nt))
+		MultiStageQP(size_type nt)
+		:	MultiStageQP(MultiStageQPSize(NX, NU, NC, NCT, nt))
 		{
 		}
 
@@ -74,18 +79,26 @@ namespace camels
 		size_type nVar() const { return _size.nVar(); }
 		size_type nConstr() const { return _size.nConstr(); }
 
-		RowMajorMatrixMap H(unsigned i)
+		Eigen::Map<StageHessianMatrix> H(unsigned i)
 		{
-			assert(i < nT() + 1);
-			const auto sz = i < nT() ? nZ() : nX();
-			return RowMajorMatrixMap(_H.data() + i * nZ() * nZ(), sz, sz);
+			assert(i < nT());
+			return Eigen::Map<StageHessianMatrix>(_H.data() + i * nZ() * nZ());
 		}
 
-		RowMajorMatrixConstMap H(unsigned i) const
+		Eigen::Map<StageHessianMatrix const> H(unsigned i) const
 		{
-			assert(i < nT() + 1);
-			const auto sz = i < nT() ? nZ() : nX();
-			return RowMajorMatrixConstMap(_H.data() + i * nZ() * nZ(), sz, sz);
+			assert(i < nT());
+			return Eigen::Map<StageHessianMatrix const>(_H.data() + i * nZ() * nZ());
+		}
+
+		Eigen::Map<EndStageHessianMatrix> Hend()
+		{
+			return Eigen::Map<EndStageHessianMatrix>(_H.data() + nT() * nZ() * nZ());
+		}
+
+		Eigen::Map<EndStageHessianMatrix const> Hend() const
+		{
+			return Eigen::Map<EndStageHessianMatrix const>(_H.data() + nT() * nZ() * nZ());
 		}
 
 		VectorMap g(unsigned i)
@@ -282,7 +295,8 @@ namespace camels
 		std::vector<double> _zOpt;
 	};
 
-	inline void MultiStageQP::PrintQP_C(std::ostream& log_stream) const
+	template<unsigned NX_, unsigned NU_, unsigned NC_, unsigned NCT_>
+	inline void MultiStageQP<NX_, NU_, NC_, NCT_>::PrintQP_C(std::ostream& log_stream) const
 	{
 		using std::endl;
 
@@ -327,7 +341,8 @@ namespace camels
 		PrintQP_zMax_C(log_stream);
 	}
 
-	inline void MultiStageQP::PrintQP_MATLAB(std::ostream& log_stream, const std::string& var_name) const
+	template<unsigned NX_, unsigned NU_, unsigned NC_, unsigned NCT_>
+	inline void MultiStageQP<NX_, NU_, NC_, NCT_>::PrintQP_MATLAB(std::ostream& log_stream, const std::string& var_name) const
 	{
 		using std::endl;
 
@@ -351,7 +366,8 @@ namespace camels
 		}
 	}
 
-	inline void MultiStageQP::PrintQP_zMin_C(std::ostream& log_stream) const
+	template<unsigned NX_, unsigned NU_, unsigned NC_, unsigned NCT_>
+	inline void MultiStageQP<NX_, NU_, NC_, NCT_>::PrintQP_zMin_C(std::ostream& log_stream) const
 	{
 		using std::endl;
 
@@ -363,7 +379,8 @@ namespace camels
 		log_stream << endl << "};" << endl << endl;
 	}
 
-	inline void MultiStageQP::PrintQP_zMax_C(std::ostream& log_stream) const
+	template<unsigned NX_, unsigned NU_, unsigned NC_, unsigned NCT_>
+	inline void MultiStageQP<NX_, NU_, NC_, NCT_>::PrintQP_zMax_C(std::ostream& log_stream) const
 	{
 		using std::endl;
 
