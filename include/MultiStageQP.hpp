@@ -47,6 +47,8 @@ namespace camels
 		typedef Eigen::Matrix<double, NX, NX, Eigen::RowMajor> EndStageHessianMatrix;
 		typedef Eigen::Matrix<double, NZ, 1> StageGradientVector;
 		typedef Eigen::Matrix<double, NX, 1> EndStageGradientVector;
+		typedef Eigen::Matrix<double, NX, NZ, Eigen::RowMajor> InterStageMatrix;
+		typedef Eigen::Matrix<double, NX, 1> InterStageVector;
 
 		typedef Eigen::Map<Eigen::VectorXd> VectorMap;
 		typedef Eigen::Map<const Eigen::VectorXd> VectorConstMap;
@@ -123,14 +125,15 @@ namespace camels
 			return Eigen::Map<EndStageGradientVector const>(_g.data() + nT() * nZ());
 		}
 		
-		RowMajorMatrixMap C(unsigned i)
+		Eigen::Map<InterStageMatrix> C(unsigned i)
 		{
-			return RowMajorMatrixMap(_C.data() + i * nX() * nZ(), nX(), nZ());
+			assert(i < nT());
+			return Eigen::Map<InterStageMatrix>(_C.data() + i * nX() * nZ());
 		}
 
-		RowMajorMatrixConstMap C(unsigned i) const
+		Eigen::Map<InterStageMatrix const> C(unsigned i) const
 		{
-			return RowMajorMatrixConstMap(_C.data() + i * nX() * nZ(), nX(), nZ());
+			return Eigen::Map<InterStageMatrix const>(_C.data() + i * nX() * nZ());
 		}
 
 		RowMajorMatrixMap D(unsigned i)
