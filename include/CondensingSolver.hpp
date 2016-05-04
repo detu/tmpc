@@ -5,6 +5,7 @@
 
 #include <qpOASES.hpp>
 #include <Condensing.hpp>
+#include <MultiStageQPSize.hpp>
 
 #include <ostream>
 

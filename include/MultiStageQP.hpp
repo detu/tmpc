@@ -1,7 +1,5 @@
 #pragma once
 
-#include "MultiStageQPSize.hpp"
-
 #include <Eigen/Dense>
 #include <Eigen/SparseCore>
 
@@ -60,11 +58,6 @@ namespace camels
 		typedef Eigen::Map<RowMajorMatrix> RowMajorMatrixMap;
 		typedef Eigen::Map<const RowMajorMatrix> RowMajorMatrixConstMap;
 
-		MultiStageQP(size_type nt)
-		:	MultiStageQP(MultiStageQPSize(NX, NU, NC, NCT, nt))
-		{
-		}
-
 		void PrintQP_C(std::ostream& os) const;
 
 		void PrintQP_zMax_C(std::ostream& log_stream) const;
@@ -73,17 +66,17 @@ namespace camels
 
 		void PrintQP_MATLAB(std::ostream& log_stream, const std::string& var_name = "qp") const;
 
-		size_type nT() const { return _size.nT(); }
-		size_type nX() const { return _size.nX(); }
-		size_type nZ() const { return _size.nZ(); }
-		size_type nU() const { return _size.nU(); }
-		size_type nD() const { return _size.nD(); }
-		size_type nDT() const { return _size.nDT(); }
+		size_type nT() const { return _Nt; }
+		size_type nX() const { return NX; }
+		size_type nZ() const { return NZ; }
+		size_type nU() const { return NU; }
+		size_type nD() const { return NC; }
+		size_type nDT() const { return NCT; }
 
-		size_type nIndep() const { return _size.nIndep(); }
-		size_type nDep() const { return _size.nDep(); }
-		size_type nVar() const { return _size.nVar(); }
-		size_type nConstr() const { return _size.nConstr(); }
+		size_type nIndep() const { return NX + NU * _Nt; }
+		size_type nDep() const { return NX * _Nt; }
+		size_type nVar() const { return NZ * _Nt + NX; }
+		size_type nConstr() const { return NC * _Nt + NCT; }
 
 		Eigen::Map<StageHessianMatrix> H(unsigned i)
 		{
@@ -309,26 +302,25 @@ namespace camels
 			return Eigen::Map<InputVector const>(_zMax.data() + i * nZ() + nX());
 		}
 
-	private:
-		MultiStageQP(const MultiStageQPSize& size)
-		:	_size(size)
+		MultiStageQP(size_type nt)
+		:	_Nt(nt)
+		,	_H(NZ * NZ * nt + NX * NX)
+		,	_g(NZ * nt + NX)
+		,	_C(NX * NZ * nt)
+		,	_c(NX * nt)
+		,	_D(NC * NZ * nt + NCT * NX)
+		,	_dMin(NC * nt + NCT)
+		,	_dMax(NC * nt + NCT)
+		,	_zMin(NZ * nt + NX)
+		,	_zMax(NZ * nt + NX)
 		{
-			// Allocate arrays.
-			_H.resize(nZ() * nZ() * nT() + nX() * nX());
-			_g.resize(nZ() * nT() + nX());
-			_C.resize(nX() * nZ() * nT());
-			_c.resize(nX() * nT());
-			_D.resize(nD() * nZ() * nT() + nDT() * nX());
-			_dMin.resize(nD() * nT() + nDT());
-			_dMax.resize(nD() * nT() + nDT());
-			_zMin.resize(nZ() * nT() + nX());
-			_zMax.resize(nZ() * nT() + nX());
 		}
 
+	private:
 		// Private data members.
 		//
 
-		const MultiStageQPSize _size;
+		size_type const _Nt;
 
 		// _H stores _Nt row-major matrices of size _Nz x _Nz and 1 matrix of size _Nx x _Nx.
 		std::vector<double> _H;
