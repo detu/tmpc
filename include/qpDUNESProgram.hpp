@@ -27,7 +27,7 @@ namespace camels
 	*	nU = nZ - nX
 	*/
 	template<unsigned NX_, unsigned NU_, unsigned NC_, unsigned NCT_>
-	class MultiStageQP
+	class qpDUNESProgram
 	{
 	public:
 		typedef unsigned int size_type;
@@ -302,7 +302,7 @@ namespace camels
 			return Eigen::Map<InputVector const>(_zMax.data() + i * nZ() + nX());
 		}
 
-		MultiStageQP(size_type nt)
+		qpDUNESProgram(size_type nt)
 		:	_Nt(nt)
 		,	_H(NZ * NZ * nt + NX * NX)
 		,	_g(NZ * nt + NX)
@@ -363,7 +363,7 @@ namespace camels
 	};
 
 	template<unsigned NX_, unsigned NU_, unsigned NC_, unsigned NCT_>
-	inline void MultiStageQP<NX_, NU_, NC_, NCT_>::PrintQP_C(std::ostream& log_stream) const
+	inline void qpDUNESProgram<NX_, NU_, NC_, NCT_>::PrintQP_C(std::ostream& log_stream) const
 	{
 		using std::endl;
 
@@ -409,7 +409,7 @@ namespace camels
 	}
 
 	template<unsigned NX_, unsigned NU_, unsigned NC_, unsigned NCT_>
-	inline void MultiStageQP<NX_, NU_, NC_, NCT_>::PrintQP_MATLAB(std::ostream& log_stream, const std::string& var_name) const
+	inline void qpDUNESProgram<NX_, NU_, NC_, NCT_>::PrintQP_MATLAB(std::ostream& log_stream, const std::string& var_name) const
 	{
 		using std::endl;
 
@@ -434,7 +434,7 @@ namespace camels
 	}
 
 	template<unsigned NX_, unsigned NU_, unsigned NC_, unsigned NCT_>
-	inline void MultiStageQP<NX_, NU_, NC_, NCT_>::PrintQP_zMin_C(std::ostream& log_stream) const
+	inline void qpDUNESProgram<NX_, NU_, NC_, NCT_>::PrintQP_zMin_C(std::ostream& log_stream) const
 	{
 		using std::endl;
 
@@ -447,7 +447,7 @@ namespace camels
 	}
 
 	template<unsigned NX_, unsigned NU_, unsigned NC_, unsigned NCT_>
-	inline void MultiStageQP<NX_, NU_, NC_, NCT_>::PrintQP_zMax_C(std::ostream& log_stream) const
+	inline void qpDUNESProgram<NX_, NU_, NC_, NCT_>::PrintQP_zMax_C(std::ostream& log_stream) const
 	{
 		using std::endl;
 

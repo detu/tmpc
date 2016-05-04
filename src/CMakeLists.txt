@@ -19,7 +19,7 @@ set(HDR
 	${RTMC_INCLUDE_DIR}/CyberMotion.hpp
 	${RTMC_INCLUDE_DIR}/CyberMotion1D.hpp
 	${RTMC_INCLUDE_DIR}/ModelPredictiveController.hpp
-	${RTMC_INCLUDE_DIR}/MultiStageQP.hpp
+	${RTMC_INCLUDE_DIR}/qpDUNESProgram.hpp
 	${RTMC_INCLUDE_DIR}/MultiStageQPSize.hpp
 	${RTMC_INCLUDE_DIR}/qpOASESProgram.hpp
 	${RTMC_INCLUDE_DIR}/CondensingSolver.hpp

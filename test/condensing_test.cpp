@@ -26,7 +26,7 @@ std::ostream& operator<<(std::ostream& os, typename Solver::Point const& point)
 
 TEST(test_1, condensing_test)
 {
-	camels::MultiStageQP<NX, NU, NC, NCT> qp(NT);
+	camels::qpDUNESProgram<NX, NU, NC, NCT> qp(NT);
 	qp.zMin(0)  .setConstant(-1);	qp.zMax(0)  .setConstant(1);
 	qp.zMin(1)  .setConstant(-1);	qp.zMax(1)  .setConstant(1);
 	qp.zendMin().setConstant(-1);	qp.zendMax().setConstant(1);

@@ -1,11 +1,11 @@
 #pragma once
 
-#include "MultiStageQP.hpp"
 #include "qpOASESProgram.hpp"
 
 #include <qpOASES.hpp>
 #include <Condensing.hpp>
 #include <MultiStageQPSize.hpp>
+#include <qpDUNESProgram.hpp>
 
 #include <ostream>
 
@@ -24,7 +24,7 @@ namespace camels
 		typedef qpOASESProgram CondensedQP;
 
 		// Manages input data of qpOASES
-		typedef camels::MultiStageQP<NX, NU, NC, NCT> MultiStageQP;
+		typedef camels::qpDUNESProgram<NX, NU, NC, NCT> MultiStageQP;
 
 		// Manages output data of qpOASES
 		class Point;
