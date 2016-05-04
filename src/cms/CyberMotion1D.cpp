@@ -1,14 +1,14 @@
-#include <CyberMotion1D.hpp>
+#include <cms/CyberMotion1D.hpp>
 
 #include <array>
 #include <cassert>
 #include <limits>
 #include <algorithm>
 
-namespace mpmc
+namespace cms
 {
 	CyberMotion1D::CyberMotion1D() : 
-		MotionPlatform(1)
+		mpmc::MotionPlatform(1)
 	{
 		_fullState.setConstant(std::numeric_limits<double>::quiet_NaN());
 	}

@@ -1,6 +1,6 @@
 #include <casadi_interface/GeneratedFunction.hpp>
 
-#include <../src/cybermotion_generated.h>
+#include <../src/cms/cybermotion_generated.h>
 
 #include <gtest/gtest.h>
 //#define EXPECT_TRUE(X) assert(X)

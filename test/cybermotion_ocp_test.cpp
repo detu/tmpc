@@ -1,4 +1,4 @@
-#include <CyberMotionOCP.hpp>
+#include <cms/CyberMotionOCP.hpp>
 
 #include <gtest/gtest.h>
 

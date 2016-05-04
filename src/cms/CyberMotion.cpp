@@ -1,4 +1,4 @@
-#include "CyberMotion.hpp"
+#include "cms/CyberMotion.hpp"
 
 #include <array>
 #include <cassert>
@@ -8,7 +8,7 @@
 
 #include "cybermotion_generated.h"
 
-namespace mpmc
+namespace cms
 {
 	const unsigned CyberMotion::numberOfAxes;
 

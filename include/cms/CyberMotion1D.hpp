@@ -4,10 +4,10 @@
 
 #include <Eigen/Dense>
 
-namespace mpmc
+namespace cms
 {
 	// Implementation of the CMS kinematics model where only axis 0 (linear track) can move.
-	class CyberMotion1D : public MotionPlatform
+	class CyberMotion1D : public mpmc::MotionPlatform
 	{
 	public:
 		typedef Eigen::Matrix<double, 8, 1> FullPositionVector;

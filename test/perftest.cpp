@@ -1,4 +1,4 @@
-#include <CyberMotion.hpp>
+#include <cms/CyberMotion.hpp>
 
 #include <Eigen/Dense>
 
@@ -8,7 +8,7 @@
 
 int main(int argc, char * argv[])
 {
-	mpmc::CyberMotion cms;
+	cms::CyberMotion cms;
 
 // 	Eigen::MatrixXd x(cms.getStateDim(), nT);
 // 	x.fill(0.);

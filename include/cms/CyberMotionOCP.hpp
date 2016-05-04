@@ -7,18 +7,26 @@
 
 #pragma once
 
-#include <OptimalControlProblem.hpp>
+#include <core/OptimalControlProblem.hpp>
 
 #include "CyberMotion.hpp"
 #include "casadi_interface/GeneratedFunction.hpp"
+#include "core/ODEModel.hpp"
 
 #include <Eigen/Dense>
 
 #include <vector>
 
-namespace mpmc
+namespace cms
 {
-	class CyberMotionOCP : public camels::OptimalControlProblem<CyberMotionOCP, 2 * CyberMotion::numberOfAxes, CyberMotion::numberOfAxes>
+	class Integrator
+	{
+
+	};
+
+	class CyberMotionOCP :
+		public camels::OptimalControlProblem<CyberMotionOCP, 2 * CyberMotion::numberOfAxes, CyberMotion::numberOfAxes>,
+		public camels::ODEModel<CyberMotionOCP>
 	{
 	public:
 		static unsigned const NY = 9;
@@ -63,8 +71,11 @@ namespace mpmc
 		void TerminalConstraints(const StateVector& x, TerminalConstraintJacobianMatrix& D,
 			TerminalConstraintVector& d_min, TerminalConstraintVector& d_max) const;
 
-	private:
+		// ODEModel interface.
+		//
 		void ODE(unsigned t, StateInputVector const& z, StateVector& xdot, ODEJacobianMatrix& jac) const;
+
+	private:
 		void Output(unsigned t, StateInputVector const& z, OutputVector& y, OutputJacobianMatrix& jac) const;
 		void SRConstraints(const StateVector& x, Eigen::Matrix<Scalar, NC, NX>& D,
 			ConstraintVector& d_min, ConstraintVector& d_max) const;

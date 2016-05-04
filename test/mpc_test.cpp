@@ -1,5 +1,5 @@
-#include <ModelPredictiveController.hpp>
-#include <CyberMotionOCP.hpp>
+#include <core/ModelPredictiveController.hpp>
+#include <cms/CyberMotionOCP.hpp>
 #include <qp/CondensingSolver.hpp>
 #include <core/Trajectory.hpp>
 
@@ -10,7 +10,7 @@
 
 TEST(mpc_test, mpc_test_case)
 {
-	typedef mpmc::CyberMotionOCP OCP;
+	typedef cms::CyberMotionOCP OCP;
 	typedef camels::CondensingSolver<OCP::NX, OCP::NU, OCP::NC, OCP::NCT> QPSolver;
 	typedef camels::ModelPredictiveController<OCP, QPSolver> Controller;
 

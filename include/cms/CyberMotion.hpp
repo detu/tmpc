@@ -4,9 +4,9 @@
 
 #include "casadi_interface/GeneratedFunction.hpp"
 
-namespace mpmc
+namespace cms
 {
-	class CyberMotion : public MotionPlatform
+	class CyberMotion : public mpmc::MotionPlatform
 	{
 	public:
 		CyberMotion();

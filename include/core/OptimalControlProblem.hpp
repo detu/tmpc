@@ -32,11 +32,6 @@ namespace camels
 		{
 		}
 
-		void ODE(unsigned t, StateInputVector const& z, StateVector& xdot, ODEJacobianMatrix& jac)
-		{
-			derived()->ODE(t, z, xdot, jac);
-		}
-
 		void LagrangeTerm(unsigned t, StateInputVector const& z, StateInputVector& grad, LagrangeHessianMatrix& hess)
 		{
 			derived()->LagrangeTerm(t, z, grad, hess);

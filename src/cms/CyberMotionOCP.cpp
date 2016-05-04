@@ -5,11 +5,11 @@
  *      Author: kotlyar
  */
 
-#include <CyberMotionOCP.hpp>
+#include <cms/CyberMotionOCP.hpp>
 
 #include "cybermotion_generated.h"
 
-namespace mpmc
+namespace cms
 {
 	CyberMotionOCP::CyberMotionOCP(unsigned Nt)
 	:	camels::OptimalControlProblem<CyberMotionOCP, 2 * CyberMotion::numberOfAxes, CyberMotion::numberOfAxes>(Nt)

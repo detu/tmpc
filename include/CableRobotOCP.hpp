@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include <OptimalControlProblem.hpp>
+#include <core/OptimalControlProblem.hpp>
 
 #include "casadi_interface/GeneratedFunction.hpp"
 
