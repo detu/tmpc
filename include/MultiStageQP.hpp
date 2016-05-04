@@ -285,28 +285,28 @@ namespace camels
 			return Eigen::Map<StateVector const>(_zMax.data() + i * nZ());
 		}
 
-		VectorMap uMin(unsigned i)
+		Eigen::Map<InputVector> uMin(unsigned i)
 		{
 			assert(i < nT());
-			return VectorMap(_zMin.data() + i * nZ() + nX(), nU());
+			return Eigen::Map<InputVector>(_zMin.data() + i * nZ() + nX());
 		}
 
-		VectorConstMap uMin(unsigned i) const
+		Eigen::Map<InputVector const> uMin(unsigned i) const
 		{
 			assert(i < nT());
-			return VectorConstMap(_zMin.data() + i * nZ() + nX(), nU());
+			return Eigen::Map<InputVector const>(_zMin.data() + i * nZ() + nX());
 		}
 
-		VectorMap uMax(unsigned i)
+		Eigen::Map<InputVector> uMax(unsigned i)
 		{
 			assert(i < nT());
-			return VectorMap(_zMax.data() + i * nZ() + nX(), nU());
+			return Eigen::Map<InputVector>(_zMax.data() + i * nZ() + nX());
 		}
 
-		VectorConstMap uMax(unsigned i) const
+		Eigen::Map<InputVector const> uMax(unsigned i) const
 		{
 			assert(i < nT());
-			return VectorConstMap(_zMax.data() + i * nZ() + nX(), nU());
+			return Eigen::Map<InputVector const>(_zMax.data() + i * nZ() + nX());
 		}
 
 	private:
@@ -323,7 +323,6 @@ namespace camels
 			_dMax.resize(nD() * nT() + nDT());
 			_zMin.resize(nZ() * nT() + nX());
 			_zMax.resize(nZ() * nT() + nX());
-			_zOpt.resize(nZ() * nT() + nX());
 		}
 
 		// Private data members.
@@ -357,10 +356,6 @@ namespace camels
 
 		// _zMax stores _Nt vectors of size _Nz and 1 vector of size _Nx
 		std::vector<double> _zMax;
-
-		// Primal optimal solution.
-		// _zOpt stores _Nt vectors of size _Nz and 1 vector of size _Nx
-		std::vector<double> _zOpt;
 	};
 
 	template<unsigned NX_, unsigned NU_, unsigned NC_, unsigned NCT_>
