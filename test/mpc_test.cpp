@@ -1,6 +1,7 @@
 #include <ModelPredictiveController.hpp>
 #include <CyberMotionOCP.hpp>
 #include <qp/CondensingSolver.hpp>
+#include <core/Trajectory.hpp>
 
 #include <iostream>
 #include <fstream>
@@ -24,10 +25,9 @@ TEST(mpc_test, mpc_test_case)
 	OCP ocp(Nt);
 	ocp.setWashoutFactor(0.1);
 
-	Controller controller(ocp, Ts);
-
 	auto x0 = ocp.getDefaultState();
-	controller.InitWorkingPoint(x0);
+	auto const working_point = camels::ConstantTrajectory<Controller::Trajectory>(Nt, x0, OCP::InputVector::Zero());
+	Controller controller(ocp, Ts, working_point);
 
 	OCP::InputVector u;
 	u.fill(0.);

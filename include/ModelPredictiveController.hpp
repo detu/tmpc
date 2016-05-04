@@ -15,6 +15,8 @@ namespace camels
 		typedef _Problem Problem;
 		typedef QPSolver_ QPSolver;
 
+		typedef typename QPSolver::Point Trajectory;
+
 		typedef typename Problem::StateVector StateVector;
 		typedef typename Problem::InputVector InputVector;
 		typedef typename Problem::StateInputVector StateInputVector;
@@ -29,18 +31,18 @@ namespace camels
 		typedef Eigen::Map<const RowMajorMatrix> RowMajorMatrixConstMap;
 		typedef std::function<void (typename QPSolver::MultiStageQP const&)> QPCallback;
 
-		ModelPredictiveController(Problem const& ocp, double sample_time)
+		ModelPredictiveController(Problem const& ocp, double sample_time, const Trajectory& working_point)
 		:	_ocp(ocp)
-		,	_QP(ocp.getNumberOfIntervals())
-		,	_workingPoint(ocp.getNumberOfIntervals())
-		,	_solution(ocp.getNumberOfIntervals())
-		,	_Solver(ocp.getNumberOfIntervals()),
+		,	_QP(working_point.nT())
+		,	_workingPoint(working_point)
+		,	_solution(working_point.nT())
+		,	_Solver(working_point.nT()),
 			_levenbergMarquardt(0.0),
 			_sampleTime(sample_time)
 		{
+			// Initialize QP
+			UpdateQP();
 		}
-
-		void InitWorkingPoint(const Eigen::VectorXd& x0);
 
 		// Feed current state x0, get back control input u.
 		InputVector Feedback(const StateVector& x0)
@@ -171,7 +173,7 @@ namespace camels
 		double _levenbergMarquardt;
 
 		// Working point (linearization point).
-		typename QPSolver::Point _workingPoint;
+		Trajectory _workingPoint;
 	};
 
 	template<class _Problem, class QPSolver_>
@@ -189,21 +191,6 @@ namespace camels
 
 		_QP.zendMin() = _ocp.getTerminalStateMin() - _workingPoint.wend();
 		_QP.zendMax() = _ocp.getTerminalStateMax() - _workingPoint.wend();
-	}
-
-	template<class _Problem, class QPSolver_>
-	void ModelPredictiveController<_Problem, QPSolver_>::InitWorkingPoint( const Eigen::VectorXd& x0 )
-	{
-		// u0 = 0;
-		InputVector const u0 = InputVector::Zero();
-
-		for (unsigned i = 0; i < _ocp.getNumberOfIntervals(); ++i)
-			_workingPoint.w(i) << x0, u0;
-
-		_workingPoint.wend() = x0;
-
-		// Initialize QP
-		UpdateQP();
 	}
 
 	template<class _Problem, class QPSolver_>

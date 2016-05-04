@@ -8,6 +8,8 @@
 #ifndef INCLUDE_QP_QPDUNESSOLUTION_HPP_
 #define INCLUDE_QP_QPDUNESSOLUTION_HPP_
 
+#include "../core/Trajectory.hpp"
+
 #include <Eigen/Dense>
 
 #include <vector>
@@ -18,7 +20,7 @@ namespace camels
 	// Manages data layout for qpDUNES solver output.
 	//
 	template<unsigned NX_, unsigned NU_>
-	class qpDUNESSolution
+	class qpDUNESSolution : public TrajectoryBase<qpDUNESSolution<NX_, NU_>, NX_, NU_>
 	{
 	public:
 		typedef unsigned size_type;
@@ -28,6 +30,7 @@ namespace camels
 		static size_type const NZ = NX + NU;
 
 		typedef Eigen::Matrix<double, NX, 1> StateVector;
+		typedef Eigen::Matrix<double, NU, 1> InputVector;
 		typedef Eigen::Matrix<double, NZ, 1> StateInputVector;
 
 		qpDUNESSolution(size_type nt)
@@ -66,6 +69,22 @@ namespace camels
 				throw std::out_of_range("qpDUNESSolution<>::x(): index is out of range");
 
 			return Eigen::Map<StateVector const>(_data.data() + i * NZ);
+		}
+
+		Eigen::Map<InputVector> u(unsigned i)
+		{
+			if (!(i < _nt))
+				throw std::out_of_range("qpDUNESSolution<>::u(): index is out of range");
+
+			return Eigen::Map<InputVector>(_data.data() + i * NZ + NX);
+		}
+
+		Eigen::Map<InputVector const> u(unsigned i) const
+		{
+			if (!(i < _nt))
+				throw std::out_of_range("qpDUNESSolution<>::u(): index is out of range");
+
+			return Eigen::Map<InputVector const>(_data.data() + i * NZ + NX);
 		}
 
 		Eigen::Map<StateVector> wend()
