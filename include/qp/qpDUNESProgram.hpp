@@ -69,11 +69,11 @@ namespace camels
 		void PrintQP_MATLAB(std::ostream& log_stream, const std::string& var_name = "qp") const;
 
 		size_type nT() const { return _Nt; }
-		size_type nX() const { return NX; }
-		size_type nZ() const { return NZ; }
-		size_type nU() const { return NU; }
-		size_type nD() const { return NC; }
-		size_type nDT() const { return NCT; }
+		static constexpr size_type nX() { return NX; }
+		static constexpr size_type nZ() { return NZ; }
+		static constexpr size_type nU() { return NU; }
+		static constexpr size_type nD() { return NC; }
+		static constexpr size_type nDT() { return NCT; }
 
 		size_type nIndep() const { return NX + NU * _Nt; }
 		size_type nDep() const { return NX * _Nt; }
