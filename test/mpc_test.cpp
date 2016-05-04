@@ -49,12 +49,9 @@ TEST(mpc_test, mpc_test_case)
 				out << y_ref[0] << "\t";
 		}
 
-		controller.EmbedInitialValue(x0);
-		//controller.PrintQP(std::cout);
-
 		try
 		{
-			controller.Solve();
+			u = controller.Feedback(x0);
 		}
 		catch (const QPSolver::SolveException& e)
 		{
@@ -86,7 +83,6 @@ TEST(mpc_test, mpc_test_case)
 			throw;
 		}
 
-		u = controller.getWorkingU(0);
 		controller.PrepareForNext();
 
 		std::cout << "\tu = " << u << std::endl;

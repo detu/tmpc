@@ -33,11 +33,15 @@ namespace camels
 		virtual ~ModelPredictiveController();
 
 		void InitWorkingPoint(const Eigen::VectorXd& x0);
-		void Solve();
 
-		void EmbedInitialValue(const Eigen::VectorXd& x0);
+		// Feed current state x0, get back control input u.
+		InputVector Feedback(const StateVector& x0)
+		{
+			EmbedInitialValue(x0);
+			Solve();
+			return getWorkingU(0);
+		}
 
-		Eigen::VectorXd getWorkingU(unsigned i) const;
 		void PrepareForNext();
 
 		void PrintQP_C(std::ostream& os) const;
@@ -63,6 +67,27 @@ namespace camels
 		typename QPSolver::StateInputVector getWorkingPoint(unsigned i) const;
 
 	private:
+		void EmbedInitialValue(const StateVector& x0)
+		{
+			// Compute linearization at new initial point.
+			_workingPoint.w(0).topRows(_Nx) = x0;
+			UpdateStage(0);
+
+			/** embed current initial value */
+			_QP.xMin(0) = x0 - _workingPoint.w(0).topRows(_Nx);
+			_QP.xMax(0) = x0 - _workingPoint.w(0).topRows(_Nx);
+		}
+
+		void Solve();
+
+		InputVector getWorkingU(unsigned i) const
+		{
+			if (!(i < _ocp.getNumberOfIntervals()))
+				throw std::out_of_range("ModelPredictiveController<Problem_, QPSolver_>::getWorkingU(): index is out of range");
+
+			return _workingPoint.w(i).bottomRows(nU());
+		}
+
 		// Initialized _G, _y, _C, _c, _zMin, _zMax based on current working point _w.
 		// Does not initialize g.
 		void UpdateQP();
@@ -220,27 +245,6 @@ namespace camels
 
 		// Calculate new matrices.
 		UpdateQP();
-	}
-
-	template<class _Problem, class QPSolver_>
-	Eigen::VectorXd ModelPredictiveController<_Problem, QPSolver_>::getWorkingU(unsigned i) const
-	{
-		if (!(i < _ocp.getNumberOfIntervals()))
-			throw std::out_of_range("ModelPredictiveController<_Problem, QPSolver_>::getWorkingU(): index is out of range");
-
-		return _workingPoint.w(i).bottomRows(nU());
-	}
-
-	template<class _Problem, class QPSolver_>
-	void ModelPredictiveController<_Problem, QPSolver_>::EmbedInitialValue(const Eigen::VectorXd& x0)
-	{
-		// Compute linearization at new initial point.
-		_workingPoint.w(0).topRows(_Nx) = x0;
-		UpdateStage(0);
-
-		/** embed current initial value */
-		_QP.xMin(0) = x0 - _workingPoint.w(0).topRows(_Nx);
-		_QP.xMax(0) = x0 - _workingPoint.w(0).topRows(_Nx);
 	}
 
 	template<class _Problem, class QPSolver_>
