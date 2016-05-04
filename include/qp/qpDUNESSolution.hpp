@@ -27,8 +27,8 @@ namespace camels
 		static size_type const NU = NU_;
 		static size_type const NZ = NX + NU;
 
-		typedef Eigen::Map<Eigen::VectorXd> VectorMap;
-		typedef Eigen::Map<const Eigen::VectorXd> VectorConstMap;
+		typedef Eigen::Matrix<double, NX, 1> StateVector;
+		typedef Eigen::Matrix<double, NZ, 1> StateInputVector;
 
 		qpDUNESSolution(size_type nt)
 		:	_data(NZ * nt + NX)
@@ -36,20 +36,46 @@ namespace camels
 		{
 		}
 
-		VectorMap w(unsigned i)
+		Eigen::Map<StateInputVector> w(unsigned i)
 		{
-			if(!(i < _nt + 1))
+			if (!(i < _nt))
 				throw std::out_of_range("qpDUNESSolution<>::w(): index is out of range");
 
-			return VectorMap(_data.data() + i * NZ, i < _nt ? NZ : NX);
+			return Eigen::Map<StateInputVector>(_data.data() + i * NZ);
 		}
 
-		VectorConstMap w(unsigned i) const
+		Eigen::Map<StateInputVector const> w(unsigned i) const
 		{
-			if (!(i < _nt + 1))
+			if (!(i < _nt))
 				throw std::out_of_range("qpDUNESSolution<>::w(): index is out of range");
 
-			return VectorConstMap(_data.data() + i * NZ, i < _nt ? NZ : NX);
+			return Eigen::Map<StateInputVector const>(_data.data() + i * NZ);
+		}
+
+		Eigen::Map<StateVector> x(unsigned i)
+		{
+			if (!(i < _nt + 1))
+				throw std::out_of_range("qpDUNESSolution<>::x(): index is out of range");
+
+			return Eigen::Map<StateVector>(_data.data() + i * NZ);
+		}
+
+		Eigen::Map<StateVector const> x(unsigned i) const
+		{
+			if (!(i < _nt + 1))
+				throw std::out_of_range("qpDUNESSolution<>::x(): index is out of range");
+
+			return Eigen::Map<StateVector const>(_data.data() + i * NZ);
+		}
+
+		Eigen::Map<StateVector> wend()
+		{
+			return Eigen::Map<StateVector>(_data.data() + _nt * NZ);
+		}
+
+		Eigen::Map<StateVector const> wend() const
+		{
+			return Eigen::Map<StateVector const>(_data.data() + _nt * NZ);
 		}
 
 		void shift()
@@ -71,6 +97,8 @@ namespace camels
 		size_type const nU() const noexcept { return NU; }
 		size_type const nT() const noexcept { return _nt; }
 
+		// qpDUNES interface
+		//
 		// Return pointer to data layout as expected by qpDUNES.
 		double * data() { return _data.data(); }
 

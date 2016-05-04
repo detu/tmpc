@@ -144,7 +144,7 @@ namespace camels
 			auto z_i = solution.w(i);
 			auto x_i = z_i.topRows(nX());
 			auto u_i = z_i.bottomRows(nU());
-			auto x_i_plus = solution.w(i + 1).topRows(nX());
+			auto x_i_plus = solution.x(i + 1);
 
 			u_i = _condensedSolution.middleRows(nX() + i * nU(), nU());
 			x_i_plus = msqp.C(i) * z_i + msqp.c(i);

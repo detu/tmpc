@@ -139,13 +139,13 @@ namespace camels
 
 		typename Problem::TerminalConstraintJacobianMatrix D;
 		typename Problem::TerminalConstraintVector d_min, d_max;
-		_ocp.TerminalConstraints(_workingPoint.w(_ocp.getNumberOfIntervals()), D, d_min, d_max);
+		_ocp.TerminalConstraints(_workingPoint.wend(), D, d_min, d_max);
 		_QP.Dend() = D;
 		_QP.dendMin() = d_min;
 		_QP.dendMax() = d_max;
 
-		_QP.zendMin() = _ocp.getTerminalStateMin() - _workingPoint.w(getNumberOfIntervals());
-		_QP.zendMax() = _ocp.getTerminalStateMax() - _workingPoint.w(getNumberOfIntervals());
+		_QP.zendMin() = _ocp.getTerminalStateMin() - _workingPoint.wend();
+		_QP.zendMax() = _ocp.getTerminalStateMax() - _workingPoint.wend();
 	}
 
 	template<class _Problem, class QPSolver_>
@@ -157,15 +157,13 @@ namespace camels
 	template<class _Problem, class QPSolver_>
 	void ModelPredictiveController<_Problem, QPSolver_>::InitWorkingPoint( const Eigen::VectorXd& x0 )
 	{
-		using namespace Eigen;
-
 		// u0 = 0;
 		InputVector const u0 = InputVector::Zero();
 
 		for (unsigned i = 0; i < _ocp.getNumberOfIntervals(); ++i)
 			_workingPoint.w(i) << x0, u0;
 
-		_workingPoint.w(_ocp.getNumberOfIntervals()) = x0;
+		_workingPoint.wend() = x0;
 
 		// Initialize QP
 		UpdateQP();
@@ -193,7 +191,7 @@ namespace camels
 		// Hessian and gradient of Mayer term.
 		typename Problem::MayerHessianMatrix H_T;
 		typename Problem::StateVector g_T;
-		_ocp.MayerTerm(_workingPoint.w(_ocp.getNumberOfIntervals()), g_T, H_T);
+		_ocp.MayerTerm(_workingPoint.wend(), g_T, H_T);
 
 		// Adding Levenberg-Marquardt term to make H positive-definite.
 		_QP.Hend() = H_T + _levenbergMarquardt * MayerHessianMatrix::Identity();
@@ -285,7 +283,7 @@ namespace camels
 
 		// \Delta x_{k+1} = C \Delta z_k + f(z_k) - x_{k+1}
 		// c = f(z_k) - x_{k+1}
-		_QP.c(i) = x_plus - _workingPoint.w(i + 1).topRows(_Nx);
+		_QP.c(i) = x_plus - _workingPoint.x(i + 1);
 
 		typename Problem::ConstraintJacobianMatrix D;
 		typename Problem::ConstraintVector d_min, d_max;

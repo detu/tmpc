@@ -18,10 +18,10 @@ std::ostream& operator<<(std::ostream& os, typename Solver::Point const& point)
 {
 	//typedef typename camels::CondensingSolver<NX_, NU_, NC_, NCT_>::size_type size_type;
 	typedef unsigned size_type;
-	for (size_type i = 0; i <= point.nT(); ++i)
+	for (size_type i = 0; i < point.nT(); ++i)
 		os << point.w(i) << std::endl;
 
-	return os;
+	return os << point.wend() << std::endl;
 }
 
 TEST(test_1, condensing_test)
