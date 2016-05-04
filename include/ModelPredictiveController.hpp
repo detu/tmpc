@@ -140,9 +140,9 @@ namespace camels
 		typename Problem::TerminalConstraintJacobianMatrix D;
 		typename Problem::TerminalConstraintVector d_min, d_max;
 		_ocp.TerminalConstraints(_workingPoint.w(_ocp.getNumberOfIntervals()), D, d_min, d_max);
-		_QP.D(getNumberOfIntervals()) = D;
-		_QP.dMin(getNumberOfIntervals()) = d_min;
-		_QP.dMax(getNumberOfIntervals()) = d_max;
+		_QP.Dend() = D;
+		_QP.dendMin() = d_min;
+		_QP.dendMax() = d_max;
 
 		_QP.zendMin() = _ocp.getTerminalStateMin() - _workingPoint.w(getNumberOfIntervals());
 		_QP.zendMax() = _ocp.getTerminalStateMax() - _workingPoint.w(getNumberOfIntervals());

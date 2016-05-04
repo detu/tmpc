@@ -49,6 +49,10 @@ namespace camels
 		typedef Eigen::Matrix<double, NX, 1> EndStageGradientVector;
 		typedef Eigen::Matrix<double, NX, NZ, Eigen::RowMajor> InterStageMatrix;
 		typedef Eigen::Matrix<double, NX, 1> InterStageVector;
+		typedef Eigen::Matrix<double, NC, NZ, Eigen::RowMajor> StageConstraintMatrix;
+		typedef Eigen::Matrix<double, NC, 1> StageConstraintVector;
+		typedef Eigen::Matrix<double, NCT, NX, Eigen::RowMajor> EndStageConstraintMatrix;
+		typedef Eigen::Matrix<double, NCT, 1> EndStageConstraintVector;
 
 		typedef Eigen::Map<Eigen::VectorXd> VectorMap;
 		typedef Eigen::Map<const Eigen::VectorXd> VectorConstMap;
@@ -136,40 +140,70 @@ namespace camels
 			return Eigen::Map<InterStageMatrix const>(_C.data() + i * nX() * nZ());
 		}
 
-		RowMajorMatrixMap D(unsigned i)
+		Eigen::Map<StageConstraintMatrix> D(unsigned i)
 		{
-			assert(i <= nT());
-			return RowMajorMatrixMap(_D.data() + i * nD() * nZ(), i < nT() ? nD() : nDT(), i < nT() ? nZ() : nX());
+			assert(i < nT());
+			return Eigen::Map<StageConstraintMatrix>(_D.data() + i * nD() * nZ());
 		}
 
-		RowMajorMatrixConstMap D(unsigned i) const
+		Eigen::Map<StageConstraintMatrix const> D(unsigned i) const
 		{
-			assert(i <= nT());
-			return RowMajorMatrixConstMap(_D.data() + i * nD() * nZ(), i < nT() ? nD() : nDT(), i < nT() ? nZ() : nX());
+			assert(i < nT());
+			return Eigen::Map<StageConstraintMatrix const>(_D.data() + i * nD() * nZ());
 		}
 
-		VectorMap dMin(unsigned i)
+		Eigen::Map<EndStageConstraintMatrix> Dend()
 		{
-			assert(i <= nT());
-			return VectorMap(_dMin.data() + i * nD(), i < nT() ? nD() : nDT());
+			return Eigen::Map<EndStageConstraintMatrix>(_D.data() + nT() * nD() * nZ());
 		}
 
-		VectorConstMap dMin(unsigned i) const
+		Eigen::Map<EndStageConstraintMatrix const> Dend() const
 		{
-			assert(i <= nT());
-			return VectorConstMap(_dMin.data() + i * nD(), i < nT() ? nD() : nDT());
+			return Eigen::Map<EndStageConstraintMatrix const>(_D.data() + nT() * nD() * nZ());
 		}
 
-		VectorMap dMax(unsigned i)
+		Eigen::Map<StageConstraintVector> dMin(unsigned i)
 		{
-			assert(i <= nT());
-			return VectorMap(_dMax.data() + i * nD(), i < nT() ? nD() : nDT());
+			assert(i < nT());
+			return Eigen::Map<StageConstraintVector>(_dMin.data() + i * nD());
 		}
 
-		VectorConstMap dMax(unsigned i) const
+		Eigen::Map<StageConstraintVector const> dMin(unsigned i) const
 		{
-			assert(i <= nT());
-			return VectorConstMap(_dMax.data() + i * nD(), i < nT() ? nD() : nDT());
+			assert(i < nT());
+			return Eigen::Map<StageConstraintVector const>(_dMin.data() + i * nD());
+		}
+
+		Eigen::Map<EndStageConstraintVector> dendMin()
+		{
+			return Eigen::Map<EndStageConstraintVector>(_dMin.data() + nT() * nD());
+		}
+
+		Eigen::Map<EndStageConstraintVector const> dendMin() const
+		{
+			return Eigen::Map<EndStageConstraintVector const>(_dMin.data() + nT() * nD());
+		}
+
+		Eigen::Map<StageConstraintVector> dMax(unsigned i)
+		{
+			assert(i < nT());
+			return Eigen::Map<StageConstraintVector>(_dMax.data() + i * nD());
+		}
+
+		Eigen::Map<StageConstraintVector const> dMax(unsigned i) const
+		{
+			assert(i < nT());
+			return Eigen::Map<StageConstraintVector const>(_dMax.data() + i * nD());
+		}
+
+		Eigen::Map<EndStageConstraintVector> dendMax()
+		{
+			return Eigen::Map<EndStageConstraintVector>(_dMax.data() + nT() * nD());
+		}
+
+		Eigen::Map<EndStageConstraintVector const> dendMax() const
+		{
+			return Eigen::Map<EndStageConstraintVector const>(_dMax.data() + nT() * nD());
 		}
 				
 		Eigen::Map<InterStageVector> c(unsigned i)

@@ -98,12 +98,12 @@ namespace camels
 		}
 
 		// Set terminal constraints.
-		const auto D_k_term = msqp.D(nT);
+		const auto D_k_term = msqp.Dend();
 		const auto d_ofs = (D_k_term * v).eval();
 
 		condensed_qp.A().bottomRows(nDT) = D_k_term * M;
-		condensed_qp.lbA().bottomRows(nDT) = msqp.dMin(nT) - d_ofs;
-		condensed_qp.ubA().bottomRows(nDT) = msqp.dMax(nT) - d_ofs;
+		condensed_qp.lbA().bottomRows(nDT) = msqp.dendMin() - d_ofs;
+		condensed_qp.ubA().bottomRows(nDT) = msqp.dendMax() - d_ofs;
 
 		// Cost of final state.
 		Hc.template triangularView<Upper>() += M.transpose() * msqp.Hend().template selfadjointView<Upper>() * M;
