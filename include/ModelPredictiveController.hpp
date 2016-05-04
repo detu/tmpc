@@ -197,9 +197,6 @@ namespace camels
 	template<class _Problem, class QPSolver_>
 	void ModelPredictiveController<_Problem, QPSolver_>::Solve()
 	{
-		using Eigen::MatrixXd;
-		using Eigen::VectorXd;
-
 		LagrangeHessianMatrix H_i;
 		StateInputVector g_i;
 
@@ -209,7 +206,7 @@ namespace camels
 			_ocp.LagrangeTerm(i, _workingPoint.w(i), g_i, H_i);
 
 			// Adding Levenberg-Marquardt term to make H positive-definite.
-			_QP.H(i) = H_i + _levenbergMarquardt * MatrixXd::Identity(_Nz, _Nz);
+			_QP.H(i) = H_i + _levenbergMarquardt * LagrangeHessianMatrix::Identity();
 			_QP.g(i) = g_i;
 		}
 
