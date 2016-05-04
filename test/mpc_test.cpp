@@ -49,6 +49,8 @@ TEST(mpc_test, mpc_test_case)
 				out << y_ref[0] << "\t";
 		}
 
+		controller.Preparation();
+
 		try
 		{
 			u = controller.Feedback(x0);
@@ -82,8 +84,6 @@ TEST(mpc_test, mpc_test_case)
 
 			throw;
 		}
-
-		controller.Preparation();
 
 		std::cout << "\tu = " << u << std::endl;
 		out << u.transpose() << std::endl << std::flush;

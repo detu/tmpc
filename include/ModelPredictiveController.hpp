@@ -29,17 +29,19 @@ namespace camels
 		,	_QP(working_point.nT())
 		,	_workingPoint(working_point)
 		,	_solution(working_point.nT())
-		,	_Solver(working_point.nT()),
-			_levenbergMarquardt(0.0),
-			_sampleTime(sample_time)
+		,	_Solver(working_point.nT())
+		,	_levenbergMarquardt(0.0)
+		,	_sampleTime(sample_time)
+		,	_prepared(false)
 		{
-			// Initialize QP
-			UpdateQP();
 		}
 
 		// Feed current state x0, get back control input u.
 		InputVector Feedback(const StateVector& x0)
 		{
+			if (!_prepared)
+				throw std::logic_error("ModelPredictiveController::Feedback(): controller is not prepared.");
+
 			// Compute linearization at new initial point.
 			{
 				_workingPoint.w(0).topRows(_Nx) = x0;
@@ -84,12 +86,17 @@ namespace camels
 				_Solver.Solve(_QP, _solution);
 			}
 
+			_prepared = false;
+
 			// Return the calculated control input.
 			return _workingPoint.w(0).bottomRows(nU()) + _solution.w(0).template bottomRows<_Nu>();
 		}
 
 		void Preparation()
 		{
+			if (_prepared)
+				throw std::logic_error("ModelPredictiveController::Preparation(): controller is already prepared.");
+
 			// Add QP step to the working point.
 			_workingPoint += _solution;
 
@@ -102,6 +109,8 @@ namespace camels
 
 			// Calculate new matrices.
 			UpdateQP();
+
+			_prepared = true;
 		}
 
 		void PrintQP_C(std::ostream& log_stream) const
@@ -167,6 +176,9 @@ namespace camels
 
 		// Working point (linearization point).
 		Trajectory _workingPoint;
+
+		// Preparation() sets this flag to true, Feedback() resets it to false.
+		bool _prepared;
 	};
 
 	template<class _Problem, class QPSolver_>
