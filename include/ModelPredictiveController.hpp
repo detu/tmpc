@@ -44,12 +44,12 @@ namespace camels
 
 			// Compute linearization at new initial point.
 			{
-				_workingPoint.w(0).topRows(_Nx) = x0;
+				_workingPoint.x(0) = x0;
 				UpdateStage(0);
 
 				/** embed current initial value */
-				_QP.xMin(0) = x0 - _workingPoint.w(0).topRows(_Nx);
-				_QP.xMax(0) = x0 - _workingPoint.w(0).topRows(_Nx);
+				_QP.xMin(0) = x0 - _workingPoint.x(0);
+				_QP.xMax(0) = x0 - _workingPoint.x(0);
 			}
 
 			//
@@ -89,7 +89,7 @@ namespace camels
 			_prepared = false;
 
 			// Return the calculated control input.
-			return _workingPoint.w(0).bottomRows(nU()) + _solution.w(0).template bottomRows<_Nu>();
+			return _workingPoint.u(0) + _solution.u(0);
 		}
 
 		void Preparation()
