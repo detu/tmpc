@@ -5,7 +5,7 @@
  *      Author: kotlyar
  */
 
-#include <qpOASESProgram.hpp>
+#include <qp/qpOASESProgram.hpp>
 
 namespace camels
 {

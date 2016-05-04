@@ -19,30 +19,31 @@ set(HDR
 	${RTMC_INCLUDE_DIR}/CyberMotion.hpp
 	${RTMC_INCLUDE_DIR}/CyberMotion1D.hpp
 	${RTMC_INCLUDE_DIR}/ModelPredictiveController.hpp
-	${RTMC_INCLUDE_DIR}/qpDUNESProgram.hpp
-	${RTMC_INCLUDE_DIR}/MultiStageQPSize.hpp
-	${RTMC_INCLUDE_DIR}/qpOASESProgram.hpp
-	${RTMC_INCLUDE_DIR}/CondensingSolver.hpp
 	${RTMC_INCLUDE_DIR}/OptimalControlProblem.hpp
 	${RTMC_INCLUDE_DIR}/CyberMotionOCP.hpp
 	${RTMC_INCLUDE_DIR}/CableRobotOCP.hpp
-	${RTMC_INCLUDE_DIR}/casadi_interface/GeneratedFunction.hpp
-	${RTMC_INCLUDE_DIR}/Condensing.hpp
 )
 
 set (SRC
 	MotionPlatformX.cpp
 	CyberMotion.cpp
 	CyberMotion1D.cpp
-	MultiStageQPSize.cpp
+	
 	CyberMotionOCP.cpp
 	CableRobotOCP.cpp
-	casadi_interface/CasADiGeneratedFunction.cpp
+	
 	cablerobot_generated.c
 	cablerobot_generated.h
 	cybermotion_generated.c
 	cybermotion_generated.h
-	qpOASESProgram.cpp
+	
+	${RTMC_INCLUDE_DIR}/casadi_interface/GeneratedFunction.hpp casadi_interface/CasADiGeneratedFunction.cpp
+	
+	${RTMC_INCLUDE_DIR}/qp/Condensing.hpp
+	${RTMC_INCLUDE_DIR}/qp/CondensingSolver.hpp
+	${RTMC_INCLUDE_DIR}/qp/MultiStageQPSize.hpp    qp/MultiStageQPSize.cpp
+	${RTMC_INCLUDE_DIR}/qp/qpDUNESProgram.hpp
+	${RTMC_INCLUDE_DIR}/qp/qpOASESProgram.hpp    qp/qpOASESProgram.cpp
 )
 
 add_library(mpmc STATIC ${HDR} ${SRC})

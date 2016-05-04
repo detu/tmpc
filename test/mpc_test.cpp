@@ -1,6 +1,6 @@
 #include <ModelPredictiveController.hpp>
 #include <CyberMotionOCP.hpp>
-#include <CondensingSolver.hpp>
+#include <qp/CondensingSolver.hpp>
 
 #include <iostream>
 #include <fstream>

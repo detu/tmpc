@@ -3,9 +3,10 @@
 #include "qpOASESProgram.hpp"
 
 #include <qpOASES.hpp>
-#include <Condensing.hpp>
-#include <MultiStageQPSize.hpp>
-#include <qpDUNESProgram.hpp>
+#include <qp/Condensing.hpp>
+#include <qp/qpDUNESProgram.hpp>
+
+#include "MultiStageQPSize.hpp"
 
 #include <ostream>
 

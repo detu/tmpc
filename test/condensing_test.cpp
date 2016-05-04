@@ -1,6 +1,6 @@
-#include <CondensingSolver.hpp>
-#include <Condensing.hpp>
-#include <qpOASESProgram.hpp>
+#include <qp/CondensingSolver.hpp>
+#include <qp/Condensing.hpp>
+#include <qp/qpOASESProgram.hpp>
 
 #include <gtest/gtest.h>
 
