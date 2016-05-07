@@ -91,8 +91,9 @@ TEST(mpc_test, mpc_test_case)
 		std::cout << "\tu = " << u << std::endl;
 		out << u.transpose() << std::endl << std::flush;
 
-		auto q = x0.topRows<OCP::NU>();
-		auto v = x0.bottomRows<OCP::NU>();
-		x0 << q + v * Ts + u * Ts * Ts / 2., v + u * Ts;
+		Integrator::StateInputVector z;
+		z << x0, u;
+		Integrator::ODEJacobianMatrix J;
+		integrator.Integrate(z, x0, J);
 	}
 }
