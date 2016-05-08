@@ -27,6 +27,8 @@ set (SRC
         
 	${RTMC_INCLUDE_DIR}/casadi_interface/GeneratedFunction.hpp casadi_interface/CasADiGeneratedFunction.cpp
 	
+	${RTMC_INCLUDE_DIR}/integrator/RK4.hpp
+	
 	${RTMC_INCLUDE_DIR}/qp/Condensing.hpp
 	${RTMC_INCLUDE_DIR}/qp/CondensingSolver.hpp
 	${RTMC_INCLUDE_DIR}/qp/MultiStageQPSize.hpp    qp/MultiStageQPSize.cpp

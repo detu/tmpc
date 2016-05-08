@@ -107,10 +107,12 @@ namespace cms
 		typedef CyberMotionOCP::ODEJacobianMatrix ODEJacobianMatrix;
 
 		explicit Integrator(double ts);
-		void Integrate(const StateInputVector& z, StateVector& x_next, ODEJacobianMatrix& J) const;
+		void Integrate(double t0, StateInputVector const& z, StateVector& x_next, ODEJacobianMatrix& J) const;
+		double timeStep() const noexcept { return _timeStep; }
 
 	private:
 		ODEJacobianMatrix _J;
+		double const _timeStep;
 	};
 } /* namespace mpmc */
 

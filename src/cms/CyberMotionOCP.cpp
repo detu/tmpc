@@ -197,6 +197,7 @@ namespace cms
 	}
 
 	Integrator::Integrator(double ts)
+	:	_timeStep(ts)
 	{
 		static auto const I = Eigen::Matrix<double, 8, 8>::Identity();
 		static auto const O = Eigen::Matrix<double, 8, 8>::Zero();
@@ -205,7 +206,7 @@ namespace cms
 		  	  O,      I,                   ts * I;
 	}
 
-	void Integrator::Integrate(const StateInputVector& z, StateVector& x_next, ODEJacobianMatrix& J) const
+	void Integrator::Integrate(double t, StateInputVector const& z, StateVector& x_next, ODEJacobianMatrix& J) const
 	{
 		x_next = (J = _J) * z;
 	}

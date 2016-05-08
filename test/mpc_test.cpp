@@ -35,7 +35,8 @@ TEST(mpc_test, mpc_test_case)
 	OCP::InputVector u;
 	u.fill(0.);
 
-	for (unsigned i = 0; i < simulation_steps; ++i)
+	double t = 0.;
+	for (unsigned i = 0; i < simulation_steps; ++i, t += Ts)
 	{
 		std::cout << "step " << i << ", x0=" << x0 << std::endl;
 
@@ -94,6 +95,6 @@ TEST(mpc_test, mpc_test_case)
 		Integrator::StateInputVector z;
 		z << x0, u;
 		Integrator::ODEJacobianMatrix J;
-		integrator.Integrate(z, x0, J);
+		integrator.Integrate(t, z, x0, J);
 	}
 }

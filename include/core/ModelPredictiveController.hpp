@@ -162,7 +162,7 @@ namespace camels
 			// x_{k+1} = C * z_k + c_k
 			typename Problem::StateVector x_plus;
 			typename Problem::ODEJacobianMatrix J;
-			_integrator.Integrate(_workingPoint.w(i), x_plus, J);
+			_integrator.Integrate(i * _integrator.timeStep(), _workingPoint.w(i), x_plus, J);
 			_QP.C(i) = J;
 
 			// \Delta x_{k+1} = C \Delta z_k + f(z_k) - x_{k+1}
