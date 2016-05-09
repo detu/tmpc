@@ -68,7 +68,7 @@ namespace casadi_interface
 		return _fun_n_out();
 	}
 
-	void GeneratedFunction::operator()(std::initializer_list<const real_t *> arg, std::initializer_list<real_t *> res)
+	void GeneratedFunction::operator()(std::initializer_list<const real_t *> arg, std::initializer_list<real_t *> res) const
 	{
 		if (arg.size() != n_in())
 		{
