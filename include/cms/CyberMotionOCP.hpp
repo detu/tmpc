@@ -75,8 +75,8 @@ namespace cms
 
 		// Private data members
 
-		casadi_interface::GeneratedFunction mutable _ode;
-		casadi_interface::GeneratedFunction mutable _output;
+		casadi_interface::GeneratedFunction _ode;
+		casadi_interface::GeneratedFunction _output;
 
 		StateVector _x_min;
 		StateVector _x_max;
