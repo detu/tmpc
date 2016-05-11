@@ -16,7 +16,6 @@
 set(HDR 
 	${RTMC_INCLUDE_DIR}/MotionPlatform.hpp
 	${RTMC_INCLUDE_DIR}/MotionPlatformX.hpp
-	${RTMC_INCLUDE_DIR}/CableRobotOCP.hpp
 )
 
 set (SRC
