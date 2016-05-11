@@ -41,10 +41,6 @@ set (SRC
 	${RTMC_INCLUDE_DIR}/cms/CyberMotion1D.hpp     cms/CyberMotion1D.cpp
 	
 	MotionPlatformX.cpp
-	CableRobotOCP.cpp
-	
-	cablerobot_generated.c
-	cablerobot_generated.h
 )
 
 add_library(mpmc STATIC ${HDR} ${SRC})
