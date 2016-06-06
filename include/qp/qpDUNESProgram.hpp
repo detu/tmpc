@@ -372,14 +372,14 @@ namespace camels
 		Eigen::IOFormat C_format(Eigen::StreamPrecision, 0, ", ", ",\n", "", "", "", "");
 
 		log_stream << "const double H[] = {" << endl;
-		for (unsigned i = 0; i <= nT(); ++i)
+		for (unsigned i = 0; i < nT(); ++i)
 			log_stream << H(i).format(C_format) << "," << endl;
-		log_stream << "};" << endl << endl;
+		log_stream << Hend().format(C_format) << endl << "};" << endl << endl;
 
 		log_stream << "const double g[] = {" << endl;
-		for (unsigned i = 0; i <= nT(); ++i)
+		for (unsigned i = 0; i < nT(); ++i)
 			log_stream << g(i).transpose().format(C_format) << "," << endl;
-		log_stream << "};" << endl << endl;
+		log_stream << gend().transpose().format(C_format) << endl << "};" << endl << endl;
 
 		log_stream << "const double C[] = {" << endl;
 		for (unsigned i = 0; i < nT(); ++i)
@@ -392,19 +392,19 @@ namespace camels
 		log_stream << "};" << endl << endl;
 
 		log_stream << "const double D[] = {" << endl;
-		for (unsigned i = 0; i <= nT(); ++i)
+		for (unsigned i = 0; i < nT(); ++i)
 			log_stream << D(i).format(C_format) << "," << endl;
-		log_stream << "};" << endl << endl;
+		log_stream << Dend().format(C_format) << endl << "};" << endl << endl;
 
 		log_stream << "const double dMin[] = {" << endl;
-		for (unsigned i = 0; i <= nT(); ++i)
+		for (unsigned i = 0; i < nT(); ++i)
 			log_stream << dMin(i).transpose().format(C_format) << ",";
-		log_stream << "};" << endl << endl;
+		log_stream << dendMin().transpose().format(C_format) << endl << "};" << endl << endl;
 
 		log_stream << "const double dMax[] = {" << endl;
-		for (unsigned i = 0; i <= nT(); ++i)
+		for (unsigned i = 0; i < nT(); ++i)
 			log_stream << dMax(i).transpose().format(C_format) << ",";
-		log_stream << "};" << endl << endl;
+		log_stream << dendMax().transpose().format(C_format) << "};" << endl << endl;
 
 		PrintQP_zMin_C(log_stream);
 		PrintQP_zMax_C(log_stream);
@@ -415,16 +415,13 @@ namespace camels
 	{
 		using std::endl;
 
-		for (unsigned k = 0; k <= nT(); ++k)
+		for (unsigned k = 0; k < nT(); ++k)
 		{
 			log_stream << var_name << ".H{" << k + 1 << "} = [..." << endl << H(k) << "];" << endl;
 			log_stream << var_name << ".g{" << k + 1 << "} = [..." << endl << g(k) << "];" << endl;
 
-			if (k < nT())
-			{
-				log_stream << var_name << ".C{" << k + 1 << "} = [..." << endl << C(k) << "];" << endl;
-				log_stream << var_name << ".c{" << k + 1 << "} = [..." << endl << c(k) << "];" << endl;
-			}
+			log_stream << var_name << ".C{" << k + 1 << "} = [..." << endl << C(k) << "];" << endl;
+			log_stream << var_name << ".c{" << k + 1 << "} = [..." << endl << c(k) << "];" << endl;
 
 			log_stream << var_name << ".D{" << k + 1 << "} = [..." << endl << D(k) << "];" << endl;
 			log_stream << var_name << ".dMin{" << k + 1 << "} = [..." << endl << dMin(k) << "];" << endl;
@@ -433,6 +430,16 @@ namespace camels
 			log_stream << var_name << ".zMin{" << k + 1 << "} = [..." << endl << zMin(k) << "];" << endl;
 			log_stream << var_name << ".zMax{" << k + 1 << "} = [..." << endl << zMax(k) << "];" << endl;
 		}
+
+		log_stream << var_name << ".H{" << nT() + 1 << "} = [..." << endl << Hend() << "];" << endl;
+		log_stream << var_name << ".g{" << nT() + 1 << "} = [..." << endl << gend() << "];" << endl;
+
+		log_stream << var_name << ".D{" << nT() + 1 << "} = [..." << endl << Dend() << "];" << endl;
+		log_stream << var_name << ".dMin{" << nT() + 1 << "} = [..." << endl << dendMin() << "];" << endl;
+		log_stream << var_name << ".dMax{" << nT() + 1 << "} = [..." << endl << dendMax() << "];" << endl;
+
+		log_stream << var_name << ".zMin{" << nT() + 1 << "} = [..." << endl << zendMin() << "];" << endl;
+		log_stream << var_name << ".zMax{" << nT() + 1 << "} = [..." << endl << zendMax() << "];" << endl;
 	}
 
 	template<unsigned NX_, unsigned NU_, unsigned NC_, unsigned NCT_>
@@ -443,9 +450,9 @@ namespace camels
 		Eigen::IOFormat C_format(Eigen::StreamPrecision, 0, ", ", ",\n", "", "", "", "");
 
 		log_stream << "const double zLow[] = {" << endl;
-		for (unsigned i = 0; i <= nT(); ++i)
+		for (unsigned i = 0; i < nT(); ++i)
 			log_stream << zMin(i).transpose().format(C_format) << "," << endl;
-		log_stream << endl << "};" << endl << endl;
+		log_stream << zendMin().transpose().format(C_format) << endl << "};" << endl << endl;
 	}
 
 	template<unsigned NX_, unsigned NU_, unsigned NC_, unsigned NCT_>
@@ -456,8 +463,8 @@ namespace camels
 		Eigen::IOFormat C_format(Eigen::StreamPrecision, 0, ", ", ",\n", "", "", "", "");
 
 		log_stream << "const double zUpp[] = {" << endl;
-		for (unsigned i = 0; i <= nT(); ++i)
+		for (unsigned i = 0; i < nT(); ++i)
 			log_stream << zMax(i).transpose().format(C_format) << "," << endl;
-		log_stream << endl << "};" << endl << endl;
+		log_stream << zendMax().transpose().format(C_format) << endl << "};" << endl << endl;
 	}
 }
