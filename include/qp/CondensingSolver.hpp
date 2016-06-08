@@ -133,10 +133,10 @@ namespace camels
 	void CondensingSolver<NX_, NU_, NC_, NCT_>::Solve(MultiStageQP const& msqp, Point& solution)
 	{
 		// Check argument sizes.
-		if (!(msqp.nX() == nX() && msqp.nU() == nU() && msqp.nT() == nT()))
+		if (msqp.nT() != nT())
 			throw std::invalid_argument("CondensingSolver::Solve(): size of MultistageQP does not match solver sizes, sorry.");
 
-		if (!(solution.nX() == nX() && solution.nU() == nU() && solution.nT() == nT()))
+		if (solution.nT() != nT())
 			throw std::invalid_argument("CondensingSolver::Solve(): size of solution Point does not match solver sizes, sorry.");
 
 		// Make a condensed problem.
@@ -160,15 +160,15 @@ namespace camels
 		//problem.getDualSolution(yOpt);
 
 		// Calculate the solution of the multi-stage QP.
-		solution.w(0).topRows(nX()) = _condensedSolution.topRows(nX());
+		solution.w(0).template topRows<NX>() = _condensedSolution.topRows<NX>();
 		for (size_type i = 0; i < nT(); ++i)
 		{
 			auto z_i = solution.w(i);
-			auto x_i = z_i.topRows(nX());
-			auto u_i = z_i.bottomRows(nU());
+			auto x_i = z_i.template topRows<NX>();
+			auto u_i = z_i.template bottomRows<NU>();
 			auto x_i_plus = solution.x(i + 1);
 
-			u_i = _condensedSolution.middleRows(nX() + i * nU(), nU());
+			u_i = _condensedSolution.middleRows<NU>(NX + i * NU);
 			x_i_plus = msqp.C(i) * z_i + msqp.c(i);
 		}
 	}
