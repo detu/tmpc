@@ -70,6 +70,9 @@ namespace camels
 		// Set maximum number of working set recalculations for qpOASES
 		void setMaxWorkingSetRecalculations(unsigned val) noexcept { _maxWorkingSetRecalculations = val; }
 
+		// Get number of working set recalculations on last call to Solve().
+		unsigned getWorkingSetRecalculations() const noexcept { return static_cast<unsigned>(_nWSR); }
+
 	private:
 		CondensingSolver(const MultiStageQPSize& size) :
 			_condensedQP(size.nIndep(), size.nDep() + size.nConstr()),
@@ -106,6 +109,9 @@ namespace camels
 
 		// Output data from qpOASES
 		Vector _condensedSolution;
+
+		// Number of working set recalculations on last call to Solve().
+		int _nWSR = 0;
 
 		bool _hotStart = false;
 		qpOASES::SQProblem _problem;
@@ -153,6 +159,7 @@ namespace camels
 		if (res != qpOASES::SUCCESSFUL_RETURN)
 			throw SolveException(res, _condensedQP);
 
+		_nWSR = nWSR;
 		_hotStart = true;
 
 		/* Get solution of the condensed QP. */
