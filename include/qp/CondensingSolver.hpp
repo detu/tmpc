@@ -61,6 +61,15 @@ namespace camels
 		const CondensedQP& getCondensedQP() const noexcept { return _condensedQP; }
 		bool getHotStart() const noexcept { return _hotStart; }
 
+		// qpOASES-specific part
+		//
+
+		// Get maximum number of working set recalculations for qpOASES
+		unsigned const getMaxWorkingSetRecalculations() const noexcept { return _maxWorkingSetRecalculations; }
+
+		// Set maximum number of working set recalculations for qpOASES
+		void setMaxWorkingSetRecalculations(unsigned val) noexcept { _maxWorkingSetRecalculations = val; }
+
 	private:
 		CondensingSolver(const MultiStageQPSize& size) :
 			_condensedQP(size.nIndep(), size.nDep() + size.nConstr()),
@@ -69,7 +78,19 @@ namespace camels
 			_problem(size.nIndep(), size.nDep() + size.nConstr())
 		{
 			qpOASES::Options options;
+
+			{
+				auto const ret = options.setToReliable();
+				assert(ret == qpOASES::SUCCESSFUL_RETURN);
+			}
+
 			options.printLevel = qpOASES::PL_LOW;
+
+			{
+				auto const ret = options.ensureConsistency();
+				assert(ret == qpOASES::SUCCESSFUL_RETURN);
+			}
+
 			_problem.setOptions(options);
 		}
 
@@ -88,6 +109,7 @@ namespace camels
 
 		bool _hotStart = false;
 		qpOASES::SQProblem _problem;
+		unsigned _maxWorkingSetRecalculations = 1000;
 	};
 
 	template<unsigned NX_, unsigned NU_, unsigned NC_, unsigned NCT_>
@@ -121,7 +143,7 @@ namespace camels
 		Condense(msqp, _condensedQP);
 
 		/* Solve the condensed QP. */
-		int nWSR = 1000;
+		int nWSR = static_cast<int>(_maxWorkingSetRecalculations);
 		const auto res = _hotStart ?
 			_problem.hotstart(_condensedQP.H_data(), _condensedQP.g_data(), _condensedQP.A_data(),
 					_condensedQP.lb_data(), _condensedQP.ub_data(), _condensedQP.lbA_data(), _condensedQP.ubA_data(), nWSR) :
