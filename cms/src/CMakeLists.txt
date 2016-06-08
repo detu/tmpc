@@ -34,6 +34,11 @@ set (SRC
 	${RTMC_INCLUDE_DIR}/qp/qpDUNESProgram.hpp
 	${RTMC_INCLUDE_DIR}/qp/qpOASESProgram.hpp    qp/qpOASESProgram.cpp
 	
+	cms/cybermotion_generated.h    cms/cybermotion_generated.c
+	${RTMC_INCLUDE_DIR}/cms/CyberMotionOCP.hpp    cms/CyberMotionOCP.cpp
+	${RTMC_INCLUDE_DIR}/cms/CyberMotion.hpp       cms/CyberMotion.cpp
+	${RTMC_INCLUDE_DIR}/cms/CyberMotion1D.hpp     cms/CyberMotion1D.cpp
+	
 	MotionPlatformX.cpp
 )
 
