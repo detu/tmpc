@@ -29,8 +29,7 @@ set (SRC
 	${RTMC_INCLUDE_DIR}/integrator/RK4.hpp
 	
 	${RTMC_INCLUDE_DIR}/qp/Condensing.hpp
-	${RTMC_INCLUDE_DIR}/qp/CondensingSolver.hpp
-	${RTMC_INCLUDE_DIR}/qp/MultiStageQPSize.hpp    qp/MultiStageQPSize.cpp
+	${RTMC_INCLUDE_DIR}/qp/CondensingSolver.hpp    qp/CondensingSolver.cpp
 	${RTMC_INCLUDE_DIR}/qp/qpDUNESProgram.hpp
 	${RTMC_INCLUDE_DIR}/qp/qpOASESProgram.hpp    qp/qpOASESProgram.cpp
 	

@@ -7,12 +7,29 @@
 #include <qp/qpDUNESProgram.hpp>
 #include <qp/qpDUNESSolution.hpp>
 
-#include "MultiStageQPSize.hpp"
-
 #include <ostream>
 
 namespace camels
 {
+	class qpOASESOptions
+	{
+	public:
+		static qpOASESOptions Reliable();
+		static qpOASESOptions MPC();
+
+		operator qpOASES::Options const&() const;
+		qpOASES::PrintLevel getPrintLevel() const;
+		qpOASESOptions& setPrintLevel(qpOASES::PrintLevel level);
+
+	private:
+		qpOASESOptions(qpOASES::Options const& options);
+
+		qpOASES::Options _options;
+	};
+
+	qpOASES::Options qpOASESOptionsReliable();
+	qpOASES::Options qpOASESOptionsMPC();
+
 	template<unsigned NX_, unsigned NU_, unsigned NC_, unsigned NCT_>
 	class CondensingSolver
 	{
@@ -39,21 +56,28 @@ namespace camels
 		typedef Eigen::VectorXd StateVector;
 		typedef Eigen::VectorXd StateInputVector;
 
-		CondensingSolver(size_type nt)
-		:	CondensingSolver(MultiStageQPSize(NX, NU, NC, NCT, nt))
+		CondensingSolver(size_type nt, qpOASESOptions const& options = qpOASESOptions::MPC())
+		:	_condensedQP(nIndep(nt), nDep(nt) + nConstr(nt))
+		,	_condensedSolution(nIndep(nt))
+		,	_problem(nIndep(nt), nDep(nt) + nConstr(nt))
+		,	_Nt(nt)
 		{
-		}		
+			_problem.setOptions(options);
+		}
 
-		const MultiStageQPSize& size() const { return _size; }
-		size_type nT() const { return _size.nT(); }
-		size_type nX() const { return _size.nX(); }
-		size_type nZ() const { return _size.nZ(); }
-		size_type nU() const { return _size.nU(); }
-		size_type nD() const { return _size.nD(); }
-		size_type nDT() const {	return _size.nDT();	}
-		size_type nIndep() const { return _size.nIndep(); }
-		size_type nDep() const { return _size.nDep(); }
-		size_type nVar() const { return _size.nVar(); }
+		size_type nT() const { return _Nt; }
+		size_type constexpr nX() { return NX; }
+		size_type constexpr nZ() { return NZ; }
+		size_type constexpr nU() { return NU; }
+		size_type constexpr nD() { return NC; }
+		size_type constexpr nDT() {	return NCT;	}
+		size_type nIndep() const { return nIndep(nT()); }
+		static size_type nIndep(size_type nt) { return NX + NU * nt; }
+		size_type nDep() const { return nDep(nT()); }
+		static size_type nDep(size_type nt) { return NX * nt; }
+		size_type nVar() const { return nVar(nT()); }
+		static size_type nVar(size_type nt) { return NZ * nt + NX; }
+		static size_type nConstr(size_type nt) { return NC * nt + NCT; }
 
 		void Solve(const MultiStageQP& msqp, Point& solution);
 		const Vector& getCondensedSolution() const { return _condensedSolution;	}
@@ -74,32 +98,8 @@ namespace camels
 		unsigned getWorkingSetRecalculations() const noexcept { return static_cast<unsigned>(_nWSR); }
 
 	private:
-		CondensingSolver(const MultiStageQPSize& size) :
-			_condensedQP(size.nIndep(), size.nDep() + size.nConstr()),
-			_size(size),
-			_condensedSolution(size.nIndep()),
-			_problem(size.nIndep(), size.nDep() + size.nConstr())
-		{
-			qpOASES::Options options;
-
-			{
-				auto const ret = options.setToReliable();
-				assert(ret == qpOASES::SUCCESSFUL_RETURN);
-			}
-
-			options.printLevel = qpOASES::PL_LOW;
-
-			{
-				auto const ret = options.ensureConsistency();
-				assert(ret == qpOASES::SUCCESSFUL_RETURN);
-			}
-
-			_problem.setOptions(options);
-		}
-
-		// Private data members.
-		//
-		const MultiStageQPSize _size;
+		// Number of time steps
+		size_type _Nt;
 
 		// Number of constraints per stage = nX() + nD().
 		size_type nC() const { return nX() + nD(); }
