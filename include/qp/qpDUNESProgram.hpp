@@ -467,4 +467,16 @@ namespace camels
 			log_stream << zMax(i).transpose().format(C_format) << "," << endl;
 		log_stream << zendMax().transpose().format(C_format) << endl << "};" << endl << endl;
 	}
+
+	template<unsigned NX_, unsigned NU_, unsigned NC_, unsigned NCT_>
+	inline void print(std::ostream& out, qpDUNESProgram<NX_, NU_, NC_, NCT_> const& program)
+	{
+		out << "H = " << std::endl << program.H() << std::endl;
+		out << "g = " << std::endl << program.g() << std::endl;
+		out << "A = " << std::endl << program.A() << std::endl;
+		out << "lb = " << std::endl << program.lb() << std::endl;
+		out << "ub = " << std::endl << program.ub() << std::endl;
+		out << "lbA = " << std::endl << program.lbA() << std::endl;
+		out << "ubA = " << std::endl << program.ubA() << std::endl;
+	}
 }

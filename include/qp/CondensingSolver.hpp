@@ -27,9 +27,6 @@ namespace camels
 		qpOASES::Options _options;
 	};
 
-	qpOASES::Options qpOASESOptionsReliable();
-	qpOASES::Options qpOASESOptionsMPC();
-
 	template<unsigned NX_, unsigned NU_, unsigned NC_, unsigned NCT_>
 	class CondensingSolver
 	{
