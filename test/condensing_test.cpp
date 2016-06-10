@@ -14,7 +14,7 @@ unsigned const NT = 2;
 
 typedef camels::CondensingSolver<NX, NU, NC, NCT> Solver;
 
-std::ostream& operator<<(std::ostream& os, typename Solver::Point const& point)
+std::ostream& operator<<(std::ostream& os, typename Solver::Solution const& point)
 {
 	//typedef typename camels::CondensingSolver<NX_, NU_, NC_, NCT_>::size_type size_type;
 	typedef unsigned size_type;
@@ -26,7 +26,7 @@ std::ostream& operator<<(std::ostream& os, typename Solver::Point const& point)
 
 TEST(test_1, condensing_test)
 {
-	Solver::MultiStageQP qp(NT);
+	Solver::Problem qp(NT);
 	qp.zMin(0)  .setConstant(-1);	qp.zMax(0)  .setConstant(1);
 	qp.zMin(1)  .setConstant(-1);	qp.zMax(1)  .setConstant(1);
 	qp.zendMin().setConstant(-1);	qp.zendMax().setConstant(1);
@@ -121,7 +121,7 @@ TEST(test_1, condensing_test)
 	std::cout << "-- ub ---" << std::endl << condensed.ub() << std::endl;
 
 	Solver solver(qp.nT());
-	Solver::Point solution(solver.nT());
+	Solver::Solution solution(solver.nT());
 
 	try
 	{

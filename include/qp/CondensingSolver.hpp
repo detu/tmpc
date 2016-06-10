@@ -4,7 +4,6 @@
 
 #include <qpOASES.hpp>
 #include <qp/Condensing.hpp>
-//#include <qp/qpDUNESProgram.hpp>
 #include <qp/MultiStageQuadraticProblem.hpp>
 #include <qp/qpDUNESSolution.hpp>
 
@@ -41,11 +40,10 @@ namespace camels
 		typedef qpOASESProgram CondensedQP;
 
 		// Problem type for CondensingSolver
-		//typedef camels::qpDUNESProgram<NX, NU, NC, NCT> MultiStageQP;
-		typedef camels::MultiStageQuadraticProblem<NX, NU, NC, NCT> MultiStageQP;
+		typedef camels::MultiStageQuadraticProblem<NX, NU, NC, NCT> Problem;
 
 		// Solution data type
-		typedef qpDUNESSolution<NX, NU> Point;
+		typedef qpDUNESSolution<NX, NU> Solution;
 
 		// Exception that can be thrown from the Solve() member function.
 		class SolveException;
@@ -78,7 +76,7 @@ namespace camels
 		static size_type nVar(size_type nt) { return NZ * nt + NX; }
 		static size_type nConstr(size_type nt) { return NC * nt + NCT; }
 
-		void Solve(const MultiStageQP& msqp, Point& solution);
+		void Solve(const Problem& msqp, Solution& solution);
 		const Vector& getCondensedSolution() const { return _condensedSolution;	}
 
 		const CondensedQP& getCondensedQP() const noexcept { return _condensedQP; }
@@ -135,7 +133,7 @@ namespace camels
 	};
 
 	template<unsigned NX_, unsigned NU_, unsigned NC_, unsigned NCT_>
-	void CondensingSolver<NX_, NU_, NC_, NCT_>::Solve(MultiStageQP const& msqp, Point& solution)
+	void CondensingSolver<NX_, NU_, NC_, NCT_>::Solve(Problem const& msqp, Solution& solution)
 	{
 		// Check argument sizes.
 		if (msqp.nT() != nT())

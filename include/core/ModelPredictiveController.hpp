@@ -14,7 +14,7 @@ namespace camels
 		typedef QPSolver_ QPSolver;
 		typedef Integrator_ Integrator;
 
-		typedef typename QPSolver::Point Trajectory;
+		typedef typename QPSolver::Solution Trajectory;
 
 		typedef typename Problem::StateVector StateVector;
 		typedef typename Problem::InputVector InputVector;
@@ -23,7 +23,7 @@ namespace camels
 		typedef typename Problem::LagrangeHessianMatrix LagrangeHessianMatrix;
 		typedef typename Problem::MayerHessianMatrix MayerHessianMatrix;
 
-		typedef std::function<void (typename QPSolver::MultiStageQP const&)> QPCallback;
+		typedef std::function<void (typename QPSolver::Problem const&)> QPCallback;
 
 		ModelPredictiveController(Problem const& ocp, Integrator const& integrator, QPSolver& solver, Trajectory const& working_point)
 		:	_ocp(ocp)
@@ -195,8 +195,8 @@ namespace camels
 		static const unsigned _Nd = Problem::NC;
 		static const unsigned _NdT = Problem::NCT;
 		
-		typename QPSolver::MultiStageQP _QP;
-		typename QPSolver::Point _solution;
+		typename QPSolver::Problem _QP;
+		typename QPSolver::Solution _solution;
 		QPSolver& _Solver;
 
 		// A callback to call back before solving each QP.
