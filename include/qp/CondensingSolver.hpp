@@ -4,7 +4,8 @@
 
 #include <qpOASES.hpp>
 #include <qp/Condensing.hpp>
-#include <qp/qpDUNESProgram.hpp>
+//#include <qp/qpDUNESProgram.hpp>
+#include <qp/MultiStageQuadraticProblem.hpp>
 #include <qp/qpDUNESSolution.hpp>
 
 #include <ostream>
@@ -39,8 +40,9 @@ namespace camels
 
 		typedef qpOASESProgram CondensedQP;
 
-		// Manages input data of qpOASES
-		typedef camels::qpDUNESProgram<NX, NU, NC, NCT> MultiStageQP;
+		// Problem type for CondensingSolver
+		//typedef camels::qpDUNESProgram<NX, NU, NC, NCT> MultiStageQP;
+		typedef camels::MultiStageQuadraticProblem<NX, NU, NC, NCT> MultiStageQP;
 
 		// Solution data type
 		typedef qpDUNESSolution<NX, NU> Point;

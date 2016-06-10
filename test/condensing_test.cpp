@@ -26,7 +26,7 @@ std::ostream& operator<<(std::ostream& os, typename Solver::Point const& point)
 
 TEST(test_1, condensing_test)
 {
-	camels::qpDUNESProgram<NX, NU, NC, NCT> qp(NT);
+	Solver::MultiStageQP qp(NT);
 	qp.zMin(0)  .setConstant(-1);	qp.zMax(0)  .setConstant(1);
 	qp.zMin(1)  .setConstant(-1);	qp.zMax(1)  .setConstant(1);
 	qp.zendMin().setConstant(-1);	qp.zendMax().setConstant(1);
@@ -87,11 +87,11 @@ TEST(test_1, condensing_test)
 	qp.c(1) << a1;
 
 	// Condense
-	camels::qpOASESProgram condensed(qp.nIndep(), qp.nDep() + qp.nConstr());
+	camels::qpOASESProgram condensed(nIndep(qp), nDep(qp) + nConstr(qp));
 	camels::Condense(qp, condensed);
 
 	const auto Hc = condensed.H();
-	Eigen::MatrixXd Hc_expected(qp.nIndep(), qp.nIndep());
+	Eigen::MatrixXd Hc_expected(nIndep(qp), nIndep(qp));
 	
 	Hc_expected <<
 		A0.transpose() * Q1 * A0 + A0.transpose() * A1.transpose() * Q2 * A1 * A0 + Q0,				A0.transpose() * Q1 * B0 + A0.transpose() * A1.transpose() * Q2 * A1 * B0 + S0,	A0.transpose() * S1 + A0.transpose() * A1.transpose() * Q2 * B1,
@@ -106,7 +106,7 @@ TEST(test_1, condensing_test)
 	//qp.PrintQP_C(std::cout);
 
 	const auto gc = condensed.g();
-	Eigen::VectorXd gc_expected(qp.nIndep());
+	Eigen::VectorXd gc_expected(nIndep(qp));
 	gc_expected <<
 		A0.transpose() * Q1 * a0					+ A0.transpose() * A1.transpose() * Q2 * a1			+ A0.transpose() * A1.transpose() * Q2 * A1 * a0,
 		B0.transpose() * A1.transpose() * Q2 * a1	+ B0.transpose() * A1.transpose() * Q2 * A1 * a0	+ B0.transpose() * Q1 * a0,

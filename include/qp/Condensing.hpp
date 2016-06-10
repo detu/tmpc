@@ -9,19 +9,19 @@ namespace camels
 	{
 		using namespace Eigen;
 
-		if (msqp.nIndep() != condensed_qp.nx())
+		if (nIndep(msqp) != condensed_qp.nx())
 		{
 			std::stringstream msg;
 			msg << "Condense(): output CondensedQP has " << condensed_qp.nx()
-					<< " variables, but is expected to have " << msqp.nIndep() << ".";
+					<< " variables, but is expected to have " << nIndep(msqp) << ".";
 			throw std::invalid_argument(msg.str());
 		}
 
-		if (msqp.nDep() + msqp.nConstr() != condensed_qp.nc())
+		if (nDep(msqp) + nConstr(msqp) != condensed_qp.nc())
 		{
 			std::stringstream msg;
 			msg << "Condense(): output CondensedQP has " << condensed_qp.nc()
-					<< " constraints, but is expected to have " << msqp.nDep() + msqp.nConstr() << ".";
+					<< " constraints, but is expected to have " << nDep(msqp) + nConstr(msqp) << ".";
 			throw std::invalid_argument(msg.str());
 		}
 
@@ -30,10 +30,10 @@ namespace camels
 		auto constexpr nD = MultiStageQP_::nD();
 		auto constexpr nDT = MultiStageQP_::nDT();
 		auto const nT = msqp.nT();
-		auto const nIndep = msqp.nIndep();
+		auto const n_indep = nIndep(msqp);
 		auto constexpr nC = nX + nD;
 
-		MatrixXd M = MatrixXd::Identity(nX, nIndep);
+		MatrixXd M = MatrixXd::Identity(nX, n_indep);
 		auto v = Matrix<double, nX, 1>::Zero().eval();
 
 		auto& Hc = condensed_qp.H();
@@ -42,8 +42,8 @@ namespace camels
 		Hc.setZero();
 		gc.setZero();
 
-		condensed_qp.lb().template topRows<nX>() = msqp.xMin(0);
-		condensed_qp.ub().template topRows<nX>() = msqp.xMax(0);
+		condensed_qp.lb().template topRows<nX>() = xMin(msqp, 0);
+		condensed_qp.ub().template topRows<nX>() = xMax(msqp, 0);
 
 		for (unsigned k = 0; k < nT; ++k)
 		{
@@ -68,8 +68,8 @@ namespace camels
 			gc_k.template bottomRows<nU>() += g_k.template bottomRows<nU>() + S.transpose() * v;
 
 			// Set lower and upper bound for independent variables at stage k.
-			condensed_qp.lb().template middleRows<nU>(nX + k * nU) = msqp.uMin(k);
-			condensed_qp.ub().template middleRows<nU>(nX + k * nU) = msqp.uMax(k);
+			condensed_qp.lb().template middleRows<nU>(nX + k * nU) = uMin(msqp, k);
+			condensed_qp.ub().template middleRows<nU>(nX + k * nU) = uMax(msqp, k);
 
 			// Set path constraints for stage k.
 			auto Aconstr_k = condensed_qp.A().template middleRows<nC>(k * nC);
@@ -93,8 +93,17 @@ namespace camels
 
 			// Set next state bound constraints.
 			Aconstr_k.template bottomRows<nX>() = M;
-			lbAconstr_k.template bottomRows<nX>() = msqp.xMin(k + 1) - v;
-			ubAconstr_k.template bottomRows<nX>() = msqp.xMax(k + 1) - v;
+
+			if (k + 1 < nT)
+			{
+				lbAconstr_k.template bottomRows<nX>() = xMin(msqp, k + 1) - v;
+				ubAconstr_k.template bottomRows<nX>() = xMax(msqp, k + 1) - v;
+			}
+			else
+			{
+				lbAconstr_k.template bottomRows<nX>() = msqp.zendMin() - v;
+				ubAconstr_k.template bottomRows<nX>() = msqp.zendMax() - v;
+			}
 		}
 
 		// Set terminal constraints.

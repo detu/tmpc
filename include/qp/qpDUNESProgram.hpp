@@ -1,5 +1,7 @@
 #pragma once
 
+#include "MultiStageQuadraticProblemBase.hpp"
+
 #include <Eigen/Dense>
 #include <Eigen/SparseCore>
 
@@ -132,6 +134,7 @@ namespace camels
 
 		Eigen::Map<InterStageMatrix const> C(unsigned i) const
 		{
+			assert(i < nT());
 			return Eigen::Map<InterStageMatrix const>(_C.data() + i * nX() * nZ());
 		}
 
@@ -209,6 +212,7 @@ namespace camels
 
 		Eigen::Map<InterStageVector const> c(unsigned i) const
 		{
+			assert(i < nT());
 			return Eigen::Map<InterStageVector const>(_c.data() + i * nX());
 		}
 
