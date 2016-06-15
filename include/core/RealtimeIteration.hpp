@@ -7,7 +7,7 @@
 namespace camels
 {
 	template<class _Problem, typename Integrator_, class QPSolver_>
-	class ModelPredictiveController
+	class RealtimeIteration
 	{
 	public:
 		typedef _Problem Problem;
@@ -25,7 +25,7 @@ namespace camels
 
 		typedef std::function<void (typename QPSolver::Problem const&)> QPCallback;
 
-		ModelPredictiveController(Problem const& ocp, Integrator const& integrator, QPSolver& solver, Trajectory const& working_point)
+		RealtimeIteration(Problem const& ocp, Integrator const& integrator, QPSolver& solver, Trajectory const& working_point)
 		:	_ocp(ocp)
 		,	_QP(working_point.nT())
 		,	_workingPoint(working_point)

@@ -19,7 +19,7 @@ set(HDR
 )
 
 set (SRC
-    ${RTMC_INCLUDE_DIR}/core/ModelPredictiveController.hpp
+    ${RTMC_INCLUDE_DIR}/core/RealtimeIteration.hpp
 	${RTMC_INCLUDE_DIR}/core/OptimalControlProblem.hpp
     ${RTMC_INCLUDE_DIR}/core/ODEModel.hpp
     ${RTMC_INCLUDE_DIR}/core/Trajectory.hpp
