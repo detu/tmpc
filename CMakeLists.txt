@@ -24,6 +24,8 @@ include_directories(${qpDUNES_INCLUDE_DIRS})
 find_package( qpOASES REQUIRED )
 include_directories(${qpOASES_INCLUDE_DIRS})
 
+find_package(HPMPC)
+
 include_directories(${RTMC_INCLUDE_DIR})
 
 include(CompilerOptions.cmake)
