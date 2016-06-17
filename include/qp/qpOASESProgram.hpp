@@ -4,7 +4,7 @@
 
 #include <iostream>
 
-namespace camels
+namespace tmpc
 {
 	// Manages input data for qpOASES solver.
 	// Implements concept: QuadraticProgram.
@@ -76,4 +76,9 @@ namespace camels
 	};
 
 	void Print_MATLAB(std::ostream& log_stream, qpOASESProgram const& qp, std::string const& var_name);
+}
+
+namespace camels
+{
+	using namespace tmpc;
 }

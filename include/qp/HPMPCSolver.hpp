@@ -1,17 +1,43 @@
 #pragma once
 
 #include "MultiStageQuadraticProblemBase.hpp"
+#include "qpDUNESSolution.hpp"
+
+#include <c_interface.h>	// TODO: "c_interface.h" is a very general name; change the design so that it is <hpmpc/c_interface.h>, for example.
 
 #include <Eigen/Dense>
 
-#include <vector>
-#include <memory>
-#include <ostream>
-
 namespace tmpc
 {
+	template< unsigned M, unsigned N >
+	struct HPMPCMatrixType
+	{
+		typedef Eigen::Matrix<double, M, N, Eigen::RowMajor> type;
+	};
+
+	template< unsigned M >
+	struct HPMPCMatrixType<M, 1>
+	{
+		typedef Eigen::Matrix<double, M, 1> type;
+	};
+
+	template< unsigned N >
+	struct HPMPCMatrixType<1, N>
+	{
+		typedef Eigen::Matrix<double, 1, N, Eigen::RowMajor> type;
+	};
+
+	template<>
+	struct HPMPCMatrixType<1, 1>
+	{
+		typedef Eigen::Matrix<double, 1, 1> type;
+	};
+
+	template< unsigned NX, unsigned NU >
+	using HPMPCMatrix = typename HPMPCMatrixType<NX, NU>::type;
+
 	/* Stores data for a multistage QP problem.
-	 * Storage format is not explicitly defined and no access to raw data is provided..
+	 * The storage format is what is expected by the c_order_d_ip_ocp_hard_tv() function from HPMPC.
 	 *
 	 *  The problem is stated as following:
 	*
@@ -30,7 +56,7 @@ namespace tmpc
 	*	nU = nZ - nX
 	*/
 	template<unsigned NX_, unsigned NU_, unsigned NC_, unsigned NCT_>
-	class MultiStageQuadraticProblem : public MultiStageQuadraticProblemBase<MultiStageQuadraticProblem<NX_, NU_, NC_, NCT_>>
+	class HPMPCProblem : public MultiStageQuadraticProblemBase<HPMPCProblem<NX_, NU_, NC_, NCT_>>
 	{
 	public:
 		typedef unsigned int size_type;
@@ -44,15 +70,14 @@ namespace tmpc
 		typedef Eigen::Matrix<double, NX, 1> StateVector;
 		typedef Eigen::Matrix<double, NU, 1> InputVector;
 		typedef Eigen::Matrix<double, NZ, 1> StateInputVector;
-		typedef Eigen::Matrix<double, NZ, NZ, Eigen::RowMajor> StageHessianMatrix;
-		typedef Eigen::Matrix<double, NX, NX, Eigen::RowMajor> EndStageHessianMatrix;
+		typedef Eigen::Matrix<double, NZ, NZ, Eigen::ColMajor> StageHessianMatrix;
+		typedef Eigen::Matrix<double, NX, NX, Eigen::ColMajor> EndStageHessianMatrix;
 		typedef Eigen::Matrix<double, NZ, 1> StageGradientVector;
 		typedef Eigen::Matrix<double, NX, 1> EndStageGradientVector;
-		typedef Eigen::Matrix<double, NX, NZ, Eigen::RowMajor> InterStageMatrix;
-		typedef Eigen::Matrix<double, NX, 1> InterStageVector;
-		typedef Eigen::Matrix<double, NC, NZ, Eigen::RowMajor> StageConstraintMatrix;
+		typedef Eigen::Matrix<double, NX, NZ, Eigen::ColMajor> InterStageMatrix;
+		typedef Eigen::Matrix<double, NC, NZ, Eigen::ColMajor> StageConstraintMatrix;
 		typedef Eigen::Matrix<double, NC, 1> StageConstraintVector;
-		typedef Eigen::Matrix<double, NCT, NX, Eigen::RowMajor> EndStageConstraintMatrix;
+		typedef Eigen::Matrix<double, NCT, NX, Eigen::ColMajor> EndStageConstraintMatrix;
 		typedef Eigen::Matrix<double, NCT, 1> EndStageConstraintVector;
 
 		size_type nT() const { return _stage.size(); }
@@ -73,7 +98,7 @@ namespace tmpc
 
 		EndStageGradientVector& gend() { return _gend; }
 		EndStageGradientVector const& gend() const { return _gend;	}
-		
+
 		InterStageMatrix& C(size_type i) { return stage(i)._C; }
 		InterStageMatrix const& C(size_type i) const { return stage(i)._C; }
 
@@ -94,36 +119,64 @@ namespace tmpc
 
 		EndStageConstraintVector& dendMax()	{ return _dendMax; }
 		EndStageConstraintVector const& dendMax() const	{ return _dendMax; }
-				
-		InterStageVector& c(size_type i) { return stage(i)._c; }
-		InterStageVector const& c(size_type i) const { return stage(i)._c; }
 
-		StateInputVector& zMin(size_type i)	{ return stage(i)._zMin; }
+		StateVector& c(size_type i) { return stage(i)._c; }
+		StateVector const& c(size_type i) const { return stage(i)._c; }
+
+		friend void setXMin(HPMPCProblem& p, std::size_t i, StateVector const& val) { p.stage(i)._xMin = val; }
+		friend void setUMin(HPMPCProblem& p, std::size_t i, InputVector const& val) { p.stage(i)._uMin = val; }
 		StateInputVector const& zMin(size_type i) const { return stage(i)._zMin; }
 
-		StateVector& zendMin() { return _zendMin; }
+		friend void setZEndMin(HPMPCProblem& p, StateVector const& val) { p._zendMin = val; }
 		StateVector const& zendMin() const { return _zendMin; }
-		
-		StateInputVector& zMax(size_type i)	{ return stage(i)._zMax; }
+
+		friend void setXMax(HPMPCProblem& p, std::size_t i, StateVector const& val) { p.stage(i)._xMax = val; }
+		friend void setUMax(HPMPCProblem& p, std::size_t i, InputVector const& val) { p.stage(i)._uMax = val; }
 		StateInputVector const& zMax(size_type i) const { return stage(i)._zMax; }
-		
-		StateVector& zendMax() { return _zendMax; }
+
+		friend void setZEndMax(HPMPCProblem& p, StateVector const& val) { p._zendMax = val; }
 		StateVector const& zendMax() const { return _zendMax; }
 
-		MultiStageQuadraticProblem(size_type nt) : _stage(nt) {}
+		HPMPCProblem(size_type nt) : _stage(nt) {}
 
 	private:
+		typedef HPMPCMatrix<NU, NU> HPMPC_RMatrix;
+		typedef HPMPCMatrix<NU, NX> HPMPC_SMatrix;
+		typedef HPMPCMatrix<NX, NX> HPMPC_QMatrix;
+		typedef HPMPCMatrix<NX, NX> HPMPC_AMatrix;
+		typedef HPMPCMatrix<NX, NU> HPMPC_BMatrix;
+		typedef HPMPCMatrix<NC, NX> HPMPC_CMatrix;
+		typedef HPMPCMatrix<NC, NU> HPMPC_DMatrix;
+
 		struct StageData
 		{
-			StageHessianMatrix _H;
-			StageGradientVector _g;
-			StageConstraintMatrix _D;
+			// Hessian = [R, S; S', Q]
+			HPMPC_RMatrix _R;
+			HPMPC_SMatrix _S;
+			HPMPC_QMatrix _Q;
+
+			// Gradient = [r; q]
+			InputVector _r;
+			StateVector _q;
+
+			// Inter-stage equalities x_{k+1} = A x_k + B u_k + c_k
+			HPMPC_AMatrix _A;
+			HPMPC_BMatrix _B;
+			StateVector _c;
+
+			// Inequality constraints d_{min} <= C x_k + D u_k <= d_{max}
+			HPMPC_CMatrix _C;
+			HPMPC_DMatrix _D;
 			StageConstraintVector _dMin;
 			StageConstraintVector _dMax;
-			InterStageMatrix _C;
-			InterStageVector _c;
-			StateInputVector _zMin;
-			StateInputVector _zMax;
+
+			// Bound constraints
+			// u_{min} <= u <= u_{max}
+			// x_{min} <= x <= x_{max}
+			InputVector _uMin;
+			InputVector _uMax;
+			StateVector _xMin;
+			StateVector _xMax;
 		};
 
 		StageData& stage(size_type i)
@@ -165,9 +218,26 @@ namespace tmpc
 		// 1 vector of size _Nx
 		StateVector _zendMax;
 	};
-}
 
-namespace camels
-{
-	using namespace tmpc;
+	template<unsigned NX_, unsigned NU_, unsigned NC_, unsigned NCT_>
+	class HPMPCSolver
+	{
+	public:
+		typedef HPMPCProblem<NX_, NU_, NC_, NCT_> Problem;
+		typedef qpDUNESSolution<NX_, NU_> Solution;
+	};
+
+	template<unsigned NX, unsigned NU, unsigned NC, unsigned NCT, typename Matrix>
+	void setZMin(HPMPCProblem<NX, NU, NC, NCT>& qp, size_t i, Eigen::MatrixBase<Matrix> const& val)
+	{
+		setXMin(qp, i, val.template topRows<NX>());
+		setUMin(qp, i, val.template bottomRows<NU>());
+	}
+
+	template<unsigned NX, unsigned NU, unsigned NC, unsigned NCT, typename Matrix>
+	void setZMax(HPMPCProblem<NX, NU, NC, NCT>& qp, size_t i, Eigen::MatrixBase<Matrix> const& val)
+	{
+		setXMax(qp, i, val.template topRows<NX>());
+		setUMax(qp, i, val.template bottomRows<NU>());
+	}
 }

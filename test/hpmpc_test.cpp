@@ -1,6 +1,11 @@
-#include <qp/CondensingSolver.hpp>
-#include <qp/Condensing.hpp>
-#include <qp/qpOASESProgram.hpp>
+/*
+ * hpmpc_test.cpp
+ *
+ *  Created on: Jun 17, 2016
+ *      Author: kotlyar
+ */
+
+#include "../include/qp/HPMPCSolver.hpp"
 
 #include <gtest/gtest.h>
 
@@ -12,26 +17,30 @@ unsigned const NC = 0;
 unsigned const NCT = 0;
 unsigned const NT = 2;
 
-typedef tmpc::CondensingSolver<NX, NU, NC, NCT> Solver;
+typedef tmpc::HPMPCSolver<NX, NU, NC, NCT> Solver;
 typedef Solver::Solution Solution;
 
-std::ostream& operator<<(std::ostream& os, Solution const& point)
+namespace
 {
-	//typedef typename camels::CondensingSolver<NX_, NU_, NC_, NCT_>::size_type size_type;
-	typedef unsigned size_type;
-	for (size_type i = 0; i < point.nT(); ++i)
-		os << point.w(i) << std::endl;
+	std::ostream& operator<<(std::ostream& os, Solution const& point)
+	{
+		//typedef typename camels::CondensingSolver<NX_, NU_, NC_, NCT_>::size_type size_type;
+		typedef unsigned size_type;
+		for (size_type i = 0; i < point.nT(); ++i)
+			os << point.w(i) << std::endl;
 
-	return os << point.wend() << std::endl;
+		return os << point.wend() << std::endl;
+	}
 }
 
-TEST(test_1, condensing_test)
+TEST(hpmpc_test, problem_test)
 {
 	Solver::Problem qp(NT);
-	qp.zMin(0)  .setConstant(-1);	qp.zMax(0)  .setConstant(1);
-	qp.zMin(1)  .setConstant(-1);	qp.zMax(1)  .setConstant(1);
-	qp.zendMin().setConstant(-1);	qp.zendMax().setConstant(1);
+	setZMin(qp, 0, -1.);	setZMax(qp, 0, 1.);
+	setZMin(qp, 1, -1.);	setZMax(qp, 1, 1.);
+	setZEndMin(qp, -1.);	setZEndMax(qp, 1.);
 
+	/*
 	// Stage 0
 	Eigen::MatrixXd H0(qp.nZ(), qp.nZ());
 	H0 << 1, 2, 3, 4, 5, 6, 7, 8, 9;
@@ -93,7 +102,7 @@ TEST(test_1, condensing_test)
 
 	const auto Hc = condensed.H();
 	Eigen::MatrixXd Hc_expected(nIndep(qp), nIndep(qp));
-	
+
 	Hc_expected <<
 		A0.transpose() * Q1 * A0 + A0.transpose() * A1.transpose() * Q2 * A1 * A0 + Q0,				A0.transpose() * Q1 * B0 + A0.transpose() * A1.transpose() * Q2 * A1 * B0 + S0,	A0.transpose() * S1 + A0.transpose() * A1.transpose() * Q2 * B1,
 		B0.transpose() * Q1 * A0 + B0.transpose() * A1.transpose() * Q2 * A1 * A0 + S0.transpose(), B0.transpose() * Q1 * B0 + B0.transpose() * A1.transpose() * Q2 * A1 * B0 + R0, B0.transpose() * S1 + B0.transpose() * A1.transpose() * Q2 * B1,
@@ -122,7 +131,7 @@ TEST(test_1, condensing_test)
 	std::cout << "-- ub ---" << std::endl << condensed.ub() << std::endl;
 
 	Solver solver(qp.nT());
-	Solution solution(solver.nT());
+	Solver::Solution solution(solver.nT());
 
 	try
 	{
@@ -137,4 +146,5 @@ TEST(test_1, condensing_test)
 
 	std::cout << "-- sol (condensed ) --" << std::endl << solver.getCondensedSolution() << std::endl;
 	std::cout << "-- sol (multistage) --" << std::endl << solution << std::endl;
+	*/
  }

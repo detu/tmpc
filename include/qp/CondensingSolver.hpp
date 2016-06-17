@@ -9,7 +9,7 @@
 
 #include <ostream>
 
-namespace camels
+namespace tmpc
 {
 	class qpOASESOptions
 	{
@@ -40,7 +40,7 @@ namespace camels
 		typedef qpOASESProgram CondensedQP;
 
 		// Problem type for CondensingSolver
-		typedef camels::MultiStageQuadraticProblem<NX, NU, NC, NCT> Problem;
+		typedef MultiStageQuadraticProblem<NX, NU, NC, NCT> Problem;
 
 		// Solution data type
 		typedef qpDUNESSolution<NX, NU> Solution;
@@ -192,3 +192,8 @@ inline std::ostream& operator<<(std::ostream& os, typename camels::CondensingSol
 	return os;
 }
 */
+
+namespace camels
+{
+	using namespace tmpc;
+}

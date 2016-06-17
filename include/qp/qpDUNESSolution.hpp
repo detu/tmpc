@@ -114,4 +114,9 @@ namespace camels
 	};
 }
 
+namespace tmpc
+{
+	using  camels::qpDUNESSolution;
+}
+
 #endif /* INCLUDE_QP_QPDUNESSOLUTION_HPP_ */

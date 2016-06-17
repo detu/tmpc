@@ -2,7 +2,7 @@
 
 #include <Eigen/Dense>
 
-namespace camels
+namespace tmpc
 {
 	template<typename MultiStageQP_, typename CondensedQP_>
 	void Condense(MultiStageQP_ const& msqp, CondensedQP_& condensed_qp)

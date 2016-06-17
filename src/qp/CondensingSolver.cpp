@@ -41,7 +41,7 @@ namespace
 	}
 }
 
-namespace camels
+namespace tmpc
 {
 	qpOASESOptions::qpOASESOptions(qpOASES::Options const& options)
 	:	_options()

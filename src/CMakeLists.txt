@@ -24,10 +24,14 @@ set (SRC
 	${RTMC_INCLUDE_DIR}/integrator/RK4.hpp
 	
 	${RTMC_INCLUDE_DIR}/qp/Condensing.hpp
-	${RTMC_INCLUDE_DIR}/qp/CondensingSolver.hpp    qp/CondensingSolver.cpp
+	${RTMC_INCLUDE_DIR}/qp/CondensingSolver.hpp  qp/CondensingSolver.cpp
 	${RTMC_INCLUDE_DIR}/qp/qpDUNESProgram.hpp
 	${RTMC_INCLUDE_DIR}/qp/qpOASESProgram.hpp    qp/qpOASESProgram.cpp
 )
+
+if (HPMPC_FOUND)
+    set(SRC ${SRC} ${RTMC_INCLUDE_DIR}/qp/HPMPCSolver.hpp qp/HPMPCSolver.cpp)
+endif()
 
 add_library(mpmc STATIC ${HDR} ${SRC})
 #target_link_libraries(mpmc ${qpDUNES_STATIC_LIBRARIES})

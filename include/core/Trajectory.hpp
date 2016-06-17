@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stdexcept>
+
 namespace camels
 {
 	template<typename Derived_, unsigned NX_, unsigned NU_>

@@ -7,7 +7,7 @@
 
 #include <qp/qpOASESProgram.hpp>
 
-namespace camels
+namespace tmpc
 {
 	void Print_MATLAB(std::ostream& log_stream, qpOASESProgram const& qp, std::string const& var_name)
 	{

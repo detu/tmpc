@@ -2,8 +2,16 @@
 
 //#include <Eigen/Dense>
 
-namespace camels
+#include <cstddef>
+
+namespace tmpc
 {
+	template <typename Derived>
+	class MultiStageQuadraticProblemBase
+	{
+	public:
+	};
+
 	template<typename QP>
 	decltype(auto) xMin(QP& problem, unsigned i)
 	{
@@ -63,4 +71,33 @@ namespace camels
 
 	template<typename QP>
 	typename QP::size_type nConstr(QP const& qp) { return qp.nD() * qp.nT() + qp.nDT(); }
+
+	template<typename QP>
+	void setZMin(MultiStageQuadraticProblemBase<QP>& qp, std::size_t i, double val)
+	{
+		setZMin(static_cast<QP&>(qp), i, QP::StateInputVector::Constant(val));
+	}
+
+	template<typename QP>
+	void setZMax(MultiStageQuadraticProblemBase<QP>& qp, std::size_t i, double val)
+	{
+		setZMax(static_cast<QP&>(qp), i, QP::StateInputVector::Constant(val));
+	}
+
+	template<typename QP>
+	void setZEndMin(MultiStageQuadraticProblemBase<QP>& qp, double val)
+	{
+		setZEndMin(static_cast<QP&>(qp), QP::StateVector::Constant(val));
+	}
+
+	template<typename QP>
+	void setZEndMax(MultiStageQuadraticProblemBase<QP>& qp, double val)
+	{
+		setZEndMax(static_cast<QP&>(qp), QP::StateVector::Constant(val));
+	}
+}
+
+namespace camels
+{
+	using namespace tmpc;
 }
