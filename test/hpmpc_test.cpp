@@ -18,6 +18,7 @@ unsigned const NCT = 0;
 unsigned const NT = 2;
 
 typedef tmpc::HPMPCSolver<NX, NU, NC, NCT> Solver;
+typedef Solver::Problem Problem;
 typedef Solver::Solution Solution;
 
 namespace
@@ -35,14 +36,13 @@ namespace
 
 TEST(hpmpc_test, problem_test)
 {
-	Solver::Problem qp(NT);
+	Problem qp(NT);
 	setZMin(qp, 0, -1.);	setZMax(qp, 0, 1.);
 	setZMin(qp, 1, -1.);	setZMax(qp, 1, 1.);
 	setZEndMin(qp, -1.);	setZEndMax(qp, 1.);
 
-	/*
 	// Stage 0
-	Eigen::MatrixXd H0(qp.nZ(), qp.nZ());
+	Problem::StageHessianMatrix H0;
 	H0 << 1, 2, 3, 4, 5, 6, 7, 8, 9;
 	H0 = H0.transpose() * H0;	// Make positive definite.
 
@@ -61,7 +61,7 @@ TEST(hpmpc_test, problem_test)
 	a0 << 1, 2;
 
 	// Stage 1
-	Eigen::MatrixXd H1(qp.nZ(), qp.nZ());
+	Problem::StageHessianMatrix H1;
 	H1 << 1, 2, 3, 4, 5, 6, 7, 8, 9;
 	H1 = H1.transpose() * H1;	// Make positive definite.
 
@@ -87,64 +87,20 @@ TEST(hpmpc_test, problem_test)
 	const Eigen::MatrixXd Q2 = H2.topLeftCorner(qp.nX(), qp.nX());
 
 	// Setup QP
-	qp.H(0) = H0;
-	qp.H(1) = H1;
+	setH(qp, 0, H0);
+	setH(qp, 1, H1);
 	qp.Hend() = H2;
 
-	qp.C(0) << A0, B0;
-	qp.c(0) << a0;
-	qp.C(1) << A1, B1;
-	qp.c(1) << a1;
+	setA(qp, 0, A0);
+	setB(qp, 0, B0);
+	setc(qp, 0, a0);
+	setA(qp, 1, A1);
+	setB(qp, 1, B1);
+	setc(qp, 1, a1);
 
-	// Condense
-	camels::qpOASESProgram condensed(nIndep(qp), nDep(qp) + nConstr(qp));
-	camels::Condense(qp, condensed);
+	Solver solver(/*qp.nT()*/);
+	Solution solution(NT);
+	//solver.Solve(qp, solution);
 
-	const auto Hc = condensed.H();
-	Eigen::MatrixXd Hc_expected(nIndep(qp), nIndep(qp));
-
-	Hc_expected <<
-		A0.transpose() * Q1 * A0 + A0.transpose() * A1.transpose() * Q2 * A1 * A0 + Q0,				A0.transpose() * Q1 * B0 + A0.transpose() * A1.transpose() * Q2 * A1 * B0 + S0,	A0.transpose() * S1 + A0.transpose() * A1.transpose() * Q2 * B1,
-		B0.transpose() * Q1 * A0 + B0.transpose() * A1.transpose() * Q2 * A1 * A0 + S0.transpose(), B0.transpose() * Q1 * B0 + B0.transpose() * A1.transpose() * Q2 * A1 * B0 + R0, B0.transpose() * S1 + B0.transpose() * A1.transpose() * Q2 * B1,
-		S1.transpose() * A0 + B1.transpose() * Q2 * A1 * A0,										S1.transpose() * B0 + B1.transpose() * Q2 * A1 * B0,							B1.transpose() * Q2 * B1 + R1;
-
-	EXPECT_TRUE(Hc_expected == Hc);
-	std::cout << "****** Condensed problem *******" << std::endl;
-	Print_MATLAB(std::cout, condensed, "qp");
-	std::cout << "********* Hc_expected **********" << std::endl;
-	std::cout << Hc_expected << std::endl;
-	//qp.PrintQP_C(std::cout);
-
-	const auto gc = condensed.g();
-	Eigen::VectorXd gc_expected(nIndep(qp));
-	gc_expected <<
-		A0.transpose() * Q1 * a0					+ A0.transpose() * A1.transpose() * Q2 * a1			+ A0.transpose() * A1.transpose() * Q2 * A1 * a0,
-		B0.transpose() * A1.transpose() * Q2 * a1	+ B0.transpose() * A1.transpose() * Q2 * A1 * a0	+ B0.transpose() * Q1 * a0,
-		B1.transpose() * Q2 * A1 * a0				+ B1.transpose() * Q2 * a1							+ S1.transpose() * a0;
-
-	EXPECT_TRUE(gc_expected == gc);
-
-	std::cout << "--- A ---" << std::endl << condensed.A() << std::endl;
-	std::cout << "-- lbA --" << std::endl << condensed.lbA() << std::endl;
-	std::cout << "-- ubA --" << std::endl << condensed.ubA() << std::endl;
-	std::cout << "-- lb ---" << std::endl << condensed.lb() << std::endl;
-	std::cout << "-- ub ---" << std::endl << condensed.ub() << std::endl;
-
-	Solver solver(qp.nT());
-	Solver::Solution solution(solver.nT());
-
-	try
-	{
-		solver.Solve(qp, solution);
-	}
-	catch(Solver::SolveException const& x)
-	{
-		std::cerr << "+++++++ Condensed QP that failed: ++++++++" << std::endl;
-		Print_MATLAB(std::cerr, x.getCondensedQP(), "qp");
-		throw;
-	}
-
-	std::cout << "-- sol (condensed ) --" << std::endl << solver.getCondensedSolution() << std::endl;
 	std::cout << "-- sol (multistage) --" << std::endl << solution << std::endl;
-	*/
  }
