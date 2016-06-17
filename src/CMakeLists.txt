@@ -13,11 +13,6 @@
 # See this link for more details: http://eigen.tuxfamily.org/dox-devel/group__TopicStructHavingEigenMembers.html
 #add_definitions(-DEIGEN_DONT_ALIGN_STATICALLY)
 
-set(HDR 
-	${RTMC_INCLUDE_DIR}/MotionPlatform.hpp
-	${RTMC_INCLUDE_DIR}/MotionPlatformX.hpp
-)
-
 set (SRC
     ${RTMC_INCLUDE_DIR}/core/RealtimeIteration.hpp
 	${RTMC_INCLUDE_DIR}/core/OptimalControlProblem.hpp
@@ -32,8 +27,6 @@ set (SRC
 	${RTMC_INCLUDE_DIR}/qp/CondensingSolver.hpp    qp/CondensingSolver.cpp
 	${RTMC_INCLUDE_DIR}/qp/qpDUNESProgram.hpp
 	${RTMC_INCLUDE_DIR}/qp/qpOASESProgram.hpp    qp/qpOASESProgram.cpp
-	
-	MotionPlatformX.cpp
 )
 
 add_library(mpmc STATIC ${HDR} ${SRC})
