@@ -202,7 +202,7 @@ namespace tmpc
 					_b[i] = _stage[i]._c.data();
 				}
 
-				_Q [i] = _stage[i]._Q.data();
+				_Q [i] = i < nt ? _stage[i]._Q.data() : _Hend.data();
 				_S [i] = i < nt ? _stage[i]._S .data() : nullptr;
 				_R [i] = i < nt ? _stage[i]._R .data() : nullptr;
 				_q [i] = i < nt ? _stage[i]._q .data() : _gend.data();
