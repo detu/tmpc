@@ -80,6 +80,14 @@ namespace tmpc
 		typedef Eigen::Matrix<double, NCT, NX, Eigen::ColMajor> EndStageConstraintMatrix;
 		typedef Eigen::Matrix<double, NCT, 1> EndStageConstraintVector;
 
+		typedef HPMPCMatrix<NU, NU> HPMPC_RMatrix;
+		typedef HPMPCMatrix<NU, NX> HPMPC_SMatrix;
+		typedef HPMPCMatrix<NX, NX> HPMPC_QMatrix;
+		typedef HPMPCMatrix<NX, NX> HPMPC_AMatrix;
+		typedef HPMPCMatrix<NX, NU> HPMPC_BMatrix;
+		typedef HPMPCMatrix<NC, NX> HPMPC_CMatrix;
+		typedef HPMPCMatrix<NC, NU> HPMPC_DMatrix;
+
 		size_type nT() const { return _stage.size(); }
 		static constexpr size_type nX() { return NX; }
 		static constexpr size_type nZ() { return NZ; }
@@ -87,34 +95,31 @@ namespace tmpc
 		static constexpr size_type nD() { return NC; }
 		static constexpr size_type nDT() { return NCT; }
 
-		template<class Matrix>
-		friend void setQ(HPMPCProblem& p, std::size_t i, Eigen::MatrixBase<Matrix> const& Q) { p.stage(i)._Q = Q; }
+		template<class Matrix> void set_Q(std::size_t i, Eigen::MatrixBase<Matrix> const& Q) { stage(i)._Q = Q; }
+		HPMPC_QMatrix const& get_Q(std::size_t i) const { return stage(i)._Q; }
 
-		template<class Matrix>
-		friend void setR(HPMPCProblem& p, std::size_t i, Eigen::MatrixBase<Matrix> const& R) { p.stage(i)._R = R; }
+		template<class Matrix> void set_R(std::size_t i, Eigen::MatrixBase<Matrix> const& R) { stage(i)._R = R; }
+		HPMPC_RMatrix const& get_R(std::size_t i) const { return stage(i)._R; }
 
-		template<class Matrix>
-		friend void setS(HPMPCProblem& p, std::size_t i, Eigen::MatrixBase<Matrix> const& S) { p.stage(i)._S = S; }
+		template<class Matrix> void set_S(std::size_t i, Eigen::MatrixBase<Matrix> const& S) { stage(i)._S = S; }
+		HPMPC_SMatrix const& get_S(std::size_t i) const { return stage(i)._S; }
 
-		StageHessianMatrix const& H(size_type i) const { return stage(i)._H; }
+		template<class Matrix> void set_A(std::size_t i, Eigen::MatrixBase<Matrix> const& A) { stage(i)._A = A; }
+		HPMPC_AMatrix const& get_A(std::size_t i) const { return stage(i)._A; }
 
-		EndStageHessianMatrix& Hend() { return _Hend; }
-		EndStageHessianMatrix const& Hend() const {	return _Hend; }
+		template<class Matrix> void set_B(std::size_t i, Eigen::MatrixBase<Matrix> const& B) { stage(i)._B = B; }
+		HPMPC_BMatrix const& get_B(std::size_t i) const { return stage(i)._B; }
 
-		StageGradientVector& g(size_type i)	{ return stage(i)._g; }
-		StageGradientVector const& g(size_type i) const	{ return stage(i)._g; }
+		template<class Matrix> friend void set_Hend(HPMPCProblem& p, Eigen::MatrixBase<Matrix> const& Hend) { p._Hend = Hend; }
+		friend EndStageHessianMatrix const& get_Hend(HPMPCProblem const& p) { return p._Hend; }
 
-		EndStageGradientVector& gend() { return _gend; }
-		EndStageGradientVector const& gend() const { return _gend;	}
+		template<class Matrix> friend void set_g(HPMPCProblem& p, size_type i, Eigen::MatrixBase<Matrix>& val)	{ p.stage(i)._g = val; }
+		friend StageGradientVector const& get_g(HPMPCProblem const& p, size_type i) { return p.stage(i)._g; }
 
-		template<class Matrix>
-		friend void setA(HPMPCProblem& p, std::size_t i, Eigen::MatrixBase<Matrix> const& A) { p.stage(i)._A = A; }
+		template<class Matrix> friend void set_gend(HPMPCProblem& p, Eigen::MatrixBase<Matrix>& val) { p._gend = val; }
+		friend EndStageGradientVector const& get_gend(HPMPCProblem const& p) { return p._gend;	}
 
-		template<class Matrix>
-		friend void setB(HPMPCProblem& p, std::size_t i, Eigen::MatrixBase<Matrix> const& B) { p.stage(i)._B = B; }
-
-		InterStageMatrix const& C(size_type i) const { return stage(i)._C; }
-
+		/*
 		StageConstraintMatrix& D(size_type i) {	return stage(i)._D; }
 		StageConstraintMatrix const& D(size_type i) const {	return stage(i)._D; }
 
@@ -132,37 +137,29 @@ namespace tmpc
 
 		EndStageConstraintVector& dendMax()	{ return _dendMax; }
 		EndStageConstraintVector const& dendMax() const	{ return _dendMax; }
+		*/
 
-		template<class Matrix>
-		friend void setc(HPMPCProblem& p, std::size_t i, Eigen::MatrixBase<Matrix> const& c) { p.stage(i)._c = c; }
+		template<class Matrix> friend void set_c(HPMPCProblem& p, std::size_t i, Eigen::MatrixBase<Matrix> const& c) { p.stage(i)._c = c; }
+		friend StateVector const& get_c(HPMPCProblem& p, std::size_t i) { return p.stage(i)._c; }
 
-		StateVector const& c(size_type i) const { return stage(i)._c; }
+		template<class Matrix> void set_xMin(std::size_t i, Eigen::MatrixBase<Matrix> const& val) { stage(i)._xMin = val; }
+		StateVector const& get_xMin(std::size_t i) const { return stage(i)._xMin; }
+		template<class Matrix> void set_xMax(std::size_t i, Eigen::MatrixBase<Matrix> const& val) { stage(i)._xMax = val; }
+		StateVector const& get_xMax(std::size_t i) const { return stage(i)._xMax; }
 
-		friend void setXMin(HPMPCProblem& p, std::size_t i, StateVector const& val) { p.stage(i)._xMin = val; }
-		friend void setUMin(HPMPCProblem& p, std::size_t i, InputVector const& val) { p.stage(i)._uMin = val; }
-		StateInputVector const& zMin(size_type i) const { return stage(i)._zMin; }
+		template<class Matrix> void set_uMin(std::size_t i, Eigen::MatrixBase<Matrix> const& val) { stage(i)._uMin = val; }
+		InputVector const& get_uMin(std::size_t i) const { return stage(i)._uMin; }
+		template<class Matrix> void set_uMax(std::size_t i, Eigen::MatrixBase<Matrix> const& val) { stage(i)._uMax = val; }
+		InputVector const& get_uMax(std::size_t i) const { return stage(i)._uMax; }
 
-		friend void setZEndMin(HPMPCProblem& p, StateVector const& val) { p._zendMin = val; }
-		StateVector const& zendMin() const { return _zendMin; }
-
-		friend void setXMax(HPMPCProblem& p, std::size_t i, StateVector const& val) { p.stage(i)._xMax = val; }
-		friend void setUMax(HPMPCProblem& p, std::size_t i, InputVector const& val) { p.stage(i)._uMax = val; }
-		StateInputVector const& zMax(size_type i) const { return stage(i)._zMax; }
-
-		friend void setZEndMax(HPMPCProblem& p, StateVector const& val) { p._zendMax = val; }
-		StateVector const& zendMax() const { return _zendMax; }
+		template<class Matrix> friend void set_zendMin(HPMPCProblem& p, Eigen::MatrixBase<Matrix> const& val) { p._zendMin = val; }
+		friend StateVector const& get_zendMin(HPMPCProblem const& p) { return p._zendMin; }
+		template<class Matrix> friend void set_zendMax(HPMPCProblem& p, Eigen::MatrixBase<Matrix> const& val) { p._zendMax = val; }
+		friend StateVector const& get_zendMax(HPMPCProblem const& p) { return p._zendMax; }
 
 		HPMPCProblem(size_type nt) : _stage(nt) {}
 
 	private:
-		typedef HPMPCMatrix<NU, NU> HPMPC_RMatrix;
-		typedef HPMPCMatrix<NU, NX> HPMPC_SMatrix;
-		typedef HPMPCMatrix<NX, NX> HPMPC_QMatrix;
-		typedef HPMPCMatrix<NX, NX> HPMPC_AMatrix;
-		typedef HPMPCMatrix<NX, NU> HPMPC_BMatrix;
-		typedef HPMPCMatrix<NC, NX> HPMPC_CMatrix;
-		typedef HPMPCMatrix<NC, NU> HPMPC_DMatrix;
-
 		struct StageData
 		{
 			// Hessian = [R, S; S', Q]
@@ -234,6 +231,72 @@ namespace tmpc
 		StateVector _zendMax;
 	};
 
+	template<unsigned NX, unsigned NU, unsigned NC, unsigned NCT, typename Matrix>
+	void set_H(HPMPCProblem<NX, NU, NC, NCT>& qp, std::size_t i, Eigen::MatrixBase<Matrix> const& val)
+	{
+		static_assert(Matrix::RowsAtCompileTime == NX + NU && Matrix::ColsAtCompileTime == NX + NU,
+			"Matrix of size (NX+NU)x(NX+NU) is expected");
+		qp.set_Q(i, val.template topLeftCorner<NX, NX>());
+		qp.set_S(i, val.template bottomLeftCorner<NU, NX>());
+		qp.set_R(i, val.template bottomRightCorner<NU, NU>());
+	}
+
+	template<unsigned NX, unsigned NU, unsigned NC, unsigned NCT>
+	typename HPMPCProblem<NX, NU, NC, NCT>::StageHessianMatrix get_H(HPMPCProblem<NX, NU, NC, NCT> const& qp, std::size_t i)
+	{
+		typename HPMPCProblem<NX, NU, NC, NCT>::StageHessianMatrix H;
+		H << qp.get_Q(i), qp.get_S(i).transpose(), qp.get_S(i), qp.get_R(i);
+		return H;
+	}
+
+	template<unsigned NX, unsigned NU, unsigned NC, unsigned NCT, typename Matrix>
+	void set_C(HPMPCProblem<NX, NU, NC, NCT>& qp, std::size_t i, Eigen::MatrixBase<Matrix> const& C)
+	{
+		static_assert(Matrix::ColsAtCompileTime == NX + NU,	"Matrix with (NX+NU) columns is expected");
+		qp.set_A(i, C.template leftCols<NX>());
+		qp.set_B(i, C.template rightCols<NU>());
+	}
+
+	template<unsigned NX, unsigned NU, unsigned NC, unsigned NCT>
+	typename HPMPCProblem<NX, NU, NC, NCT>::InterStageMatrix get_C(HPMPCProblem<NX, NU, NC, NCT> const& qp, std::size_t i)
+	{
+		typename HPMPCProblem<NX, NU, NC, NCT>::InterStageMatrix C;
+		C << qp.get_A(i), qp.get_B(i);
+		return C;
+	}
+
+	template<unsigned NX, unsigned NU, unsigned NC, unsigned NCT, typename Matrix>
+	void set_zMin(HPMPCProblem<NX, NU, NC, NCT>& qp, std::size_t i, Eigen::MatrixBase<Matrix> const& z_min)
+	{
+		static_assert(Matrix::RowsAtCompileTime == NX + NU,	"Vector with (NX+NU) rows is expected");
+		qp.set_xMin(i, z_min.template topRows<NX>());
+		qp.set_uMin(i, z_min.template bottomRows<NU>());
+	}
+
+	template<unsigned NX, unsigned NU, unsigned NC, unsigned NCT>
+	typename HPMPCProblem<NX, NU, NC, NCT>::StateInputVector get_zMin(HPMPCProblem<NX, NU, NC, NCT> const& qp, std::size_t i)
+	{
+		typename HPMPCProblem<NX, NU, NC, NCT>::StateInputVector z_min;
+		z_min << qp.get_xMin(i), qp.get_uMin(i);
+		return z_min;
+	}
+
+	template<unsigned NX, unsigned NU, unsigned NC, unsigned NCT, typename Matrix>
+	void set_zMax(HPMPCProblem<NX, NU, NC, NCT>& qp, std::size_t i, Eigen::MatrixBase<Matrix> const& z_max)
+	{
+		static_assert(Matrix::RowsAtCompileTime == NX + NU,	"Vector with (NX+NU) rows is expected");
+		qp.set_xMax(i, z_max.template topRows<NX>());
+		qp.set_uMax(i, z_max.template bottomRows<NU>());
+	}
+
+	template<unsigned NX, unsigned NU, unsigned NC, unsigned NCT>
+	typename HPMPCProblem<NX, NU, NC, NCT>::StateInputVector get_zMax(HPMPCProblem<NX, NU, NC, NCT> const& qp, std::size_t i)
+	{
+		typename HPMPCProblem<NX, NU, NC, NCT>::StateInputVector z_max;
+		z_max << qp.get_xMax(i), qp.get_uMax(i);
+		return z_max;
+	}
+
 	template<unsigned NX_, unsigned NU_, unsigned NC_, unsigned NCT_>
 	class HPMPCSolver
 	{
@@ -241,30 +304,4 @@ namespace tmpc
 		typedef HPMPCProblem<NX_, NU_, NC_, NCT_> Problem;
 		typedef qpDUNESSolution<NX_, NU_> Solution;
 	};
-
-	template<unsigned NX, unsigned NU, unsigned NC, unsigned NCT, typename Matrix>
-	void setZMin(HPMPCProblem<NX, NU, NC, NCT>& qp, size_t i, Eigen::MatrixBase<Matrix> const& val)
-	{
-		static_assert(Matrix::RowsAtCompileTime == NX + NU, "Column vector of size NX+NU is expected");
-		setXMin(qp, i, val.template topRows<NX>());
-		setUMin(qp, i, val.template bottomRows<NU>());
-	}
-
-	template<unsigned NX, unsigned NU, unsigned NC, unsigned NCT, typename Matrix>
-	void setZMax(HPMPCProblem<NX, NU, NC, NCT>& qp, size_t i, Eigen::MatrixBase<Matrix> const& val)
-	{
-		static_assert(Matrix::RowsAtCompileTime == NX + NU, "Column vector of size NX+NU is expected");
-		setXMax(qp, i, val.template topRows<NX>());
-		setUMax(qp, i, val.template bottomRows<NU>());
-	}
-
-	template<unsigned NX, unsigned NU, unsigned NC, unsigned NCT, typename Matrix>
-	void setH(HPMPCProblem<NX, NU, NC, NCT>& qp, size_t i, Eigen::MatrixBase<Matrix> const& val)
-	{
-		static_assert(Matrix::RowsAtCompileTime == NX + NU && Matrix::ColsAtCompileTime == NX + NU,
-			"Matrix of size (NX+NU)x(NX+NU) is expected");
-		setQ(qp, i, val.template topLeftCorner<NX, NX>());
-		setS(qp, i, val.template bottomLeftCorner<NU, NX>());
-		setR(qp, i, val.template bottomRightCorner<NU, NU>());
-	}
 }

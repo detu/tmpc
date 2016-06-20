@@ -73,27 +73,27 @@ namespace tmpc
 	typename QP::size_type nConstr(QP const& qp) { return qp.nD() * qp.nT() + qp.nDT(); }
 
 	template<typename QP>
-	void setZMin(MultiStageQuadraticProblemBase<QP>& qp, std::size_t i, double val)
+	void set_zMin(MultiStageQuadraticProblemBase<QP>& qp, std::size_t i, double val)
 	{
-		setZMin(static_cast<QP&>(qp), i, QP::StateInputVector::Constant(val));
+		set_zMin(static_cast<QP&>(qp), i, QP::StateInputVector::Constant(val));
 	}
 
 	template<typename QP>
-	void setZMax(MultiStageQuadraticProblemBase<QP>& qp, std::size_t i, double val)
+	void set_zMax(MultiStageQuadraticProblemBase<QP>& qp, std::size_t i, double val)
 	{
-		setZMax(static_cast<QP&>(qp), i, QP::StateInputVector::Constant(val));
+		set_zMax(static_cast<QP&>(qp), i, QP::StateInputVector::Constant(val));
 	}
 
 	template<typename QP>
-	void setZEndMin(MultiStageQuadraticProblemBase<QP>& qp, double val)
+	void set_zendMin(MultiStageQuadraticProblemBase<QP>& qp, double val)
 	{
-		setZEndMin(static_cast<QP&>(qp), QP::StateVector::Constant(val));
+		set_zendMin(static_cast<QP&>(qp), QP::StateVector::Constant(val));
 	}
 
 	template<typename QP>
-	void setZEndMax(MultiStageQuadraticProblemBase<QP>& qp, double val)
+	void set_zendMax(MultiStageQuadraticProblemBase<QP>& qp, double val)
 	{
-		setZEndMax(static_cast<QP&>(qp), QP::StateVector::Constant(val));
+		set_zendMax(static_cast<QP&>(qp), QP::StateVector::Constant(val));
 	}
 }
 
