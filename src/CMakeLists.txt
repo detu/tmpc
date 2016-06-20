@@ -30,7 +30,10 @@ set (SRC
 )
 
 if (HPMPC_FOUND)
-    set(SRC ${SRC} ${RTMC_INCLUDE_DIR}/qp/HPMPCSolver.hpp qp/HPMPCSolver.cpp)
+    set(SRC ${SRC} 
+        ${RTMC_INCLUDE_DIR}/qp/HPMPCSolver.hpp     qp/HPMPCSolver.cpp
+        ${RTMC_INCLUDE_DIR}/qp/HPMPCProblem.hpp    qp/HPMPCProblem.cpp
+    )
 endif()
 
 add_library(mpmc STATIC ${HDR} ${SRC})
