@@ -1,7 +1,7 @@
 #pragma once
 
 #include "HPMPCProblem.hpp"
-#include "qpDUNESSolution.hpp"
+#include "HPMPCSolution.hpp"
 
 #include <c_interface.h>	// TODO: "c_interface.h" is a very general name; change the design so that it is <hpmpc/c_interface.h>, for example.
 
@@ -21,7 +21,7 @@ namespace tmpc
 		static unsigned const NCT = NCT_;
 
 		typedef HPMPCProblem<NX, NU, NC, NCT> Problem;
-		typedef qpDUNESSolution<NX, NU> Solution;
+		typedef HPMPCSolution<NX, NU, NC, NCT> Solution;
 
 		HPMPCSolver(std::size_t nt, int max_iter = 100)
 		:	_nx(nt + 1, NX)
@@ -46,10 +46,12 @@ namespace tmpc
 					_nx.data(), _nu.data(), _nb.data(), _ng.data(), _warmStart ? 1 : 0, p.A_data(), p.B_data(), p.b_data(),
 					p.Q_data(), p.S_data(), p.R_data(), p.q_data(), p.r_data(), p.lb_data(), p.ub_data(), p.C_data(), p.D_data(),
 					p.lg_data(), p.ug_data(), s.x_data(), s.u_data(), s.pi_data(), s.lam_data(), s.t_data(), s.inf_norm_res_data(),
-					static_cast<void *>(_workspace.data()), s.stat_data());
+					static_cast<void *>(_workspace.data()), _stat[0].data());
 
 			if (ret != 0)
 				throw_hpmpc_error(ret);
+
+			_warmStart = true;
 		}
 
 		std::size_t nT() const noexcept { return _nx.size() - 1; }

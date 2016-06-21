@@ -206,7 +206,7 @@ namespace tmpc
 				_S [i] = i < nt ? _stage[i]._S .data() : nullptr;
 				_R [i] = i < nt ? _stage[i]._R .data() : nullptr;
 				_q [i] = i < nt ? _stage[i]._q .data() : _gend.data();
-				_r [i] = i < nt ? _stage[i]._r .data() : _gend.data() + NX;
+				_r [i] = i < nt ? _stage[i]._r .data() : nullptr;
 				_lb[i] = i < nt ? _stage[i]._lb.data() : _zendMin.data();
 				_ub[i] = i < nt ? _stage[i]._ub.data() : _zendMax.data();
 				_C [i] = i < nt ? _stage[i]._C .data() : _Dend.data();

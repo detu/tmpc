@@ -28,9 +28,9 @@ namespace
 		//typedef typename camels::CondensingSolver<NX_, NU_, NC_, NCT_>::size_type size_type;
 		typedef unsigned size_type;
 		for (size_type i = 0; i < point.nT(); ++i)
-			os << point.w(i) << std::endl;
+			os << point.get_x(i) << "\t" << point.get_u(i) << std::endl;
 
-		return os << point.wend() << std::endl;
+		return os << point.get_xend() << std::endl;
 	}
 }
 
@@ -119,6 +119,9 @@ TEST(hpmpc_test, problem_test)
 	EXPECT_EQ(qp.R_data()[2], nullptr);
 	EXPECT_EQ(qp.S_data()[2], nullptr);
 
+	EXPECT_NE(qp.q_data()[2], nullptr);
+	EXPECT_EQ(qp.r_data()[2], nullptr);
+
 	Problem::InterStageMatrix C0;
 	C0 << A0, B0;
 	set_C(qp, 0, C0);
@@ -142,7 +145,7 @@ TEST(hpmpc_test, problem_test)
 	EXPECT_EQ(Eigen::Map<Problem::StateVector const>(qp.b_data()[1]), a1);
  }
 
-TEST(hpmpc_test, DISABLED_solve_test)
+TEST(hpmpc_test, solve_test)
 {
 	Problem qp(NT);
 	set_zMin(qp, 0, -1.);	set_zMax(qp, 0, 1.);
@@ -209,9 +212,9 @@ TEST(hpmpc_test, DISABLED_solve_test)
 	set_C(qp, 1, C1);
 	set_c(qp, 1, a1);
 
-	Solver solver(/*qp.nT()*/);
+	Solver solver(qp.nT());
 	Solution solution(NT);
-	//solver.Solve(qp, solution);
+	solver.Solve(qp, solution);
 
 	std::cout << "-- sol (multistage) --" << std::endl << solution << std::endl;
  }
