@@ -110,34 +110,49 @@ namespace tmpc
 		template<class Matrix> friend void set_Hend(HPMPCProblem& p, Eigen::MatrixBase<Matrix> const& Hend) { p._Hend = Hend; }
 		friend EndStageHessianMatrix const& get_Hend(HPMPCProblem const& p) { return p._Hend; }
 
-		template<class Matrix> friend void set_g(HPMPCProblem& p, size_type i, Eigen::MatrixBase<Matrix>& val)	{ p.stage(i)._g = val; }
-		friend StageGradientVector const& get_g(HPMPCProblem const& p, size_type i) { return p.stage(i)._g; }
+		template<class Matrix> friend void set_g(HPMPCProblem& p, size_type i, Eigen::MatrixBase<Matrix>& val)
+		{
+			static_assert(Matrix::RowsAtCompileTime == NX + NU,	"Column vector of size (NX+NU) is expected");
+			p.stage(i)._q = val.template topRows<NX>();
+			p.stage(i)._r = val.template bottomRows<NU>();
+		}
+
+		friend StageGradientVector get_g(HPMPCProblem const& p, size_type i)
+		{
+			StageGradientVector g;
+			g << p.stage(i)._q, p.stage(i)._r;
+			return g;
+		}
 
 		template<class Matrix> friend void set_gend(HPMPCProblem& p, Eigen::MatrixBase<Matrix>& val) { p._gend = val; }
 		friend EndStageGradientVector const& get_gend(HPMPCProblem const& p) { return p._gend;	}
 
+		StageConstraintMatrix get_D(std::size_t i) const
+		{
+			StageConstraintMatrix D;
+
+			if (D.RowsAtCompileTime > 0)	// Workaround for http://eigen.tuxfamily.org/bz/show_bug.cgi?id=1242
+				D << stage(i)._C, stage(i)._D;
+
+			return D;
+		}
+
+		EndStageConstraintMatrix const& get_Dend() const { return _Dend; }
+		StageConstraintVector const& get_dMin(size_type i) const { return stage(i)._dMin; }
+		EndStageConstraintVector const& get_dendMin() const	{ return _dendMin; }
+		StageConstraintVector const& get_dMax(size_type i) const { return stage(i)._dMax; }
+		EndStageConstraintVector const& get_dendMax() const	{ return _dendMax; }
+
 		/*
 		StageConstraintMatrix& D(size_type i) {	return stage(i)._D; }
-		StageConstraintMatrix const& D(size_type i) const {	return stage(i)._D; }
-
-		EndStageConstraintMatrix& Dend() { return _Dend; }
-		EndStageConstraintMatrix const& Dend() const { return _Dend; }
-
 		StageConstraintVector& dMin(size_type i) { return stage(i)._dMin; }
-		StageConstraintVector const& dMin(size_type i) const { return stage(i)._dMin; }
-
 		EndStageConstraintVector& dendMin() { return _dendMin; }
-		EndStageConstraintVector const& dendMin() const	{ return _dendMin; }
-
 		StageConstraintVector& dMax(size_type i) { return stage(i)._dMax; }
-		StageConstraintVector const& dMax(size_type i) const { return stage(i)._dMax; }
-
 		EndStageConstraintVector& dendMax()	{ return _dendMax; }
-		EndStageConstraintVector const& dendMax() const	{ return _dendMax; }
 		*/
 
 		template<class Matrix> friend void set_c(HPMPCProblem& p, std::size_t i, Eigen::MatrixBase<Matrix> const& c) { p.stage(i)._c = c; }
-		friend StateVector const& get_c(HPMPCProblem& p, std::size_t i) { return p.stage(i)._c; }
+		friend StateVector const& get_c(HPMPCProblem const& p, std::size_t i) { return p.stage(i)._c; }
 
 		template<class Matrix> void set_xMin(std::size_t i, Eigen::MatrixBase<Matrix> const& val) { stage(i)._lb.template bottomRows<NX>() = val; }
 		decltype(auto) get_xMin(std::size_t i) const { return stage(i)._lb.template bottomRows<NX>(); }
@@ -162,7 +177,29 @@ namespace tmpc
 		// ******************************************************
 		double const * const * A_data () const { return _A .data(); }
 		double const * const * B_data () const { return _B .data(); }
-		double const * const * b_data () const { return _b .data(); }
+
+		double const * const * b_data () const
+		{
+			auto const x0_min = _stage[0]._lb.template bottomRows<NX>();
+			auto const x0_max = _stage[0]._ub.template bottomRows<NX>();
+
+			if (x0_min == x0_max)
+			{
+				// In the MPC case, the equality for stage 0 reads:
+				// x[1] = A[0]*x[0] + B[0]*u[0] + c[0] = B[0]*u[0] + (A[0]*x[0] + c[0]) = B[0]*u[0] + b0,
+				// b0 = A[0]*x[0].
+				// and x[0] is not treated as an optimization variable by HPMPC.
+				_b0 = _stage[0]._A * x0_min + _stage[0]._c;
+				_b[0] = _b0.data();
+			}
+			else
+			{
+				_b[0] = _stage[0]._c.data();
+			}
+
+			return _b.data();
+		}
+
 		double const * const * Q_data () const { return _Q .data(); }
 		double const * const * S_data () const { return _S .data(); }
 		double const * const * R_data () const { return _R .data(); }
@@ -177,18 +214,18 @@ namespace tmpc
 
 		HPMPCProblem(size_type nt)
 		:	_stage(nt)
-		,	_A(nt)
-		,	_B(nt)
-		,	_b(nt)
-		,	_Q(nt + 1)
-		,	_S(nt + 1)
-		,	_R(nt + 1)
-		,	_q(nt + 1)
-		,	_r(nt + 1)
+		,	_A (nt)
+		,	_B (nt)
+		,	_b (nt)
+		,	_Q (nt + 1)
+		,	_S (nt + 1)
+		,	_R (nt + 1)
+		,	_q (nt + 1)
+		,	_r (nt + 1)
 		,	_lb(nt + 1)
 		,	_ub(nt + 1)
-		,	_C(nt + 1)
-		,	_D(nt + 1)
+		,	_C (nt + 1)
+		,	_D (nt + 1)
 		,	_lg(nt + 1)
 		,	_ug(nt + 1)
 		{
@@ -202,7 +239,7 @@ namespace tmpc
 					_b[i] = _stage[i]._c.data();
 				}
 
-				_Q [i] = i < nt ? _stage[i]._Q.data() : _Hend.data();
+				_Q [i] = i < nt ? _stage[i]._Q .data() : _Hend.data();
 				_S [i] = i < nt ? _stage[i]._S .data() : nullptr;
 				_R [i] = i < nt ? _stage[i]._R .data() : nullptr;
 				_q [i] = i < nt ? _stage[i]._q .data() : _gend.data();
@@ -263,6 +300,12 @@ namespace tmpc
 		// Stores stage data
 		std::vector<StageData> _stage;
 
+		// In the MPC case, the equality for stage 0 reads:
+		// x[1] = A[0]*x[0] + B[0]*u[0] + c[0] = B[0]*u[0] + (A[0]*x[0] + c[0]) = B[0]*u[0] + b0,
+		// b0 = A[0]*x[0].
+		// and x[0] is not treated as an optimization variable by HPMPC.
+		StateVector mutable _b0;
+
 		// 1 matrix of size _Nx x _Nx.
 		EndStageHessianMatrix _Hend;
 
@@ -291,7 +334,7 @@ namespace tmpc
 		std::vector<double const *> _B;
 
 		// "b" data array for HPMPC
-		std::vector<double const *> _b;
+		std::vector<double const *> mutable _b;
 
 		// "Q" data array for HPMPC
 		std::vector<double const *> _Q;

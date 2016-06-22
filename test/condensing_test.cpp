@@ -2,6 +2,8 @@
 #include <qp/Condensing.hpp>
 #include <qp/qpOASESProgram.hpp>
 
+#include "qp_test_problems.hpp"
+
 #include <gtest/gtest.h>
 
 #include <iostream>
@@ -13,6 +15,7 @@ unsigned const NCT = 0;
 unsigned const NT = 2;
 
 typedef tmpc::CondensingSolver<NX, NU, NC, NCT> Solver;
+typedef Solver::Problem Problem;
 typedef Solver::Solution Solution;
 
 std::ostream& operator<<(std::ostream& os, Solution const& point)
@@ -25,7 +28,7 @@ std::ostream& operator<<(std::ostream& os, Solution const& point)
 	return os << point.wend() << std::endl;
 }
 
-TEST(test_1, condensing_test)
+TEST(CondensingSolver_test, condensing_test)
 {
 	Solver::Problem qp(NT);
 	qp.zMin(0)  .setConstant(-1);	qp.zMax(0)  .setConstant(1);
@@ -115,11 +118,19 @@ TEST(test_1, condensing_test)
 
 	EXPECT_TRUE(gc_expected == gc);
 
+	/*
 	std::cout << "--- A ---" << std::endl << condensed.A() << std::endl;
 	std::cout << "-- lbA --" << std::endl << condensed.lbA() << std::endl;
 	std::cout << "-- ubA --" << std::endl << condensed.ubA() << std::endl;
 	std::cout << "-- lb ---" << std::endl << condensed.lb() << std::endl;
 	std::cout << "-- ub ---" << std::endl << condensed.ub() << std::endl;
+	*/
+}
+
+TEST(CondensingSolver_test, Solve_test)
+{
+	Problem qp(NT);
+	tmpc_test::qp_problems::problem_1(qp);
 
 	Solver solver(qp.nT());
 	Solution solution(solver.nT());
@@ -135,6 +146,18 @@ TEST(test_1, condensing_test)
 		throw;
 	}
 
+	Solution::StateInputVector z0_expected;
+	z0_expected << 1., -1., -1;
+	EXPECT_TRUE(solution.w(0).isApprox(z0_expected));
+
+	Solution::StateInputVector z1_expected;
+	z1_expected << 0.5, 0., -1;
+	EXPECT_TRUE(solution.w(1).isApprox(z1_expected));
+
+	Solution::StateVector z2_expected;
+	z2_expected << 1., 1;
+	EXPECT_TRUE(solution.wend().isApprox(z2_expected));
+
 	std::cout << "-- sol (condensed ) --" << std::endl << solver.getCondensedSolution() << std::endl;
 	std::cout << "-- sol (multistage) --" << std::endl << solution << std::endl;
- }
+}

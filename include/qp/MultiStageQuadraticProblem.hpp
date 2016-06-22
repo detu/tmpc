@@ -65,17 +65,32 @@ namespace tmpc
 		StageHessianMatrix& H(size_type i) { return stage(i)._H; }
 		StageHessianMatrix const& H(size_type i) const { return stage(i)._H; }
 
+		template <typename Matrix>
+		friend void set_H(MultiStageQuadraticProblem& p, std::size_t i, Eigen::MatrixBase<Matrix> const& H) { p.H(i) = H; }
+
 		EndStageHessianMatrix& Hend() { return _Hend; }
 		EndStageHessianMatrix const& Hend() const {	return _Hend; }
+
+		template <typename Matrix>
+		friend void set_Hend(MultiStageQuadraticProblem& p, Eigen::MatrixBase<Matrix> const& Hend) { p.Hend() = Hend; }
 
 		StageGradientVector& g(size_type i)	{ return stage(i)._g; }
 		StageGradientVector const& g(size_type i) const	{ return stage(i)._g; }
 
+		template <typename Matrix>
+		friend void set_g(MultiStageQuadraticProblem& p, std::size_t i, Eigen::MatrixBase<Matrix> const& g) { p.g(i) = g; }
+
 		EndStageGradientVector& gend() { return _gend; }
 		EndStageGradientVector const& gend() const { return _gend;	}
 		
+		template <typename Matrix>
+		friend void set_gend(MultiStageQuadraticProblem& p, Eigen::MatrixBase<Matrix> const& gend) { p.gend() = gend; }
+
 		InterStageMatrix& C(size_type i) { return stage(i)._C; }
 		InterStageMatrix const& C(size_type i) const { return stage(i)._C; }
+
+		template <typename Matrix>
+		friend void set_C(MultiStageQuadraticProblem& p, std::size_t i, Eigen::MatrixBase<Matrix> const& C) { p.C(i) = C; }
 
 		StageConstraintMatrix& D(size_type i) {	return stage(i)._D; }
 		StageConstraintMatrix const& D(size_type i) const {	return stage(i)._D; }
@@ -98,17 +113,32 @@ namespace tmpc
 		InterStageVector& c(size_type i) { return stage(i)._c; }
 		InterStageVector const& c(size_type i) const { return stage(i)._c; }
 
+		template <typename Matrix>
+		friend void set_c(MultiStageQuadraticProblem& p, std::size_t i, Eigen::MatrixBase<Matrix> const& c) { p.c(i) = c; }
+
 		StateInputVector& zMin(size_type i)	{ return stage(i)._zMin; }
 		StateInputVector const& zMin(size_type i) const { return stage(i)._zMin; }
+
+		template <typename Matrix>
+		friend void set_zMin(MultiStageQuadraticProblem& p, std::size_t i, Eigen::MatrixBase<Matrix> const& z_min) { p.zMin(i) = z_min; }
 
 		StateVector& zendMin() { return _zendMin; }
 		StateVector const& zendMin() const { return _zendMin; }
 		
+		template <typename Matrix>
+		friend void set_zendMin(MultiStageQuadraticProblem& p, Eigen::MatrixBase<Matrix> const& val) { p.zendMin() = val; }
+
 		StateInputVector& zMax(size_type i)	{ return stage(i)._zMax; }
 		StateInputVector const& zMax(size_type i) const { return stage(i)._zMax; }
 		
+		template <typename Matrix>
+		friend void set_zMax(MultiStageQuadraticProblem& p, std::size_t i, Eigen::MatrixBase<Matrix> const& z_max) { p.zMax(i) = z_max; }
+
 		StateVector& zendMax() { return _zendMax; }
 		StateVector const& zendMax() const { return _zendMax; }
+
+		template <typename Matrix>
+		friend void set_zendMax(MultiStageQuadraticProblem& p, Eigen::MatrixBase<Matrix> const& val) { p.zendMax() = val; }
 
 		MultiStageQuadraticProblem(size_type nt) : _stage(nt) {}
 

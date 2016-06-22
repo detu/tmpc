@@ -7,7 +7,6 @@
 
 #include <vector>
 #include <memory>
-#include <ostream>
 #include <cstdlib>
 
 namespace camels
@@ -412,38 +411,6 @@ namespace camels
 
 		PrintQP_zMin_C(log_stream);
 		PrintQP_zMax_C(log_stream);
-	}
-
-	template<unsigned NX_, unsigned NU_, unsigned NC_, unsigned NCT_>
-	inline void qpDUNESProgram<NX_, NU_, NC_, NCT_>::PrintQP_MATLAB(std::ostream& log_stream, const std::string& var_name) const
-	{
-		using std::endl;
-
-		for (unsigned k = 0; k < nT(); ++k)
-		{
-			log_stream << var_name << ".H{" << k + 1 << "} = [..." << endl << H(k) << "];" << endl;
-			log_stream << var_name << ".g{" << k + 1 << "} = [..." << endl << g(k) << "];" << endl;
-
-			log_stream << var_name << ".C{" << k + 1 << "} = [..." << endl << C(k) << "];" << endl;
-			log_stream << var_name << ".c{" << k + 1 << "} = [..." << endl << c(k) << "];" << endl;
-
-			log_stream << var_name << ".D{" << k + 1 << "} = [..." << endl << D(k) << "];" << endl;
-			log_stream << var_name << ".dMin{" << k + 1 << "} = [..." << endl << dMin(k) << "];" << endl;
-			log_stream << var_name << ".dMax{" << k + 1 << "} = [..." << endl << dMax(k) << "];" << endl;
-
-			log_stream << var_name << ".zMin{" << k + 1 << "} = [..." << endl << zMin(k) << "];" << endl;
-			log_stream << var_name << ".zMax{" << k + 1 << "} = [..." << endl << zMax(k) << "];" << endl;
-		}
-
-		log_stream << var_name << ".H{" << nT() + 1 << "} = [..." << endl << Hend() << "];" << endl;
-		log_stream << var_name << ".g{" << nT() + 1 << "} = [..." << endl << gend() << "];" << endl;
-
-		log_stream << var_name << ".D{" << nT() + 1 << "} = [..." << endl << Dend() << "];" << endl;
-		log_stream << var_name << ".dMin{" << nT() + 1 << "} = [..." << endl << dendMin() << "];" << endl;
-		log_stream << var_name << ".dMax{" << nT() + 1 << "} = [..." << endl << dendMax() << "];" << endl;
-
-		log_stream << var_name << ".zMin{" << nT() + 1 << "} = [..." << endl << zendMin() << "];" << endl;
-		log_stream << var_name << ".zMax{" << nT() + 1 << "} = [..." << endl << zendMax() << "];" << endl;
 	}
 
 	template<unsigned NX_, unsigned NU_, unsigned NC_, unsigned NCT_>

@@ -30,6 +30,7 @@ namespace tmpc
 		,	_ng(nt + 1, NC)
 		,	_stat(max_iter)
 		{
+			//_nx.front() = 0;	// HPMPC wants nx[0] = 0 for MPC problems (seems that it does not support lbx[0] == ubx[0])
 			_nu.back() = 0;
 			_nb.back() = NX;
 			_ng.back() = NCT;
@@ -42,6 +43,10 @@ namespace tmpc
 		void Solve(Problem const& p, Solution& s)
 		{
 			int num_iter = 0;
+
+			//assert(get_xMin(p, 0) == get_xMax(p, 0));
+
+
 			auto const ret = c_order_d_ip_ocp_hard_tv(&num_iter, getMaxIter(), _mu0, _muTol, nT(),
 					_nx.data(), _nu.data(), _nb.data(), _ng.data(), _warmStart ? 1 : 0, p.A_data(), p.B_data(), p.b_data(),
 					p.Q_data(), p.S_data(), p.R_data(), p.q_data(), p.r_data(), p.lb_data(), p.ub_data(), p.C_data(), p.D_data(),
