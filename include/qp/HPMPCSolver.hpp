@@ -44,8 +44,7 @@ namespace tmpc
 		{
 			int num_iter = 0;
 
-			//assert(get_xMin(p, 0) == get_xMax(p, 0));
-
+			_nx[0] = p.get_xMin(0) == p.get_xMax(0) ? 0 : NX;
 
 			auto const ret = c_order_d_ip_ocp_hard_tv(&num_iter, getMaxIter(), _mu0, _muTol, nT(),
 					_nx.data(), _nu.data(), _nb.data(), _ng.data(), _warmStart ? 1 : 0, p.A_data(), p.B_data(), p.b_data(),

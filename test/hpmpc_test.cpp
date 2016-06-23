@@ -222,7 +222,7 @@ TEST(hpmpc_test, solve_test_1)
 
 TEST(hpmpc_test, low_level_call_test_1)
 {
-	int const nx[NT + 1] = {NX, NX, NX};
+	int const nx[NT + 1] = {0, NX, NX};
 	int const nu[NT + 1] = {NU, NU, 0};
 	int const nb[NT + 1] = {NU + NX, NU + NX, NX};
 	int const ng[NT + 1] = {0, 0, 0};
@@ -233,31 +233,33 @@ TEST(hpmpc_test, low_level_call_test_1)
 	double const B0[NX * NU] = {0.5, 1.};
 	double const * const B[NT] = {B0, B0};
 
-	double const b0[NX] = {0., 0.};
-	double const * const b[NT] = {b0, b0};
+	double const x0[NX] = {1., 0.};
+	double const b0[NX] = {A0[NX * 0 + 0] * x0[0] + A0[NX * 0 + 1] * x0[1], A0[NX * 1 + 0] * x0[0] + A0[NX * 1 + 1] * x0[1]};
+	double const b1[NX] = {0., 0.};
+	double const * const b[NT] = {b0, b1};
 
 	double const Q0[NX * NX] = {66., 78., 78., 93.};
 	double const QT[NX * NX] = {10., 14., 14., 20.};
-	double const * const Q[NT + 1] = {Q0, Q0, QT};
+	double const * const Q[NT + 1] = {nullptr, Q0, QT};
 
 	double const S0[NU * NX] = {90., 108};
-	double const * const S[NT] = {S0, S0};
+	double const * const S[NT] = {nullptr, S0};
 
 	double const R0[NU * NU] = {126.};
 	double const * const R[NT] = {R0, R0};
 
 	double const q0[NX] = {0., 0.};
-	double const * const q[NT + 1] = {q0, q0, q0};
+	double const * const q[NT + 1] = {nullptr, q0, q0};
 
 	double const r0[NU] = {0.};
 	double const * const r[NT] = {r0, r0};
 
-	double const lb0[NU + NX] = {-1., 1., 0.};
+	double const lb0[NU     ] = {-1.};
 	double const lb1[NU + NX] = {-1., -1., -1.};
 	double const lbT[NX] = {-1., -1.};
 	double const * const lb[NT + 1] = {lb0, lb1, lbT};
 
-	double const ub0[NU + NX] = { 1., 1., 0.};
+	double const ub0[NU     ] = { 1.};
 	double const ub1[NU + NX] = {1., 1., 1.};
 	double const ubT[NX] = {1., 1.};
 	double const * const ub[NT + 1] = {ub0, ub1, ubT};

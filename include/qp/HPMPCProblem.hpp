@@ -180,8 +180,8 @@ namespace tmpc
 
 		double const * const * b_data () const
 		{
-			auto const x0_min = _stage[0]._lb.template bottomRows<NX>();
-			auto const x0_max = _stage[0]._ub.template bottomRows<NX>();
+			auto const x0_min = get_xMin(0);
+			auto const x0_max = get_xMax(0);
 
 			if (x0_min == x0_max)
 			{
