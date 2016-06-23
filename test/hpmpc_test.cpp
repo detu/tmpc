@@ -207,15 +207,15 @@ TEST(hpmpc_test, solve_test_1)
 
 	Solution::StateInputVector z0_expected;
 	z0_expected << 1., 0., -0.690877362606266;
-	EXPECT_TRUE(get_z(solution, 0).isApprox(z0_expected));
+	EXPECT_TRUE(get_z(solution, 0).isApprox(z0_expected, 1e-6));
 
 	Solution::StateInputVector z1_expected;
 	z1_expected << 0.654561318696867, -0.690877362606266, 0.215679569867116;
-	EXPECT_TRUE(get_z(solution, 1).isApprox(z1_expected));
+	EXPECT_TRUE(get_z(solution, 1).isApprox(z1_expected, 1e-6));
 
 	Solution::StateVector z2_expected;
 	z2_expected << 0.0715237410241597, -0.475197792739149;
-	EXPECT_TRUE(get_xend(solution).isApprox(z2_expected));
+	EXPECT_TRUE(get_xend(solution).isApprox(z2_expected, 1e-6));
 
 	std::cout << "-- sol (multistage) --" << std::endl << solution << std::endl;
 }
@@ -224,7 +224,7 @@ TEST(hpmpc_test, low_level_call_test_1)
 {
 	int const nx[NT + 1] = {0, NX, NX};
 	int const nu[NT + 1] = {NU, NU, 0};
-	int const nb[NT + 1] = {NU + NX, NU + NX, NX};
+	int const nb[NT + 1] = {nx[0] + nu[0], nx[1] + nu[1], nx[2] + nu[2]};
 	int const ng[NT + 1] = {0, 0, 0};
 
 	double const A0[NX * NX] = {1., 1., 0., 1.};
@@ -251,8 +251,9 @@ TEST(hpmpc_test, low_level_call_test_1)
 	double const q0[NX] = {0., 0.};
 	double const * const q[NT + 1] = {nullptr, q0, q0};
 
-	double const r0[NU] = {0.};
-	double const * const r[NT] = {r0, r0};
+	double const r0[NU] = {S0[0] * x0[0] + S0[1] * x0[1]};
+	double const r1[NU] = {0.};
+	double const * const r[NT] = {r0, r1};
 
 	double const lb0[NU     ] = {-1.};
 	double const lb1[NU + NX] = {-1., -1., -1.};
@@ -269,8 +270,8 @@ TEST(hpmpc_test, low_level_call_test_1)
 	double const * const lg[NT + 1] = {nullptr, nullptr, nullptr};
 	double const * const ug[NT + 1] = {nullptr, nullptr, nullptr};
 
-	double x  [NT + 1][NX];	double * px [NT + 1] = {x [0], x [1], x [2]};
-	double u  [NT + 1][NU]; double * pu [NT + 1] = {u [0], u [1], u [2]};
+	Solution::StateVector x[NT + 1];	double * px[NT + 1] = {nullptr, x[1].data(), x[2].data()};
+	Solution::InputVector u[NT];        double * pu[NT    ] = {u[0].data(), u[1].data()};
 	double pi [NT    ][NX]; double * ppi[NT    ] = {pi[0], pi[1]};
 	double lam[NT + 1][2 * (NX + NU)];	double * plam[NT + 1] = {lam[0], lam[1], lam[2]};
 	double t  [NT + 1][2 * (NX + NU)];	double * pt  [NT + 1] = {t  [0], t  [1], t  [2]};
@@ -297,6 +298,21 @@ TEST(hpmpc_test, low_level_call_test_1)
 	printf("\n");
 
 	ASSERT_EQ(ret, 0);
+
+	std::cout << "u[0] = " << u[0].transpose() << std::endl;
+	std::cout << "x[1] = " << x[1].transpose() << "\tu[1] = " << u[1].transpose() << std::endl;
+	std::cout << "x[2] = " << x[2].transpose() << std::endl;
+
+	Solution::InputVector u0_expected;	u0_expected << -0.690877362606266;
+	EXPECT_TRUE(u[0].isApprox(u0_expected, 1e-6));
+
+	Solution::StateVector x1_expected;	x1_expected << 0.654561318696867, -0.690877362606266;
+	Solution::InputVector u1_expected;	u1_expected << 0.215679569867116;
+	EXPECT_TRUE(x[1].isApprox(x1_expected, 1e-6));
+	EXPECT_TRUE(u[1].isApprox(u1_expected, 1e-6));
+
+	Solution::StateVector x2_expected;	x2_expected << 0.0715237410241597, -0.475197792739149;
+	EXPECT_TRUE(x[2].isApprox(x2_expected, 1e-6));
 }
 
 TEST(hpmpc_test, low_level_call_test_0)

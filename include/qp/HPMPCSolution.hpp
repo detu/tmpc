@@ -66,6 +66,12 @@ namespace tmpc
 			return i < nT() ? _stage[i]._x : _xEnd;
 		}
 
+		template <typename Matrix>
+		void set_x(std::size_t i, Eigen::MatrixBase<Matrix> const& val)
+		{
+			stage(i)._x = val;
+		}
+
 		InputVector const& get_u(std::size_t i) const { return stage(i)._u; }
 		StateVector const& get_xend() const	{ return _xEnd; }
 		friend StateVector const& get_xend(HPMPCSolution const& s) { return s._xEnd; }

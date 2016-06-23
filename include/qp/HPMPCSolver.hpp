@@ -44,16 +44,21 @@ namespace tmpc
 		{
 			int num_iter = 0;
 
-			_nx[0] = p.get_xMin(0) == p.get_xMax(0) ? 0 : NX;
+			bool const x0_equality = p.is_x0_equality_constrained();
+			_nx[0] = x0_equality ? 0 : NX;
+			_nb[0] = _nx[0] + _nu[0];
 
 			auto const ret = c_order_d_ip_ocp_hard_tv(&num_iter, getMaxIter(), _mu0, _muTol, nT(),
 					_nx.data(), _nu.data(), _nb.data(), _ng.data(), _warmStart ? 1 : 0, p.A_data(), p.B_data(), p.b_data(),
 					p.Q_data(), p.S_data(), p.R_data(), p.q_data(), p.r_data(), p.lb_data(), p.ub_data(), p.C_data(), p.D_data(),
 					p.lg_data(), p.ug_data(), s.x_data(), s.u_data(), s.pi_data(), s.lam_data(), s.t_data(), s.inf_norm_res_data(),
-					static_cast<void *>(_workspace.data()), _stat[0].data());
+					_workspace.data(), _stat[0].data());
 
 			if (ret != 0)
 				throw_hpmpc_error(ret);
+
+			if (x0_equality)
+				s.set_x(0, p.get_xMin(0));
 
 			_warmStart = true;
 		}

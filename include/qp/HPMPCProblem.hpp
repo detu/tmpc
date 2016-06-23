@@ -169,6 +169,8 @@ namespace tmpc
 		template<class Matrix> friend void set_zendMax(HPMPCProblem& p, Eigen::MatrixBase<Matrix> const& val) { p._zendMax = val; }
 		friend StateVector const& get_zendMax(HPMPCProblem const& p) { return p._zendMax; }
 
+		bool is_x0_equality_constrained() const { return get_xMin(0) == get_xMax(0); }
+
 		// ******************************************************
 		//                HPMPC raw data interface.
 		//
@@ -180,16 +182,9 @@ namespace tmpc
 
 		double const * const * b_data () const
 		{
-			auto const x0_min = get_xMin(0);
-			auto const x0_max = get_xMax(0);
-
-			if (x0_min == x0_max)
+			if (is_x0_equality_constrained())
 			{
-				// In the MPC case, the equality for stage 0 reads:
-				// x[1] = A[0]*x[0] + B[0]*u[0] + c[0] = B[0]*u[0] + (A[0]*x[0] + c[0]) = B[0]*u[0] + b0,
-				// b0 = A[0]*x[0].
-				// and x[0] is not treated as an optimization variable by HPMPC.
-				_b0 = _stage[0]._A * x0_min + _stage[0]._c;
+				_b0 = _stage[0]._A * get_xMin(0) + _stage[0]._c;
 				_b[0] = _b0.data();
 			}
 			else
@@ -204,13 +199,28 @@ namespace tmpc
 		double const * const * S_data () const { return _S .data(); }
 		double const * const * R_data () const { return _R .data(); }
 		double const * const * q_data () const { return _q .data(); }
-		double const * const * r_data () const { return _r .data(); }
+
+		double const * const * r_data () const
+		{
+			if (is_x0_equality_constrained())
+			{
+				_r0 = _stage[0]._S * get_xMin(0) + _stage[0]._r;
+				_r[0] = _r0.data();
+			}
+			else
+			{
+				_r[0] = _stage[0]._r.data();
+			}
+
+			return _r .data();
+		}
+
 		double const * const * lb_data() const { return _lb.data(); }
 		double const * const * ub_data() const { return _ub.data(); }
 		double const * const * C_data () const { return _C .data(); }
 		double const * const * D_data () const { return _D .data(); }
-		double const * const * lg_data() const { return _lg.data(); }
-		double const * const * ug_data() const { return _ug.data(); }
+		double const * const * lg_data() const { return _lg.data(); }	// TODO: beware of x[0] being equality constrained!
+		double const * const * ug_data() const { return _ug.data(); }	// TODO: beware of x[0] being equality constrained!
 
 		HPMPCProblem(size_type nt)
 		:	_stage(nt)
@@ -306,6 +316,12 @@ namespace tmpc
 		// and x[0] is not treated as an optimization variable by HPMPC.
 		StateVector mutable _b0;
 
+		// If x[0] is equality constrained and we eliminate it, then we need to
+		// account for the x[0]' * S[0] * u[0] term:
+		// x[0]' * S[0] * u[0] + r[0]' * u[0] =  (x[0]' * S[0] + r[0]') * u[0] = r0' * u[0],
+		// where r0 = S[0]' * x[0] + r[0]
+		InputVector mutable _r0;
+
 		// 1 matrix of size _Nx x _Nx.
 		EndStageHessianMatrix _Hend;
 
@@ -349,7 +365,7 @@ namespace tmpc
 		std::vector<double const *> _q;
 
 		// "r" data array for HPMPC
-		std::vector<double const *> _r;
+		std::vector<double const *> mutable _r;
 
 		// "lb" data array for HPMPC
 		std::vector<double const *> _lb;
