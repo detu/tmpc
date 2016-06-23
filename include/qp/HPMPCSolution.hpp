@@ -39,7 +39,7 @@ namespace tmpc
 		HPMPCSolution(size_type nt)
 		:	_stage(nt)
 		,	_x    (nt + 1)
-		,	_u    (nt + 1)
+		,	_u    (nt    )
 		,	_pi   (nt    )
 		,	_lam  (nt + 1)
 		,	_t    (nt + 1)
@@ -54,7 +54,6 @@ namespace tmpc
 			}
 
 			_x  .back() = _xEnd  .data();
-			_u  .back() = nullptr;
 			_lam.back() = _lamEnd.data();
 			_t  .back() = _tEnd  .data();
 		}

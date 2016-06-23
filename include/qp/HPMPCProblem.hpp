@@ -435,4 +435,14 @@ namespace tmpc
 		z_max << qp.get_xMax(i), qp.get_uMax(i);
 		return z_max;
 	}
+
+	template<unsigned NX, unsigned NU, unsigned NC, unsigned NCT, typename Matrix>
+	void set_xMin(HPMPCProblem<NX, NU, NC, NCT>& qp, std::size_t i, Eigen::MatrixBase<Matrix> const& x_min)	{
+		qp.set_xMin(i, x_min);
+	}
+
+	template<unsigned NX, unsigned NU, unsigned NC, unsigned NCT, typename Matrix>
+	void set_xMax(HPMPCProblem<NX, NU, NC, NCT>& qp, std::size_t i, Eigen::MatrixBase<Matrix> const& x_max)	{
+		qp.set_xMax(i, x_max);
+	}
 }

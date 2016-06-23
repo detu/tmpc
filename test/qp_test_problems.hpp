@@ -7,7 +7,7 @@ namespace tmpc_test
 	namespace qp_problems
 	{
 		template <typename Problem>
-		void problem_1(Problem& qp)
+		void problem_0(Problem& qp)
 		{
 			unsigned const NX = 2;
 			unsigned const NU = 1;
@@ -92,6 +92,19 @@ namespace tmpc_test
 			C1 << A1, B1;
 			set_C(qp, 1, C1);
 			set_c(qp, 1, a1);
+		}
+
+		template <typename Problem>
+		void problem_1(Problem& qp)
+		{
+			problem_0(qp);
+
+			typename Problem::StateVector x0;
+			x0 << 1., 0.;
+			set_xMin(qp, 0, x0);	set_xMax(qp, 0, x0);
+
+			set_c(qp, 0, Problem::StateVector::Zero());
+			set_c(qp, 1, Problem::StateVector::Zero());
 		}
 	}
 }

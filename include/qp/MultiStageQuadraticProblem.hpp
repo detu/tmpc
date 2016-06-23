@@ -122,6 +122,11 @@ namespace tmpc
 		template <typename Matrix>
 		friend void set_zMin(MultiStageQuadraticProblem& p, std::size_t i, Eigen::MatrixBase<Matrix> const& z_min) { p.zMin(i) = z_min; }
 
+		template <typename Matrix>
+		friend void set_xMin(MultiStageQuadraticProblem& p, std::size_t i, Eigen::MatrixBase<Matrix> const& x_min)	{
+			p.zMin(i).template topRows<NX>() = x_min;
+		}
+
 		StateVector& zendMin() { return _zendMin; }
 		StateVector const& zendMin() const { return _zendMin; }
 		
@@ -131,6 +136,11 @@ namespace tmpc
 		StateInputVector& zMax(size_type i)	{ return stage(i)._zMax; }
 		StateInputVector const& zMax(size_type i) const { return stage(i)._zMax; }
 		
+		template <typename Matrix>
+		friend void set_xMax(MultiStageQuadraticProblem& p, std::size_t i, Eigen::MatrixBase<Matrix> const& x_max)	{
+			p.zMax(i).template topRows<NX>() = x_max;
+		}
+
 		template <typename Matrix>
 		friend void set_zMax(MultiStageQuadraticProblem& p, std::size_t i, Eigen::MatrixBase<Matrix> const& z_max) { p.zMax(i) = z_max; }
 

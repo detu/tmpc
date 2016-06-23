@@ -148,10 +148,10 @@ TEST(hpmpc_test, problem_test)
 	EXPECT_EQ(Eigen::Map<Problem::StateVector const>(qp.b_data()[1]), a1);
  }
 
-TEST(hpmpc_test, solve_test)
+TEST(hpmpc_test, solve_test_0)
 {
 	Problem qp(NT);
-	tmpc_test::qp_problems::problem_1(qp);
+	tmpc_test::qp_problems::problem_0(qp);
 
 	Print_MATLAB(std::cout, qp, "qp");
 
@@ -166,6 +166,7 @@ TEST(hpmpc_test, solve_test)
 	{
 		std::cout << "HPMPC SOLVER RETURNED AN ERROR" << std::endl;
 		std::cout << "-- sol (multistage) --" << std::endl << solution << std::endl;
+		throw;
 	}
 
 	Solution::StateInputVector z0_expected;
@@ -183,20 +184,56 @@ TEST(hpmpc_test, solve_test)
 	std::cout << "-- sol (multistage) --" << std::endl << solution << std::endl;
 }
 
-TEST(hpmpc_test, low_level_call_test)
+TEST(hpmpc_test, solve_test_1)
+{
+	Problem qp(NT);
+	tmpc_test::qp_problems::problem_1(qp);
+
+	Print_MATLAB(std::cout, qp, "qp");
+
+	Solver solver(qp.nT());
+	Solution solution(NT);
+
+	try
+	{
+		solver.Solve(qp, solution);
+	}
+	catch (std::runtime_error const& e)
+	{
+		std::cout << "HPMPC SOLVER RETURNED AN ERROR" << std::endl;
+		std::cout << "-- sol (multistage) --" << std::endl << solution << std::endl;
+		throw;
+	}
+
+	Solution::StateInputVector z0_expected;
+	z0_expected << 1., 0., -0.690877362606266;
+	EXPECT_TRUE(get_z(solution, 0).isApprox(z0_expected));
+
+	Solution::StateInputVector z1_expected;
+	z1_expected << 0.654561318696867, -0.690877362606266, 0.215679569867116;
+	EXPECT_TRUE(get_z(solution, 1).isApprox(z1_expected));
+
+	Solution::StateVector z2_expected;
+	z2_expected << 0.0715237410241597, -0.475197792739149;
+	EXPECT_TRUE(get_xend(solution).isApprox(z2_expected));
+
+	std::cout << "-- sol (multistage) --" << std::endl << solution << std::endl;
+}
+
+TEST(hpmpc_test, low_level_call_test_1)
 {
 	int const nx[NT + 1] = {NX, NX, NX};
 	int const nu[NT + 1] = {NU, NU, 0};
 	int const nb[NT + 1] = {NU + NX, NU + NX, NX};
 	int const ng[NT + 1] = {0, 0, 0};
 
-	double const A0[NX * NX] = {1., 1., 0., -1.};
+	double const A0[NX * NX] = {1., 1., 0., 1.};
 	double const * const A[NT] = {A0, A0};
 
 	double const B0[NX * NU] = {0.5, 1.};
 	double const * const B[NT] = {B0, B0};
 
-	double const b0[NX] = {1., 2.};
+	double const b0[NX] = {0., 0.};
 	double const * const b[NT] = {b0, b0};
 
 	double const Q0[NX * NX] = {66., 78., 78., 93.};
@@ -204,24 +241,26 @@ TEST(hpmpc_test, low_level_call_test)
 	double const * const Q[NT + 1] = {Q0, Q0, QT};
 
 	double const S0[NU * NX] = {90., 108};
-	double const * const S[NT + 1] = {S0, S0, nullptr};
+	double const * const S[NT] = {S0, S0};
 
 	double const R0[NU * NU] = {126.};
-	double const * const R[NT + 1] = {R0, R0, nullptr};
+	double const * const R[NT] = {R0, R0};
 
 	double const q0[NX] = {0., 0.};
 	double const * const q[NT + 1] = {q0, q0, q0};
 
 	double const r0[NU] = {0.};
-	double const * const r[NT + 1] = {r0, r0, nullptr};
+	double const * const r[NT] = {r0, r0};
 
-	double const lb0[NU + NX] = {-1., -1., -1.};
+	double const lb0[NU + NX] = {-1., 1., 0.};
+	double const lb1[NU + NX] = {-1., -1., -1.};
 	double const lbT[NX] = {-1., -1.};
-	double const * const lb[NT + 1] = {lb0, lb0, lbT};
+	double const * const lb[NT + 1] = {lb0, lb1, lbT};
 
-	double const ub0[NU + NX] = {1., 1., 1.};
+	double const ub0[NU + NX] = { 1., 1., 0.};
+	double const ub1[NU + NX] = {1., 1., 1.};
 	double const ubT[NX] = {1., 1.};
-	double const * const ub[NT + 1] = {ub0, ub0, ubT};
+	double const * const ub[NT + 1] = {ub0, ub1, ubT};
 
 	double const * const C[NT + 1] = {nullptr, nullptr, nullptr};
 	double const * const D[NT + 1] = {nullptr, nullptr, nullptr};
@@ -238,31 +277,116 @@ TEST(hpmpc_test, low_level_call_test)
 	int const max_iter = 100;
 	double stat[5 * max_iter];
 
-	std::vector<char> workspace(hpmpc_d_ip_ocp_hard_tv_work_space_size_bytes(
-			static_cast<int>(NT), const_cast<int*>(nx), const_cast<int*>(nu), const_cast<int*>(nb), const_cast<int*>(ng)));
+	std::vector<char> workspace(hpmpc_d_ip_ocp_hard_tv_work_space_size_bytes(NT, nx, nu, nb, ng));
 
 	int num_iter = 0;
 	double const mu0 = 0;
 	double const mu_tol = 1e-10;
 
 	auto const ret = c_order_d_ip_ocp_hard_tv(&num_iter, max_iter, mu0, mu_tol, NT,
-			nx, nu, nb, ng, 1, A, B, b,
+			nx, nu, nb, ng, 0, A, B, b,
+			Q, S, R, q, r, lb, ub, C, D,
+			lg, ug, px, pu, ppi, plam, pt, inf_norm_res,
+			workspace.data(), stat);
+
+	std::cout << "num_iter = " << num_iter << std::endl;
+	for(int jj=0; jj<num_iter; jj++)
+		printf("k = %d\tsigma = %f\talpha = %f\tmu = %f\t\tmu = %e\talpha = %f\tmu = %f\tmu = %e\n", jj, stat[5*jj], stat[5*jj+1], stat[5*jj+2], stat[5*jj+2], stat[5*jj+3], stat[5*jj+4], stat[5*jj+4]);
+	printf("\n");
+
+	ASSERT_EQ(ret, 0);
+}
+
+TEST(hpmpc_test, low_level_call_test_0)
+{
+	int const nx[NT + 1] = {NX, NX, NX};
+	int const nu[NT + 1] = {NU, NU, 0};
+	int const nb[NT + 1] = {NU + NX, NU + NX, NX};
+	int const ng[NT + 1] = {0, 0, 0};
+
+	double const A0[NX * NX] = {1., 1., 0., 1.};
+	double const * const A[NT] = {A0, A0};
+
+	double const B0[NX * NU] = {0.5, 1.};
+	double const * const B[NT] = {B0, B0};
+
+	double const b0[NX] = {1., 2.};
+	double const * const b[NT] = {b0, b0};
+
+	double const Q0[NX * NX] = {66., 78., 78., 93.};
+	double const QT[NX * NX] = {10., 14., 14., 20.};
+	double const * const Q[NT + 1] = {Q0, Q0, QT};
+
+	double const S0[NU * NX] = {90., 108};
+	double const * const S[NT] = {S0, S0};
+
+	double const R0[NU * NU] = {126.};
+	double const * const R[NT] = {R0, R0};
+
+	double const q0[NX] = {0., 0.};
+	double const * const q[NT + 1] = {q0, q0, q0};
+
+	double const r0[NU] = {0.};
+	double const * const r[NT] = {r0, r0};
+
+	double const lb0[NU + NX] = {-1., -1., -1.};
+	double const lbT[NX] = {-1., -1.};
+	double const * const lb[NT + 1] = {lb0, lb0, lbT};
+
+	double const ub0[NU + NX] = {1., 1., 1.};
+	double const ubT[NX] = {1., 1.};
+	double const * const ub[NT + 1] = {ub0, ub0, ubT};
+
+	double const * const C[NT + 1] = {nullptr, nullptr, nullptr};
+	double const * const D[NT + 1] = {nullptr, nullptr, nullptr};
+	double const * const lg[NT + 1] = {nullptr, nullptr, nullptr};
+	double const * const ug[NT + 1] = {nullptr, nullptr, nullptr};
+
+	Solution::StateVector x  [NT + 1];	double * px [NT + 1] = {x [0].data(), x [1].data(), x [2].data()};
+	Solution::InputVector u  [NT    ];  double * pu [NT    ] = {u [0].data(), u [1].data()};
+
+	double pi [NT    ][NX]; double * ppi[NT    ] = {pi[0], pi[1]};
+	double lam[NT + 1][2 * (NX + NU)];	double * plam[NT + 1] = {lam[0], lam[1], lam[2]};
+	double t  [NT + 1][2 * (NX + NU)];	double * pt  [NT + 1] = {t  [0], t  [1], t  [2]};
+	double inf_norm_res[4];
+
+	int const max_iter = 100;
+	double stat[5 * max_iter];
+
+	std::vector<char> workspace(hpmpc_d_ip_ocp_hard_tv_work_space_size_bytes(NT, nx, nu, nb, ng));
+
+	int num_iter = 0;
+	double const mu0 = 0;
+	double const mu_tol = 1e-10;
+
+	auto const ret = c_order_d_ip_ocp_hard_tv(&num_iter, max_iter, mu0, mu_tol, NT,
+			nx, nu, nb, ng, 0, A, B, b,
 			Q, S, R, q, r, lb, ub, C, D,
 			lg, ug, px, pu, ppi, plam, pt, inf_norm_res,
 			static_cast<void *>(workspace.data()), stat);
 
 	ASSERT_EQ(ret, 0);
-}
 
-TEST(Eigen, DISABLED_comma_initializer_test)
-{
-	auto const M = 0;
-	auto const N1 = 2;
-	auto const N2 = 1;
+	Solution::StateInputVector z0_expected;
+	z0_expected << 1., -1., -1;
 
-	Eigen::Matrix<double, M, N1> A1;
-	Eigen::Matrix<double, M, N2> A2;
-	Eigen::Matrix<double, M, N1 + N2> B;
+	Solution::StateInputVector z1_expected;
+	z1_expected << 0.5, 0., -1;
 
-	B << A1, A2;
+	Solution::StateVector z2_expected;
+	z2_expected << 1., 1;
+
+	/*
+	std::cout << "x[0] = " << x[0] << std::endl;
+	std::cout << "u[0] = " << u[0] << std::endl;
+	std::cout << "x[1] = " << x[1] << std::endl;
+	std::cout << "u[1] = " << u[1] << std::endl;
+	std::cout << "x[2] = " << x[2] << std::endl;
+	*/
+
+	EXPECT_TRUE(x[0].isApprox(z0_expected.topRows<NX>()));
+	EXPECT_TRUE(u[0].isApprox(z0_expected.bottomRows<NU>()));
+	EXPECT_TRUE(x[1].isApprox(z1_expected.topRows<NX>()));
+	EXPECT_TRUE(u[1].isApprox(z1_expected.bottomRows<NU>()));
+	EXPECT_TRUE(x[2].isApprox(z2_expected));
 }

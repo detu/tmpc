@@ -127,10 +127,10 @@ TEST(CondensingSolver_test, condensing_test)
 	*/
 }
 
-TEST(CondensingSolver_test, Solve_test)
+TEST(CondensingSolver_test, Solve_test_0)
 {
 	Problem qp(NT);
-	tmpc_test::qp_problems::problem_1(qp);
+	tmpc_test::qp_problems::problem_0(qp);
 
 	Solver solver(qp.nT());
 	Solution solution(solver.nT());
@@ -156,6 +156,41 @@ TEST(CondensingSolver_test, Solve_test)
 
 	Solution::StateVector z2_expected;
 	z2_expected << 1., 1;
+	EXPECT_TRUE(solution.wend().isApprox(z2_expected));
+
+	std::cout << "-- sol (condensed ) --" << std::endl << solver.getCondensedSolution() << std::endl;
+	std::cout << "-- sol (multistage) --" << std::endl << solution << std::endl;
+}
+
+TEST(CondensingSolver_test, Solve_test_1)
+{
+	Problem qp(NT);
+	tmpc_test::qp_problems::problem_1(qp);
+
+	Solver solver(qp.nT());
+	Solution solution(solver.nT());
+
+	try
+	{
+		solver.Solve(qp, solution);
+	}
+	catch(Solver::SolveException const& x)
+	{
+		std::cerr << "+++++++ Condensed QP that failed: ++++++++" << std::endl;
+		Print_MATLAB(std::cerr, x.getCondensedQP(), "qp");
+		throw;
+	}
+
+	Solution::StateInputVector z0_expected;
+	z0_expected << 1., 0., -0.690877362606266;
+	EXPECT_TRUE(solution.w(0).isApprox(z0_expected));
+
+	Solution::StateInputVector z1_expected;
+	z1_expected << 0.654561318696867, -0.690877362606266, 0.215679569867116;
+	EXPECT_TRUE(solution.w(1).isApprox(z1_expected));
+
+	Solution::StateVector z2_expected;
+	z2_expected << 0.0715237410241597, -0.475197792739149;
 	EXPECT_TRUE(solution.wend().isApprox(z2_expected));
 
 	std::cout << "-- sol (condensed ) --" << std::endl << solver.getCondensedSolution() << std::endl;
