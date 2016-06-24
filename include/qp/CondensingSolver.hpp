@@ -178,21 +178,6 @@ namespace tmpc
 	}
 }
 
-// TODO: failed to write a templated version of this function.
-// The following gives me "unable to deduce template arguments" error:
-/*
-template<unsigned NX_, unsigned NU_, unsigned NC_, unsigned NCT_>
-inline std::ostream& operator<<(std::ostream& os, typename camels::CondensingSolver<NX_, NU_, NC_, NCT_>::Point const& point)
-{
-	//typedef typename camels::CondensingSolver<NX_, NU_, NC_, NCT_>::size_type size_type;
-	typedef unsigned size_type;
-	for (size_type i = 0; i <= point.nT(); ++i)
-		os << point.w(i) << std::endl;
-
-	return os;
-}
-*/
-
 namespace camels
 {
 	using namespace tmpc;

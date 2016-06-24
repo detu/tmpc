@@ -1,6 +1,9 @@
 #pragma once
 
+#include <Eigen/Dense>
+
 #include <stdexcept>
+#include <vector>
 
 namespace tmpc
 {
@@ -31,50 +34,70 @@ namespace tmpc
 
 		size_type nT() const noexcept { return derived().nT(); }
 
-		template<typename OtherDerived_>
-		Derived& operator+=(TrajectoryBase<OtherDerived_, NX_, NU_> const& rhs)
-		{
-			if (rhs.nT() != nT())
-				throw std::invalid_argument("TrajectoryBase<>::operator+=(): arguments have different sizes!");
-
-			for (size_type i = 0; i + 1 < nT(); ++i)
-				w(i) += rhs.w(i);
-
-			wend() += rhs.wend();
-
-			return derived();
-		}
-
 	private:
 		Derived& derived() { return static_cast<Derived&>(*this); }
 		Derived const& derived() const { return static_cast<Derived const&>(*this); }
 	};
 
-	// Creates trajectory with nt steps. At every step, control is set equal to u and state is set equal to x.
-	//
-	template<typename Trajectory, typename StateVector, typename InputVector>
-	Trajectory ConstantTrajectory(typename Trajectory::size_type nt, StateVector const& x, InputVector const& u)
+	template <unsigned NX, unsigned NU>
+	class Trajectory
 	{
-		Trajectory tr(nt);
+	public:
+		typedef Eigen::Matrix<double, NX, 1> StateVector;
+		typedef Eigen::Matrix<double, NU, 1> InputVector;
 
-		for (typename Trajectory::size_type i = 0; i < nt; ++i)
+		Trajectory(std::size_t n) : _x(n + 1), _u(n) {}
+
+		template <typename StateVector_, typename InputVector_>
+		Trajectory(std::size_t n, Eigen::MatrixBase<StateVector_> const& x, Eigen::MatrixBase<InputVector_> const& u)
+		: _x(n + 1, x), _u(n, u) {}
+
+		StateVector const& get_x(std::size_t i) const { return _x.at(i); }
+		template <typename Matrix> void set_x(std::size_t i, Eigen::MatrixBase<Matrix> const& val) { _x.at(i) = val; }
+
+		InputVector const& get_u(std::size_t i) const { return _u.at(i); }
+		template <typename Matrix> void set_u(std::size_t i, Eigen::MatrixBase<Matrix> const& val) { _u.at(i) = val; }
+
+		std::size_t nT() const { return _u.size(); }
+
+		template<typename Other>
+		Trajectory& operator+=(Other const& rhs)
 		{
-			tr.x(i) = x;
-			tr.u(i) = u;
+			if (rhs.nT() != nT())
+				throw std::invalid_argument("Trajectory::operator+=(): arguments must have same number of time steps!");
+
+			for (std::size_t i = 0; i < nT() + 1; ++i)
+				_x[i] += rhs.get_x(i);
+
+			for (std::size_t i = 0; i < nT(); ++i)
+			    _u[i] += rhs.get_u(i);
+
+			return *this;
 		}
 
-		tr.wend() = x;
+	private:
+		std::vector<StateVector> _x;
+		std::vector<InputVector> _u;
+	};
 
-		return tr;
+	template<unsigned NX_, unsigned NU_>
+	void shift(Trajectory<NX_, NU_>& tr)
+	{
+		for (std::size_t i = 0; i < tr.nT(); ++i)
+			tr.set_x(i, tr.get_x(i + 1));
+
+		for (std::size_t i = 0; i + 1 < tr.nT(); ++i)
+			tr.set_u(i, tr.get_u(i + 1));
 	}
 
-	template<typename Trajectory, unsigned NX_, unsigned NU_>
-	void shift(TrajectoryBase<Trajectory, NX_, NU_>& tr)
+	// The following gives me "unable to deduce template arguments" error:
+	template<unsigned NX_, unsigned NU_>
+	inline std::ostream& operator<<(std::ostream& os, Trajectory<NX_, NU_> const& tr)
 	{
-		for (typename Trajectory::size_type i = 0; i + 1 < tr.nT(); ++i)
-			tr.w(i) = tr.w(i + 1);
+		for (std::size_t i = 0; i < tr.nT(); ++i)
+			os << tr.get_x(i).transpose() << "\t" << tr.get_u(i).transpose() << std::endl;
 
-		tr.x(tr.nT() - 1) = tr.wend();
+		return os << tr.get_x(tr.nT()).transpose() << std::endl;
 	}
 
 	/*

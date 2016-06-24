@@ -114,26 +114,25 @@ public:
 template <typename QPSolver>
 class RealtimeIterationTest : public ::testing::Test
 {
+public:
+	RealtimeIterationTest(unsigned Nt = 2)
+	:	_ocp(Nt)
+	,	_qpSolver(Nt)
+	,	_rti(_ocp, _integrator, _qpSolver, WorkingPoint(Nt, OCP::StateVector::Zero(), OCP::InputVector::Zero()))
+	{
+	}
+
+protected:
 	typedef DiscreteTimeModel Integrator;
 	//typedef tmpc::CondensingSolver<OCP::NX, OCP::NU, OCP::NC, OCP::NCT> QPSolver;
 	typedef tmpc::RealtimeIteration<OCP, Integrator, QPSolver> RealtimeIteration;
-	typedef typename RealtimeIteration::Trajectory Trajectory;
+	typedef typename RealtimeIteration::WorkingPoint WorkingPoint;
 
 	OCP _ocp;
 	Integrator _integrator;
 	QPSolver _qpSolver;
 	RealtimeIteration _rti;
 
-public:
-	RealtimeIterationTest(unsigned Nt = 2)
-	:	_ocp(Nt)
-	,	_qpSolver(Nt)
-	,	_rti(_ocp, _integrator, _qpSolver,
-			tmpc::ConstantTrajectory<Trajectory>(Nt, OCP::StateVector::Zero(), OCP::InputVector::Zero()))
-	{
-	}
-
-protected:
 	void Preparation()
 	{
 		_rti.Preparation();
@@ -154,15 +153,53 @@ TYPED_TEST_CASE(RealtimeIterationTest, QPSolvers);
 
 TYPED_TEST(RealtimeIterationTest, GivesCorrectU0)
 {
-	OCP::StateVector x0;
-	x0 << 1, 0;
+	OCP::StateVector x;
+	OCP::InputVector u;
 
-	this->Preparation();
-	auto const u0 = this->Feedback(x0);
+	// Step 0
+	{
+		this->Preparation();
 
-	OCP::InputVector u0_expected;
-	u0_expected << -0.690877362606266;
-	EXPECT_TRUE(u0.isApprox(u0_expected, 1e-6));
+		x << 1, 0;
+		u = this->Feedback(x);
 
-	std::cout << u0;
+		OCP::InputVector u_expected;
+		u_expected << -0.690877362606266;
+		EXPECT_TRUE(u.isApprox(u_expected, 1e-6));
+
+		std::cout << "u[0] = " << u.transpose() << std::endl;
+	}
+
+	// Step 1
+	{
+		this->Preparation();
+
+		std::cout << "Working point before step 1: " << std::endl;
+		std::cout << this->_rti.getWorkingPoint() << std::endl;
+
+		{
+			OCP::StateVector x;
+			OCP::InputVector u;
+
+			x << 0.654561318696867,	 -0.690877362606266;	u << 0.215679569867116;
+			EXPECT_TRUE(this->_rti.getWorkingPoint().get_x(0).isApprox(x, 1e-6));
+			EXPECT_TRUE(this->_rti.getWorkingPoint().get_u(0).isApprox(u, 1e-6));
+
+			x << 0.0715237410241597, -0.475197792739149;	u << 0.215679569867116;
+			EXPECT_TRUE(this->_rti.getWorkingPoint().get_x(1).isApprox(x, 1e-6));
+			EXPECT_TRUE(this->_rti.getWorkingPoint().get_u(1).isApprox(u, 1e-6));
+
+			x << 0.0715237410241597, -0.475197792739149;
+			EXPECT_TRUE(this->_rti.getWorkingPoint().get_x(2).isApprox(x, 1e-6));
+		}
+
+		x << 0.654561318696867,	-0.690877362606266;
+		u = this->Feedback(x);
+
+		OCP::InputVector u_expected;
+		u_expected << 0.218183;
+		EXPECT_TRUE(u.isApprox(u_expected, 1e-5));
+
+		std::cout << "u[1] = " << u.transpose() << std::endl;
+	}
 }

@@ -63,10 +63,13 @@ namespace camels
 			return Eigen::Map<StateVector>(_data.data() + i * NZ);
 		}
 
-		Eigen::Map<StateVector const> x(unsigned i) const
+		// TODO: obsolete
+		Eigen::Map<StateVector const> x(unsigned i) const {	return get_x(i); }
+
+		Eigen::Map<StateVector const> get_x(unsigned i) const
 		{
 			if (!(i < _nt + 1))
-				throw std::out_of_range("qpDUNESSolution<>::x(): index is out of range");
+				throw std::out_of_range("qpDUNESSolution<>::get_x(): index is out of range");
 
 			return Eigen::Map<StateVector const>(_data.data() + i * NZ);
 		}
@@ -79,10 +82,13 @@ namespace camels
 			return Eigen::Map<InputVector>(_data.data() + i * NZ + NX);
 		}
 
-		Eigen::Map<InputVector const> u(unsigned i) const
+		// TODO: obsolete
+		Eigen::Map<InputVector const> u(unsigned i) const { return get_u(i); }
+
+		Eigen::Map<InputVector const> get_u(unsigned i) const
 		{
 			if (!(i < _nt))
-				throw std::out_of_range("qpDUNESSolution<>::u(): index is out of range");
+				throw std::out_of_range("qpDUNESSolution<>::get_u(): index is out of range");
 
 			return Eigen::Map<InputVector const>(_data.data() + i * NZ + NX);
 		}

@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Trajectory.hpp"
+
 #include <ostream>
 #include <functional>
 #include <stdexcept>
@@ -14,7 +16,8 @@ namespace tmpc
 		typedef QPSolver_ QPSolver;
 		typedef Integrator_ Integrator;
 
-		typedef typename QPSolver::Solution Trajectory;
+		typedef typename QPSolver::Solution Solution;
+		typedef Trajectory<Problem::NX, Problem::NU> WorkingPoint;
 
 		typedef typename Problem::StateVector StateVector;
 		typedef typename Problem::InputVector InputVector;
@@ -25,7 +28,7 @@ namespace tmpc
 
 		typedef std::function<void (typename QPSolver::Problem const&)> QPCallback;
 
-		RealtimeIteration(Problem const& ocp, Integrator const& integrator, QPSolver& solver, Trajectory const& working_point)
+		RealtimeIteration(Problem const& ocp, Integrator const& integrator, QPSolver& solver, WorkingPoint const& working_point)
 		:	_ocp(ocp)
 		,	_QP(working_point.nT())
 		,	_workingPoint(working_point)
@@ -44,7 +47,7 @@ namespace tmpc
 				throw std::logic_error("ModelPredictiveController::Feedback(): controller is not prepared.");
 
 			/** embed current initial value */
-			xMin(_QP, 0) = xMax(_QP, 0) = x0 - _workingPoint.x(0);
+			xMin(_QP, 0) = xMax(_QP, 0) = x0 - _workingPoint.get_x(0);
 
 			// Call the QP callback, if there is one.
 			if(_QPCallback)
@@ -56,7 +59,7 @@ namespace tmpc
 			_prepared = false;
 
 			// Return the calculated control input.
-			return _workingPoint.u(0) + _solution.u(0);
+			return _workingPoint.get_u(0) + _solution.u(0);
 		}
 
 		void Preparation()
@@ -79,6 +82,8 @@ namespace tmpc
 
 			_prepared = true;
 		}
+
+		WorkingPoint const& getWorkingPoint() const { return _workingPoint; }
 
 		void PrintQP_C(std::ostream& log_stream) const
 		{
@@ -118,24 +123,27 @@ namespace tmpc
 		// Initializes _G, _g, _y, _C, _c, _zMin, _zMax based on current working point _w.
 		void UpdateQP()
 		{
-			for (unsigned i = 0; i < _ocp.getNumberOfIntervals(); ++i)
+			auto const N = _ocp.getNumberOfIntervals();
+			for (unsigned i = 0; i < N; ++i)
 				UpdateStage(i);
+
+			auto const xN = _workingPoint.get_x(N);
 
 			// End state constraints.
 			typename Problem::TerminalConstraintJacobianMatrix D;
 			typename Problem::TerminalConstraintVector d_min, d_max;
-			_ocp.TerminalConstraints(_workingPoint.wend(), D, d_min, d_max);
+			_ocp.TerminalConstraints(xN, D, d_min, d_max);
 			_QP.Dend() = D;
 			_QP.dendMin() = d_min;
 			_QP.dendMax() = d_max;
 
-			_QP.zendMin() = _ocp.getTerminalStateMin() - _workingPoint.wend();
-			_QP.zendMax() = _ocp.getTerminalStateMax() - _workingPoint.wend();
+			_QP.zendMin() = _ocp.getTerminalStateMin() - xN;
+			_QP.zendMax() = _ocp.getTerminalStateMax() - xN;
 
 			// Hessian and gradient of Mayer term.
 			typename Problem::MayerHessianMatrix H_T;
 			typename Problem::StateVector g_T;
-			_ocp.MayerTerm(_workingPoint.wend(), g_T, H_T);
+			_ocp.MayerTerm(xN, g_T, H_T);
 
 			// Adding Levenberg-Marquardt term to make H positive-definite.
 			_QP.Hend() = H_T + _levenbergMarquardt * MayerHessianMatrix::Identity();
@@ -149,7 +157,10 @@ namespace tmpc
 			LagrangeHessianMatrix H_i;
 			StateInputVector g_i;
 
-			_ocp.LagrangeTerm(i, _workingPoint.w(i), g_i, H_i);
+			StateInputVector z_i;
+			z_i << _workingPoint.get_x(i), _workingPoint.get_u(i);
+
+			_ocp.LagrangeTerm(i, z_i, g_i, H_i);
 
 			// Adding Levenberg-Marquardt term to make H positive-definite.
 			_QP.H(i) = H_i + _levenbergMarquardt * LagrangeHessianMatrix::Identity();
@@ -164,25 +175,25 @@ namespace tmpc
 			// x_{k+1} = C * z_k + c_k
 			typename Problem::StateVector x_plus;
 			typename Problem::ODEJacobianMatrix J;
-			_integrator.Integrate(i * _integrator.timeStep(), _workingPoint.w(i), x_plus, J);
+			_integrator.Integrate(i * _integrator.timeStep(), z_i, x_plus, J);
 			_QP.C(i) = J;
 
 			// \Delta x_{k+1} = C \Delta z_k + f(z_k) - x_{k+1}
 			// c = f(z_k) - x_{k+1}
-			_QP.c(i) = x_plus - _workingPoint.x(i + 1);
+			_QP.c(i) = x_plus - _workingPoint.get_x(i + 1);
 
 			typename Problem::ConstraintJacobianMatrix D;
 			typename Problem::ConstraintVector d_min, d_max;
-			_ocp.PathConstraints(i, _workingPoint.w(i), D, d_min, d_max);
+			_ocp.PathConstraints(i, z_i, D, d_min, d_max);
 			_QP.D(i) = D;
 			_QP.dMin(i) = d_min;
 			_QP.dMax(i) = d_max;
 
 			// z_min stores _Nt vectors of size _Nz and 1 vector of size _Nx
-			_QP.zMin(i) = z_min - _workingPoint.w(i);
+			_QP.zMin(i) = z_min - z_i;
 
 			// z_max stores _Nt vectors of size _Nz and 1 vector of size _Nx
-			_QP.zMax(i) = z_max - _workingPoint.w(i);
+			_QP.zMax(i) = z_max - z_i;
 		}
 
 		// Private data members.
@@ -205,7 +216,7 @@ namespace tmpc
 		double _levenbergMarquardt;
 
 		// Working point (linearization point).
-		Trajectory _workingPoint;
+		WorkingPoint _workingPoint;
 
 		// Preparation() sets this flag to true, Feedback() resets it to false.
 		bool _prepared;
