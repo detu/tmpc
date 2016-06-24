@@ -42,9 +42,54 @@ namespace
 TEST(hpmpc_test, problem_test)
 {
 	Problem qp(NT);
+
+	{
+		Problem::StateVector x;
+		Problem::InputVector u;
+
+		x << -1, -2;					u << -10;
+		qp.set_x_min(0, x);				qp.set_u_min(0, u);
+		EXPECT_EQ(qp.get_x_min(0), x);	EXPECT_EQ(qp.get_u_min(0), u);
+		EXPECT_EQ(Eigen::Map<Problem::StateVector const>(qp.lb_data()[0] + NU), x);
+		EXPECT_EQ(Eigen::Map<Problem::InputVector const>(qp.lb_data()[0]     ), u);
+
+		x << -3, -4;					u << -30;
+		qp.set_x_min(1, x);				qp.set_u_min(1, u);
+		EXPECT_EQ(qp.get_x_min(1), x);	EXPECT_EQ(qp.get_u_min(1), u);
+		EXPECT_EQ(Eigen::Map<Problem::StateVector const>(qp.lb_data()[1] + NU), x);
+		EXPECT_EQ(Eigen::Map<Problem::InputVector const>(qp.lb_data()[1]     ), u);
+
+		x << -5, -6;
+		qp.set_x_min(2, x);
+		EXPECT_EQ(qp.get_x_min(2), x);
+		EXPECT_EQ(Eigen::Map<Problem::StateVector const>(qp.lb_data()[2]), x);
+
+		x << 1, 2;						u << 10;
+		qp.set_x_max(0, x);				qp.set_u_max(0, u);
+		EXPECT_EQ(qp.get_x_max(0), x);
+		EXPECT_EQ(Eigen::Map<Problem::StateVector const>(qp.ub_data()[0] + NU), x);
+		EXPECT_EQ(Eigen::Map<Problem::InputVector const>(qp.ub_data()[0]     ), u);
+
+		x << 3, 4;						u << 30;
+		qp.set_x_max(1, x);				qp.set_u_max(1, u);
+		EXPECT_EQ(qp.get_x_max(1), x);
+		EXPECT_EQ(Eigen::Map<Problem::StateVector const>(qp.ub_data()[1] + NU), x);
+		EXPECT_EQ(Eigen::Map<Problem::InputVector const>(qp.ub_data()[1]     ), u);
+
+		x << 5, 6;
+		qp.set_x_max(2, x);
+		EXPECT_EQ(qp.get_x_max(2), x);
+		EXPECT_EQ(Eigen::Map<Problem::StateVector const>(qp.ub_data()[2]), x);
+	}
+
 	set_xu_min(qp, 0, -1.);	set_xu_max(qp, 0, 1.);
 	set_xu_min(qp, 1, -1.);	set_xu_max(qp, 1, 1.);
 	set_x_end_min(qp, -1.);	set_x_end_max(qp, 1.);
+
+	/*
+	std::cout << "******** QP *********" << std::endl;
+	Print_MATLAB(std::cout, qp, "qp");
+	*/
 
 	EXPECT_EQ(get_xu_min(qp, 0), Problem::StateInputVector::Constant(-1.));
 	EXPECT_EQ(get_xu_max(qp, 0), Problem::StateInputVector::Constant( 1.));
