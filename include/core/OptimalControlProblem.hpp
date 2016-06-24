@@ -9,7 +9,7 @@
 
 #include <Eigen/Dense>
 
-namespace camels
+namespace tmpc
 {
 	template<class Derived, unsigned NX_, unsigned NU_, class _Scalar = double>
 	class OptimalControlProblem

@@ -4,7 +4,7 @@
 #include <functional>
 #include <stdexcept>
 
-namespace camels
+namespace tmpc
 {
 	template<class _Problem, typename Integrator_, class QPSolver_>
 	class RealtimeIteration

@@ -2,7 +2,7 @@
 
 #include <stdexcept>
 
-namespace camels
+namespace tmpc
 {
 	template<typename Derived_, unsigned NX_, unsigned NU_>
 	class TrajectoryBase
