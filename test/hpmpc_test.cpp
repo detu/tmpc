@@ -10,6 +10,8 @@
 
 #include "qp_test_problems.hpp"
 
+#include <c_interface.h>	// HPMPC C interface
+
 #include <gtest/gtest.h>
 
 #include <iostream>

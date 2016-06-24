@@ -10,7 +10,7 @@
 
 #include <Eigen/Dense>
 
-namespace camels
+namespace tmpc
 {
 	template<unsigned N, typename Matrix>
 	decltype(auto) topRows(Eigen::MatrixBase<Matrix>& m)
@@ -95,6 +95,11 @@ namespace camels
 		ODEModel const& _ode;
 		double const _timeStep;
 	};
+}
+
+namespace camels
+{
+	using namespace tmpc;
 }
 
 #endif /* INCLUDE_INTEGRATOR_RK4_HPP_ */

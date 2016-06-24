@@ -3,12 +3,24 @@
 #include "HPMPCProblem.hpp"
 #include "HPMPCSolution.hpp"
 
-#include <c_interface.h>	// TODO: "c_interface.h" is a very general name; change the design so that it is <hpmpc/c_interface.h>, for example.
-
-
 namespace tmpc
 {
-	void throw_hpmpc_error(int err_code);
+	namespace hpmpc_wrapper
+	{
+		void c_order_d_ip_ocp_hard_tv(	int *kk, int k_max, double mu0, double mu_tol,
+										int N, int const *nx, int const *nu, int const *nb, int const *ng,
+										int warm_start,
+										double const * const *A, double const * const *B, double const * const *b,
+										double const * const *Q, double const * const *S, double const * const *R, double const * const *q, double const * const *r,
+										double const * const *lb, double const * const *ub,
+										double const * const *C, double const * const *D, double const * const *lg, double const * const *ug,
+										double * const *x, double * const *u, double * const *pi, double * const *lam, double * const *t,
+										double *inf_norm_res,
+										void *work0,
+										double *stat );
+
+		int d_ip_ocp_hard_tv_work_space_size_bytes(int N, int const *nx, int const *nu, int const *nb, int const *ng);
+	}
 
 	template<unsigned NX_, unsigned NU_, unsigned NC_, unsigned NCT_>
 	class HPMPCSolver
@@ -36,7 +48,7 @@ namespace tmpc
 			_ng.back() = NCT;
 
 			// Allocate workspace
-			_workspace.resize(hpmpc_d_ip_ocp_hard_tv_work_space_size_bytes(
+			_workspace.resize(hpmpc_wrapper::d_ip_ocp_hard_tv_work_space_size_bytes(
 					static_cast<int>(nt), _nx.data(), _nu.data(), _nb.data(), _ng.data()));
 		}
 
@@ -48,14 +60,11 @@ namespace tmpc
 			_nx[0] = x0_equality ? 0 : NX;
 			_nb[0] = _nx[0] + _nu[0];
 
-			auto const ret = c_order_d_ip_ocp_hard_tv(&num_iter, getMaxIter(), _mu0, _muTol, nT(),
+			hpmpc_wrapper::c_order_d_ip_ocp_hard_tv(&num_iter, getMaxIter(), _mu0, _muTol, nT(),
 					_nx.data(), _nu.data(), _nb.data(), _ng.data(), _warmStart ? 1 : 0, p.A_data(), p.B_data(), p.b_data(),
 					p.Q_data(), p.S_data(), p.R_data(), p.q_data(), p.r_data(), p.lb_data(), p.ub_data(), p.C_data(), p.D_data(),
 					p.lg_data(), p.ug_data(), s.x_data(), s.u_data(), s.pi_data(), s.lam_data(), s.t_data(), s.inf_norm_res_data(),
 					_workspace.data(), _stat[0].data());
-
-			if (ret != 0)
-				throw_hpmpc_error(ret);
 
 			if (x0_equality)
 				s.set_x(0, p.get_x_min(0));
