@@ -146,7 +146,7 @@ protected:
 
 typedef ::testing::Types<
 		tmpc::CondensingSolver<OCP::NX, OCP::NU, OCP::NC, OCP::NCT>
-//,		tmpc::HPMPCSolver     <OCP::NX, OCP::NU, OCP::NC, OCP::NCT>
+,		tmpc::HPMPCSolver     <OCP::NX, OCP::NU, OCP::NC, OCP::NCT>
 	> QPSolvers;
 
 TYPED_TEST_CASE(RealtimeIterationTest, QPSolvers);

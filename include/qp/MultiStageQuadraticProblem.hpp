@@ -37,177 +37,167 @@ namespace tmpc
 
 		static unsigned const NX = NX_;
 		static unsigned const NU = NU_;
-		static unsigned const NZ = NX + NU;
 		static unsigned const NC = NC_;
 		static unsigned const NCT = NCT_;
 
 		typedef Eigen::Matrix<double, NX, 1> StateVector;
 		typedef Eigen::Matrix<double, NU, 1> InputVector;
-		typedef Eigen::Matrix<double, NZ, 1> StateInputVector;
-		typedef Eigen::Matrix<double, NZ, NZ, Eigen::RowMajor> StageHessianMatrix;
-		typedef Eigen::Matrix<double, NX, NX, Eigen::RowMajor> EndStageHessianMatrix;
-		typedef Eigen::Matrix<double, NZ, 1> StageGradientVector;
-		typedef Eigen::Matrix<double, NX, 1> EndStageGradientVector;
-		typedef Eigen::Matrix<double, NX, NZ, Eigen::RowMajor> InterStageMatrix;
-		typedef Eigen::Matrix<double, NX, 1> InterStageVector;
-		typedef Eigen::Matrix<double, NC, NZ, Eigen::RowMajor> StageConstraintMatrix;
-		typedef Eigen::Matrix<double, NC, 1> StageConstraintVector;
-		typedef Eigen::Matrix<double, NCT, NX, Eigen::RowMajor> EndStageConstraintMatrix;
-		typedef Eigen::Matrix<double, NCT, 1> EndStageConstraintVector;
+		typedef Eigen::Matrix<double, NX, NX> StateStateMatrix;
+		typedef Eigen::Matrix<double, NU, NU> InputInputMatrix;
+		typedef Eigen::Matrix<double, NX, NU> StateInputMatrix;
+		typedef Eigen::Matrix<double, NC, NX> ConstraintStateMatrix;
+		typedef Eigen::Matrix<double, NC, NU> ConstraintInputMatrix;
+		typedef Eigen::Matrix<double, NC, 1> ConstraintVector;
+		typedef Eigen::Matrix<double, NCT, NX> EndConstraintStateMatrix;
+		typedef Eigen::Matrix<double, NCT, 1> EndConstraintVector;
 
-		size_type nT() const { return _stage.size(); }
+		size_type nT() const { return _nt; }
 		static constexpr size_type nX() { return NX; }
-		static constexpr size_type nZ() { return NZ; }
 		static constexpr size_type nU() { return NU; }
 		static constexpr size_type nD() { return NC; }
 		static constexpr size_type nDT() { return NCT; }
 
-		StageHessianMatrix& H(size_type i) { return stage(i)._H; }
-		StageHessianMatrix const& H(size_type i) const { return stage(i)._H; }
+		StateStateMatrix const& get_Q(size_type i) const { return stage(i, 1).Q; }
+		template <typename Matrix> void set_Q(size_type i, Eigen::MatrixBase<Matrix> const& val) { stage(i, 1).Q = val; }
 
-		template <typename Matrix>
-		friend void set_H(MultiStageQuadraticProblem& p, std::size_t i, Eigen::MatrixBase<Matrix> const& H) { p.H(i) = H; }
+		InputInputMatrix const& get_R(size_type i) const { return stage(i).R; }
+		template <typename Matrix> void set_R(size_type i, Eigen::MatrixBase<Matrix> const& val) { stage(i).R = val; }
 
-		EndStageHessianMatrix& Hend() { return _Hend; }
-		EndStageHessianMatrix const& Hend() const {	return _Hend; }
+		StateInputMatrix const& get_S(size_type i) const { return stage(i).S; }
+		template <typename Matrix> void set_S(size_type i, Eigen::MatrixBase<Matrix> const& val) { stage(i).S = val; }
 
-		template <typename Matrix>
-		friend void set_Hend(MultiStageQuadraticProblem& p, Eigen::MatrixBase<Matrix> const& Hend) { p.Hend() = Hend; }
+		/*
+		StateStateMatrix const& get_Q_end() const { return _Q_end; }
+		template <typename Matrix> void set_Q_end(Eigen::MatrixBase<Matrix> const& val) { _Q_end = val; }
+		*/
 
-		StageGradientVector& g(size_type i)	{ return stage(i)._g; }
-		StageGradientVector const& g(size_type i) const	{ return stage(i)._g; }
+		StateVector const& get_q(size_type i) const { return stage(i, 1).q; }
+		template <typename Matrix> void set_q(size_type i, Eigen::MatrixBase<Matrix> const& val) { stage(i, 1).q = val; }
 
-		template <typename Matrix>
-		friend void set_g(MultiStageQuadraticProblem& p, std::size_t i, Eigen::MatrixBase<Matrix> const& g) { p.g(i) = g; }
+		InputVector const& get_r(size_type i) const { return stage(i).r; }
+		template <typename Matrix> void set_r(size_type i, Eigen::MatrixBase<Matrix> const& val) { stage(i).r = val; }
 
-		EndStageGradientVector& gend() { return _gend; }
-		EndStageGradientVector const& gend() const { return _gend;	}
-		
-		template <typename Matrix>
-		friend void set_gend(MultiStageQuadraticProblem& p, Eigen::MatrixBase<Matrix> const& gend) { p.gend() = gend; }
+		/*
+		StateVector const& get_q_end() const { return _q_end;	}
+		template <typename Matrix> void set_q_end(Eigen::MatrixBase<Matrix> const& val) { _q_end = val; }
+		*/
 
-		InterStageMatrix& C(size_type i) { return stage(i)._C; }
-		InterStageMatrix const& C(size_type i) const { return stage(i)._C; }
+		StateStateMatrix const& get_A(size_type i) const { return stage(i).A; }
+		template <typename Matrix> void set_A(size_type i, Eigen::MatrixBase<Matrix> const& val) { stage(i).A = val; }
 
-		template <typename Matrix>
-		friend void set_C(MultiStageQuadraticProblem& p, std::size_t i, Eigen::MatrixBase<Matrix> const& C) { p.C(i) = C; }
+		StateInputMatrix const& get_B(size_type i) const { return stage(i).B; }
+		template <typename Matrix> void set_B(size_type i, Eigen::MatrixBase<Matrix> const& val) { stage(i).B = val; }
 
-		StageConstraintMatrix& D(size_type i) {	return stage(i)._D; }
-		StageConstraintMatrix const& D(size_type i) const {	return stage(i)._D; }
+		StateVector const& get_b(size_type i) const { return stage(i).b; }
+		template <typename Matrix> void set_b(size_type i, Eigen::MatrixBase<Matrix> const& val) { stage(i).b = val; }
 
-		EndStageConstraintMatrix& Dend() { return _Dend; }
-		EndStageConstraintMatrix const& Dend() const { return _Dend; }
+		ConstraintStateMatrix const& get_C(size_type i) const { return stage(i).C; }
+		template <typename Matrix> void set_C(size_type i, Eigen::MatrixBase<Matrix> const& val) { stage(i).C = val; }
 
-		StageConstraintVector& dMin(size_type i) { return stage(i)._dMin; }
-		StageConstraintVector const& dMin(size_type i) const { return stage(i)._dMin; }
+		ConstraintInputMatrix const& get_D(size_type i) const { return stage(i).D; }
+		template <typename Matrix> void set_D(size_type i, Eigen::MatrixBase<Matrix> const& val) { stage(i).D = val; }
 
-		EndStageConstraintVector& dendMin() { return _dendMin; }
-		EndStageConstraintVector const& dendMin() const	{ return _dendMin; }
+		ConstraintStateMatrix const& get_C_end() const { return _C_end; }
+		template <typename Matrix> void set_C_end(Eigen::MatrixBase<Matrix> const& val) { _C_end = val; }
 
-		StageConstraintVector& dMax(size_type i) { return stage(i)._dMax; }
-		StageConstraintVector const& dMax(size_type i) const { return stage(i)._dMax; }
+		ConstraintVector const& get_d_min(size_type i) const { return stage(i).d_min; }
+		template <typename Matrix> void set_d_min(size_type i, Eigen::MatrixBase<Matrix> const& val) { stage(i).d_min = val; }
 
-		EndStageConstraintVector& dendMax()	{ return _dendMax; }
-		EndStageConstraintVector const& dendMax() const	{ return _dendMax; }
+		EndConstraintVector const& get_d_end_min() const { return _d_end_min; }
+		template <typename Matrix> void set_d_end_min(Eigen::MatrixBase<Matrix> const& val)	{ _d_end_min = val; }
+
+		ConstraintVector const& get_d_max(size_type i) const { return stage(i).d_max; }
+		template <typename Matrix> void set_d_max(size_type i, Eigen::MatrixBase<Matrix> const& val) { stage(i).d_max = val; }
+
+		EndConstraintVector const& get_d_end_max() const { return _d_end_max; }
+		template <typename Matrix> void set_d_end_max(Eigen::MatrixBase<Matrix> const& val)	{ _d_end_max = val; }
 				
-		InterStageVector& c(size_type i) { return stage(i)._c; }
-		InterStageVector const& c(size_type i) const { return stage(i)._c; }
+		StateVector const& get_x_min(size_type i) const { return stage(i, 1).x_min; }
+		template <typename Matrix> void set_x_min(size_type i, Eigen::MatrixBase<Matrix> const& val) { stage(i, 1).x_min = val; }
 
-		template <typename Matrix>
-		friend void set_c(MultiStageQuadraticProblem& p, std::size_t i, Eigen::MatrixBase<Matrix> const& c) { p.c(i) = c; }
+		StateVector const& get_x_max(size_type i) const { return stage(i, 1).x_max; }
+		template <typename Matrix> void set_x_max(size_type i, Eigen::MatrixBase<Matrix> const& val) { stage(i, 1).x_max = val; }
 
-		StateInputVector& zMin(size_type i)	{ return stage(i)._zMin; }
-		StateInputVector const& zMin(size_type i) const { return stage(i)._zMin; }
+		/*
+		StateVector const& get_x_end_min() { return _x_end_min; }
+		template <typename Matrix> void set_x_end_min(Eigen::MatrixBase<Matrix> const& val) { _x_end_min = val; }
 
-		template <typename Matrix>
-		friend void set_zMin(MultiStageQuadraticProblem& p, std::size_t i, Eigen::MatrixBase<Matrix> const& z_min) { p.zMin(i) = z_min; }
-
-		template <typename Matrix>
-		friend void set_xMin(MultiStageQuadraticProblem& p, std::size_t i, Eigen::MatrixBase<Matrix> const& x_min)	{
-			p.zMin(i).template topRows<NX>() = x_min;
-		}
-
-		StateVector& zendMin() { return _zendMin; }
-		StateVector const& zendMin() const { return _zendMin; }
+		StateVector const& get_x_end_max() const { return _x_end_max; }
+		template <typename Matrix> void set_x_end_max(Eigen::MatrixBase<Matrix> const& val) { _x_end_max = val; }
+		*/
 		
-		template <typename Matrix>
-		friend void set_zendMin(MultiStageQuadraticProblem& p, Eigen::MatrixBase<Matrix> const& val) { p.zendMin() = val; }
+		InputVector const& get_u_min(size_type i) const { return stage(i).u_min; }
+		template <typename Matrix> void set_u_min(size_type i, Eigen::MatrixBase<Matrix> const& val) { stage(i).u_min = val; }
 
-		StateInputVector& zMax(size_type i)	{ return stage(i)._zMax; }
-		StateInputVector const& zMax(size_type i) const { return stage(i)._zMax; }
-		
-		template <typename Matrix>
-		friend void set_xMax(MultiStageQuadraticProblem& p, std::size_t i, Eigen::MatrixBase<Matrix> const& x_max)	{
-			p.zMax(i).template topRows<NX>() = x_max;
-		}
+		InputVector const& get_u_max(size_type i) const { return stage(i).u_max; }
+		template <typename Matrix> void set_u_max(size_type i, Eigen::MatrixBase<Matrix> const& val) { stage(i).u_max = val; }
 
-		template <typename Matrix>
-		friend void set_zMax(MultiStageQuadraticProblem& p, std::size_t i, Eigen::MatrixBase<Matrix> const& z_max) { p.zMax(i) = z_max; }
-
-		StateVector& zendMax() { return _zendMax; }
-		StateVector const& zendMax() const { return _zendMax; }
-
-		template <typename Matrix>
-		friend void set_zendMax(MultiStageQuadraticProblem& p, Eigen::MatrixBase<Matrix> const& val) { p.zendMax() = val; }
-
-		MultiStageQuadraticProblem(size_type nt) : _stage(nt) {}
+		MultiStageQuadraticProblem(size_type nt)
+		:	_nt(nt)
+		,	_stage(nt + 1)	// only some fields of _stage[nt] are used
+		{}
 
 	private:
 		struct StageData
 		{
-			StageHessianMatrix _H;
-			StageGradientVector _g;
-			StageConstraintMatrix _D;
-			StageConstraintVector _dMin;
-			StageConstraintVector _dMax;
-			InterStageMatrix _C;
-			InterStageVector _c;
-			StateInputVector _zMin;
-			StateInputVector _zMax;
+			StateStateMatrix Q;
+			StateInputMatrix S;
+			InputInputMatrix R;
+			StateVector q;
+			InputVector r;
+			StateStateMatrix A;
+			StateInputMatrix B;
+			StateVector b;
+			StateVector x_min;
+			StateVector x_max;
+			InputVector u_min;
+			InputVector u_max;
+			ConstraintStateMatrix C;
+			ConstraintInputMatrix D;
+			ConstraintVector d_min;
+			ConstraintVector d_max;
 		};
 
-		StageData& stage(size_type i)
+		StageData& stage(size_type i, std::size_t delta = 0)
 		{
-			assert(i < nT());
+			assert(i < nT() + delta && i < _stage.size());
 			return _stage[i];
 		}
 
-		StageData const& stage(size_type i) const
+		StageData const& stage(size_type i, std::size_t delta = 0) const
 		{
-			assert(i < nT());
+			assert(i < nT() + delta && i < _stage.size());
 			return _stage[i];
 		}
 
 		// Private data members.
 		//
 
+		// Number of control intervals.
+		std::size_t _nt;
+
 		// Stores stage data
 		std::vector<StageData> _stage;
 
 		// 1 matrix of size _Nx x _Nx.
-		EndStageHessianMatrix _Hend;
+		StateStateMatrix _Q_end;
 
 		// 1 vector of size _Nx
-		EndStageGradientVector _gend;
+		StateVector _q_end;
 
 		// 1 matrix of size NCT x NX.
-		EndStageConstraintMatrix _Dend;
+		EndConstraintStateMatrix _C_end;
 
 		// 1 vector of size NCT
-		EndStageConstraintVector _dendMin;
+		EndConstraintVector _d_end_min;
 
 		// 1 vector of size NCT
-		EndStageConstraintVector _dendMax;
+		EndConstraintVector _d_end_max;
 
 		// 1 vector of size _Nx
-		StateVector _zendMin;
+		StateVector _x_end_min;
 
 		// 1 vector of size _Nx
-		StateVector _zendMax;
+		StateVector _x_end_max;
 	};
-}
-
-namespace camels
-{
-	using namespace tmpc;
 }

@@ -40,16 +40,16 @@ namespace
 TEST(hpmpc_test, problem_test)
 {
 	Problem qp(NT);
-	set_zMin(qp, 0, -1.);	set_zMax(qp, 0, 1.);
-	set_zMin(qp, 1, -1.);	set_zMax(qp, 1, 1.);
-	set_zendMin(qp, -1.);	set_zendMax(qp, 1.);
+	set_xu_min(qp, 0, -1.);	set_xu_max(qp, 0, 1.);
+	set_xu_min(qp, 1, -1.);	set_xu_max(qp, 1, 1.);
+	set_x_end_min(qp, -1.);	set_x_end_max(qp, 1.);
 
-	EXPECT_EQ(get_zMin(qp, 0), Problem::StateInputVector::Constant(-1.));
-	EXPECT_EQ(get_zMax(qp, 0), Problem::StateInputVector::Constant( 1.));
-	EXPECT_EQ(get_zMin(qp, 1), Problem::StateInputVector::Constant(-1.));
-	EXPECT_EQ(get_zMax(qp, 1), Problem::StateInputVector::Constant( 1.));
-	EXPECT_EQ(get_zendMin(qp), Problem::StateVector::Constant(-1.));
-	EXPECT_EQ(get_zendMax(qp), Problem::StateVector::Constant( 1.));
+	EXPECT_EQ(get_xu_min(qp, 0), Problem::StateInputVector::Constant(-1.));
+	EXPECT_EQ(get_xu_max(qp, 0), Problem::StateInputVector::Constant( 1.));
+	EXPECT_EQ(get_xu_min(qp, 1), Problem::StateInputVector::Constant(-1.));
+	EXPECT_EQ(get_xu_max(qp, 1), Problem::StateInputVector::Constant( 1.));
+	EXPECT_EQ(get_x_end_min(qp), Problem::StateVector::Constant(-1.));
+	EXPECT_EQ(get_x_end_max(qp), Problem::StateVector::Constant( 1.));
 
 	EXPECT_EQ(Eigen::Map<Problem::StateInputVector const>(qp.lb_data()[0]), Problem::StateInputVector::Constant(-1.));
 	EXPECT_EQ(Eigen::Map<Problem::StateInputVector const>(qp.ub_data()[0]), Problem::StateInputVector::Constant( 1.));
@@ -116,8 +116,8 @@ TEST(hpmpc_test, problem_test)
 	EXPECT_EQ(Eigen::Map<Problem::HPMPC_RMatrix const>(qp.R_data()[1]), R1);
 	EXPECT_EQ(Eigen::Map<Problem::HPMPC_SMatrix const>(qp.S_data()[1]), S1.transpose());
 
-	set_Hend(qp, H2);
-	EXPECT_EQ(get_Hend(qp), H2);
+	set_Q_end(qp, H2);
+	EXPECT_EQ(get_Q_end(qp), H2);
 	EXPECT_EQ(Eigen::Map<Problem::HPMPC_QMatrix const>(qp.Q_data()[2]), Q2);
 	EXPECT_EQ(qp.R_data()[2], nullptr);
 	EXPECT_EQ(qp.S_data()[2], nullptr);
@@ -127,24 +127,24 @@ TEST(hpmpc_test, problem_test)
 
 	Problem::InterStageMatrix C0;
 	C0 << A0, B0;
-	set_C(qp, 0, C0);
-	EXPECT_EQ(get_C(qp, std::size_t(0)), C0);
+	set_AB(qp, 0, C0);
+	EXPECT_EQ(get_AB(qp, std::size_t(0)), C0);
 	EXPECT_EQ(Eigen::Map<Problem::HPMPC_AMatrix const>(qp.A_data()[0]), A0);
 	EXPECT_EQ(Eigen::Map<Problem::HPMPC_BMatrix const>(qp.B_data()[0]), B0);
 
-	set_c(qp, 0, a0);
-	EXPECT_EQ(get_c(qp, 0), a0);
+	qp.set_b(0, a0);
+	EXPECT_EQ(qp.get_b(0), a0);
 	EXPECT_EQ(Eigen::Map<Problem::StateVector const>(qp.b_data()[0]), a0);
 
 	Problem::InterStageMatrix C1;
 	C1 << A1, B1;
-	set_C(qp, 1, C1);
-	EXPECT_EQ(get_C(qp, 1), C1);
+	set_AB(qp, 1, C1);
+	EXPECT_EQ(get_AB(qp, 1), C1);
 	EXPECT_EQ(Eigen::Map<Problem::HPMPC_AMatrix const>(qp.A_data()[1]), A1);
 	EXPECT_EQ(Eigen::Map<Problem::HPMPC_BMatrix const>(qp.B_data()[1]), B1);
 
-	set_c(qp, 1, a1);
-	EXPECT_EQ(get_c(qp, 1), a1);
+	qp.set_b(1, a1);
+	EXPECT_EQ(qp.get_b(1), a1);
 	EXPECT_EQ(Eigen::Map<Problem::StateVector const>(qp.b_data()[1]), a1);
  }
 

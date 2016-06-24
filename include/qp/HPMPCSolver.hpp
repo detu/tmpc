@@ -58,7 +58,7 @@ namespace tmpc
 				throw_hpmpc_error(ret);
 
 			if (x0_equality)
-				s.set_x(0, p.get_xMin(0));
+				s.set_x(0, p.get_x_min(0));
 
 			_warmStart = true;
 		}

@@ -10,6 +10,7 @@
 
 unsigned const NX = 2;
 unsigned const NU = 1;
+unsigned const NZ = NX + NU;
 unsigned const NC = 0;
 unsigned const NCT = 0;
 unsigned const NT = 2;
@@ -30,13 +31,18 @@ std::ostream& operator<<(std::ostream& os, Solution const& point)
 
 TEST(CondensingSolver_test, condensing_test)
 {
-	Solver::Problem qp(NT);
-	qp.zMin(0)  .setConstant(-1);	qp.zMax(0)  .setConstant(1);
-	qp.zMin(1)  .setConstant(-1);	qp.zMax(1)  .setConstant(1);
-	qp.zendMin().setConstant(-1);	qp.zendMax().setConstant(1);
+	Problem qp(NT);
+
+	qp.set_x_min(0, Problem::StateVector::Constant(-1.));	qp.set_x_max(0, Problem::StateVector::Constant(1.));
+	qp.set_u_min(0, Problem::InputVector::Constant(-1.));	qp.set_u_max(0, Problem::InputVector::Constant(1.));
+
+	qp.set_x_min(1, Problem::StateVector::Constant(-1.));	qp.set_x_max(1, Problem::StateVector::Constant(1.));
+	qp.set_u_min(1, Problem::InputVector::Constant(-1.));	qp.set_u_max(1, Problem::InputVector::Constant(1.));
+
+	qp.set_x_min(2, Problem::StateVector::Constant(-1.));	qp.set_x_max(2, Problem::StateVector::Constant(1.));
 
 	// Stage 0
-	Eigen::MatrixXd H0(qp.nZ(), qp.nZ());
+	Eigen::Matrix<double, NZ, NZ> H0;
 	H0 << 1, 2, 3, 4, 5, 6, 7, 8, 9;
 	H0 = H0.transpose() * H0;	// Make positive definite.
 
@@ -45,17 +51,17 @@ TEST(CondensingSolver_test, condensing_test)
 	const Eigen::MatrixXd S0 = H0.topRightCorner(qp.nX(), qp.nU());
 	const Eigen::MatrixXd S0T = H0.bottomLeftCorner(qp.nU(), qp.nX());
 
-	Eigen::MatrixXd A0(qp.nX(), qp.nX());
+	Problem::StateStateMatrix A0;
 	A0 << 1, 1, 0, 1;
 
-	Eigen::MatrixXd B0(qp.nX(), qp.nU());
+	Problem::StateInputMatrix B0(qp.nX(), qp.nU());
 	B0 << 0.5, 1.0;
 
 	Eigen::VectorXd a0(qp.nX());
 	a0 << 1, 2;
 
 	// Stage 1
-	Eigen::MatrixXd H1(qp.nZ(), qp.nZ());
+	Eigen::Matrix<double, NZ, NZ> H1;
 	H1 << 1, 2, 3, 4, 5, 6, 7, 8, 9;
 	H1 = H1.transpose() * H1;	// Make positive definite.
 
@@ -74,21 +80,19 @@ TEST(CondensingSolver_test, condensing_test)
 	a1 << 1, 2;
 
 	// Stage 2
-	Eigen::MatrixXd H2(qp.nX(), qp.nX());
+	Eigen::Matrix<double, NX, NX> H2;
 	H2 << 1, 2, 3, 4;
 	H2 = H2.transpose() * H2;	// Make positive definite.
 
 	const Eigen::MatrixXd Q2 = H2.topLeftCorner(qp.nX(), qp.nX());
 
 	// Setup QP
-	qp.H(0) = H0;
-	qp.H(1) = H1;
-	qp.Hend() = H2;
+	set_H(qp, 0, H0);
+	set_H(qp, 1, H1);
+	set_Q_end(qp, H2);
 
-	qp.C(0) << A0, B0;
-	qp.c(0) << a0;
-	qp.C(1) << A1, B1;
-	qp.c(1) << a1;
+	qp.set_A(0, A0);	qp.set_B(0, B0);	qp.set_b(0, a0);
+	qp.set_A(1, A1);	qp.set_B(1, B1);	qp.set_b(1, a1);
 
 	// Condense
 	camels::qpOASESProgram condensed(nIndep(qp), nDep(qp) + nConstr(qp));

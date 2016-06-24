@@ -47,7 +47,9 @@ namespace tmpc
 				throw std::logic_error("ModelPredictiveController::Feedback(): controller is not prepared.");
 
 			/** embed current initial value */
-			xMin(_QP, 0) = xMax(_QP, 0) = x0 - _workingPoint.get_x(0);
+			auto const w0 = (x0 - _workingPoint.get_x(0)).eval();
+			_QP.set_x_min(0, w0);
+			_QP.set_x_max(0, w0);
 
 			// Call the QP callback, if there is one.
 			if(_QPCallback)
@@ -59,7 +61,7 @@ namespace tmpc
 			_prepared = false;
 
 			// Return the calculated control input.
-			return _workingPoint.get_u(0) + _solution.u(0);
+			return _workingPoint.get_u(0) + _solution.get_u(0);
 		}
 
 		void Preparation()
@@ -133,12 +135,12 @@ namespace tmpc
 			typename Problem::TerminalConstraintJacobianMatrix D;
 			typename Problem::TerminalConstraintVector d_min, d_max;
 			_ocp.TerminalConstraints(xN, D, d_min, d_max);
-			_QP.Dend() = D;
-			_QP.dendMin() = d_min;
-			_QP.dendMax() = d_max;
+			_QP.set_C_end(D);
+			_QP.set_d_end_min(d_min);
+			_QP.set_d_end_max(d_max);
 
-			_QP.zendMin() = _ocp.getTerminalStateMin() - xN;
-			_QP.zendMax() = _ocp.getTerminalStateMax() - xN;
+			_QP.set_x_min(N, _ocp.getTerminalStateMin() - xN);
+			_QP.set_x_max(N, _ocp.getTerminalStateMax() - xN);
 
 			// Hessian and gradient of Mayer term.
 			typename Problem::MayerHessianMatrix H_T;
@@ -146,8 +148,8 @@ namespace tmpc
 			_ocp.MayerTerm(xN, g_T, H_T);
 
 			// Adding Levenberg-Marquardt term to make H positive-definite.
-			_QP.Hend() = H_T + _levenbergMarquardt * MayerHessianMatrix::Identity();
-			_QP.gend() = g_T;
+			_QP.set_Q(N, H_T + _levenbergMarquardt * MayerHessianMatrix::Identity());
+			_QP.set_q(N, g_T);
 		}
 
 		void UpdateStage(unsigned i)
@@ -163,8 +165,8 @@ namespace tmpc
 			_ocp.LagrangeTerm(i, z_i, g_i, H_i);
 
 			// Adding Levenberg-Marquardt term to make H positive-definite.
-			_QP.H(i) = H_i + _levenbergMarquardt * LagrangeHessianMatrix::Identity();
-			_QP.g(i) = g_i;
+			set_H(_QP, i, H_i + _levenbergMarquardt * LagrangeHessianMatrix::Identity());
+			set_g(_QP, i, g_i);
 
 			// Bound constraints.
 			StateInputVector z_min, z_max;
@@ -176,24 +178,24 @@ namespace tmpc
 			typename Problem::StateVector x_plus;
 			typename Problem::ODEJacobianMatrix J;
 			_integrator.Integrate(i * _integrator.timeStep(), z_i, x_plus, J);
-			_QP.C(i) = J;
+			set_AB(_QP, i, J);
 
 			// \Delta x_{k+1} = C \Delta z_k + f(z_k) - x_{k+1}
 			// c = f(z_k) - x_{k+1}
-			_QP.c(i) = x_plus - _workingPoint.get_x(i + 1);
+			_QP.set_b(i, x_plus - _workingPoint.get_x(i + 1));
 
 			typename Problem::ConstraintJacobianMatrix D;
 			typename Problem::ConstraintVector d_min, d_max;
 			_ocp.PathConstraints(i, z_i, D, d_min, d_max);
-			_QP.D(i) = D;
-			_QP.dMin(i) = d_min;
-			_QP.dMax(i) = d_max;
+			set_CD(_QP, i, D);
+			_QP.set_d_min(i, d_min);
+			_QP.set_d_max(i, d_max);
 
 			// z_min stores _Nt vectors of size _Nz and 1 vector of size _Nx
-			_QP.zMin(i) = z_min - z_i;
+			set_xu_min(_QP, i, z_min - z_i);
 
 			// z_max stores _Nt vectors of size _Nz and 1 vector of size _Nx
-			_QP.zMax(i) = z_max - z_i;
+			set_xu_max(_QP, i, z_max - z_i);
 		}
 
 		// Private data members.

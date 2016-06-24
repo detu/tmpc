@@ -173,7 +173,7 @@ namespace tmpc
 			auto x_i_plus = solution.x(i + 1);
 
 			u_i = _condensedSolution.middleRows<NU>(NX + i * NU);
-			x_i_plus = msqp.C(i) * z_i + msqp.c(i);
+			x_i_plus = get_AB(msqp, i) * z_i + msqp.get_b(i);
 		}
 	}
 }
