@@ -130,7 +130,7 @@ namespace tmpc
 		static_assert(Matrix::RowsAtCompileTime == n_xu(qp) && Matrix::ColsAtCompileTime == n_xu(qp),
 			"Matrix of size (NX+NU)x(NX+NU) is expected");
 		qp.set_Q(i, val.template topLeftCorner    <qp.nX(), qp.nX()>());
-		qp.set_S(i, val.template bottomLeftCorner <qp.nU(), qp.nX()>());
+		qp.set_S(i, val.template topRightCorner   <qp.nX(), qp.nU()>());
 		qp.set_R(i, val.template bottomRightCorner<qp.nU(), qp.nU()>());
 	}
 
