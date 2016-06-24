@@ -1,5 +1,6 @@
 #include "../include/core/RealtimeIteration.hpp"
 #include "../include/qp/CondensingSolver.hpp"
+#include "../include/qp/HPMPCSolver.hpp"
 #include "../include/integrator/RK4.hpp"
 #include "../include/core/OptimalControlProblem.hpp"
 
@@ -110,12 +111,13 @@ public:
 	double timeStep() const { return 1.; }
 };
 
-class Controller
+template <typename QPSolver>
+class RealtimeIterationTest : public ::testing::Test
 {
 	typedef DiscreteTimeModel Integrator;
-	typedef tmpc::CondensingSolver<OCP::NX, OCP::NU, OCP::NC, OCP::NCT> QPSolver;
+	//typedef tmpc::CondensingSolver<OCP::NX, OCP::NU, OCP::NC, OCP::NCT> QPSolver;
 	typedef tmpc::RealtimeIteration<OCP, Integrator, QPSolver> RealtimeIteration;
-	typedef RealtimeIteration::Trajectory Trajectory;
+	typedef typename RealtimeIteration::Trajectory Trajectory;
 
 	OCP _ocp;
 	Integrator _integrator;
@@ -123,14 +125,15 @@ class Controller
 	RealtimeIteration _rti;
 
 public:
-	Controller(unsigned Nt = 2)
+	RealtimeIterationTest(unsigned Nt = 2)
 	:	_ocp(Nt)
-	,	_qpSolver(Nt, camels::qpOASESOptions::MPC().setPrintLevel(qpOASES::PL_LOW))
+	,	_qpSolver(Nt)
 	,	_rti(_ocp, _integrator, _qpSolver,
 			tmpc::ConstantTrajectory<Trajectory>(Nt, OCP::StateVector::Zero(), OCP::InputVector::Zero()))
 	{
 	}
 
+protected:
 	void Preparation()
 	{
 		_rti.Preparation();
@@ -142,15 +145,20 @@ public:
 	}
 };
 
-TEST(realtime_iteration, sample_ocp)
-{
-	Controller controller;
+typedef ::testing::Types<
+		tmpc::CondensingSolver<OCP::NX, OCP::NU, OCP::NC, OCP::NCT>
+//,		tmpc::HPMPCSolver     <OCP::NX, OCP::NU, OCP::NC, OCP::NCT>
+	> QPSolvers;
 
+TYPED_TEST_CASE(RealtimeIterationTest, QPSolvers);
+
+TYPED_TEST(RealtimeIterationTest, GivesCorrectU0)
+{
 	OCP::StateVector x0;
 	x0 << 1, 0;
 
-	controller.Preparation();
-	auto const u0 = controller.Feedback(x0);
+	this->Preparation();
+	auto const u0 = this->Feedback(x0);
 
 	OCP::InputVector u0_expected;
 	u0_expected << -0.690877362606266;
