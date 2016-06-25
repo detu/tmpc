@@ -5,10 +5,17 @@
  *      Author: kotlyar
  */
 
+#include "HPMPCProblemExport.hpp"
+
 #include <c_interface.h>	// TODO: "c_interface.h" is a very general name; change the design so that it is <hpmpc/c_interface.h>, for example.
 
 #include <stdexcept>
 #include <sstream>
+#include <fstream>
+#include <limits>
+#include <iomanip>
+
+//#include <fenv.h>
 
 namespace tmpc
 {
@@ -34,6 +41,10 @@ namespace tmpc
 									void *work0,
 									double *stat)
 		{
+			//int rr = feenableexcept(FE_ALL_EXCEPT);
+			//double nan = std::numeric_limits<double>::signaling_NaN();
+			//double xx = nan + 1;
+
 			int const ret = ::c_order_d_ip_ocp_hard_tv(
 					kk, k_max, mu0, mu_tol,
 					N, nx, nu, nb, ng,
@@ -48,7 +59,27 @@ namespace tmpc
 					stat);
 
 			if (ret != 0)
+			{
+				{
+					using namespace hpmpc_problem_export;
+
+					std::ofstream os("failed_qp.m");
+					os << std::scientific << std::setprecision(std::numeric_limits<double>::digits10 + 1);
+
+					MATLABFormatter f(os, "qp.");
+
+					print_c_order_d_ip_ocp_hard_tv(f,
+						k_max, mu0, mu_tol,
+						N, nx, nu, nb, ng,
+						warm_start,
+						A, B, b,
+						Q, S, R, q, r,
+						lb, ub,
+						C, D, lg, ug, x, u);
+				}
+
 				throw_hpmpc_error(ret);
+			}
 		}
 
 		int fortran_order_d_ip_ocp_hard_tv(int *kk, int k_max, double mu0, double mu_tol, int N, int *nx, int *nu, int *nb, int *ng, int warm_start, double **A, double **B, double **b, double **Q, double **S, double **R, double **q, double **r, double **lb, double **ub, double **C, double **D, double **lg, double **ug, double **x, double **u, double **pi, double **lam, double **t, double *inf_norm_res, void *work0, double *stat);
