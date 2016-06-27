@@ -35,13 +35,30 @@ namespace
 }
 */
 
+template <typename Matrix>
+bool isZero(Eigen::MatrixBase<Matrix> const& m)
+{
+	return m == Matrix::Zero();
+}
+
+template <typename Matrix>
+Matrix random()
+{
+	Matrix m;
+
+	for (std::size_t i = 0; i < m.rows(); ++i)
+		for (std::size_t j = 0; j < m.cols(); ++j)
+			m(i, j) = rand();
+
+	return m;
+}
+
+
 template <typename QP>
 class MultiStageQuadraticProblemTest : public ::testing::Test
 {
 public:
 	typedef QP Problem;
-	typedef typename Problem::StateVector StateVector;
-	typedef typename Problem::InputVector InputVector;
 	//typedef typename Problem::StateInputVector StateInputVector;
 	//typedef typename Problem::StageHessianMatrix StageHessianMatrix;
 	//typedef typename Problem::InterStageMatrix InterStageMatrix;
@@ -53,6 +70,12 @@ protected:
 	unsigned const NC = n_d<QP>();
 	unsigned const NCT = n_d_end<QP>();
 	*/
+	typedef Eigen::Matrix<double, QP::NX, 1> StateVector;
+	typedef Eigen::Matrix<double, QP::NU, 1> InputVector;
+	typedef Eigen::Matrix<double, QP::NX, QP::NX> StateStateMatrix;
+	typedef Eigen::Matrix<double, QP::NX, QP::NU> StateInputMatrix;
+	typedef Eigen::Matrix<double, QP::NU, QP::NU> InputInputMatrix;
+
 	unsigned const NT = 2;
 
 	MultiStageQuadraticProblemTest()
@@ -70,27 +93,54 @@ typedef ::testing::Types<
 
 TYPED_TEST_CASE(MultiStageQuadraticProblemTest, QPTypes);
 
-TYPED_TEST(MultiStageQuadraticProblemTest, get_set_x_min_works)
+TYPED_TEST(MultiStageQuadraticProblemTest, get_set_interface_works)
 {
-	typename TestFixture::StateVector x;
+	std::vector<typename TestFixture::StateStateMatrix> Q(this->NT + 1);
+	std::vector<typename TestFixture::StateVector> x_min(this->NT + 1), x_max(this->NT + 1);
 
+	std::vector<typename TestFixture::StateInputMatrix> S(this->NT + 1);
+	std::vector<typename TestFixture::InputInputMatrix> R(this->NT + 1);
+	std::vector<typename TestFixture::StateStateMatrix> A(this->NT);
+	std::vector<typename TestFixture::StateInputMatrix> B(this->NT);
+	std::vector<typename TestFixture::StateVector> b(this->NT);
+	std::vector<typename TestFixture::InputVector> u_min(this->NT), u_max(this->NT);
+
+	// Writing random data
 	for (std::size_t i = 0; i <= this->NT; ++i)
 	{
-		x << -1.* i, -2. * i;
-		this->qp.set_x_min(i, x);
-		EXPECT_EQ(this->qp.get_x_min(i), x);
+		this->qp.set_Q(i, Q[i] = random<typename TestFixture::StateStateMatrix>());
+		this->qp.set_x_min(i, x_min[i] = random<typename TestFixture::StateVector>());
+		this->qp.set_x_max(i, x_max[i] = random<typename TestFixture::StateVector>());
 	}
-}
 
-TYPED_TEST(MultiStageQuadraticProblemTest, get_set_x_max_works)
-{
-	typename TestFixture::StateVector x;
+	for (std::size_t i = 0; i < this->NT; ++i)
+	{
+		this->qp.set_S(i, S[i] = random<typename TestFixture::StateInputMatrix>());
+		this->qp.set_R(i, R[i] = random<typename TestFixture::InputInputMatrix>());
+		this->qp.set_A(i, A[i] = random<typename TestFixture::StateStateMatrix>());
+		this->qp.set_B(i, B[i] = random<typename TestFixture::StateInputMatrix>());
+		this->qp.set_b(i, b[i] = random<typename TestFixture::StateVector>());
+		this->qp.set_u_min(i, u_min[i] = random<typename TestFixture::InputVector>());
+		this->qp.set_u_max(i, u_max[i] = random<typename TestFixture::InputVector>());
+	}
 
+	// Reading the data and checking that they are the same that we wrote
 	for (std::size_t i = 0; i <= this->NT; ++i)
 	{
-		x << 1.* i, 2. * i;
-		this->qp.set_x_max(i, x);
-		EXPECT_EQ(this->qp.get_x_max(i), x);
+		EXPECT_EQ(this->qp.get_Q(i), Q[i]);
+		EXPECT_EQ(this->qp.get_x_min(i), x_min[i]);
+		EXPECT_EQ(this->qp.get_x_max(i), x_max[i]);
+	}
+
+	for (std::size_t i = 0; i < this->NT; ++i)
+	{
+		EXPECT_EQ(this->qp.get_S(i), S[i]);
+		EXPECT_EQ(this->qp.get_R(i), R[i]);
+		EXPECT_EQ(this->qp.get_A(i), A[i]);
+		EXPECT_EQ(this->qp.get_B(i), B[i]);
+		EXPECT_EQ(this->qp.get_b(i), b[i]);
+		EXPECT_EQ(this->qp.get_u_min(i), u_min[i]);
+		EXPECT_EQ(this->qp.get_u_max(i), u_max[i]);
 	}
 }
 
