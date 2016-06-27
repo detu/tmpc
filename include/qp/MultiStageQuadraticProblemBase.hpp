@@ -43,6 +43,18 @@ namespace tmpc
 	std::size_t constexpr n_xu() { return QP::nX() + QP::nU(); }
 
 	template<typename QP>
+	std::size_t constexpr n_x() { return QP::nX(); }
+
+	template<typename QP>
+	std::size_t constexpr n_u() { return QP::nU(); }
+
+	template<typename QP>
+	std::size_t constexpr n_d() { return QP::nD(); }
+
+	template<typename QP>
+	std::size_t constexpr n_d_end() { return QP::nDT(); }
+
+	template<typename QP>
 	typename QP::size_type nIndep(QP const& qp) { return qp.nX() + qp.nU() * qp.nT(); }
 
 	template<typename QP>
@@ -55,7 +67,7 @@ namespace tmpc
 	typename QP::size_type nConstr(QP const& qp) { return qp.nD() * qp.nT() + qp.nDT(); }
 
 	template <typename QP>
-	decltype(auto) get_xu_min(QP const& qp, std::size_t i)
+	Eigen::Matrix<double, n_xu<QP>(), 1> get_xu_min(QP const& qp, std::size_t i)
 	{
 		Eigen::Matrix<double, n_xu(qp), 1> val;
 		val << qp.get_x_min(i), qp.get_u_min(i);
@@ -78,7 +90,7 @@ namespace tmpc
 	}
 
 	template <typename QP>
-	decltype(auto) get_xu_max(QP const& qp, std::size_t i)
+	Eigen::Matrix<double, n_xu<QP>(), 1> get_xu_max(QP const& qp, std::size_t i)
 	{
 		Eigen::Matrix<double, n_xu(qp), 1> val;
 		val << qp.get_x_max(i), qp.get_u_max(i);
@@ -113,13 +125,13 @@ namespace tmpc
 	}
 
 	template<typename QP>
-	decltype(auto) get_x_end_min(QP const& qp)
+	auto get_x_end_min(QP const& qp) -> decltype(qp.get_x_min(qp.nT()))
 	{
 		return qp.get_x_min(qp.nT());
 	}
 
 	template<typename QP>
-	decltype(auto) get_x_end_max(QP const& qp)
+	auto get_x_end_max(QP const& qp) -> decltype(qp.get_x_max(qp.nT()))
 	{
 		return qp.get_x_max(qp.nT());
 	}
@@ -167,9 +179,9 @@ namespace tmpc
 	}
 
 	template <typename QP>
-	decltype(auto) get_AB(QP const& qp, std::size_t i)
+	Eigen::Matrix<double, n_x<QP>(), n_xu<QP>()> get_AB(QP const& qp, std::size_t i)
 	{
-		Eigen::Matrix<double, qp.nX(), n_xu(qp)> AB;
+		Eigen::Matrix<double, n_x<QP>(), n_xu<QP>()> AB;
 		AB << qp.get_A(i), qp.get_B(i);
 		return AB;
 	}
@@ -183,9 +195,9 @@ namespace tmpc
 	}
 
 	template <typename QP>
-	decltype(auto) get_CD(QP const& qp, std::size_t i)
+	Eigen::Matrix<double, n_d<QP>(), n_xu<QP>()> get_CD(QP const& qp, std::size_t i)
 	{
-		Eigen::Matrix<double, qp.nD(), n_xu(qp)> CD;
+		Eigen::Matrix<double, n_d<QP>(), n_xu<QP>()> CD;
 
 		if (qp.nD() > 0)	// workaround for this bug: http://eigen.tuxfamily.org/bz/show_bug.cgi?id=1242
 			CD << qp.get_C(i), qp.get_D(i);
@@ -199,7 +211,7 @@ namespace tmpc
 	}
 
 	template <typename QP>
-	decltype(auto) get_Q_end(QP const& qp)
+	auto get_Q_end(QP const& qp) -> decltype(qp.get_Q(qp.nT()))
 	{
 		return qp.get_Q(qp.nT());
 	}
@@ -210,7 +222,7 @@ namespace tmpc
 	}
 
 	template <typename QP>
-	decltype(auto) get_q_end(QP const& qp)
+	auto get_q_end(QP const& qp) -> decltype(qp.get_q(qp.nT()))
 	{
 		return qp.get_q(qp.nT());
 	}
