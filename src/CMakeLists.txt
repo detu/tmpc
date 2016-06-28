@@ -34,7 +34,7 @@ if (HPMPC_FOUND)
         ${RTMC_INCLUDE_DIR}/qp/HPMPCSolver.hpp     qp/HPMPCSolver.cpp
         ${RTMC_INCLUDE_DIR}/qp/HPMPCProblem.hpp    qp/HPMPCProblem.cpp
         ${RTMC_INCLUDE_DIR}/qp/HPMPCSolution.hpp
-        qp/HPMPCProblemExport.hpp
+        qp/HPMPCProblemExport.hpp                  qp/HPMPCProblemExport.cpp
     )
 endif()
 

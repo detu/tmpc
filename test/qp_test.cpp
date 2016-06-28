@@ -154,45 +154,6 @@ TYPED_TEST(MultiStageQuadraticProblemTest, qp_interface_works)
 	typedef Eigen::Matrix<double, NZ, NZ> StageHessianMatrix;
 	typedef Eigen::Matrix<double, TestFixture::Problem::NX, NZ> InterStageMatrix;
 
-	{
-		StateVector x;
-		InputVector u;
-
-		x << -1, -2;					u << -10;
-		this->qp.set_x_min(0, x);				this->qp.set_u_min(0, u);
-		EXPECT_EQ(this->qp.get_x_min(0), x);	EXPECT_EQ(this->qp.get_u_min(0), u);
-		//EXPECT_EQ(Eigen::Map<StateVector const>(this->qp.lb_data()[0] + NU), x);
-		//EXPECT_EQ(Eigen::Map<InputVector const>(this->qp.lb_data()[0]     ), u);
-
-		x << -3, -4;					u << -30;
-		this->qp.set_x_min(1, x);				this->qp.set_u_min(1, u);
-		EXPECT_EQ(this->qp.get_x_min(1), x);	EXPECT_EQ(this->qp.get_u_min(1), u);
-		//EXPECT_EQ(Eigen::Map<StateVector const>(this->qp.lb_data()[1] + NU), x);
-		//EXPECT_EQ(Eigen::Map<InputVector const>(this->qp.lb_data()[1]     ), u);
-
-		x << -5, -6;
-		this->qp.set_x_min(2, x);
-		EXPECT_EQ(this->qp.get_x_min(2), x);
-		//EXPECT_EQ(Eigen::Map<StateVector const>(this->qp.lb_data()[2]), x);
-
-		x << 1, 2;						u << 10;
-		this->qp.set_x_max(0, x);				this->qp.set_u_max(0, u);
-		EXPECT_EQ(this->qp.get_x_max(0), x);
-		//EXPECT_EQ(Eigen::Map<StateVector const>(this->qp.ub_data()[0] + NU), x);
-		//EXPECT_EQ(Eigen::Map<InputVector const>(this->qp.ub_data()[0]     ), u);
-
-		x << 3, 4;						u << 30;
-		this->qp.set_x_max(1, x);				this->qp.set_u_max(1, u);
-		EXPECT_EQ(this->qp.get_x_max(1), x);
-		//EXPECT_EQ(Eigen::Map<StateVector const>(this->qp.ub_data()[1] + NU), x);
-		//EXPECT_EQ(Eigen::Map<InputVector const>(this->qp.ub_data()[1]     ), u);
-
-		x << 5, 6;
-		this->qp.set_x_max(2, x);
-		EXPECT_EQ(this->qp.get_x_max(2), x);
-		//EXPECT_EQ(Eigen::Map<StateVector const>(this->qp.ub_data()[2]), x);
-	}
-
 	set_xu_min(this->qp, 0, -1.);	set_xu_max(this->qp, 0, 1.);
 	set_xu_min(this->qp, 1, -1.);	set_xu_max(this->qp, 1, 1.);
 	set_x_end_min(this->qp, -1.);	set_x_end_max(this->qp, 1.);

@@ -18,6 +18,9 @@ namespace hpmpc_problem_export
 										double const * const *C, double const * const *D, double const * const *lg, double const * const *ug,
 										double const * const *x, double const * const *u)
 	{
+		f.printStructure(N, nx, nu, nb, ng);
+
+		f.printFunctionHeader();
 		f.print("k_max", k_max);
 		f.print("mu0", mu0);
 		f.print("mu_tol", mu_tol);
@@ -47,6 +50,7 @@ namespace hpmpc_problem_export
 			f.print("x", i, x[i], nx[i]);
 			if (i < N) f.print("u", i, u[i], nu[i]);
 		}
+		f.printFunctionFooter();
 	}
 
 	class MATLABFormatter
@@ -56,6 +60,13 @@ namespace hpmpc_problem_export
 		:	_os(os)
 		,	_prefix(name_prefix)
 		{}
+
+		void printStructure(int N, int const *nx, int const *nu, int const *nb, int const *ng) const
+		{
+		}
+
+		void printFunctionHeader() const {}
+		void printFunctionFooter() const {}
 
 		template <typename T>
 		void print(std::string const& name, T const& val)
@@ -120,5 +131,86 @@ namespace hpmpc_problem_export
 
 		std::ostream& _os;
 		std::string _prefix;
+	};
+
+	class CFormatter
+	{
+	public:
+		CFormatter(std::ostream& os)
+		:	_os(os)
+		,	_varName("qp")
+		{}
+
+		void printStructure(int N, int const *nx, int const *nu, int const *nb, int const *ng) const;
+		void printFunctionHeader() const;
+		void printFunctionFooter() const;
+
+		template <typename T>
+		void print(std::string const& name, T const& val)
+		{
+			_os << field(name) << " = " << val << ";" << std::endl;
+		}
+
+		template <typename T>
+		void print(std::string const& name, T const * val, std::size_t n)
+		{
+			for (std::size_t i = 0; i < n; ++i)
+				_os << field(name, i) << " = " << val[i] << "; ";
+			_os << std::endl;
+		}
+
+		template <typename T>
+		void print(std::string const& name, std::size_t k, T const * val, std::size_t n)
+		{
+			std::string const name_k = name + std::to_string(k);
+
+			if (n > 0)
+			{
+				for (std::size_t j = 0; j < n; ++j)
+					_os << field(name_k, j) << " = " << val[j] << "; ";
+				_os << std::endl;
+			}
+
+			_os << field(name, k) << " = " << field(name_k) << ";" << std::endl;
+		}
+
+		template <typename T>
+		void print(std::string const& name, std::size_t k, T const * val, std::size_t m, std::size_t n)
+		{
+			std::string const name_k = name + std::to_string(k);
+
+			if (n > 0)
+			{
+				for (std::size_t i = 0; i < m; ++i)
+				{
+					for (std::size_t j = 0; j < n; ++j)
+						_os << field(name_k, n * i + j) << " = " << val[n * i + j] << "; ";
+					_os << std::endl;
+				}
+			}
+
+			_os << field(name, k) << " = " << field(name_k) << ";" << std::endl;
+		}
+
+	private:
+		void printArrayStructure(std::string const& type, std::string const& name, int N) const;
+		void printArrayStructure(std::string const& type, std::string const& name, int M, int N) const;
+		void printArrayOfArraysStructure(std::string const& type, bool const_ptr, std::string const& name, int N, int const * n) const;
+		void printArrayOfArraysStructure(std::string const& type, bool const_ptr, std::string const& name, int N, int const * m, int const * n) const;
+
+		std::string field(std::string const& name) const
+		{
+			return _varName + "->" + name;
+		}
+
+		std::string field(std::string const& name, std::size_t i) const
+		{
+			return _varName + "->" + name + "[" + std::to_string(i) + "]";
+		}
+
+		std::string eol() const { return ";\n"; }
+
+		std::ostream& _os;
+		std::string _varName;
 	};
 }
