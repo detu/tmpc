@@ -5,16 +5,9 @@
  *      Author: kotlyar
  */
 
-#include "../include/qp/HPMPCSolver.hpp"
-#include "../include/qp/Printing.hpp"
-
-#include "qp_test_problems.hpp"
-
-#include <c_interface.h>	// HPMPC C interface
+#include "../include/qp/HPMPCProblem.hpp"
 
 #include <gtest/gtest.h>
-
-#include <iostream>
 
 unsigned const NX = 2;
 unsigned const NU = 1;
@@ -22,24 +15,9 @@ unsigned const NC = 0;
 unsigned const NCT = 0;
 unsigned const NT = 2;
 
-typedef tmpc::HPMPCSolver<NX, NU, NC, NCT> Solver;
-typedef Solver::Problem Problem;
-typedef Solver::Solution Solution;
+typedef tmpc::HPMPCProblem<NX, NU, NC, NCT> Problem;
 
-namespace
-{
-	std::ostream& operator<<(std::ostream& os, Solution const& point)
-	{
-		//typedef typename camels::CondensingSolver<NX_, NU_, NC_, NCT_>::size_type size_type;
-		typedef unsigned size_type;
-		for (size_type i = 0; i < point.nT(); ++i)
-			os << point.get_x(i).transpose() << "\t" << point.get_u(i).transpose() << std::endl;
-
-		return os << point.get_xend().transpose() << std::endl;
-	}
-}
-
-TEST(hpmpc_test, problem_test)
+TEST(HPMPCProblemTest, hpmpc_interface_works)
 {
 	Problem qp(NT);
 
@@ -193,76 +171,5 @@ TEST(hpmpc_test, problem_test)
 	qp.set_b(1, a1);
 	EXPECT_EQ(qp.get_b(1), a1);
 	EXPECT_EQ(Eigen::Map<Problem::StateVector const>(qp.b_data()[1]), a1);
- }
-
-TEST(hpmpc_test, solve_test_0)
-{
-	Problem qp(NT);
-	tmpc_test::qp_problems::problem_0(qp);
-
-	Print_MATLAB(std::cout, qp, "qp");
-
-	Solver solver(qp.nT());
-	Solution solution(NT);
-
-	try
-	{
-		solver.Solve(qp, solution);
-	}
-	catch (std::runtime_error const& e)
-	{
-		std::cout << "HPMPC SOLVER RETURNED AN ERROR" << std::endl;
-		std::cout << "-- sol (multistage) --" << std::endl << solution << std::endl;
-		throw;
-	}
-
-	Solution::StateInputVector z0_expected;
-	z0_expected << 1., -1., -1;
-	EXPECT_TRUE(get_z(solution, 0).isApprox(z0_expected));
-
-	Solution::StateInputVector z1_expected;
-	z1_expected << 0.5, 0., -1;
-	EXPECT_TRUE(get_z(solution, 1).isApprox(z1_expected));
-
-	Solution::StateVector z2_expected;
-	z2_expected << 1., 1;
-	EXPECT_TRUE(get_xend(solution).isApprox(z2_expected));
-
-	std::cout << "-- sol (multistage) --" << std::endl << solution << std::endl;
 }
 
-TEST(hpmpc_test, solve_test_1)
-{
-	Problem qp(NT);
-	tmpc_test::qp_problems::problem_1(qp);
-
-	Print_MATLAB(std::cout, qp, "qp");
-
-	Solver solver(qp.nT());
-	Solution solution(NT);
-
-	try
-	{
-		solver.Solve(qp, solution);
-	}
-	catch (std::runtime_error const& e)
-	{
-		std::cout << "HPMPC SOLVER RETURNED AN ERROR" << std::endl;
-		std::cout << "-- sol (multistage) --" << std::endl << solution << std::endl;
-		throw;
-	}
-
-	Solution::StateInputVector z0_expected;
-	z0_expected << 1., 0., -0.690877362606266;
-	EXPECT_TRUE(get_z(solution, 0).isApprox(z0_expected, 1e-6));
-
-	Solution::StateInputVector z1_expected;
-	z1_expected << 0.654561318696867, -0.690877362606266, 0.215679569867116;
-	EXPECT_TRUE(get_z(solution, 1).isApprox(z1_expected, 1e-6));
-
-	Solution::StateVector z2_expected;
-	z2_expected << 0.0715237410241597, -0.475197792739149;
-	EXPECT_TRUE(get_xend(solution).isApprox(z2_expected, 1e-6));
-
-	std::cout << "-- sol (multistage) --" << std::endl << solution << std::endl;
-}

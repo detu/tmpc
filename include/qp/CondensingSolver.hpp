@@ -53,7 +53,7 @@ namespace tmpc
 		typedef Eigen::VectorXd StateVector;
 		typedef Eigen::VectorXd StateInputVector;
 
-		CondensingSolver(size_type nt, qpOASESOptions const& options = qpOASESOptions::MPC())
+		CondensingSolver(size_type nt, qpOASESOptions const& options = qpOASESOptions::MPC().setPrintLevel(qpOASES::PL_LOW))
 		:	_condensedQP(nIndep(nt), nDep(nt) + nConstr(nt))
 		,	_condensedSolution(nIndep(nt))
 		,	_problem(nIndep(nt), nDep(nt) + nConstr(nt))
@@ -178,7 +178,3 @@ namespace tmpc
 	}
 }
 
-namespace camels
-{
-	using namespace tmpc;
-}

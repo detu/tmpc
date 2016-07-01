@@ -21,7 +21,6 @@ class SampleOCP : public tmpc::OptimalControlProblem<SampleOCP, Dimensions::NX, 
 public:
 	static unsigned const NX  = Dimensions::NX;
 	static unsigned const NU  = Dimensions::NU;
-	//static unsigned const NZ
 	static unsigned const NC  = 0;
 	static unsigned const NCT = 0;
 
@@ -124,7 +123,6 @@ public:
 
 protected:
 	typedef DiscreteTimeModel Integrator;
-	//typedef tmpc::CondensingSolver<OCP::NX, OCP::NU, OCP::NC, OCP::NCT> QPSolver;
 	typedef tmpc::RealtimeIteration<OCP, Integrator, QPSolver> RealtimeIteration;
 	typedef typename RealtimeIteration::WorkingPoint WorkingPoint;
 
@@ -166,16 +164,11 @@ TYPED_TEST(RealtimeIterationTest, GivesCorrectU0)
 		OCP::InputVector u_expected;
 		u_expected << -0.690877362606266;
 		EXPECT_TRUE(u.isApprox(u_expected, 1e-6));
-
-		std::cout << "u[0] = " << u.transpose() << std::endl;
 	}
 
 	// Step 1
 	{
 		this->Preparation();
-
-		std::cout << "Working point before step 1: " << std::endl;
-		std::cout << this->_rti.getWorkingPoint() << std::endl;
 
 		{
 			OCP::StateVector x;
@@ -199,7 +192,5 @@ TYPED_TEST(RealtimeIterationTest, GivesCorrectU0)
 		OCP::InputVector u_expected;
 		u_expected << 0.218183;
 		EXPECT_TRUE(u.isApprox(u_expected, 1e-5));
-
-		std::cout << "u[1] = " << u.transpose() << std::endl;
 	}
 }

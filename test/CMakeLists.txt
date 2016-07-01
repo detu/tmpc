@@ -10,6 +10,8 @@ set(SRC
     rk4_test.cpp
     realtime_iteration_test.cpp
     qp_test.cpp
+    qp_solver_test.cpp
+    
     pendulum_ode_generated.h    pendulum_ode_generated.c
    )
    
