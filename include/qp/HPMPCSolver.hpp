@@ -69,7 +69,14 @@ namespace tmpc
 			if (x0_equality)
 				s.set_x(0, p.get_x_min(0));
 
-			_warmStart = true;
+			// Warmstarting disabled on purpose.
+			// 1. After the Simuling model is executed about 3 times, next runs produce
+			// the "HPMPC returned -1" error. This happens randomly. To make sure that
+			// this bug has nothing to do with warmstarting, I disable it.
+			//_warmStart = true;
+			// 2.On AMD K8 (hpmpc compiled for SSE3), WITHOUT warmstarting it is significantly
+			// FASTER (9ms vs 14ms per time step) than with warmstarting. I am curious why.
+			_warmStart = false;
 		}
 
 		std::size_t nT() const noexcept { return _nx.size() - 1; }

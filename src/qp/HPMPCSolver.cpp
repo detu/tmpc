@@ -15,8 +15,6 @@
 #include <limits>
 #include <iomanip>
 
-//#include <fenv.h>
-
 namespace tmpc
 {
 	namespace hpmpc_wrapper
@@ -58,7 +56,7 @@ namespace tmpc
 					work0,
 					stat);
 
-			if (ret != 0)
+			if (ret < 0)
 			{
 				{
 					using namespace hpmpc_problem_export;
