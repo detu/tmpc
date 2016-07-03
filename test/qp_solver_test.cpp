@@ -20,26 +20,8 @@ class QPSolverTest : public ::testing::Test
 {
 public:
 	typedef Solver_ Solver;
-	//typedef typename Problem::StateInputVector StateInputVector;
-	//typedef typename Problem::StageHessianMatrix StageHessianMatrix;
-	//typedef typename Problem::InterStageMatrix InterStageMatrix;
 
 protected:
-	/*
-	unsigned const NX = n_x<QP>();
-	unsigned const NU = n_u<QP>();
-	unsigned const NC = n_d<QP>();
-	unsigned const NCT = n_d_end<QP>();
-	*/
-
-	/*
-	typedef Eigen::Matrix<double, QP::NX, 1> StateVector;
-	typedef Eigen::Matrix<double, QP::NU, 1> InputVector;
-	typedef Eigen::Matrix<double, QP::NX, QP::NX> StateStateMatrix;
-	typedef Eigen::Matrix<double, QP::NX, QP::NU> StateInputMatrix;
-	typedef Eigen::Matrix<double, QP::NU, QP::NU> InputInputMatrix;
-	*/
-
 	unsigned const NT = 2;
 
 	QPSolverTest()
