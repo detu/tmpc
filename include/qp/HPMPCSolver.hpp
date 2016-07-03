@@ -82,6 +82,17 @@ namespace tmpc
 		std::size_t nT() const noexcept { return _nx.size() - 1; }
 		std::size_t getMaxIter() const noexcept { return _stat.size(); }
 
+		double getMuTol() const noexcept { return _muTol; }
+
+		void setMuTol(double val)
+		{
+			if (val <= 0.)
+				throw std::invalid_argument("mu tolerance for hpmpc must be positive");
+
+			_muTol = val;
+		}
+
+
 	private:
 		// Array of NX sizes
 		std::vector<int> _nx;

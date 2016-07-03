@@ -58,40 +58,38 @@ namespace tmpc
 
 			if (ret < 0)
 			{
+				using namespace hpmpc_problem_export;
+
 				{
-					using namespace hpmpc_problem_export;
+					std::ofstream os("failed_qp.m");
+					os << std::scientific << std::setprecision(std::numeric_limits<double>::digits10 + 1);
 
-					{
-						std::ofstream os("failed_qp.m");
-						os << std::scientific << std::setprecision(std::numeric_limits<double>::digits10 + 1);
+					MATLABFormatter f(os, "qp.");
 
-						MATLABFormatter f(os, "qp.");
+					print_c_order_d_ip_ocp_hard_tv(f,
+						k_max, mu0, mu_tol,
+						N, nx, nu, nb, ng,
+						warm_start,
+						A, B, b,
+						Q, S, R, q, r,
+						lb, ub,
+						C, D, lg, ug, x, u);
+				}
 
-						print_c_order_d_ip_ocp_hard_tv(f,
-							k_max, mu0, mu_tol,
-							N, nx, nu, nb, ng,
-							warm_start,
-							A, B, b,
-							Q, S, R, q, r,
-							lb, ub,
-							C, D, lg, ug, x, u);
-					}
+				{
+					std::ofstream os("failed_qp.c");
+					os << std::scientific << std::setprecision(std::numeric_limits<double>::digits10 + 1);
 
-					{
-						std::ofstream os("failed_qp.c");
-						os << std::scientific << std::setprecision(std::numeric_limits<double>::digits10 + 1);
+					CFormatter f(os);
 
-						CFormatter f(os);
-
-						print_c_order_d_ip_ocp_hard_tv(f,
-							k_max, mu0, mu_tol,
-							N, nx, nu, nb, ng,
-							warm_start,
-							A, B, b,
-							Q, S, R, q, r,
-							lb, ub,
-							C, D, lg, ug, x, u);
-					}
+					print_c_order_d_ip_ocp_hard_tv(f,
+						k_max, mu0, mu_tol,
+						N, nx, nu, nb, ng,
+						warm_start,
+						A, B, b,
+						Q, S, R, q, r,
+						lb, ub,
+						C, D, lg, ug, x, u);
 				}
 
 				throw_hpmpc_error(ret);
