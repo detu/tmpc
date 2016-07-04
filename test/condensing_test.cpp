@@ -21,12 +21,10 @@ typedef Solver::Solution Solution;
 
 std::ostream& operator<<(std::ostream& os, Solution const& point)
 {
-	//typedef typename camels::CondensingSolver<NX_, NU_, NC_, NCT_>::size_type size_type;
-	typedef unsigned size_type;
-	for (size_type i = 0; i < point.nT(); ++i)
-		os << point.w(i) << std::endl;
+	for (std::size_t i = 0; i < point.nT(); ++i)
+		os << point.get_x(i).transpose() << "\t" << point.get_u(i).transpose() << std::endl;
 
-	return os << point.wend() << std::endl;
+	return os << point.get_x(point.nT()).transpose() << std::endl;
 }
 
 TEST(CondensingSolver_test, condensing_test)

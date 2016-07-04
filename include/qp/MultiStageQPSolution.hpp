@@ -1,13 +1,10 @@
 /*
- * qpDUNESSolution.hpp
+ * MultiStageQPSolution.hpp
  *
- *  Created on: May 4, 2016
  *      Author: kotlyar
  */
 
 #pragma once
-
-//#include "../core/Trajectory.hpp"
 
 #include <Eigen/Dense>
 
@@ -16,10 +13,10 @@
 namespace tmpc
 {
 	//
-	// Provides solution interface for the HPMPC solver.
+	// Provides a generic solution interface for multistage QP solvers.
 	//
 	template<unsigned NX_, unsigned NU_, unsigned NC_, unsigned NCT_>
-	class HPMPCSolution //: public TrajectoryBase<HPMPCSolution<NX_, NU_>, NX_, NU_>
+	class MultiStageQPSolution
 	{
 	public:
 		typedef std::size_t size_type;
@@ -36,32 +33,15 @@ namespace tmpc
 		typedef Eigen::Matrix<double, 2 * NC + 2 * (NX + NU), 1> LagrangeVector;
 		typedef Eigen::Matrix<double, 2 * NCT + 2 * NX, 1> EndLagrangeVector;
 
-		HPMPCSolution(size_type nt)
+		MultiStageQPSolution(size_type nt)
 		:	_stage(nt)
-		,	_x    (nt + 1)
-		,	_u    (nt    )
-		,	_pi   (nt    )
-		,	_lam  (nt + 1)
-		,	_t    (nt + 1)
 		{
-			for (std::size_t i = 0; i < nt; ++i)
-			{
-				_x[i]   = _stage[i]._x  .data();
-				_u[i]   = _stage[i]._u  .data();
-				_pi[i]  = _stage[i]._pi .data();
-				_lam[i] = _stage[i]._lam.data();
-				_t[i]   = _stage[i]._t  .data();
-			}
-
-			_x  .back() = _xEnd  .data();
-			_lam.back() = _lamEnd.data();
-			_t  .back() = _tEnd  .data();
 		}
 
 		StateVector const& get_x(std::size_t i) const
 		{
 			if (i > nT())
-				throw std::out_of_range("HPMPCSolution<>::get_x(): index is out of range");
+				throw std::out_of_range("MultiStageQPSolution<>::get_x(): index is out of range");
 
 			return i < nT() ? _stage[i]._x : _xEnd;
 		}
@@ -70,9 +50,15 @@ namespace tmpc
 		void set_x(std::size_t i, Eigen::MatrixBase<Matrix> const& val)
 		{
 			if (i > nT())
-				throw std::out_of_range("HPMPCSolution<>::set_x(): index is out of range");
+				throw std::out_of_range("MultiStageQPSolution<>::set_x(): index is out of range");
 
 			(i < nT() ? _stage[i]._x : _xEnd) = val;
+		}
+
+		template <typename Matrix>
+		void set_u(std::size_t i, Eigen::MatrixBase<Matrix> const& val)
+		{
+			stage(i)._u = val;
 		}
 
 		InputVector const& get_u(std::size_t i) const { return stage(i)._u; }
@@ -80,16 +66,6 @@ namespace tmpc
 		size_type const nX() const noexcept { return NX; }
 		size_type const nU() const noexcept { return NU; }
 		size_type const nT() const { return _stage.size(); }
-
-		// ************************************************
-		//                 HPMPC interface
-		// ************************************************
-		double * const * x_data() { return _x.data(); }
-		double * const * u_data() { return _u.data(); }
-		double * const * pi_data() { return _pi.data(); }
-		double * const * lam_data() { return _lam.data(); }
-		double * const * t_data() { return _t.data(); }
-		double * inf_norm_res_data() { return _inf_norm_res.data(); }
 
 	private:
 		struct StageData
@@ -105,13 +81,6 @@ namespace tmpc
 		StateVector _xEnd;
 		EndLagrangeVector _lamEnd;
 		EndLagrangeVector _tEnd;
-
-		std::vector<double *> _x;
-		std::vector<double *> _u;
-		std::vector<double *> _pi;
-		std::vector<double *> _lam;
-		std::vector<double *> _t;
-		Eigen::Matrix<double, 4, 1> _inf_norm_res;
 
 		StageData& stage(size_type i)
 		{

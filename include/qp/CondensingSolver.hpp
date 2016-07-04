@@ -5,7 +5,7 @@
 #include <qpOASES.hpp>
 #include <qp/Condensing.hpp>
 #include <qp/MultiStageQuadraticProblem.hpp>
-#include <qp/qpDUNESSolution.hpp>
+#include <qp/MultiStageQPSolution.hpp>
 
 #include <ostream>
 
@@ -43,7 +43,7 @@ namespace tmpc
 		typedef MultiStageQuadraticProblem<NX, NU, NC, NCT> Problem;
 
 		// Solution data type
-		typedef qpDUNESSolution<NX, NU> Solution;
+		typedef MultiStageQPSolution<NX, NU, NC, NCT> Solution;
 
 		// Exception that can be thrown from the Solve() member function.
 		class SolveException;
@@ -164,16 +164,11 @@ namespace tmpc
 		//problem.getDualSolution(yOpt);
 
 		// Calculate the solution of the multi-stage QP.
-		solution.w(0).template topRows<NX>() = _condensedSolution.topRows<NX>();
+		solution.set_x(0, _condensedSolution.topRows<NX>());
 		for (size_type i = 0; i < nT(); ++i)
 		{
-			auto z_i = solution.w(i);
-			auto x_i = z_i.template topRows<NX>();
-			auto u_i = z_i.template bottomRows<NU>();
-			auto x_i_plus = solution.x(i + 1);
-
-			u_i = _condensedSolution.middleRows<NU>(NX + i * NU);
-			x_i_plus = get_AB(msqp, i) * z_i + msqp.get_b(i);
+			solution.set_u(i, _condensedSolution.middleRows<NU>(NX + i * NU));
+			solution.set_x(i + 1, msqp.get_A(i) * solution.get_x(i) + msqp.get_B(i) * solution.get_u(i) + msqp.get_b(i));
 		}
 	}
 }

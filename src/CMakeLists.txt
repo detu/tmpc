@@ -27,6 +27,7 @@ set (SRC
 	${RTMC_INCLUDE_DIR}/qp/CondensingSolver.hpp  qp/CondensingSolver.cpp
 	${RTMC_INCLUDE_DIR}/qp/qpDUNESProgram.hpp
 	${RTMC_INCLUDE_DIR}/qp/qpOASESProgram.hpp    qp/qpOASESProgram.cpp
+	${RTMC_INCLUDE_DIR}/qp/MultiStageQPSolution.hpp
 )
 
 if (HPMPC_FOUND)
