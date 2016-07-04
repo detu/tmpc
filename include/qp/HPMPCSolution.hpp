@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include "qp.hpp"
 #include "../core/matrix.hpp"
 
 #include <Eigen/Dense>
@@ -19,7 +20,7 @@ namespace tmpc
 	// Provides solution interface for the HPMPC solver.
 	//
 	template<unsigned NX_, unsigned NU_, unsigned NC_, unsigned NCT_>
-	class HPMPCSolution //: public TrajectoryBase<HPMPCSolution<NX_, NU_>, NX_, NU_>
+	class HPMPCSolution : public MultiStageQPSolutionBase
 	{
 	public:
 		typedef std::size_t size_type;
@@ -78,6 +79,33 @@ namespace tmpc
 		}
 
 		InputVector const& get_u(std::size_t i) const { return stage(i)._u; }
+
+		StateVector const& get_pi(std::size_t i) const { return stage(i)._pi; }
+
+		decltype(auto) get_lam_u_min(std::size_t i) const { return middle_rows<NU>(stage(i)._lam, 0); }
+		decltype(auto) get_lam_u_max(std::size_t i) const { return middle_rows<NU>(stage(i)._lam, NU + NX + NC); }
+
+		Eigen::Map<StateVector> get_lam_x_min(std::size_t i) const
+		{
+			if (i > nT())
+				throw std::out_of_range("HPMPCSolution::get_lam_x_min(): index is out of range");
+
+			return Eigen::Map<StateVector>(_lam[i] + NU);
+		}
+
+		Eigen::Map<StateVector> get_lam_x_max(std::size_t i) const
+		{
+			if (i > nT())
+				throw std::out_of_range("HPMPCSolution::get_lam_x_max(): index is out of range");
+
+			return Eigen::Map<StateVector>(_lam[i] + NU + NX + NC + NU);
+		}
+
+		decltype(auto) get_lam_d_min(std::size_t i) const { return middle_rows<NC>(stage(i)._lam, NU + NX); }
+		decltype(auto) get_lam_d_max(std::size_t i) const { return middle_rows<NC>(stage(i)._lam, NU + NX + NC + NU + NX); }
+
+		decltype(auto) get_lam_d_end_min() const { return middle_rows<NC>(_lamEnd, NX); }
+		decltype(auto) get_lam_d_end_max() const { return middle_rows<NC>(_lamEnd, NX + NCT + NX); }
 
 		size_type const nX() const noexcept { return NX; }
 		size_type const nU() const noexcept { return NU; }

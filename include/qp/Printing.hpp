@@ -1,7 +1,10 @@
 #pragma once
 
 #include "MultiStageQuadraticProblemBase.hpp"
+#include "qp.hpp"
+#include "../core/matrix.hpp"
 
+#include <type_traits>
 #include <ostream>
 
 namespace tmpc
@@ -38,5 +41,40 @@ namespace tmpc
 
 		os << var_name << ".zMin{" << qp.nT() + 1 << "} = [..." << endl << get_x_end_min(qp) << "];" << endl;
 		os << var_name << ".zMax{" << qp.nT() + 1 << "} = [..." << endl << get_x_end_max(qp) << "];" << endl;
+	}
+
+	// Define ostream insert operator for all classes derived from MultiStageQPSolutionBase.
+	template <typename QPSolution>
+	inline std::enable_if_t<std::is_base_of<MultiStageQPSolutionBase, QPSolution>::value,
+		std::ostream&> operator<<(std::ostream& os, QPSolution const& solution)
+	{
+		for (std::size_t i = 0; i <= solution.nT(); ++i)
+		{
+			os << "x[" << i << "] = " << transpose(solution.get_x(i));
+
+			os << "\tlam_x_min[" << i << "] = " << transpose(solution.get_lam_x_min(i));
+			os << "\tlam_x_max[" << i << "] = " << transpose(solution.get_lam_x_max(i));
+
+			if (i < solution.nT())
+			{
+				os << "\tu[" << i << "] = " << transpose(solution.get_u(i));
+				os << "\tlam_u_min[" << i << "] = " << transpose(solution.get_lam_u_min(i));
+				os << "\tlam_u_max[" << i << "] = " << transpose(solution.get_lam_u_max(i));
+			}
+
+			if (i < solution.nT())
+			{
+				os << "\tlam_d_min[" << i << "] = " << transpose(solution.get_lam_d_min(i));
+				os << "\tlam_d_max[" << i << "] = " << transpose(solution.get_lam_d_max(i));
+				os << "\tpi[" << i << "] = " << transpose(solution.get_pi(i));
+			}
+			else
+			{
+				os << "\tlam_d_min[" << i << "] = " << transpose(solution.get_lam_d_end_min());
+				os << "\tlam_d_max[" << i << "] = " << transpose(solution.get_lam_d_end_max());
+			}
+
+			os << std::endl;
+		}
 	}
 }

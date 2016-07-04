@@ -162,8 +162,6 @@ namespace tmpc
 		template<class Matrix> void set_u_max(std::size_t i, Eigen::MatrixBase<Matrix> const& val) { stage(i)._ub.template topRows<NU>() = val; }
 		decltype(auto) get_u_max(std::size_t i) const { return stage(i)._ub.template topRows<NU>(); }
 
-		bool is_x0_equality_constrained() const { return get_x_min(0) == get_x_max(0); }
-
 		// ******************************************************
 		//                HPMPC raw data interface.
 		//
@@ -172,42 +170,12 @@ namespace tmpc
 		// ******************************************************
 		double const * const * A_data () const { return _A .data(); }
 		double const * const * B_data () const { return _B .data(); }
-
-		double const * const * b_data () const
-		{
-			if (is_x0_equality_constrained())
-			{
-				_b0 = _stage[0]._A * get_x_min(0) + _stage[0]._b;
-				_b[0] = _b0.data();
-			}
-			else
-			{
-				_b[0] = _stage[0]._b.data();
-			}
-
-			return _b.data();
-		}
-
+		double const * const * b_data () const { return _b.data();	}
 		double const * const * Q_data () const { return _Q .data(); }
 		double const * const * S_data () const { return _S .data(); }
 		double const * const * R_data () const { return _R .data(); }
 		double const * const * q_data () const { return _q .data(); }
-
-		double const * const * r_data () const
-		{
-			if (is_x0_equality_constrained())
-			{
-				_r0 = _stage[0]._S * get_x_min(0) + _stage[0]._r;
-				_r[0] = _r0.data();
-			}
-			else
-			{
-				_r[0] = _stage[0]._r.data();
-			}
-
-			return _r .data();
-		}
-
+		double const * const * r_data () const { return _r .data();	}
 		double const * const * lb_data() const { return _lb.data(); }
 		double const * const * ub_data() const { return _ub.data(); }
 		double const * const * C_data () const { return _C .data(); }
@@ -309,18 +277,6 @@ namespace tmpc
 		// Stores stage data
 		std::vector<StageData> _stage;
 
-		// In the MPC case, the equality for stage 0 reads:
-		// x[1] = A[0]*x[0] + B[0]*u[0] + c[0] = B[0]*u[0] + (A[0]*x[0] + c[0]) = B[0]*u[0] + b0,
-		// b0 = A[0]*x[0].
-		// and x[0] is not treated as an optimization variable by HPMPC.
-		StateVector mutable _b0;
-
-		// If x[0] is equality constrained and we eliminate it, then we need to
-		// account for the x[0]' * S[0] * u[0] term:
-		// x[0]' * S[0] * u[0] + r[0]' * u[0] =  (x[0]' * S[0] + r[0]') * u[0] = r0' * u[0],
-		// where r0 = S[0]' * x[0] + r[0]
-		InputVector mutable _r0;
-
 		// 1 matrix of size NCT x NX.
 		EndStageConstraintMatrix _C_end     = signaling_nan<EndStageConstraintMatrix>();
 
@@ -337,7 +293,7 @@ namespace tmpc
 		std::vector<double const *> _B;
 
 		// "b" data array for HPMPC
-		std::vector<double const *> mutable _b;
+		std::vector<double const *> _b;
 
 		// "Q" data array for HPMPC
 		std::vector<double const *> _Q;
@@ -352,7 +308,7 @@ namespace tmpc
 		std::vector<double const *> _q;
 
 		// "r" data array for HPMPC
-		std::vector<double const *> mutable _r;
+		std::vector<double const *> _r;
 
 		// "lb" data array for HPMPC
 		std::vector<double const *> _lb;

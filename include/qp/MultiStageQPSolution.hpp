@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "qp.hpp"
 #include "../core/matrix.hpp"
 
 #include <Eigen/Dense>
@@ -18,7 +19,7 @@ namespace tmpc
 	// Provides a generic solution interface for multistage QP solvers.
 	//
 	template<unsigned NX_, unsigned NU_, unsigned NC_, unsigned NCT_>
-	class MultiStageQPSolution
+	class MultiStageQPSolution : public MultiStageQPSolutionBase
 	{
 	public:
 		typedef std::size_t size_type;
@@ -32,6 +33,8 @@ namespace tmpc
 		typedef Eigen::Matrix<double, NX, 1> StateVector;
 		typedef Eigen::Matrix<double, NU, 1> InputVector;
 		typedef Eigen::Matrix<double, NZ, 1> StateInputVector;
+		typedef Eigen::Matrix<double, NC, 1> StageConstraintVector;
+		typedef Eigen::Matrix<double, NC, 1> EndStageConstraintVector;
 		typedef Eigen::Matrix<double, 2 * NC + 2 * (NX + NU), 1> LagrangeVector;
 		typedef Eigen::Matrix<double, 2 * NCT + 2 * NX, 1> EndLagrangeVector;
 
@@ -71,9 +74,20 @@ namespace tmpc
 		size_type constexpr nU() { return NU; }
 		size_type nT() const noexcept { return _stage.size(); }
 
-	private:
-		static double constexpr nan() { return std::numeric_limits<double>::signaling_NaN(); }
+		StateVector const& get_pi(std::size_t i) const { return stage(i)._pi; }
 
+		decltype(auto) get_lam_u_min(std::size_t i) const { return signaling_nan<InputVector>(); }
+		decltype(auto) get_lam_u_max(std::size_t i) const { return signaling_nan<InputVector>(); }
+		decltype(auto) get_lam_x_min(std::size_t i) const {	return signaling_nan<StateVector>(); }
+		decltype(auto) get_lam_x_max(std::size_t i) const {	return signaling_nan<StateVector>(); }
+
+		decltype(auto) get_lam_d_min(std::size_t i) const { return signaling_nan<StageConstraintVector>(); }
+		decltype(auto) get_lam_d_max(std::size_t i) const { return signaling_nan<StageConstraintVector>(); }
+
+		decltype(auto) get_lam_d_end_min() const { return signaling_nan<EndStageConstraintVector>(); }
+		decltype(auto) get_lam_d_end_max() const { return signaling_nan<EndStageConstraintVector>(); }
+
+	private:
 		struct StageData
 		{
 			StateVector    _x   = signaling_nan<StateVector   >();

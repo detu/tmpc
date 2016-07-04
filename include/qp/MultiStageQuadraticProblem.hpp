@@ -65,21 +65,11 @@ namespace tmpc
 		StateInputMatrix const& get_S(size_type i) const { return stage(i).S; }
 		template <typename Matrix> void set_S(size_type i, Eigen::MatrixBase<Matrix> const& val) { stage(i).S = val; }
 
-		/*
-		StateStateMatrix const& get_Q_end() const { return _Q_end; }
-		template <typename Matrix> void set_Q_end(Eigen::MatrixBase<Matrix> const& val) { _Q_end = val; }
-		*/
-
 		StateVector const& get_q(size_type i) const { return stage(i, 1).q; }
 		template <typename Matrix> void set_q(size_type i, Eigen::MatrixBase<Matrix> const& val) { stage(i, 1).q = val; }
 
 		InputVector const& get_r(size_type i) const { return stage(i).r; }
 		template <typename Matrix> void set_r(size_type i, Eigen::MatrixBase<Matrix> const& val) { stage(i).r = val; }
-
-		/*
-		StateVector const& get_q_end() const { return _q_end;	}
-		template <typename Matrix> void set_q_end(Eigen::MatrixBase<Matrix> const& val) { _q_end = val; }
-		*/
 
 		StateStateMatrix const& get_A(size_type i) const { return stage(i).A; }
 		template <typename Matrix> void set_A(size_type i, Eigen::MatrixBase<Matrix> const& val) { stage(i).A = val; }
@@ -117,14 +107,6 @@ namespace tmpc
 		StateVector const& get_x_max(size_type i) const { return stage(i, 1).x_max; }
 		template <typename Matrix> void set_x_max(size_type i, Eigen::MatrixBase<Matrix> const& val) { stage(i, 1).x_max = val; }
 
-		/*
-		StateVector const& get_x_end_min() { return _x_end_min; }
-		template <typename Matrix> void set_x_end_min(Eigen::MatrixBase<Matrix> const& val) { _x_end_min = val; }
-
-		StateVector const& get_x_end_max() const { return _x_end_max; }
-		template <typename Matrix> void set_x_end_max(Eigen::MatrixBase<Matrix> const& val) { _x_end_max = val; }
-		*/
-		
 		InputVector const& get_u_min(size_type i) const { return stage(i).u_min; }
 		template <typename Matrix> void set_u_min(size_type i, Eigen::MatrixBase<Matrix> const& val) { stage(i).u_min = val; }
 

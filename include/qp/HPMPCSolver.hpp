@@ -58,25 +58,18 @@ namespace tmpc
 		{
 			int num_iter = 0;
 
-			bool const x0_equality = p.is_x0_equality_constrained();
-			_nx[0] = x0_equality ? 0 : NX;
-			_nb[0] = _nx[0] + _nu[0];
-
 			hpmpc_wrapper::c_order_d_ip_ocp_hard_tv(&num_iter, getMaxIter(), _mu0, _muTol, nT(),
 					_nx.data(), _nu.data(), _nb.data(), _ng.data(), _warmStart ? 1 : 0, p.A_data(), p.B_data(), p.b_data(),
 					p.Q_data(), p.S_data(), p.R_data(), p.q_data(), p.r_data(), p.lb_data(), p.ub_data(), p.C_data(), p.D_data(),
 					p.lg_data(), p.ug_data(), s.x_data(), s.u_data(), s.pi_data(), s.lam_data(), s.t_data(), s.inf_norm_res_data(),
 					_workspace.data(), _stat[0].data());
 
-			if (x0_equality)
-				s.set_x(0, p.get_x_min(0));
-
 			// Warmstarting disabled on purpose.
 			// 1. After the Simuling model is executed about 3 times, next runs produce
 			// the "HPMPC returned -1" error. This happens randomly. To make sure that
 			// this bug has nothing to do with warmstarting, I disable it.
 			//_warmStart = true;
-			// 2.On AMD K8 (hpmpc compiled for SSE3), WITHOUT warmstarting it is significantly
+			// 2. On AMD K8 (hpmpc compiled for SSE3), WITHOUT warmstarting it is significantly
 			// FASTER (9ms vs 14ms per time step) than with warmstarting. I am curious why.
 			_warmStart = false;
 		}

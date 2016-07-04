@@ -60,6 +60,8 @@ TYPED_TEST(QPSolverTest, solve_test_0)
 
 	x_expected << 1., 1;
 	EXPECT_TRUE(solution.get_x(2).isApprox(x_expected));
+
+	std::cout << std::scientific << "Solution: " << std::endl << solution;
 }
 
 TYPED_TEST(QPSolverTest, solve_test_1)
