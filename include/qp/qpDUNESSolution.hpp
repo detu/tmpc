@@ -39,6 +39,8 @@ namespace camels
 		{
 		}
 
+		qpDUNESSolution(qpDUNESSolution const&) = delete;
+
 		Eigen::Map<StateInputVector> w(unsigned i)
 		{
 			if (!(i < _nt))

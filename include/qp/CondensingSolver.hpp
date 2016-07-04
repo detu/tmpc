@@ -62,6 +62,8 @@ namespace tmpc
 			_problem.setOptions(options);
 		}
 
+		CondensingSolver(CondensingSolver const&) = delete;
+
 		size_type nT() const { return _Nt; }
 		size_type constexpr nX() { return NX; }
 		size_type constexpr nZ() { return NZ; }
@@ -172,4 +174,3 @@ namespace tmpc
 		}
 	}
 }
-

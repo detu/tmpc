@@ -36,9 +36,12 @@ namespace tmpc
 		,	_Solver(solver)
 		,	_levenbergMarquardt(0.0)
 		,	_integrator(integrator)
-		,	_prepared(false)
+		,	_prepared(true)
 		{
+			UpdateQP();
 		}
+
+		RealtimeIteration(RealtimeIteration const&) = delete;
 
 		// Feed current state x0, get back control input u.
 		InputVector Feedback(const StateVector& x0)

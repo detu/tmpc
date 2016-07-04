@@ -52,6 +52,8 @@ namespace tmpc
 					static_cast<int>(nt), _nx.data(), _nu.data(), _nb.data(), _ng.data()));
 		}
 
+		HPMPCSolver(HPMPCSolver const&) = delete;
+
 		void Solve(Problem const& p, Solution& s)
 		{
 			int num_iter = 0;

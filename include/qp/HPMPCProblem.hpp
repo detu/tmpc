@@ -1,6 +1,7 @@
 #pragma once
 
 #include "MultiStageQuadraticProblemBase.hpp"
+#include "../core/matrix.hpp"
 
 #include <Eigen/Dense>
 
@@ -256,65 +257,35 @@ namespace tmpc
 			}
 		}
 
-		// *************************************************************************
-		// OBSOLETE INTERFACE
-		// *************************************************************************
-		/*
-		template<class Matrix> friend void set_Hend(HPMPCProblem& p, Eigen::MatrixBase<Matrix> const& Hend) { p._Hend = Hend; }
-		friend EndStageHessianMatrix const& get_Hend(HPMPCProblem const& p) { return p._Hend; }
-
-		template<class Matrix> friend void set_gend(HPMPCProblem& p, Eigen::MatrixBase<Matrix>& val) { p._gend = val; }
-		friend EndStageGradientVector const& get_gend(HPMPCProblem const& p) { return p._gend;	}
-
-		EndStageConstraintMatrix const& get_Dend() const { return _C_end; }
-		StageConstraintVector const& get_dMin(size_type i) const { return stage(i)._dMin; }
-		EndStageConstraintVector const& get_dendMin() const	{ return _d_end_min; }
-		StageConstraintVector const& get_dMax(size_type i) const { return stage(i)._dMax; }
-		EndStageConstraintVector const& get_dendMax() const	{ return _d_end_max; }
-
-		template<class Matrix> void set_xMin(std::size_t i, Eigen::MatrixBase<Matrix> const& val) { stage(i)._lb.template bottomRows<NX>() = val; }
-		decltype(auto) get_xMin(std::size_t i) const { return stage(i)._lb.template bottomRows<NX>(); }
-		template<class Matrix> void set_xMax(std::size_t i, Eigen::MatrixBase<Matrix> const& val) { stage(i)._ub.template bottomRows<NX>() = val; }
-		decltype(auto) get_xMax(std::size_t i) const { return stage(i)._ub.template bottomRows<NX>(); }
-
-		template<class Matrix> void set_uMin(std::size_t i, Eigen::MatrixBase<Matrix> const& val) { stage(i)._lb.template topRows<NU>() = val; }
-		decltype(auto) get_uMin(std::size_t i) const { return stage(i)._lb.template topRows<NU>(); }
-		template<class Matrix> void set_uMax(std::size_t i, Eigen::MatrixBase<Matrix> const& val) { stage(i)._ub.template topRows<NU>() = val; }
-		decltype(auto) get_uMax(std::size_t i) const { return stage(i)._ub.template topRows<NU>(); }
-
-		template<class Matrix> friend void set_zendMin(HPMPCProblem& p, Eigen::MatrixBase<Matrix> const& val) { p._zendMin = val; }
-		friend StateVector const& get_zendMin(HPMPCProblem const& p) { return p._zendMin; }
-		template<class Matrix> friend void set_zendMax(HPMPCProblem& p, Eigen::MatrixBase<Matrix> const& val) { p._zendMax = val; }
-		friend StateVector const& get_zendMax(HPMPCProblem const& p) { return p._zendMax; }
-		*/
+		HPMPCProblem(HPMPCProblem const&) = delete;
 
 	private:
 		struct StageData
 		{
 			// Hessian = [R, S; S', Q]
-			HPMPC_RMatrix _R;
-			HPMPC_SMatrix _S;
-			HPMPC_QMatrix _Q;
+			HPMPC_RMatrix _R = signaling_nan<HPMPC_RMatrix>();
+			HPMPC_SMatrix _S = signaling_nan<HPMPC_SMatrix>();
+			HPMPC_QMatrix _Q = signaling_nan<HPMPC_QMatrix>();
 
 			// Gradient = [r; q]
-			InputVector _r;
-			StateVector _q;
+			InputVector _r = signaling_nan<InputVector>();
+			StateVector _q = signaling_nan<StateVector>();
 
 			// Inter-stage equalities x_{k+1} = A x_k + B u_k + c_k
-			HPMPC_AMatrix _A;
-			HPMPC_BMatrix _B;
-			StateVector _b;
+			HPMPC_AMatrix _A = signaling_nan<HPMPC_AMatrix>();
+			HPMPC_BMatrix _B = signaling_nan<HPMPC_BMatrix>();
+			StateVector   _b = signaling_nan<StateVector  >();
 
 			// Inequality constraints d_{min} <= C x_k + D u_k <= d_{max}
-			HPMPC_CMatrix _C;
-			HPMPC_DMatrix _D;
-			StageConstraintVector _dMin;
-			StageConstraintVector _dMax;
+			HPMPC_CMatrix _C = signaling_nan<HPMPC_CMatrix>();
+			HPMPC_DMatrix _D = signaling_nan<HPMPC_DMatrix>();
+			StageConstraintVector _dMin = signaling_nan<StageConstraintVector>();
+			StageConstraintVector _dMax = signaling_nan<StageConstraintVector>();
 
 			// Bound constraints:
 			// lb <= [u; x] <= ub
-			StateInputVector _lb;
-			StateInputVector _ub;
+			StateInputVector _lb = signaling_nan<StateInputVector>();
+			StateInputVector _ub = signaling_nan<StateInputVector>();
 		};
 
 		StageData& stage(size_type i, std::size_t delta = 0)
@@ -351,13 +322,13 @@ namespace tmpc
 		InputVector mutable _r0;
 
 		// 1 matrix of size NCT x NX.
-		EndStageConstraintMatrix _C_end;
+		EndStageConstraintMatrix _C_end     = signaling_nan<EndStageConstraintMatrix>();
 
 		// 1 vector of size NCT
-		EndStageConstraintVector _d_end_min;
+		EndStageConstraintVector _d_end_min = signaling_nan<EndStageConstraintVector>();
 
 		// 1 vector of size NCT
-		EndStageConstraintVector _d_end_max;
+		EndStageConstraintVector _d_end_max = signaling_nan<EndStageConstraintVector>();
 
 		// "A" data array for HPMPC
 		std::vector<double const *> _A;

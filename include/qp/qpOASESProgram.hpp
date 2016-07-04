@@ -1,5 +1,7 @@
 #pragma once
 
+#include "../core/matrix.hpp"
+
 #include <Eigen/Dense>
 
 #include <iostream>
@@ -21,9 +23,17 @@ namespace tmpc
 		typedef Eigen::Matrix<Scalar, Eigen::Dynamic, 1> Vector;
 		
 		qpOASESProgram(size_type nx, size_type nc)
-			: _H(nx, nx), _g(nx), _A(nc, nx), _lbA(nc), _ubA(nc), _lb(nx), _ub(nx)
+		:	_H(signaling_nan<Matrix>(nx, nx))
+		,	_g(signaling_nan<Vector>(nx))
+		, 	_A(signaling_nan<Matrix>(nc, nx))
+		, 	_lbA(signaling_nan<Vector>(nc))
+		, 	_ubA(signaling_nan<Vector>(nc))
+		, 	_lb(signaling_nan<Vector>(nx))
+		, 	_ub(signaling_nan<Vector>(nx))
 		{
 		}
+
+		qpOASESProgram(qpOASESProgram const&) = default;
 
 		size_type nx() const { return static_cast<size_type>(_H.rows()); }
 		size_type nc() const { return static_cast<size_type>(_A.rows()); }

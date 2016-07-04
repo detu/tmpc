@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include "../core/matrix.hpp"
+
 #include <Eigen/Dense>
 
 #include <vector>
@@ -38,6 +40,8 @@ namespace tmpc
 		{
 		}
 
+		MultiStageQPSolution(MultiStageQPSolution const&) = delete;
+
 		StateVector const& get_x(std::size_t i) const
 		{
 			if (i > nT())
@@ -63,24 +67,26 @@ namespace tmpc
 
 		InputVector const& get_u(std::size_t i) const { return stage(i)._u; }
 
-		size_type const nX() const noexcept { return NX; }
-		size_type const nU() const noexcept { return NU; }
-		size_type const nT() const { return _stage.size(); }
+		size_type constexpr nX() { return NX; }
+		size_type constexpr nU() { return NU; }
+		size_type nT() const noexcept { return _stage.size(); }
 
 	private:
+		static double constexpr nan() { return std::numeric_limits<double>::signaling_NaN(); }
+
 		struct StageData
 		{
-			StateVector _x;
-			InputVector _u;
-			StateVector _pi;
-			LagrangeVector _lam;
-			LagrangeVector _t;
+			StateVector    _x   = signaling_nan<StateVector   >();
+			InputVector    _u   = signaling_nan<InputVector   >();
+			StateVector    _pi  = signaling_nan<StateVector   >();
+			LagrangeVector _lam = signaling_nan<LagrangeVector>();
+			LagrangeVector _t   = signaling_nan<LagrangeVector>();
 		};
 
 		std::vector<StageData> _stage;
-		StateVector _xEnd;
-		EndLagrangeVector _lamEnd;
-		EndLagrangeVector _tEnd;
+		StateVector       _xEnd   = signaling_nan<StateVector      >();
+		EndLagrangeVector _lamEnd = signaling_nan<EndLagrangeVector>();
+		EndLagrangeVector _tEnd   = signaling_nan<EndLagrangeVector>();
 
 		StageData& stage(size_type i)
 		{

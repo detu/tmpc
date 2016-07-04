@@ -1,12 +1,11 @@
 #pragma once
 
 #include "MultiStageQuadraticProblemBase.hpp"
+#include "../core/matrix.hpp"
 
 #include <Eigen/Dense>
 
 #include <vector>
-#include <memory>
-#include <ostream>
 
 namespace tmpc
 {
@@ -137,25 +136,27 @@ namespace tmpc
 		,	_stage(nt + 1)	// only some fields of _stage[nt] are used
 		{}
 
+		MultiStageQuadraticProblem(MultiStageQuadraticProblem const&) = delete;
+
 	private:
 		struct StageData
 		{
-			StateStateMatrix Q;
-			StateInputMatrix S;
-			InputInputMatrix R;
-			StateVector q;
-			InputVector r;
-			StateStateMatrix A;
-			StateInputMatrix B;
-			StateVector b;
-			StateVector x_min;
-			StateVector x_max;
-			InputVector u_min;
-			InputVector u_max;
-			ConstraintStateMatrix C;
-			ConstraintInputMatrix D;
-			ConstraintVector d_min;
-			ConstraintVector d_max;
+			StateStateMatrix Q = signaling_nan<StateStateMatrix>();
+			StateInputMatrix S = signaling_nan<StateInputMatrix>();
+			InputInputMatrix R = signaling_nan<InputInputMatrix>();
+			StateVector q = signaling_nan<StateVector>();
+			InputVector r = signaling_nan<InputVector>();
+			StateStateMatrix A = signaling_nan<StateStateMatrix>();
+			StateInputMatrix B = signaling_nan<StateInputMatrix>();
+			StateVector b = signaling_nan<StateVector>();
+			StateVector x_min = signaling_nan<StateVector>();
+			StateVector x_max = signaling_nan<StateVector>();
+			InputVector u_min = signaling_nan<InputVector>();
+			InputVector u_max = signaling_nan<InputVector>();
+			ConstraintStateMatrix C = signaling_nan<ConstraintStateMatrix>();
+			ConstraintInputMatrix D = signaling_nan<ConstraintInputMatrix>();
+			ConstraintVector d_min = signaling_nan<ConstraintVector>();
+			ConstraintVector d_max = signaling_nan<ConstraintVector>();
 		};
 
 		StageData& stage(size_type i, std::size_t delta = 0)
@@ -180,24 +181,24 @@ namespace tmpc
 		std::vector<StageData> _stage;
 
 		// 1 matrix of size _Nx x _Nx.
-		StateStateMatrix _Q_end;
+		StateStateMatrix _Q_end = signaling_nan<StateStateMatrix>();
 
 		// 1 vector of size _Nx
-		StateVector _q_end;
+		StateVector _q_end = signaling_nan<StateVector>();
 
 		// 1 matrix of size NCT x NX.
-		EndConstraintStateMatrix _C_end;
+		EndConstraintStateMatrix _C_end = signaling_nan<EndConstraintStateMatrix>();
 
 		// 1 vector of size NCT
-		EndConstraintVector _d_end_min;
+		EndConstraintVector _d_end_min = signaling_nan<EndConstraintVector>();
 
 		// 1 vector of size NCT
-		EndConstraintVector _d_end_max;
+		EndConstraintVector _d_end_max = signaling_nan<EndConstraintVector>();
 
 		// 1 vector of size _Nx
-		StateVector _x_end_min;
+		StateVector _x_end_min = signaling_nan<StateVector>();
 
 		// 1 vector of size _Nx
-		StateVector _x_end_max;
+		StateVector _x_end_max = signaling_nan<StateVector>();
 	};
 }

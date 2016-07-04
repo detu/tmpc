@@ -3,6 +3,7 @@
 #include <qp/qpOASESProgram.hpp>
 
 #include "qp_test_problems.hpp"
+#include "eigen_print_wrap.hpp"
 
 #include <gtest/gtest.h>
 
@@ -29,6 +30,9 @@ std::ostream& operator<<(std::ostream& os, Solution const& point)
 
 TEST(CondensingSolver_test, condensing_test)
 {
+	typedef Eigen::Matrix<double, NX, 1> StateVector;
+	typedef Eigen::Matrix<double, NU, 1> InputVector;
+
 	Problem qp(NT);
 
 	qp.set_x_min(0, Problem::StateVector::Constant(-1.));	qp.set_x_max(0, Problem::StateVector::Constant(1.));
@@ -85,9 +89,9 @@ TEST(CondensingSolver_test, condensing_test)
 	const Eigen::MatrixXd Q2 = H2.topLeftCorner(qp.nX(), qp.nX());
 
 	// Setup QP
-	set_H(qp, 0, H0);
-	set_H(qp, 1, H1);
-	set_Q_end(qp, H2);
+	set_H(qp, 0, H0);	qp.set_q(0, StateVector::Zero());	qp.set_r(0, InputVector::Zero());
+	set_H(qp, 1, H1);	qp.set_q(1, StateVector::Zero());	qp.set_r(1, InputVector::Zero());
+	set_Q_end(qp, H2);	qp.set_q(2, StateVector::Zero());
 
 	qp.set_A(0, A0);	qp.set_B(0, B0);	qp.set_b(0, a0);
 	qp.set_A(1, A1);	qp.set_B(1, B1);	qp.set_b(1, a1);
@@ -105,11 +109,6 @@ TEST(CondensingSolver_test, condensing_test)
 		S1.transpose() * A0 + B1.transpose() * Q2 * A1 * A0,										S1.transpose() * B0 + B1.transpose() * Q2 * A1 * B0,							B1.transpose() * Q2 * B1 + R1;
 
 	EXPECT_TRUE(Hc_expected == Hc);
-	std::cout << "****** Condensed problem *******" << std::endl;
-	Print_MATLAB(std::cout, condensed, "qp");
-	std::cout << "********* Hc_expected **********" << std::endl;
-	std::cout << Hc_expected << std::endl;
-	//qp.PrintQP_C(std::cout);
 
 	const auto gc = condensed.g();
 	Eigen::VectorXd gc_expected(nIndep(qp));
@@ -118,14 +117,6 @@ TEST(CondensingSolver_test, condensing_test)
 		B0.transpose() * A1.transpose() * Q2 * a1	+ B0.transpose() * A1.transpose() * Q2 * A1 * a0	+ B0.transpose() * Q1 * a0,
 		B1.transpose() * Q2 * A1 * a0				+ B1.transpose() * Q2 * a1							+ S1.transpose() * a0;
 
-	EXPECT_TRUE(gc_expected == gc);
-
-	/*
-	std::cout << "--- A ---" << std::endl << condensed.A() << std::endl;
-	std::cout << "-- lbA --" << std::endl << condensed.lbA() << std::endl;
-	std::cout << "-- ubA --" << std::endl << condensed.ubA() << std::endl;
-	std::cout << "-- lb ---" << std::endl << condensed.lb() << std::endl;
-	std::cout << "-- ub ---" << std::endl << condensed.ub() << std::endl;
-	*/
+	EXPECT_EQ(print_wrap(gc), print_wrap(gc_expected));
 }
 

@@ -321,6 +321,8 @@ namespace camels
 		{
 		}
 
+		qpDUNESProgram(qpDUNESProgram const&) = delete;
+
 		// Interface for accessing the data in qpDUNES format.
 		//
 		double const * H_data() const { return _H.data(); }
