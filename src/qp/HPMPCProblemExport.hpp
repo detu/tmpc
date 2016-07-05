@@ -1,12 +1,55 @@
 #pragma once
 
+#include "../include/qp/qp.hpp"
+
 #include <ostream>
 #include <string>
+#include <type_traits>
 
 #include <Eigen/Dense>
 
 namespace hpmpc_problem_export
 {
+	/*
+	template <typename Formatter, typename QP>
+	std::enable_if_t<std::is_base_of<tmpc::MultiStageQPTag, QP>::value, void> export_qp(Formatter& f, QP const& qp)
+	{
+		f.printStructure(N, nx, nu, nb, ng);
+
+		f.printFunctionHeader();
+		f.print("k_max", k_max);
+		f.print("mu0", mu0);
+		f.print("mu_tol", mu_tol);
+		f.print("N", N);
+		f.print("nx", nx, N + 1);
+		f.print("nu", nu, N);
+		f.print("nb", nb, N + 1);
+		f.print("ng", ng, N + 1);
+		f.print("warm_start", warm_start);
+
+		for (int i = 0; i <= N; ++i)
+		{
+			if (i < N) f.print("A", i, A[i], nx[i + 1], nx[i]);
+			if (i < N) f.print("B", i, B[i], nx[i + 1], nu[i]);
+			if (i < N) f.print("b", i, b[i], nx[i + 1]);
+			f.print("Q", i, Q[i], nx[i], nx[i]);
+			if (i < N) f.print("S", i, S[i], nu[i], nx[i]);
+			if (i < N) f.print("R", i, R[i], nu[i], nu[i]);
+			f.print("q", i, q[i], nx[i]);
+			if (i < N) f.print("r", i, r[i], nu[i]);
+			f.print("lb", i, lb[i], nb[i]);
+			f.print("ub", i, ub[i], nb[i]);
+			f.print("C", i, C[i], ng[i], nx[i]);
+			if (i < N) f.print("D", i, D[i], ng[i], nu[i]);
+			f.print("lg", i, lg[i], ng[i]);
+			f.print("ug", i, ug[i], ng[i]);
+			f.print("x", i, x[i], nx[i]);
+			if (i < N) f.print("u", i, u[i], nu[i]);
+		}
+		f.printFunctionFooter();
+	}
+	*/
+		
 	template <typename Formatter>
 	void print_c_order_d_ip_ocp_hard_tv(Formatter& f,
 										int k_max, double mu0, double mu_tol,

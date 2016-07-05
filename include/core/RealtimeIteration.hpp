@@ -2,8 +2,6 @@
 
 #include "Trajectory.hpp"
 
-#include <ostream>
-#include <functional>
 #include <stdexcept>
 
 namespace tmpc
@@ -54,10 +52,6 @@ namespace tmpc
 			_QP.set_x_min(0, w0);
 			_QP.set_x_max(0, w0);
 
-			// Call the QP callback, if there is one.
-			if(_QPCallback)
-				_QPCallback(_QP);
-
 			/** solve QP */
 			_Solver.Solve(_QP, _solution);
 
@@ -90,29 +84,6 @@ namespace tmpc
 
 		WorkingPoint const& getWorkingPoint() const { return _workingPoint; }
 
-		void PrintQP_C(std::ostream& log_stream) const
-		{
-			// TODO: Fix compilation error
-			// _QP.PrintQP_C(log_stream);
-		}
-
-		void PrintQP_MATLAB(std::ostream& log_stream) const
-		{
-			// TODO: Fix compilation error
-			// _QP.PrintQP_MATLAB(log_stream);
-		}
-
-		void PrintQP_zMax_C(std::ostream& log_stream) const;
-		void PrintQP_zMin_C(std::ostream& log_stream) const;
-
-		// Log working point
-		void PrintWorkingPoint_MATLAB(std::ostream& os, const std::string& var_name) const
-		{
-			for (unsigned i = 0; i < nT(); ++i)
-				os << var_name << "{" << i + 1 << "} = [" << _workingPoint.w(i) << "];" << std::endl;
-			os << var_name << "{" << nT() + 1 << "} = [" << _workingPoint.wend() << "];" << std::endl;
-		}
-		
 		double getLevenbergMarquardt() const { return _levenbergMarquardt; }
 		void setLevenbergMarquardt(double val) { _levenbergMarquardt = val; }
 
@@ -121,8 +92,6 @@ namespace tmpc
 		unsigned nX() const	noexcept { return _Nx; }
 		unsigned nZ() const noexcept { return _Nz; }
 
-		void setQPCallback(const QPCallback& cb) { _QPCallback = cb; }
-
 	private:
 
 		// Initializes _G, _g, _y, _C, _c, _zMin, _zMax based on current working point _w.
@@ -130,7 +99,50 @@ namespace tmpc
 		{
 			auto const N = _ocp.getNumberOfIntervals();
 			for (unsigned i = 0; i < N; ++i)
-				UpdateStage(i);
+			{
+				// Hessians and gradients of Lagrange terms.
+				//
+				LagrangeHessianMatrix H_i;
+				StateInputVector g_i;
+
+				StateInputVector z_i;
+				z_i << _workingPoint.get_x(i), _workingPoint.get_u(i);
+
+				_ocp.LagrangeTerm(i, z_i, g_i, H_i);
+
+				// Adding Levenberg-Marquardt term to make H positive-definite.
+				set_H(_QP, i, H_i + _levenbergMarquardt * LagrangeHessianMatrix::Identity());
+				set_g(_QP, i, g_i);
+
+				// Bound constraints.
+				StateInputVector z_min, z_max;
+				z_min << _ocp.getStateMin(), _ocp.getInputMin();
+				z_max << _ocp.getStateMax(), _ocp.getInputMax();
+
+				// C = [ssA, ssB];
+				// x_{k+1} = C * z_k + c_k
+				typename Problem::StateVector x_plus;
+				typename Problem::ODEJacobianMatrix J;
+				_integrator.Integrate(i * _integrator.timeStep(), z_i, x_plus, J);
+				set_AB(_QP, i, J);
+
+				// \Delta x_{k+1} = C \Delta z_k + f(z_k) - x_{k+1}
+				// c = f(z_k) - x_{k+1}
+				_QP.set_b(i, x_plus - _workingPoint.get_x(i + 1));
+
+				typename Problem::ConstraintJacobianMatrix D;
+				typename Problem::ConstraintVector d_min, d_max;
+				_ocp.PathConstraints(i, z_i, D, d_min, d_max);
+				set_CD(_QP, i, D);
+				_QP.set_d_min(i, d_min);
+				_QP.set_d_max(i, d_max);
+
+				// z_min stores _Nt vectors of size _Nz and 1 vector of size _Nx
+				set_xu_min(_QP, i, z_min - z_i);
+
+				// z_max stores _Nt vectors of size _Nz and 1 vector of size _Nx
+				set_xu_max(_QP, i, z_max - z_i);
+			}
 
 			auto const xN = _workingPoint.get_x(N);
 
@@ -155,52 +167,6 @@ namespace tmpc
 			_QP.set_q(N, g_T);
 		}
 
-		void UpdateStage(unsigned i)
-		{
-			// Hessians and gradients of Lagrange terms.
-			//
-			LagrangeHessianMatrix H_i;
-			StateInputVector g_i;
-
-			StateInputVector z_i;
-			z_i << _workingPoint.get_x(i), _workingPoint.get_u(i);
-
-			_ocp.LagrangeTerm(i, z_i, g_i, H_i);
-
-			// Adding Levenberg-Marquardt term to make H positive-definite.
-			set_H(_QP, i, H_i + _levenbergMarquardt * LagrangeHessianMatrix::Identity());
-			set_g(_QP, i, g_i);
-
-			// Bound constraints.
-			StateInputVector z_min, z_max;
-			z_min << _ocp.getStateMin(), _ocp.getInputMin();
-			z_max << _ocp.getStateMax(), _ocp.getInputMax();
-
-			// C = [ssA, ssB];
-			// x_{k+1} = C * z_k + c_k
-			typename Problem::StateVector x_plus;
-			typename Problem::ODEJacobianMatrix J;
-			_integrator.Integrate(i * _integrator.timeStep(), z_i, x_plus, J);
-			set_AB(_QP, i, J);
-
-			// \Delta x_{k+1} = C \Delta z_k + f(z_k) - x_{k+1}
-			// c = f(z_k) - x_{k+1}
-			_QP.set_b(i, x_plus - _workingPoint.get_x(i + 1));
-
-			typename Problem::ConstraintJacobianMatrix D;
-			typename Problem::ConstraintVector d_min, d_max;
-			_ocp.PathConstraints(i, z_i, D, d_min, d_max);
-			set_CD(_QP, i, D);
-			_QP.set_d_min(i, d_min);
-			_QP.set_d_max(i, d_max);
-
-			// z_min stores _Nt vectors of size _Nz and 1 vector of size _Nx
-			set_xu_min(_QP, i, z_min - z_i);
-
-			// z_max stores _Nt vectors of size _Nz and 1 vector of size _Nx
-			set_xu_max(_QP, i, z_max - z_i);
-		}
-
 		// Private data members.
 		Problem const& _ocp;
 		Integrator const& _integrator;
@@ -214,9 +180,6 @@ namespace tmpc
 		typename QPSolver::Problem _QP;
 		typename QPSolver::Solution _solution;
 		QPSolver& _Solver;
-
-		// A callback to call back before solving each QP.
-		QPCallback _QPCallback;
 
 		double _levenbergMarquardt;
 

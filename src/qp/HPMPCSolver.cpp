@@ -19,10 +19,10 @@ namespace tmpc
 {
 	namespace hpmpc_wrapper
 	{
-		void throw_hpmpc_error(int err_code)
+		void throw_hpmpc_error(int err_code, std::string const& s = "")
 		{
 			std::ostringstream msg;
-			msg << "HPMPC error: return code = " << err_code;
+			msg << "HPMPC error: return code = " << err_code << " . " << s << ".";
 			throw std::runtime_error(msg.str());
 		}
 
@@ -56,7 +56,7 @@ namespace tmpc
 					work0,
 					stat);
 
-			if (ret < 0)
+			if (ret != 0)
 			{
 				using namespace hpmpc_problem_export;
 
@@ -92,7 +92,7 @@ namespace tmpc
 						C, D, lg, ug, x, u);
 				}
 
-				throw_hpmpc_error(ret);
+				throw_hpmpc_error(ret, "The QP dumped to failed_qp.m and failed_qp.c");
 			}
 		}
 

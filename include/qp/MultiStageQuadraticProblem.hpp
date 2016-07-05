@@ -1,7 +1,7 @@
 #pragma once
 
-#include "MultiStageQuadraticProblemBase.hpp"
 #include "../core/matrix.hpp"
+#include "qp.hpp"
 
 #include <Eigen/Dense>
 
@@ -29,7 +29,7 @@ namespace tmpc
 	*	nU = nZ - nX
 	*/
 	template<unsigned NX_, unsigned NU_, unsigned NC_, unsigned NCT_>
-	class MultiStageQuadraticProblem : public MultiStageQuadraticProblemBase<MultiStageQuadraticProblem<NX_, NU_, NC_, NCT_>>
+	class MultiStageQuadraticProblem : public MultiStageQPTag
 	{
 	public:
 		typedef unsigned int size_type;

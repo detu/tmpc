@@ -1,6 +1,5 @@
 #pragma once
 
-#include "MultiStageQuadraticProblemBase.hpp"
 #include "qp.hpp"
 #include "../core/matrix.hpp"
 
@@ -10,7 +9,7 @@
 namespace tmpc
 {
 	template<typename QP>
-	inline void Print_MATLAB(std::ostream& os, MultiStageQuadraticProblemBase<QP> const& qp_, const std::string& var_name)
+	inline std::enable_if_t<std::is_base_of<MultiStageQPTag, QP>::value, void> Print_MATLAB(std::ostream& os, QP const& qp_, const std::string& var_name)
 	{
 		using std::endl;
 
@@ -45,7 +44,7 @@ namespace tmpc
 
 	// Define ostream insert operator for all classes derived from MultiStageQPSolutionBase.
 	template <typename QPSolution>
-	inline std::enable_if_t<std::is_base_of<MultiStageQPSolutionBase, QPSolution>::value,
+	inline std::enable_if_t<std::is_base_of<MultiStageQPSolutionTag, QPSolution>::value,
 		std::ostream&> operator<<(std::ostream& os, QPSolution const& solution)
 	{
 		for (std::size_t i = 0; i <= solution.nT(); ++i)
