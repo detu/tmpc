@@ -92,6 +92,21 @@ namespace tmpc
 
 	}
 
+	template <typename StateVector, typename WorkingPoint, typename QP, typename QPSolver, typename Solution>
+	decltype(auto) realtime_iteration_feedback(StateVector& x0, WorkingPoint const& working_point, QP& qp, QPSolver& solver, Solution& solution)
+	{
+		/** embed current initial value */
+		auto const w0 = (x0 - working_point.get_x(0)).eval();
+		qp.set_x_min(0, w0);
+		qp.set_x_max(0, w0);
+
+		/** solve QP */
+		solver.Solve(qp, solution);
+
+		// Return the calculated control input.
+		return working_point.get_u(0) + solution.get_u(0);
+	}
+
 	template<class _Problem, typename Integrator_, class QPSolver_>
 	class RealtimeIteration
 	{
@@ -133,18 +148,12 @@ namespace tmpc
 			if (!_prepared)
 				throw std::logic_error("ModelPredictiveController::Feedback(): controller is not prepared.");
 
-			/** embed current initial value */
-			auto const w0 = (x0 - _workingPoint.get_x(0)).eval();
-			_QP.set_x_min(0, w0);
-			_QP.set_x_max(0, w0);
-
-			/** solve QP */
-			_Solver.Solve(_QP, _solution);
+			auto const u = realtime_iteration_feedback(x0, _workingPoint, _QP, _Solver, _solution);
 
 			_prepared = false;
 
 			// Return the calculated control input.
-			return _workingPoint.get_u(0) + _solution.get_u(0);
+			return u;
 		}
 
 		void Preparation()
