@@ -107,6 +107,16 @@ namespace tmpc
 		return working_point.get_u(0) + solution.get_u(0);
 	}
 
+	template <typename WorkingPoint, typename Solution>
+	void realtime_iteration_update_working_point(WorkingPoint& working_point, Solution const& solution)
+	{
+		// Add QP step to the working point.
+		working_point += solution;
+
+		// Shift working point
+		shift(working_point);
+	}
+
 	template<class _Problem, typename Integrator_, class QPSolver_>
 	class RealtimeIteration
 	{
@@ -161,15 +171,7 @@ namespace tmpc
 			if (_prepared)
 				throw std::logic_error("ModelPredictiveController::Preparation(): controller is already prepared.");
 
-			// Add QP step to the working point.
-			_workingPoint += _solution;
-
-			/** prepare QP for next solution */
-			//qpDUNES_shiftLambda(&_qpData);			/* shift multipliers */
-			//qpDUNES_shiftIntervals(&_qpData);		/* shift intervals (particularly important when using qpOASES for underlying local QPs) */
-
-			// Shift working point
-			shift(_workingPoint);
+			realtime_iteration_update_working_point(_workingPoint, _solution);
 
 			// Calculate new QP.
 			UpdateQP();
