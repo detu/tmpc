@@ -11,6 +11,8 @@
 
 namespace tmpc
 {
+	struct OptimalControlProblemTag {};
+
 	template<class Derived, unsigned NX_, unsigned NU_, class _Scalar = double>
 	class OptimalControlProblem
 	{
