@@ -7,38 +7,6 @@
 
 namespace tmpc
 {
-	template<typename Derived_, unsigned NX_, unsigned NU_>
-	class TrajectoryBase
-	{
-	public:
-		typedef unsigned size_type;
-		typedef Derived_ Derived;
-
-		/*
-		typedef typename Derived_::StateVector StateVector;
-		typedef typename Derived_::StateInputVector StateInputVector;
-		*/
-
-		/*
-		static size_type const NX = NX_;
-		static size_type const NU = NU_;
-		static size_type const NZ = NX + NU;
-		*/
-
-		decltype(auto) w(size_type i) const noexcept { return derived().w(i); }
-		decltype(auto) w(size_type i) noexcept { return derived().w(i); }
-		decltype(auto) wend() const noexcept { return derived().wend(); }
-		decltype(auto) wend() noexcept { return derived().wend(); }
-		decltype(auto) x(size_type i) const noexcept { return derived().x(i); }
-		decltype(auto) x(size_type i) noexcept { return derived().x(i); }
-
-		size_type nT() const noexcept { return derived().nT(); }
-
-	private:
-		Derived& derived() { return static_cast<Derived&>(*this); }
-		Derived const& derived() const { return static_cast<Derived const&>(*this); }
-	};
-
 	template <unsigned NX, unsigned NU>
 	class Trajectory
 	{

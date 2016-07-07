@@ -33,7 +33,7 @@ set (SRC
 if (HPMPC_FOUND)
     set(SRC ${SRC} 
         ${RTMC_INCLUDE_DIR}/qp/HPMPCSolver.hpp     qp/HPMPCSolver.cpp
-        ${RTMC_INCLUDE_DIR}/qp/HPMPCProblem.hpp    qp/HPMPCProblem.cpp
+        ${RTMC_INCLUDE_DIR}/qp/HPMPCProblem.hpp
         ${RTMC_INCLUDE_DIR}/qp/HPMPCSolution.hpp
         qp/HPMPCProblemExport.hpp                  qp/HPMPCProblemExport.cpp
     )

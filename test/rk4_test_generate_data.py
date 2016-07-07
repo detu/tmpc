@@ -32,8 +32,13 @@ integrator_sens = cs.Function('Integrator_Sensitivities', [x, F], [x_plus, cs.ja
 # Generate C code for ODE model
 #------------------------------
 name = 'pendulum_ode'
-ode_jac = cs.Function(name, [t, cs.vertcat(x, F)], 
+x_seed = cs.MX('x_seed', x.shape);
+u_seed = cs.MX('u_seed', F.shape);
+ode_jac = cs.Function(name + "_jac", [t, cs.vertcat(x, F)], 
                       [cs.densify(f), cs.densify(cs.jacobian(f, cs.vertcat(x, F)))], ['t', 'z0'], ['xdot', 'J'])
+ode_sens = cs.Function(name + "_sens", [t, x, F, x_seed, u_seed], 
+                      [cs.densify(f), cs.densify(cs.jtimes(f, x, x_seed)), cs.densify(cs.jtimes(f, u, u_seed))], 
+                      ['t', 'x0', 'u0', 'x_seed', 'u_seed'], ['xdot', 'x_sens', 'u_sens'])
 gen = cs.CodeGenerator({'mex' : False, 'with_header' : True})
 gen.add(ode_jac)
 name_c = '{0}_generated.c'.format(name)

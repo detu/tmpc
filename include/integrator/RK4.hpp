@@ -10,44 +10,10 @@
 
 #include <Eigen/Dense>
 
+#include "../core/matrix.hpp"
+
 namespace tmpc
 {
-	template<unsigned N, typename Matrix>
-	decltype(auto) topRows(Eigen::MatrixBase<Matrix>& m)
-	{
-		return m.template topRows<N>();
-	}
-
-	template<unsigned N, typename Matrix>
-	decltype(auto) topRows(Eigen::MatrixBase<Matrix> const& m)
-	{
-		return m.template topRows<N>();
-	}
-
-	template<unsigned N, typename Matrix>
-	decltype(auto) bottomRows(Eigen::MatrixBase<Matrix>& m)
-	{
-		return m.template bottomRows<N>();
-	}
-
-	template<unsigned N, typename Matrix>
-	decltype(auto) bottomRows(Eigen::MatrixBase<Matrix> const& m)
-	{
-		return m.template bottomRows<N>();
-	}
-
-	template<unsigned N, typename Matrix>
-	decltype(auto) leftCols(Eigen::MatrixBase<Matrix>& m)
-	{
-		return m.template leftCols<N>();
-	}
-
-	template<unsigned N, typename Matrix>
-	decltype(auto) leftCols(Eigen::MatrixBase<Matrix> const& m)
-	{
-		return m.template leftCols<N>();
-	}
-
 	template<typename ODEModel_>
 	class RK4
 	{
@@ -68,8 +34,8 @@ namespace tmpc
 			ODEJacobianMatrix J1, J2, J3, J4;
 			auto const h = _timeStep;
 
-			auto const x0 = topRows   <NX>(z0);
-			auto const u  = bottomRows<NU>(z0);
+			auto const x0 = top_rows   <NX>(z0);
+			auto const u  = bottom_rows<NU>(z0);
 
 			// Calculating next state
 			StateInputVector z1;
@@ -82,9 +48,9 @@ namespace tmpc
 
 			// Calculating sensitivities
 			ODEJacobianMatrix const& J1_bar = J1;
-			ODEJacobianMatrix const  J2_bar = J2 + h / 2. * leftCols<NX>(J2) * J1_bar;
-			ODEJacobianMatrix const  J3_bar = J3 + h / 2. * leftCols<NX>(J3) * J2_bar;
-			ODEJacobianMatrix const  J4_bar = J4 + h      * leftCols<NX>(J4) * J3_bar;
+			ODEJacobianMatrix const  J2_bar = J2 + h / 2. * left_cols<NX>(J2) * J1_bar;
+			ODEJacobianMatrix const  J3_bar = J3 + h / 2. * left_cols<NX>(J3) * J2_bar;
+			ODEJacobianMatrix const  J4_bar = J4 + h      * left_cols<NX>(J4) * J3_bar;
 
 			J = ODEJacobianMatrix::Identity() + h / 6. * (J1_bar + 2. * J2_bar + 2. * J3_bar + J4_bar);
 		}

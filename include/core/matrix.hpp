@@ -39,4 +39,40 @@ namespace tmpc
 	{
 		return m.template middleRows<N>(first_row);
 	}
+
+	template<unsigned N, typename Matrix>
+	decltype(auto) top_rows(Eigen::MatrixBase<Matrix>& m)
+	{
+		return m.template topRows<N>();
+	}
+
+	template<unsigned N, typename Matrix>
+	decltype(auto) top_rows(Eigen::MatrixBase<Matrix> const& m)
+	{
+		return m.template topRows<N>();
+	}
+
+	template<unsigned N, typename Matrix>
+	decltype(auto) bottom_rows(Eigen::MatrixBase<Matrix>& m)
+	{
+		return m.template bottomRows<N>();
+	}
+
+	template<unsigned N, typename Matrix>
+	decltype(auto) bottom_rows(Eigen::MatrixBase<Matrix> const& m)
+	{
+		return m.template bottomRows<N>();
+	}
+
+	template<unsigned N, typename Matrix>
+	decltype(auto) left_cols(Eigen::MatrixBase<Matrix>& m)
+	{
+		return m.template leftCols<N>();
+	}
+
+	template<unsigned N, typename Matrix>
+	decltype(auto) left_cols(Eigen::MatrixBase<Matrix> const& m)
+	{
+		return m.template leftCols<N>();
+	}
 }
