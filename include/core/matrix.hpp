@@ -7,6 +7,7 @@
 #include <Eigen/Dense>
 
 #include <limits>
+#include <type_traits>
 
 namespace tmpc
 {
@@ -74,5 +75,11 @@ namespace tmpc
 	decltype(auto) left_cols(Eigen::MatrixBase<Matrix> const& m)
 	{
 		return m.template leftCols<N>();
+	}
+
+	template <typename Matrix>
+	std::enable_if_t<std::is_base_of<Eigen::MatrixBase<Matrix>, Matrix>::value, typename Matrix::IdentityReturnType> identity()
+	{
+		return Matrix::Identity();
 	}
 }
