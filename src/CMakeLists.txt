@@ -14,33 +14,29 @@
 #add_definitions(-DEIGEN_DONT_ALIGN_STATICALLY)
 
 set (SRC
-    ${RTMC_INCLUDE_DIR}/core/RealtimeIteration.hpp
-	${RTMC_INCLUDE_DIR}/core/OptimalControlProblem.hpp
-    ${RTMC_INCLUDE_DIR}/core/ODEModel.hpp
-    ${RTMC_INCLUDE_DIR}/core/Trajectory.hpp
+    ${PROJECT_INCLUDE_DIR}/core/RealtimeIteration.hpp
+	${PROJECT_INCLUDE_DIR}/core/OptimalControlProblem.hpp
+    ${PROJECT_INCLUDE_DIR}/core/ODEModel.hpp
+    ${PROJECT_INCLUDE_DIR}/core/Trajectory.hpp
         
-	${RTMC_INCLUDE_DIR}/casadi_interface/GeneratedFunction.hpp casadi_interface/CasADiGeneratedFunction.cpp
+	${PROJECT_INCLUDE_DIR}/casadi_interface/GeneratedFunction.hpp casadi_interface/CasADiGeneratedFunction.cpp
 	
-	${RTMC_INCLUDE_DIR}/integrator/RK4.hpp
+	${PROJECT_INCLUDE_DIR}/integrator/RK4.hpp
 	
-	${RTMC_INCLUDE_DIR}/qp/Condensing.hpp
-	${RTMC_INCLUDE_DIR}/qp/CondensingSolver.hpp  qp/CondensingSolver.cpp
-	${RTMC_INCLUDE_DIR}/qp/qpDUNESProgram.hpp
-	${RTMC_INCLUDE_DIR}/qp/qpOASESProgram.hpp    qp/qpOASESProgram.cpp
-	${RTMC_INCLUDE_DIR}/qp/MultiStageQPSolution.hpp
+	${PROJECT_INCLUDE_DIR}/qp/Condensing.hpp
+	${PROJECT_INCLUDE_DIR}/qp/CondensingSolver.hpp  qp/CondensingSolver.cpp
+	${PROJECT_INCLUDE_DIR}/qp/qpDUNESProgram.hpp
+	${PROJECT_INCLUDE_DIR}/qp/qpOASESProgram.hpp    qp/qpOASESProgram.cpp
+	${PROJECT_INCLUDE_DIR}/qp/MultiStageQPSolution.hpp
 )
 
 if (HPMPC_FOUND)
     set(SRC ${SRC} 
-        ${RTMC_INCLUDE_DIR}/qp/HPMPCSolver.hpp     qp/HPMPCSolver.cpp
-        ${RTMC_INCLUDE_DIR}/qp/HPMPCProblem.hpp
-        ${RTMC_INCLUDE_DIR}/qp/HPMPCSolution.hpp
+        ${PROJECT_INCLUDE_DIR}/qp/HPMPCSolver.hpp     qp/HPMPCSolver.cpp
+        ${PROJECT_INCLUDE_DIR}/qp/HPMPCProblem.hpp
+        ${PROJECT_INCLUDE_DIR}/qp/HPMPCSolution.hpp
         qp/HPMPCProblemExport.hpp                  qp/HPMPCProblemExport.cpp
     )
 endif()
 
-add_library(mpmc STATIC ${HDR} ${SRC})
-#target_link_libraries(mpmc ${qpDUNES_STATIC_LIBRARIES})
-target_link_libraries(mpmc ${qpOASES_STATIC_LIBRARIES})
-
-
+add_library(tmpc STATIC ${HDR} ${SRC})

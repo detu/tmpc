@@ -1,5 +1,5 @@
 #
-# RTMC/test
+# test
 #
 
 enable_testing()
@@ -21,21 +21,23 @@ if (HPMPC_FOUND)
 endif()
    
 include_directories(${GTEST_INCLUDE_DIRS})
-add_executable(mpc_test ${SRC})
+add_executable(tmpc_test ${SRC})
 
-target_link_libraries(mpc_test mpmc ${GTEST_BOTH_LIBRARIES})
+target_link_libraries(tmpc_test tmpc ${GTEST_BOTH_LIBRARIES})
 
 if (UNIX)
 	# On UNIX, link to pthread -- gtest requires it.
-	target_link_libraries(mpc_test pthread)
+	target_link_libraries(tmpc_test pthread)
 endif (UNIX)
 
-if (qpOASES_FOUND)
-    target_link_libraries(mpc_test ${qpOASES_STATIC_LIBRARIES})
-endif ()
+#if (qpOASES_FOUND)
+#    target_link_libraries(mpc_test ${qpOASES_STATIC_LIBRARIES})
+#endif ()
 
-if (HPMPC_FOUND)
-    target_link_libraries(mpc_test ${HPMPC_STATIC_LIB})
-endif ()
+#if (HPMPC_FOUND)
+#    target_link_libraries(mpc_test ${HPMPC_STATIC_LIB})
+#endif ()
+
+target_link_libraries(tmpc_test ${PROJECT_DEPENDENCY_LIBS})
 
 add_test(AllTests mpc_test)
