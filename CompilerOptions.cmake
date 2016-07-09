@@ -12,9 +12,9 @@ INCLUDE( CheckCXXCompilerFlag )
 #
 ################################################################################
 MESSAGE(CMAKE_CXX_COMPILER_ID = ${CMAKE_CXX_COMPILER_ID})
-IF (    "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" )
+IF (${CMAKE_CXX_COMPILER_ID} MATCHES "(GNU|Clang)")
 	
-	SET( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -fPIC" )
+	SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -fPIC")
 
 ################################################################################
 #

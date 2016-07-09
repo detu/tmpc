@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Eigen/Dense>
+#include "../core/matrix.hpp"
 
 #include <cstddef>
 
@@ -42,7 +42,7 @@ namespace tmpc
 	template <typename QP>
 	Eigen::Matrix<double, n_xu<QP>(), 1> get_xu_min(QP const& qp, std::size_t i)
 	{
-		Eigen::Matrix<double, n_xu(qp), 1> val;
+		Eigen::Matrix<double, n_xu<QP>(), 1> val;
 		val << qp.get_x_min(i), qp.get_u_min(i);
 		return val;
 	}
@@ -50,9 +50,9 @@ namespace tmpc
 	template <typename QP, typename Matrix>
 	void set_xu_min(QP& qp, std::size_t i, Eigen::MatrixBase<Matrix> const& val)
 	{
-		static_assert(Matrix::RowsAtCompileTime == n_xu(qp),	"Vector with (NX+NU) rows is expected");
-		qp.set_x_min(i, val.template topRows   <qp.nX()>());
-		qp.set_u_min(i, val.template bottomRows<qp.nU()>());
+		static_assert(Matrix::RowsAtCompileTime == n_xu<QP>(),	"Vector with (NX+NU) rows is expected");
+		qp.set_x_min(i, top_rows   <n_x<QP>()>(val));
+		qp.set_u_min(i, bottom_rows<n_u<QP>()>(val));
 	}
 
 	template<typename QP>
@@ -65,7 +65,7 @@ namespace tmpc
 	template <typename QP>
 	Eigen::Matrix<double, n_xu<QP>(), 1> get_xu_max(QP const& qp, std::size_t i)
 	{
-		Eigen::Matrix<double, n_xu(qp), 1> val;
+		Eigen::Matrix<double, n_xu<QP>(), 1> val;
 		val << qp.get_x_max(i), qp.get_u_max(i);
 		return val;
 	}
@@ -73,9 +73,9 @@ namespace tmpc
 	template <typename QP, typename Matrix>
 	void set_xu_max(QP& qp, std::size_t i, Eigen::MatrixBase<Matrix> const& val)
 	{
-		static_assert(Matrix::RowsAtCompileTime == n_xu(qp),	"Vector with (NX+NU) rows is expected");
-		qp.set_x_max(i, val.template topRows   <qp.nX()>());
-		qp.set_u_max(i, val.template bottomRows<qp.nU()>());
+		static_assert(Matrix::RowsAtCompileTime == n_xu<QP>(),	"Vector with (NX+NU) rows is expected");
+		qp.set_x_max(i, val.template topRows   <n_x<QP>()>());
+		qp.set_u_max(i, val.template bottomRows<n_u<QP>()>());
 	}
 
 	template<typename QP>
@@ -112,17 +112,17 @@ namespace tmpc
 	template <typename QP, typename Matrix>
 	void set_H(QP& qp, std::size_t i, Eigen::MatrixBase<Matrix> const& val)
 	{
-		static_assert(Matrix::RowsAtCompileTime == n_xu(qp) && Matrix::ColsAtCompileTime == n_xu(qp),
+		static_assert(Matrix::RowsAtCompileTime == n_xu<QP>() && Matrix::ColsAtCompileTime == n_xu<QP>(),
 			"Matrix of size (NX+NU)x(NX+NU) is expected");
-		qp.set_Q(i, val.template topLeftCorner    <qp.nX(), qp.nX()>());
-		qp.set_S(i, val.template topRightCorner   <qp.nX(), qp.nU()>());
-		qp.set_R(i, val.template bottomRightCorner<qp.nU(), qp.nU()>());
+		qp.set_Q(i, top_left_corner    <n_x<QP>(), n_x<QP>()>(val));
+		qp.set_S(i, top_right_corner   <n_x<QP>(), n_u<QP>()>(val));
+		qp.set_R(i, bottom_right_corner<n_u<QP>(), n_u<QP>()>(val));
 	}
 
 	template <typename QP>
 	Eigen::Matrix<double, n_xu<QP>(), n_xu<QP>()> get_H(QP const& qp, std::size_t i)
 	{
-		Eigen::Matrix<double, n_xu(qp), n_xu(qp)> H;
+		Eigen::Matrix<double, n_xu<QP>(), n_xu<QP>()> H;
 		H << qp.get_Q(i), qp.get_S(i), qp.get_S(i).transpose(), qp.get_R(i);
 		return H;
 	}
@@ -130,15 +130,15 @@ namespace tmpc
 	template <typename QP, typename Matrix>
 	void set_g(QP& qp, std::size_t i, Eigen::MatrixBase<Matrix>& val)
 	{
-		static_assert(Matrix::RowsAtCompileTime == n_xu(qp),	"Column vector of size (NX+NU) is expected");
-		qp.set_q(i, val.template topRows   <qp.nX()>());
-		qp.set_r(i, val.template bottomRows<qp.nU()>());
+		static_assert(Matrix::RowsAtCompileTime == n_xu<QP>(),	"Column vector of size (NX+NU) is expected");
+		qp.set_q(i, top_rows   <n_x<QP>()>(val));
+		qp.set_r(i, bottom_rows<n_u<QP>()>(val));
 	}
 
 	template <typename QP>
 	Eigen::Matrix<double, n_xu<QP>(), 1> get_g(QP const& qp, std::size_t i)
 	{
-		Eigen::Matrix<double, n_xu(qp), 1> g;
+		Eigen::Matrix<double, n_xu<QP>(), 1> g;
 		g << qp.get_q(i), qp.get_r(i);
 		return g;
 	}
@@ -146,9 +146,9 @@ namespace tmpc
 	template <typename QP, typename Matrix>
 	void set_AB(QP& qp, std::size_t i, Eigen::MatrixBase<Matrix> const& AB)
 	{
-		static_assert(Matrix::ColsAtCompileTime == n_xu(qp),	"Matrix with (NX+NU) columns is expected");
-		qp.set_A(i, AB.template leftCols <qp.nX()>());
-		qp.set_B(i, AB.template rightCols<qp.nU()>());
+		static_assert(Matrix::ColsAtCompileTime == n_xu<QP>(),	"Matrix with (NX+NU) columns is expected");
+		qp.set_A(i, left_cols <n_x<QP>()>(AB));
+		qp.set_B(i, right_cols<n_u<QP>()>(AB));
 	}
 
 	template <typename QP>
@@ -162,9 +162,9 @@ namespace tmpc
 	template <typename QP, typename Matrix>
 	void set_CD(QP& qp, std::size_t i, Eigen::MatrixBase<Matrix> const& val)
 	{
-		static_assert(Matrix::ColsAtCompileTime == n_xu(qp),	"Matrix with (NX+NU) columns is expected");
-		qp.set_C(i, val.template leftCols <qp.nX()>());
-		qp.set_D(i, val.template rightCols<qp.nU()>());
+		static_assert(Matrix::ColsAtCompileTime == n_xu<QP>(),	"Matrix with (NX+NU) columns is expected");
+		qp.set_C(i, left_cols <n_x<QP>()>(val));
+		qp.set_D(i, right_cols<n_u<QP>()>(val));
 	}
 
 	template <typename QP>

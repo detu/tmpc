@@ -6,9 +6,11 @@ namespace tmpc_test
 {
 	namespace qp_problems
 	{
-		template <typename Problem>
-		void problem_0(Problem& qp)
+		template <typename QP>
+		void problem_0(QP& qp)
 		{
+			using namespace tmpc;
+
 			unsigned const NX = 2;
 			unsigned const NU = 1;
 			unsigned const NZ = NX + NU;
@@ -19,7 +21,7 @@ namespace tmpc_test
 			typedef Eigen::Matrix<double, NZ, NZ> StageHessianMatrix;
 			typedef Eigen::Matrix<double, NZ,  1> StageGradientVector;
 
-			static_assert(qp.nX() == NX && qp.nU() == NU && qp.nD() == NC && qp.nDT() == NCT, "Problem sizes must match");
+			static_assert(n_x<QP>() == NX && n_u<QP>() == NU && n_d<QP>() == NC && n_d_end<QP>() == NCT, "Problem sizes must match");
 
 			if (qp.nT() != NT)
 				throw std::logic_error("Invalid size of the QP problem");
@@ -77,7 +79,7 @@ namespace tmpc_test
 			H2 << 1, 2, 3, 4;
 			H2 = H2.transpose() * H2;	// Make positive definite.
 
-			typename Problem::StateVector g2;
+			typename QP::StateVector g2;
 			g2 << 0., 0.;
 
 			const Eigen::MatrixXd Q2 = H2.topLeftCorner(qp.nX(), qp.nX());

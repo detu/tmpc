@@ -77,6 +77,42 @@ namespace tmpc
 		return m.template leftCols<N>();
 	}
 
+	template<unsigned N, typename Matrix>
+	decltype(auto) right_cols(Eigen::MatrixBase<Matrix>& m)
+	{
+		return m.template rightCols<N>();
+	}
+
+	template<unsigned N, typename Matrix>
+	decltype(auto) right_cols(Eigen::MatrixBase<Matrix> const& m)
+	{
+		return m.template rightCols<N>();
+	}
+
+	template<unsigned M, unsigned N, typename Matrix>
+	decltype(auto) top_left_corner(Eigen::MatrixBase<Matrix> const& m)
+	{
+		return m.template topLeftCorner<M, N>();
+	}
+
+	template<unsigned M, unsigned N, typename Matrix>
+	decltype(auto) top_right_corner(Eigen::MatrixBase<Matrix> const& m)
+	{
+		return m.template topRightCorner<M, N>();
+	}
+
+	template<unsigned M, unsigned N, typename Matrix>
+	decltype(auto) bottom_left_corner(Eigen::MatrixBase<Matrix> const& m)
+	{
+		return m.template bottomLeftCorner<M, N>();
+	}
+
+	template<unsigned M, unsigned N, typename Matrix>
+	decltype(auto) bottom_right_corner(Eigen::MatrixBase<Matrix> const& m)
+	{
+		return m.template bottomRightCorner<M, N>();
+	}
+
 	template <typename Matrix>
 	std::enable_if_t<std::is_base_of<Eigen::MatrixBase<Matrix>, Matrix>::value, typename Matrix::IdentityReturnType> identity()
 	{

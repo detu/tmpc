@@ -75,5 +75,7 @@ namespace tmpc
 
 			os << std::endl;
 		}
+
+		return os;
 	}
 }

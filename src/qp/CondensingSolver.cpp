@@ -3,42 +3,43 @@
 #include <sstream>
 #include <stdexcept>
 
-namespace
+static qpOASES::Options& ensureConsistency(qpOASES::Options& options)
 {
-	qpOASES::Options& ensureConsistency(qpOASES::Options& options)
+	auto const ret = options.ensureConsistency();
+	if(ret != qpOASES::SUCCESSFUL_RETURN)
 	{
-		auto const ret = options.ensureConsistency();
-		if(ret != qpOASES::SUCCESSFUL_RETURN)
-		{
-			std::stringstream msg;
-			msg << "ensureConsistency(): qpOASES::Options::ensureConsistency() returned error code " << ret << ".";
-			throw std::runtime_error(msg.str());
-		}
-
-		return options;
+		std::stringstream msg;
+		msg << "ensureConsistency(): qpOASES::Options::ensureConsistency() returned error code " << ret << ".";
+		throw std::runtime_error(msg.str());
 	}
 
-	qpOASES::Options& setToReliable(qpOASES::Options& options)
+	return options;
+}
+
+static qpOASES::Options& setToReliable(qpOASES::Options& options)
+{
+	auto const ret = options.setToReliable();
+	if(ret != qpOASES::SUCCESSFUL_RETURN)
 	{
-		auto const ret = options.setToReliable();
-		if(ret != qpOASES::SUCCESSFUL_RETURN)
-		{
-			std::stringstream msg;
-			msg << "setToReliable(): qpOASES::Options::setToReliable() returned error code " << ret << ".";
-			throw std::runtime_error(msg.str());
-		}
+		std::stringstream msg;
+		msg << "setToReliable(): qpOASES::Options::setToReliable() returned error code " << ret << ".";
+		throw std::runtime_error(msg.str());
 	}
 
-	qpOASES::Options& setToMPC(qpOASES::Options& options)
+	return options;
+}
+
+static qpOASES::Options& setToMPC(qpOASES::Options& options)
+{
+	auto const ret = options.setToMPC();
+	if(ret != qpOASES::SUCCESSFUL_RETURN)
 	{
-		auto const ret = options.setToMPC();
-		if(ret != qpOASES::SUCCESSFUL_RETURN)
-		{
-			std::stringstream msg;
-			msg << "setToMPC(): qpOASES::Options::setToMPC() returned error code " << ret << ".";
-			throw std::runtime_error(msg.str());
-		}
+		std::stringstream msg;
+		msg << "setToMPC(): qpOASES::Options::setToMPC() returned error code " << ret << ".";
+		throw std::runtime_error(msg.str());
 	}
+
+	return options;
 }
 
 namespace tmpc
