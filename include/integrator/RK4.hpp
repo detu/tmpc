@@ -20,14 +20,14 @@ namespace tmpc
 	public:
 		typedef ODEModel_ ODEModel;
 
-		static unsigned const NX = ODEModel::NX;
-		static unsigned const NU = ODEModel::NU;
-
 		RK4(ODEModel const& ode, double time_step) : _ode(ode), _timeStep(time_step) {}
 
 		template <typename StateVector0_, typename InputVector_, typename StateVector1_, typename AMatrix, typename BMatrix>
 		void Integrate(double t0, StateVector0_ const& x0, InputVector_ const& u, StateVector1_& x_next, AMatrix& A, BMatrix& B) const
 		{
+			auto constexpr NX = rows<StateVector0_>();
+			auto constexpr NU = rows<InputVector_ >();
+
 			typedef Eigen::Matrix<double, NX,  1> StateVector;
 			typedef Eigen::Matrix<double, NX, NX> StateStateMatrix;
 			typedef Eigen::Matrix<double, NX, NU> StateInputMatrix;

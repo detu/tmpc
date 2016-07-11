@@ -118,4 +118,16 @@ namespace tmpc
 	{
 		return Matrix::Identity();
 	}
+
+	template <typename Matrix>
+	std::enable_if_t<std::is_base_of<Eigen::MatrixBase<Matrix>, Matrix>::value, typename Matrix::Index> constexpr rows()
+	{
+		return Matrix::RowsAtCompileTime;
+	}
+
+	template <typename Matrix>
+	std::enable_if_t<std::is_base_of<Eigen::MatrixBase<Matrix>, Matrix>::value, typename Matrix::Index> constexpr cols()
+	{
+		return Matrix::ColsAtCompileTime;
+	}
 }
