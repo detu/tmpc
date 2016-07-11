@@ -8,6 +8,8 @@
 
 #include <gtest/gtest.h>
 
+#include <type_traits>
+
 struct Dimensions
 {
 	static unsigned const NX = 2;
@@ -91,7 +93,7 @@ class DiscreteTimeModel
 {
 public:
 	typedef OCP::StateVector StateVector;
-	typedef OCP::StateInputVector StateInputVector;
+	typedef OCP::InputVector InputVector;
 	typedef OCP::ODEJacobianMatrix ODEJacobianMatrix;
 
 	static unsigned const NX = OCP::NX;
@@ -99,12 +101,20 @@ public:
 
 	DiscreteTimeModel() {}
 
-	void Integrate(double t0, StateInputVector const& z0, StateVector& x_next, ODEJacobianMatrix& J) const
+	template <typename AMatrix, typename BMatrix>
+	std::enable_if_t<
+		AMatrix::RowsAtCompileTime == NX && AMatrix::ColsAtCompileTime == NX &&
+		BMatrix::RowsAtCompileTime == NX && BMatrix::ColsAtCompileTime == NU,
+		void> Integrate(double t0, StateVector const& x0, InputVector const& u, StateVector& x_next,
+			Eigen::MatrixBase<AMatrix>& A, Eigen::MatrixBase<BMatrix>& B) const
 	{
-		J << 1.,  1., 0.5,
-		     0.,  1., 1. ;
+		A << 1.,  1.,
+		     0.,  1.;
 
-		x_next = J * z0;
+		B << 0.5,
+			 1. ;
+
+		x_next = A * x0 + B * u;
 	}
 
 	double timeStep() const { return 1.; }

@@ -3,6 +3,7 @@
 #include "Trajectory.hpp"
 #include "OptimalControlProblem.hpp"
 #include "matrix.hpp"
+#include "../qp/qp.hpp"
 
 #include <stdexcept>
 //#include <type_traits>
@@ -46,9 +47,12 @@ namespace tmpc
 			// C = [ssA, ssB];
 			// x_{k+1} = C * z_k + c_k
 			StateVector x_plus;
-			ODEJacobianMatrix J;
-			integrator.Integrate(i * integrator.timeStep(), z_i, x_plus, J);
-			set_AB(qp, i, J);
+
+			Eigen::Matrix<double, n_x<QP_>(), n_x<QP_>()> A;
+			Eigen::Matrix<double, n_x<QP_>(), n_u<QP_>()> B;
+			integrator.Integrate(i * integrator.timeStep(), working_point.get_x(i), working_point.get_u(i), x_plus, A, B);
+			qp.set_A(i, A);
+			qp.set_B(i, B);
 
 			// \Delta x_{k+1} = C \Delta z_k + f(z_k) - x_{k+1}
 			// c = f(z_k) - x_{k+1}

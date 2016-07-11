@@ -34,15 +34,12 @@ integrator_sens = cs.Function('Integrator_Sensitivities', [x, F], [x_plus, cs.ja
 name = 'pendulum_ode'
 #x_seed = cs.MX('x_seed', x.shape);
 #u_seed = cs.MX('u_seed', F.shape);
-ode_jac = cs.Function(name + "_jac", [t, cs.vertcat(x, F)], 
-                      [cs.densify(f), cs.densify(cs.jacobian(f, cs.vertcat(x, F)))], ['t', 'z0'], ['xdot', 'J'])
 ode_AB = cs.Function(name + "_AB", [t, x, F], 
                       [cs.densify(f), cs.densify(cs.jacobian(f, x)), cs.densify(cs.jacobian(f, F))], ['t', 'x0', 'u0'], ['xdot', 'A', 'B'])
 #ode_sens = cs.Function(name + "_sens", [t, x, F, x_seed, u_seed], 
 #                      [cs.densify(f), cs.densify(cs.jtimes(f, x, x_seed)), cs.densify(cs.jtimes(f, u, u_seed))], 
 #                      ['t', 'x0', 'u0', 'x_seed', 'u_seed'], ['xdot', 'x_sens', 'u_sens'])
 gen = cs.CodeGenerator({'mex' : False, 'with_header' : True})
-gen.add(ode_jac)
 gen.add(ode_AB)
 name_c = '{0}_generated.c'.format(name)
 name_h = '{0}_generated.h'.format(name)
@@ -55,7 +52,7 @@ gen.generate(name_c)
 #------------------------------
 x0 = cs.DM([1.0, 0.0])  # initial state
 
-data = {'t' : [], 'z0' : [], 'xdot' : [], 'J_ode' : [], 'x_plus' : [], 'J' : []}
+data = {'t' : [], 'x0' : [], 'u' : [], 'xdot' : [], 'A_ode' : [], 'B_ode' : [], 'x_plus' : [], 'A' : [], 'B' : []}
 N = 600
 
 for k in range(N):
@@ -68,36 +65,34 @@ for k in range(N):
         u = 0.0
                                         
     [x_plus, A, B] = integrator_sens(x0, u)
-    
-    z0  = cs.vertcat(x0, u)
-    [xdot, J_ode] = ode_jac(t_k, z0)
+    [xdot, A_ode, B_ode] = ode_AB(t_k, x0, u)
     
     data['t'     ].append(t_k)
-    data['z0'    ].append(z0)
+    data['x0'    ].append(x0)
+    data['u'     ].append(u)
     data['xdot'  ].append(xdot)
-    data['J_ode' ].append(J_ode)
+    data['A_ode' ].append(A_ode)
+    data['B_ode' ].append(B_ode)
     data['x_plus'].append(x_plus)
-    data['J'     ].append(cs.horzcat(A, B))
+    data['A'     ].append(A)
+    data['B'     ].append(B)
     x0 = x_plus
     
 with open('data/rk4/pendulum.txt', 'w') as file:
     sep = ' '
     for k in range(N):
-        np.array(data['t'     ][k]).tofile(file, sep)
-        file.write('\t')
-        np.array(data['z0'    ][k]).tofile(file, sep)
-        file.write('\t')
-        np.array(data['xdot'  ][k]).tofile(file, sep)
-        file.write('\t')
-        np.array(data['J_ode' ][k]).tofile(file, sep)
-        file.write('\t')
-        np.array(data['x_plus'][k]).tofile(file, sep)
-        file.write('\t')
-        np.array(data['J'     ][k]).tofile(file, sep)
-        file.write('\n')
+        np.array(data['t'     ][k]).tofile(file, sep);        file.write('\t')
+        np.array(data['x0'    ][k]).tofile(file, sep);        file.write('\t')
+        np.array(data['u'     ][k]).tofile(file, sep);        file.write('\t')
+        np.array(data['xdot'  ][k]).tofile(file, sep);        file.write('\t')
+        np.array(data['A_ode' ][k]).tofile(file, sep);        file.write('\t')
+        np.array(data['B_ode' ][k]).tofile(file, sep);        file.write('\t')
+        np.array(data['x_plus'][k]).tofile(file, sep);        file.write('\t')
+        np.array(data['A'     ][k]).tofile(file, sep);        file.write('\n')
+        np.array(data['B'     ][k]).tofile(file, sep);        file.write('\n')
         
 plt.subplot(2, 1, 1)
-plt.step(cs.vertcat(data['t']), cs.transpose(cs.horzcat(*data['z0'])[ -1, :]))
+plt.step(cs.vertcat(data['t']), cs.transpose(cs.horzcat(*data['u' ]))      )
 plt.subplot(2, 1, 2)
-plt.plot(cs.vertcat(data['t']), cs.transpose(cs.horzcat(*data['z0'])[: 2, :]), '.-')
+plt.plot(cs.vertcat(data['t']), cs.transpose(cs.horzcat(*data['x0'])), '.-')
 plt.show()
