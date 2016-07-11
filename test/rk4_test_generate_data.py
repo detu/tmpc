@@ -32,15 +32,18 @@ integrator_sens = cs.Function('Integrator_Sensitivities', [x, F], [x_plus, cs.ja
 # Generate C code for ODE model
 #------------------------------
 name = 'pendulum_ode'
-x_seed = cs.MX('x_seed', x.shape);
-u_seed = cs.MX('u_seed', F.shape);
+#x_seed = cs.MX('x_seed', x.shape);
+#u_seed = cs.MX('u_seed', F.shape);
 ode_jac = cs.Function(name + "_jac", [t, cs.vertcat(x, F)], 
                       [cs.densify(f), cs.densify(cs.jacobian(f, cs.vertcat(x, F)))], ['t', 'z0'], ['xdot', 'J'])
-ode_sens = cs.Function(name + "_sens", [t, x, F, x_seed, u_seed], 
-                      [cs.densify(f), cs.densify(cs.jtimes(f, x, x_seed)), cs.densify(cs.jtimes(f, u, u_seed))], 
-                      ['t', 'x0', 'u0', 'x_seed', 'u_seed'], ['xdot', 'x_sens', 'u_sens'])
+ode_AB = cs.Function(name + "_AB", [t, x, F], 
+                      [cs.densify(f), cs.densify(cs.jacobian(f, x)), cs.densify(cs.jacobian(f, F))], ['t', 'x0', 'u0'], ['xdot', 'A', 'B'])
+#ode_sens = cs.Function(name + "_sens", [t, x, F, x_seed, u_seed], 
+#                      [cs.densify(f), cs.densify(cs.jtimes(f, x, x_seed)), cs.densify(cs.jtimes(f, u, u_seed))], 
+#                      ['t', 'x0', 'u0', 'x_seed', 'u_seed'], ['xdot', 'x_sens', 'u_sens'])
 gen = cs.CodeGenerator({'mex' : False, 'with_header' : True})
 gen.add(ode_jac)
+gen.add(ode_AB)
 name_c = '{0}_generated.c'.format(name)
 name_h = '{0}_generated.h'.format(name)
 gen.generate(name_c)

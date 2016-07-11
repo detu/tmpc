@@ -9,16 +9,26 @@ extern "C" {
 #define to_int(x) (int) x
 #endif /* real_t */
 
-int pendulum_ode(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
-void pendulum_ode_incref(void);
-void pendulum_ode_decref(void);
-int pendulum_ode_n_in(void);
-int pendulum_ode_n_out(void);
-const char* pendulum_ode_name_in(int i);
-const char* pendulum_ode_name_out(int i);
-const int* pendulum_ode_sparsity_in(int i);
-const int* pendulum_ode_sparsity_out(int i);
-int pendulum_ode_work(int *sz_arg, int* sz_res, int *sz_iw, int *sz_w);
+int pendulum_ode_jac(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
+void pendulum_ode_jac_incref(void);
+void pendulum_ode_jac_decref(void);
+int pendulum_ode_jac_n_in(void);
+int pendulum_ode_jac_n_out(void);
+const char* pendulum_ode_jac_name_in(int i);
+const char* pendulum_ode_jac_name_out(int i);
+const int* pendulum_ode_jac_sparsity_in(int i);
+const int* pendulum_ode_jac_sparsity_out(int i);
+int pendulum_ode_jac_work(int *sz_arg, int* sz_res, int *sz_iw, int *sz_w);
+int pendulum_ode_AB(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
+void pendulum_ode_AB_incref(void);
+void pendulum_ode_AB_decref(void);
+int pendulum_ode_AB_n_in(void);
+int pendulum_ode_AB_n_out(void);
+const char* pendulum_ode_AB_name_in(int i);
+const char* pendulum_ode_AB_name_out(int i);
+const int* pendulum_ode_AB_sparsity_in(int i);
+const int* pendulum_ode_AB_sparsity_out(int i);
+int pendulum_ode_AB_work(int *sz_arg, int* sz_res, int *sz_iw, int *sz_w);
 #ifdef __cplusplus
 } /* extern "C" */
 #endif

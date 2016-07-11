@@ -93,9 +93,4 @@ namespace tmpc
 	};
 }
 
-namespace camels
-{
-	using namespace tmpc;
-}
-
 #endif /* INCLUDE_INTEGRATOR_RK4_HPP_ */

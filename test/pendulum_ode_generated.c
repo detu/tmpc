@@ -101,8 +101,14 @@ static const int CASADI_PREFIX(s4)[] = {3, 1, 0, 3, 0, 1, 2};
 #define s4 CASADI_PREFIX(s4)
 static const int CASADI_PREFIX(s5)[] = {2, 1, 0, 2, 0, 1};
 #define s5 CASADI_PREFIX(s5)
-/* pendulum_ode */
-int pendulum_ode(const real_t** arg, real_t** res, int* iw, real_t* w, int mem) {
+static const int CASADI_PREFIX(s6)[] = {2, 2, 0, 1, 3, 1, 0, 1};
+#define s6 CASADI_PREFIX(s6)
+static const int CASADI_PREFIX(s7)[] = {2, 2, 0, 2, 4, 0, 1, 0, 1};
+#define s7 CASADI_PREFIX(s7)
+static const int CASADI_PREFIX(s8)[] = {2, 1, 0, 1, 1};
+#define s8 CASADI_PREFIX(s8)
+/* pendulum_ode_jac */
+int pendulum_ode_jac(const real_t** arg, real_t** res, int* iw, real_t* w, int mem) {
   int i, j, k, *ii, *jj, *kk;
   const int *cii;
   real_t r, s, t, *rr, *ss, *tt;
@@ -147,17 +153,17 @@ int pendulum_ode(const real_t** arg, real_t** res, int* iw, real_t* w, int mem) 
   return 0;
 }
 
-void pendulum_ode_incref(void) {
+void pendulum_ode_jac_incref(void) {
 }
 
-void pendulum_ode_decref(void) {
+void pendulum_ode_jac_decref(void) {
 }
 
-int pendulum_ode_n_in(void) { return 2;}
+int pendulum_ode_jac_n_in(void) { return 2;}
 
-int pendulum_ode_n_out(void) { return 2;}
+int pendulum_ode_jac_n_out(void) { return 2;}
 
-const char* pendulum_ode_name_in(int i){
+const char* pendulum_ode_jac_name_in(int i){
   switch (i) {
   case 0: return "t";
   case 1: return "z0";
@@ -165,7 +171,7 @@ const char* pendulum_ode_name_in(int i){
   }
 }
 
-const char* pendulum_ode_name_out(int i){
+const char* pendulum_ode_jac_name_out(int i){
   switch (i) {
   case 0: return "xdot";
   case 1: return "J";
@@ -173,7 +179,7 @@ const char* pendulum_ode_name_out(int i){
   }
 }
 
-const int* pendulum_ode_sparsity_in(int i) {
+const int* pendulum_ode_jac_sparsity_in(int i) {
   switch (i) {
   case 0: return s3;
   case 1: return s4;
@@ -181,7 +187,7 @@ const int* pendulum_ode_sparsity_in(int i) {
   }
 }
 
-const int* pendulum_ode_sparsity_out(int i) {
+const int* pendulum_ode_jac_sparsity_out(int i) {
   switch (i) {
   case 0: return s5;
   case 1: return s2;
@@ -189,11 +195,113 @@ const int* pendulum_ode_sparsity_out(int i) {
   }
 }
 
-int pendulum_ode_work(int *sz_arg, int* sz_res, int *sz_iw, int *sz_w) {
+int pendulum_ode_jac_work(int *sz_arg, int* sz_res, int *sz_iw, int *sz_w) {
   if (sz_arg) *sz_arg = 4;
   if (sz_res) *sz_res = 5;
   if (sz_iw) *sz_iw = 4;
   if (sz_w) *sz_w = 23;
+  return 0;
+}
+
+/* pendulum_ode_AB */
+int pendulum_ode_AB(const real_t** arg, real_t** res, int* iw, real_t* w, int mem) {
+  int i, j, k, *ii, *jj, *kk;
+  const int *cii;
+  real_t r, s, t, *rr, *ss, *tt;
+  const real_t *cr, *cs, *ct;
+  const real_t** arg1=arg+3;
+  real_t** res1=res+3;
+  real_t w0, w1, w2, w3, w4, *w5=w+7, *w6=w+9, *w7=w+12, *w8=w+15;
+  w0 = arg[1] ? arg[1][0] : 0;
+  w1 = sin( w0 );
+  w2 = -9.8100000000000005e+00;
+  w1  = (w2*w1);
+  w3 = arg[1] ? arg[1][1] : 0;
+  w4 = (2.* w3 );
+  w1 -= w4;
+  w4 = arg[2] ? arg[2][0] : 0;
+  w1 += w4;
+  rr=w5;
+  *rr++ = w3;
+  *rr++ = w1;
+  if (res[0]) copy(w5, 2, res[0]);
+  w0 = cos( w0 );
+  w3 = 1.;
+  w1 = w3;
+  w0 *= w1;
+  w2 *= w0;
+  fill(w6, 3, 0.);
+  for (rr=w6+1, ss=(&w2); rr!=w6+2; rr+=1) *rr = *ss++;
+  w2 = 1.;
+  w0 = w2;
+  w2 = (2.* w0 );
+  w2 = (- w2 );
+  rr=w5;
+  *rr++ = w0;
+  *rr++ = w2;
+  for (rr=w6+0, ss=w5; rr!=w6+4; rr+=2) *rr = *ss++;
+  trans(w6, s6, w7, s6, iw);
+    project(w7, s6, w8, s7, w);
+  if (res[1]) copy(w8, 4, res[1]);
+  w0 = 0.;
+  w2 = 1.;
+  for (rr=(&w0)+0, ss=(&w2); rr!=(&w0)+1; rr+=1) *rr = *ss++;
+    project((&w0), s8, w5, s5, w);
+  if (res[2]) copy(w5, 2, res[2]);
+  return 0;
+}
+
+void pendulum_ode_AB_incref(void) {
+}
+
+void pendulum_ode_AB_decref(void) {
+}
+
+int pendulum_ode_AB_n_in(void) { return 3;}
+
+int pendulum_ode_AB_n_out(void) { return 3;}
+
+const char* pendulum_ode_AB_name_in(int i){
+  switch (i) {
+  case 0: return "t";
+  case 1: return "x0";
+  case 2: return "u0";
+  default: return 0;
+  }
+}
+
+const char* pendulum_ode_AB_name_out(int i){
+  switch (i) {
+  case 0: return "xdot";
+  case 1: return "A";
+  case 2: return "B";
+  default: return 0;
+  }
+}
+
+const int* pendulum_ode_AB_sparsity_in(int i) {
+  switch (i) {
+  case 0: return s3;
+  case 1: return s5;
+  case 2: return s3;
+  default: return 0;
+  }
+}
+
+const int* pendulum_ode_AB_sparsity_out(int i) {
+  switch (i) {
+  case 0: return s5;
+  case 1: return s7;
+  case 2: return s5;
+  default: return 0;
+  }
+}
+
+int pendulum_ode_AB_work(int *sz_arg, int* sz_res, int *sz_iw, int *sz_w) {
+  if (sz_arg) *sz_arg = 5;
+  if (sz_res) *sz_res = 5;
+  if (sz_iw) *sz_iw = 3;
+  if (sz_w) *sz_w = 19;
   return 0;
 }
 
