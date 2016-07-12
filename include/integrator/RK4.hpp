@@ -52,6 +52,24 @@ namespace tmpc
 			B = 					           h / 6. * (B1_bar + 2. * B2_bar + 2. * B3_bar + B4_bar);
 		}
 
+		//
+		// Sensitivity-free version of the Integrate() function.
+		//
+		template <typename ODE, typename StateVector, typename InputVector>
+		decltype(auto) Integrate(ODE const& ode, double t0, StateVector const& x0, InputVector const& u) const
+		{
+			auto const h = _timeStep;
+
+			// Calculating next state
+			auto const k1 = eval(ode(t0,          x0              , u));
+			auto const k2 = eval(ode(t0 + h / 2., x0 + k1 * h / 2., u));
+			auto const k3 = eval(ode(t0 + h / 2., x0 + k2 * h / 2., u));
+			auto const k4 = eval(ode(t0 + h,      x0 + k3 * h     , u));
+
+			return x0 + (k1 + 2. * k2 + 2. * k3 + k4) * h / 6.;
+		}
+
+		// TODO: should it be a parameter of Integrate() instead?
 		double timeStep() const noexcept { return _timeStep; }
 
 	private:
