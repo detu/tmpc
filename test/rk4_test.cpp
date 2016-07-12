@@ -24,16 +24,13 @@ class PendulumODE
 public:
 	static unsigned const NX = 2;
 	static unsigned const NU = 1;
+
 	typedef Eigen::Matrix<double, NX, 1> StateVector;
 	typedef Eigen::Matrix<double, NU, 1> InputVector;
-	typedef Eigen::Matrix<double, NX + NU, 1> StateInputVector;
-	typedef Eigen::Matrix<double, NX, NX + NU, Eigen::ColMajor> ODEJacobianMatrix;
 	typedef Eigen::Matrix<double, NX, NX, Eigen::ColMajor> StateStateMatrix;
 	typedef Eigen::Matrix<double, NX, NU, Eigen::ColMajor> StateInputMatrix;
 
-	PendulumODE() {}
-
-	void ODE(double t, StateVector const& x0, InputVector const& u0, StateVector& xdot, StateStateMatrix& A, StateInputMatrix& B) const
+	void operator()(double t, StateVector const& x0, InputVector const& u0, StateVector& xdot, StateStateMatrix& A, StateInputMatrix& B) const
 	{
 		static casadi_interface::GeneratedFunction const _ode(CASADI_GENERATED_FUNCTION_INTERFACE(pendulum_ode_AB));
 		_ode({&t, x0.data(), u0.data()}, {xdot.data(), A.data(), B.data()});
@@ -71,7 +68,7 @@ TEST_F(rk4_test, integrate_new_interface_works)
 			ODE::StateVector xdot;
 			ODE::StateStateMatrix A;
 			ODE::StateInputMatrix B;
-			ode_.ODE(t, x0, u, xdot, A, B);
+			ode_(t, x0, u, xdot, A, B);
 
 			EXPECT_TRUE(xdot.isApprox(xdot_expected));
 			EXPECT_TRUE(A.isApprox(Aode_expected));
