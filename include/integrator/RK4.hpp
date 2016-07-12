@@ -46,10 +46,10 @@ namespace tmpc
 			x_next = x0 + (k1 + 2. * k2 + 2. * k3 + k4) * h / 6.;
 
 			// Calculating sensitivities
-			StateStateMatrix const& A1_bar = A1;						StateInputMatrix const& B1_bar = B1;
-			StateStateMatrix const  A2_bar = A2 + h / 2. * A2 * A1_bar;	StateInputMatrix const  B2_bar = B2 + h / 2. * A2 * B1_bar;
-			StateStateMatrix const  A3_bar = A3 + h / 2. * A3 * A2_bar;	StateInputMatrix const  B3_bar = B3 + h / 2. * A3 * B2_bar;
-			StateStateMatrix const  A4_bar = A4 + h      * A4 * A3_bar;	StateInputMatrix const  B4_bar = B4 + h      * A4 * B3_bar;
+			auto const& A1_bar =      A1;							auto const& B1_bar =      B1;
+			auto const  A2_bar = eval(A2 + h / 2. * A2 * A1_bar);	auto const  B2_bar = eval(B2 + h / 2. * A2 * B1_bar);
+			auto const  A3_bar = eval(A3 + h / 2. * A3 * A2_bar);	auto const  B3_bar = eval(B3 + h / 2. * A3 * B2_bar);
+			auto const  A4_bar =      A4 + h      * A4 * A3_bar ;	auto const  B4_bar =      B4 + h      * A4 * B3_bar ;
 
 			A = identity<StateStateMatrix>() + h / 6. * (A1_bar + 2. * A2_bar + 2. * A3_bar + A4_bar);
 			B = 					           h / 6. * (B1_bar + 2. * B2_bar + 2. * B3_bar + B4_bar);

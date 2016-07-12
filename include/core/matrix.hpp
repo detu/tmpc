@@ -130,4 +130,22 @@ namespace tmpc
 	{
 		return Matrix::ColsAtCompileTime;
 	}
+
+	template <typename Matrix>
+	typename Matrix::EvalReturnType eval(Eigen::MatrixBase<Matrix> const& m)
+	{
+		return m.eval();
+	}
+
+	template <typename Matrix>
+	// Eigen::NoAlias< Matrix, Eigen::MatrixBase<Matrix> > does not work as a return type
+	// for the reason I which don't understand:
+	// error: template argument for template template parameter must be a class template or type alias template
+    // Eigen::NoAlias< Matrix, Eigen::MatrixBase<Matrix> > noalias(Eigen::MatrixBase<Matrix> const& m)
+    //                         ^
+	// Eigen::NoAlias< Matrix, Eigen::MatrixBase<Matrix> > noalias(Eigen::MatrixBase<Matrix> const& m)
+	decltype(auto) noalias(Eigen::MatrixBase<Matrix> const& m)
+	{
+		return m.noalias();
+	}
 }
