@@ -148,4 +148,22 @@ namespace tmpc
 	{
 		return m.noalias();
 	}
+
+	template <typename Matrix>
+	decltype(auto) as_diagonal(Eigen::MatrixBase<Matrix> const& m)
+	{
+		return m.asDiagonal();
+	}
+
+	template <typename Matrix>
+	decltype(auto) diagonal(Eigen::MatrixBase<Matrix> const& m)
+	{
+		return m.diagonal();
+	}
+
+	template <typename Matrix>
+	decltype(auto) diagonal(Eigen::MatrixBase<Matrix>& m)
+	{
+		return m.diagonal();
+	}
 }

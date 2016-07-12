@@ -55,13 +55,18 @@ public:
 		return ode;
 	}
 
-	void LagrangeTerm(unsigned i, StateInputVector const& z, StateInputVector& g, LagrangeHessianMatrix& H) const
+	template <typename StateVector, typename InputVector, typename QMatrix, typename RMatrix, typename SMatrix,
+		typename StateGradientVector, typename InputGradientVector>
+	void LagrangeTerm(unsigned i, StateVector const& x, InputVector const& u, QMatrix& Q, RMatrix& R, SMatrix& S,
+			StateGradientVector& q, InputGradientVector& r) const
 	{
-		H << 66,  78,  90,
-			 78,  93, 108,
-			 90, 108, 126;
-
-		g << 0, 0, 0;
+		Q << 66,  78,
+			 78,  93;
+		R << 126;
+		S << 90,
+			108;
+		q << 0., 0.;
+		r << 0.;
 	}
 
 	StateVector const& getStateMin() const { return _x_min; }

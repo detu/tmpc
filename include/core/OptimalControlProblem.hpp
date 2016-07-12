@@ -13,6 +13,7 @@ namespace tmpc
 {
 	struct OptimalControlProblemTag {};
 
+	// TODO: obsolete class, get rid of.
 	template<class Derived, unsigned NX_, unsigned NU_, class _Scalar = double>
 	class OptimalControlProblem
 	{
