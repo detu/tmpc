@@ -1,5 +1,5 @@
 #
-# RTMC/src
+# tmpc/src
 #
 
 # Disable alignment of fixed-sized Eigen matrices.
@@ -16,8 +16,9 @@
 set (SRC
     ${PROJECT_INCLUDE_DIR}/core/RealtimeIteration.hpp
 	${PROJECT_INCLUDE_DIR}/core/OptimalControlProblem.hpp
-    ${PROJECT_INCLUDE_DIR}/core/ODEModel.hpp
     ${PROJECT_INCLUDE_DIR}/core/Trajectory.hpp
+    ${PROJECT_INCLUDE_DIR}/core/gauss_newton.hpp
+    ${PROJECT_INCLUDE_DIR}/core/matrix.hpp
         
 	${PROJECT_INCLUDE_DIR}/casadi_interface/GeneratedFunction.hpp casadi_interface/CasADiGeneratedFunction.cpp
 	
@@ -39,4 +40,4 @@ if (HPMPC_FOUND)
     )
 endif()
 
-add_library(tmpc STATIC ${HDR} ${SRC})
+add_library(tmpc STATIC ${SRC})
