@@ -18,6 +18,12 @@ struct Dimensions
 	static unsigned const NDT = 0;
 };
 
+// An empty class for ODE, since we provide the discrete-time dynamics ourselves.
+struct ODE
+{
+	ODE() {}
+};
+
 class SampleOCP : public tmpc::OptimalControlProblem<SampleOCP, Dimensions::NX, Dimensions::NU>
 {
 public:
@@ -41,6 +47,12 @@ public:
 		_u_max <<  1.;
 		_x_terminal_min << -1., -1.;
 		_x_terminal_max <<  1.,  1.;
+	}
+
+	ODE const& getODE() const
+	{
+		static ODE const ode;
+		return ode;
 	}
 
 	void LagrangeTerm(unsigned i, StateInputVector const& z, StateInputVector& g, LagrangeHessianMatrix& H) const
@@ -89,9 +101,6 @@ private:
 
 typedef SampleOCP OCP;
 
-// An empty class for ODE, since we provide the discrete-time dynamics ourselves.
-class ODE {};
-
 class DiscreteTimeModel
 {
 public:
@@ -107,7 +116,8 @@ public:
 	std::enable_if_t<
 		AMatrix::RowsAtCompileTime == NX && AMatrix::ColsAtCompileTime == NX &&
 		BMatrix::RowsAtCompileTime == NX && BMatrix::ColsAtCompileTime == NU,
-		void> Integrate(ODE const&, double t0, StateVector const& x0, InputVector const& u, StateVector& x_next,
+		void>
+	Integrate(ODE const&, double t0, StateVector const& x0, InputVector const& u, StateVector& x_next,
 			Eigen::MatrixBase<AMatrix>& A, Eigen::MatrixBase<BMatrix>& B) const
 	{
 		A << 1.,  1.,
@@ -129,17 +139,16 @@ public:
 	RealtimeIterationTest(unsigned Nt = 2)
 	:	_ocp(Nt)
 	,	_qpSolver(Nt)
-	,	_rti(_ocp, ode_, _integrator, _qpSolver, WorkingPoint(Nt, OCP::StateVector::Zero(), OCP::InputVector::Zero()))
+	,	_rti(_ocp, _integrator, _qpSolver, WorkingPoint(Nt, OCP::StateVector::Zero(), OCP::InputVector::Zero()))
 	{
 	}
 
 protected:
 	typedef DiscreteTimeModel Integrator;
-	typedef tmpc::RealtimeIteration<OCP, ODE, Integrator, QPSolver> RealtimeIteration;
+	typedef tmpc::RealtimeIteration<OCP, Integrator, QPSolver> RealtimeIteration;
 	typedef typename RealtimeIteration::WorkingPoint WorkingPoint;
 
 	OCP _ocp;
-	ODE ode_;
 	Integrator _integrator;
 	QPSolver _qpSolver;
 	RealtimeIteration _rti;
