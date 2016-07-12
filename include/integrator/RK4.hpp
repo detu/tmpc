@@ -19,8 +19,9 @@ namespace tmpc
 	public:
 		RK4(double time_step) : _timeStep(time_step) {}
 
-		template <typename ODE, typename StateVector0_, typename InputVector_, typename StateVector1_, typename AMatrix, typename BMatrix>
-		void Integrate(ODE const& ode, double t0, StateVector0_ const& x0, InputVector_ const& u, StateVector1_& x_next, AMatrix& A, BMatrix& B) const
+		template <typename ODE, typename StateVector0_, typename InputVector_, typename ParamVector, typename StateVector1_, typename AMatrix, typename BMatrix>
+		void Integrate(ODE const& ode, double t0, StateVector0_ const& x0, InputVector_ const& u,
+				ParamVector const& p, StateVector1_& x_next, AMatrix& A, BMatrix& B) const
 		{
 			auto constexpr NX = rows<StateVector0_>();
 			auto constexpr NU = rows<InputVector_ >();
@@ -35,10 +36,10 @@ namespace tmpc
 			auto const h = _timeStep;
 
 			// Calculating next state
-			ode(t0,          x0              , u, k1, A1, B1);
-			ode(t0 + h / 2., x0 + k1 * h / 2., u, k2, A2, B2);
-			ode(t0 + h / 2., x0 + k2 * h / 2., u, k3, A3, B3);
-			ode(t0 + h,      x0 + k3 * h     , u, k4, A4, B4);
+			ode(t0,          x0              , u, p, k1, A1, B1);
+			ode(t0 + h / 2., x0 + k1 * h / 2., u, p, k2, A2, B2);
+			ode(t0 + h / 2., x0 + k2 * h / 2., u, p, k3, A3, B3);
+			ode(t0 + h,      x0 + k3 * h     , u, p, k4, A4, B4);
 
 			x_next = x0 + (k1 + 2. * k2 + 2. * k3 + k4) * h / 6.;
 

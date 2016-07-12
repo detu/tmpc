@@ -97,7 +97,6 @@ class DiscreteTimeModel
 public:
 	typedef OCP::StateVector StateVector;
 	typedef OCP::InputVector InputVector;
-	typedef OCP::ODEJacobianMatrix ODEJacobianMatrix;
 
 	static unsigned const NX = OCP::NX;
 	static unsigned const NU = OCP::NU;
