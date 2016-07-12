@@ -44,10 +44,10 @@ class rk4_test : public ::testing::Test
 {
 protected:
 	typedef PendulumODE ODE;
-	typedef tmpc::RK4<PendulumODE> Integrator;
+	typedef tmpc::RK4 Integrator;
 
 	ODE ode_;
-	Integrator integrator_ {ode_, 0.01};
+	Integrator integrator_ {0.01};
 
 	std::ifstream test_data_ {"data/rk4/pendulum.txt"};
 };
@@ -82,7 +82,7 @@ TEST_F(rk4_test, integrate_new_interface_works)
 			ODE::StateVector xplus;
 			ODE::StateStateMatrix A;
 			ODE::StateInputMatrix B;
-			integrator_.Integrate(t, x0, u, xplus, A, B);
+			integrator_.Integrate(ode_, t, x0, u, xplus, A, B);
 
 			EXPECT_TRUE(xplus.isApprox(xplus_expected));
 			EXPECT_TRUE(A.isApprox(A_expected));

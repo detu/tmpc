@@ -10,8 +10,8 @@
 
 namespace tmpc
 {
-	template <typename OCP_, typename Integrator_, typename WorkingPoint, typename QP_>
-	void realtime_iteration_preparation(OCP_ const& ocp, Integrator_ const& integrator,
+	template <typename OCP_, typename ODE, typename Integrator_, typename WorkingPoint, typename QP_>
+	void realtime_iteration_preparation(OCP_ const& ocp, ODE const& ode, Integrator_ const& integrator,
 			WorkingPoint const& working_point, QP_& qp, double levenberg_marquardt = 0.)
 	{
 		typedef typename OCP_::StateVector StateVector;
@@ -50,7 +50,7 @@ namespace tmpc
 
 			Eigen::Matrix<double, n_x<QP_>(), n_x<QP_>()> A;
 			Eigen::Matrix<double, n_x<QP_>(), n_u<QP_>()> B;
-			integrator.Integrate(i * integrator.timeStep(), working_point.get_x(i), working_point.get_u(i), x_plus, A, B);
+			integrator.Integrate(ode, i * integrator.timeStep(), working_point.get_x(i), working_point.get_u(i), x_plus, A, B);
 			qp.set_A(i, A);
 			qp.set_B(i, B);
 
@@ -114,7 +114,7 @@ namespace tmpc
 		return working_point.get_u(0);
 	}
 
-	template<class _Problem, typename Integrator_, class QPSolver_>
+	template <typename _Problem, typename ODE, typename Integrator_, class QPSolver_>
 	class RealtimeIteration
 	{
 	public:
@@ -134,8 +134,9 @@ namespace tmpc
 
 		typedef std::function<void (typename QPSolver::Problem const&)> QPCallback;
 
-		RealtimeIteration(Problem const& ocp, Integrator const& integrator, QPSolver& solver, WorkingPoint const& working_point)
+		RealtimeIteration(Problem const& ocp, ODE const& ode, Integrator const& integrator, QPSolver& solver, WorkingPoint const& working_point)
 		:	_ocp(ocp)
+		,	ode_(ode)
 		,	_QP(working_point.nT())
 		,	_workingPoint(working_point)
 		,	_solution(working_point.nT())
@@ -191,11 +192,12 @@ namespace tmpc
 		// Initializes _G, _g, _y, _C, _c, _zMin, _zMax based on current working point _w.
 		void UpdateQP()
 		{
-			realtime_iteration_preparation(_ocp, _integrator, _workingPoint, _QP, _levenbergMarquardt);
+			realtime_iteration_preparation(_ocp, ode_, _integrator, _workingPoint, _QP, _levenbergMarquardt);
 		}
 
 		// Private data members.
 		Problem const& _ocp;
+		ODE const& ode_;
 		Integrator const& _integrator;
 
 		static const unsigned _Nu = Problem::NU;
