@@ -10,7 +10,7 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 
 set(PROJECT_DEPENDENCY_LIBS)
 
-find_package( Eigen3 REQUIRED )
+find_package( Eigen3 3.2.92 REQUIRED )
 include_directories(${EIGEN3_INCLUDE_DIR})
 
 include(ExternalProject)
