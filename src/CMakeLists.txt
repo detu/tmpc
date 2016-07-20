@@ -31,6 +31,8 @@ set (SRC
 	${PROJECT_INCLUDE_DIR}/qp/MultiStageQPSolution.hpp
 )
 
+unset(LIB)
+
 if (HPMPC_FOUND)
     set(SRC ${SRC} 
         ${PROJECT_INCLUDE_DIR}/qp/HPMPCSolver.hpp     qp/HPMPCSolver.cpp
@@ -38,6 +40,9 @@ if (HPMPC_FOUND)
         ${PROJECT_INCLUDE_DIR}/qp/HPMPCSolution.hpp
         qp/HPMPCProblemExport.hpp                  qp/HPMPCProblemExport.cpp
     )
+    
+    set(LIB hpmpc)
 endif()
 
 add_library(tmpc STATIC ${SRC})
+target_link_libraries(tmpc ${LIB})

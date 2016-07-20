@@ -2,8 +2,6 @@
 # test
 #
 
-add_subdirectory(googletest)
-
 # ~~~~~~~~~~ Our tests ~~~~~~~~~~~~~~
 set(SRC 
     condensing_test.cpp
@@ -30,10 +28,6 @@ target_link_libraries(tmpc_test
 
 if (qpOASES_FOUND)
     target_link_libraries(tmpc_test ${qpOASES_STATIC_LIBRARIES})
-endif ()
-
-if (HPMPC_FOUND)
-    target_link_libraries(tmpc_test ${HPMPC_STATIC_LIB})
 endif ()
 
 #target_link_libraries(tmpc_test ${PROJECT_DEPENDENCY_LIBS})

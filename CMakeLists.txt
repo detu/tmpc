@@ -8,7 +8,11 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 
-set(PROJECT_DEPENDENCY_LIBS)
+if(NOT TARGET gtest)
+    add_subdirectory(test/googletest)
+endif()
+
+unset(PROJECT_DEPENDENCY_LIBS)
 
 find_package( Eigen3 REQUIRED )
 include_directories(${EIGEN3_INCLUDE_DIR})
@@ -25,11 +29,13 @@ if (qpOASES_FOUND)
     list(APPEND PROJECT_DEPENDENCY_LIBS ${qpOASES_STATIC_LIBRARIES})
 endif()
 
-find_package(HPMPC)
-if (HPMPC_FOUND)
-    include_directories(${HPMPC_INCLUDE_DIR})
-    set(PROJECT_DEPENDENCY_LIBS ${PROJECT_DEPENDENCY_LIBS} ${HPMPC_STATIC_LIB})
-endif()
+set(HPMPC_BUILD_TESTS OFF)    # disable tests for hpmpc to avoid duplication of gtest
+add_subdirectory(extern/hpmpc)
+set(HPMPC_FOUND TRUE)    # notify the other CMake scripts that hpmpc is available
+set(HPMPC_INCLUDE_DIR extern/hpmpc/include)
+set(HPMPC_STATIC_LIB hpmpc)
+include_directories(${HPMPC_INCLUDE_DIR})
+set(PROJECT_DEPENDENCY_LIBS ${PROJECT_DEPENDENCY_LIBS} ${HPMPC_STATIC_LIB})
 
 message(STATUS "PROJECT_DEPENDENCY_LIBS=" ${PROJECT_DEPENDENCY_LIBS})
 
