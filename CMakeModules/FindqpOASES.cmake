@@ -5,7 +5,9 @@ MESSAGE( STATUS "Looking for qpOASES package: \n" )
 # Include folders
 #
 MESSAGE( STATUS "Looking for qpOASES include directories" )
-FIND_PATH(qpOASES_INCLUDE_DIRS "qpOASES.hpp")
+FIND_PATH(qpOASES_INCLUDE_DIRS "qpOASES.hpp"
+	HINTS ${QPOASES_DIR}/include $ENV{QPOASES_DIR}/include
+)
 IF( qpOASES_INCLUDE_DIRS )
 	MESSAGE( STATUS "Found qpOASES include directories: ${qpOASES_INCLUDE_DIRS} \n" )
 	SET( qpOASES_INCLUDE_DIRS_FOUND TRUE )
@@ -17,7 +19,8 @@ ENDIF( qpOASES_INCLUDE_DIRS )
 # Libraries
 #
 FIND_LIBRARY( qpOASES_STATIC_LIBRARIES
-	NAMES qpOASES
+	NAMES libqpOASES.a qpOASES
+	HINTS ${QPOASES_DIR}/bin $ENV{QPOASES_DIR}/bin
 )
 IF( qpOASES_STATIC_LIBRARIES )
 	MESSAGE( STATUS "Found qpOASES static library: ${qpOASES_STATIC_LIBRARIES} \n" )

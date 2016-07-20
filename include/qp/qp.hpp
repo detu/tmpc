@@ -74,8 +74,10 @@ namespace tmpc
 	void set_xu_max(QP& qp, std::size_t i, Eigen::MatrixBase<Matrix> const& val)
 	{
 		static_assert(Matrix::RowsAtCompileTime == n_xu<QP>(),	"Vector with (NX+NU) rows is expected");
-		qp.set_x_max(i, val.template topRows   <n_x<QP>()>());
-		qp.set_u_max(i, val.template bottomRows<n_u<QP>()>());
+		// qp.set_x_max(i, val.template topRows   <n_x<QP>()>());
+		// qp.set_u_max(i, val.template bottomRows<n_u<QP>()>());
+    qp.set_x_max(i, top_rows   <n_x<QP>()>(val));
+    qp.set_u_max(i, bottom_rows<n_u<QP>()>(val));
 	}
 
 	template<typename QP>

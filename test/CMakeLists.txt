@@ -5,25 +5,25 @@
 add_subdirectory(googletest)
 
 # ~~~~~~~~~~ Our tests ~~~~~~~~~~~~~~
-set(SRC 
+set(SRC
     condensing_test.cpp
     rk4_test.cpp
     realtime_iteration_test.cpp
     qp_test.cpp
     qp_solver_test.cpp
     eigen_print_wrap.hpp
-    
+
     pendulum_ode_generated.h    pendulum_ode_generated.c
    )
-   
+
 if (HPMPC_FOUND)
     set(SRC ${SRC} hpmpc_test.cpp)
 endif()
-   
+
 add_executable(tmpc_test ${SRC})
 
-target_link_libraries(tmpc_test 
-    tmpc 
+target_link_libraries(tmpc_test
+    tmpc
     gtest
     gtest_main
     )
