@@ -93,17 +93,17 @@ namespace tmpc
 			typedef typename OCP::StateVector StateVector;
 			typedef typename OCP::InputVector InputVector;
 			typedef typename OCP::StateInputVector StateInputVector;
-			typedef typename OCP::LagrangeHessianMatrix LagrangeHessianMatrix;
 			typedef typename OCP::MayerHessianMatrix MayerHessianMatrix;
 
 			auto const N = _ocp.getNumberOfIntervals();
 
 			for (unsigned i = 0; i < N; ++i)
 			{
-				// Hessian and gradient of Lagrang term.
-				//
-				LagrangeHessianMatrix H_i;
-				StateInputVector g_i;
+				// Hessian and gradient of Lagrange term.
+				// H = [Q, S
+				//      S, R]
+				// g = [q
+				//      r]
 
 				Eigen::Matrix<double, NX, NX> Q;
 				Eigen::Matrix<double, NU, NU> R;
