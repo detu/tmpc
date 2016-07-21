@@ -3,6 +3,7 @@
 #include "qp.hpp"
 #include "../core/matrix.hpp"
 
+#include <vector>
 #include <Eigen/Dense>
 
 namespace tmpc

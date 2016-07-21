@@ -2,7 +2,7 @@
 ##	This file is part of qpDUNES.
 ##
 ##	qpDUNES -- A DUal NEwton Strategy for convex quadratic programming.
-##	Copyright (C) 2012-2014 by Janick Frasch, Hans Joachim Ferreau et al. 
+##	Copyright (C) 2012-2014 by Janick Frasch, Hans Joachim Ferreau et al.
 ##	All rights reserved.
 ##
 ##	qpDUNES is free software; you can redistribute it and/or
@@ -58,7 +58,9 @@ MESSAGE( STATUS "Looking for qpDUNES package: \n" )
 # Include folders
 #
 MESSAGE( STATUS "Looking for qpDUNES include directories" )
-SET( qpDUNES_INCLUDE_DIRS $ENV{qpDUNES_ENV_INCLUDE_DIRS} )
+IF( NOT qpDUNES_INCLUDE_DIRS)
+  SET( qpDUNES_INCLUDE_DIRS $ENV{qpDUNES_ENV_INCLUDE_DIRS} )
+ENDIF( NOT qpDUNES_INCLUDE_DIRS)
 IF( qpDUNES_INCLUDE_DIRS )
 	MESSAGE( STATUS "Found qpDUNES include directories: ${qpDUNES_INCLUDE_DIRS} \n" )
 	SET( qpDUNES_INCLUDE_DIRS_FOUND TRUE )
@@ -70,7 +72,9 @@ ENDIF( qpDUNES_INCLUDE_DIRS )
 # Library folders
 #
 MESSAGE( STATUS "Looking for qpDUNES library directories" )
-SET( qpDUNES_LIBRARY_DIRS $ENV{qpDUNES_ENV_LIBRARY_DIRS} )
+IF( NOT qpDUNES_LIBRARY_DIRS)
+  SET( qpDUNES_LIBRARY_DIRS $ENV{qpDUNES_ENV_LIBRARY_DIRS} )
+ENDIF( NOT qpDUNES_LIBRARY_DIRS )
 IF( qpDUNES_LIBRARY_DIRS )
 	MESSAGE( STATUS "Found qpDUNES library directories: ${qpDUNES_LIBRARY_DIRS} \n" )
 	SET( qpDUNES_LIBRARY_DIRS_FOUND TRUE )

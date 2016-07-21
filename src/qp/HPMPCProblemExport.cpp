@@ -6,6 +6,7 @@
  */
 
 #include "HPMPCProblemExport.hpp"
+#include <vector>
 
 namespace hpmpc_problem_export
 {

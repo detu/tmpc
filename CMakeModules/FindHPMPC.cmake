@@ -6,7 +6,9 @@ MESSAGE( STATUS "Looking for HPMPC package: \n" )
 #
 MESSAGE( STATUS "Looking for HPMPC include directories" )
 
-FIND_PATH(HPMPC_INCLUDE_DIR "c_interface.h" ${HPMPC_DIR}/include)
+FIND_PATH(HPMPC_INCLUDE_DIR "c_interface.h"
+	HINTS ${HPMPC_DIR}/include $ENV{HPMPC_DIR}/include
+)
 IF( HPMPC_INCLUDE_DIR )
 	MESSAGE( STATUS "Found HPMPC include directories: ${HPMPC_INCLUDE_DIR} \n" )
 	SET( HPMPC_INCLUDE_DIRS_FOUND TRUE )
@@ -17,7 +19,9 @@ ENDIF( HPMPC_INCLUDE_DIR )
 #
 # Libraries
 #
-FIND_LIBRARY( HPMPC_STATIC_LIB hpmpc ${HPMPC_DIR})
+FIND_LIBRARY( HPMPC_STATIC_LIB hpmpc 
+	HINTS ${HPMPC_DIR} $ENV{HPMPC_DIR}
+)
 
 IF( HPMPC_STATIC_LIB )
 	MESSAGE( STATUS "Found HPMPC static library: ${HPMPC_STATIC_LIB} \n" )
