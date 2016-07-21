@@ -46,7 +46,12 @@ protected:
 	ODE ode_;
 	Integrator integrator_ {0.01};
 
-	std::ifstream test_data_ {"data/rk4/pendulum.txt"};
+	std::ifstream test_data_ {"test/data/rk4/pendulum.txt"};
+
+	void SetUp() override
+	{
+		ASSERT_TRUE(test_data_);
+	}
 };
 
 TEST_F(rk4_test, integrate_new_interface_works)

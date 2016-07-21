@@ -4,6 +4,9 @@
 
 add_subdirectory(googletest)
 
+# Copy test data files to binary dir
+file(COPY data DESTINATION .)
+
 # ~~~~~~~~~~ Our tests ~~~~~~~~~~~~~~
 set(SRC
     condensing_test.cpp
