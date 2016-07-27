@@ -36,6 +36,7 @@ endif()
 if(BUILD_QPOASES)
     ExternalProject_Add(qpOASES
                         SVN_REPOSITORY https://projects.coin-or.org/svn/qpOASES/stable/3.2
+                        SVN_TRUST_CERT 1
                         CMAKE_ARGS "-DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/qpoases-build"
                       )
     set( qpOASES_STATIC_LIBRARIES ${CMAKE_BINARY_DIR}/qpoases-build/lib/libqpOASES.a )
