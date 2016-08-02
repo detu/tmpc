@@ -35,22 +35,22 @@ namespace tmpc
 			auto const h = _timeStep;
 
 			// Calculating next state
-			ode(t0,          x0              , u, k1, A1, B1);
-			ode(t0 + h / 2., x0 + k1 * h / 2., u, k2, A2, B2);
-			ode(t0 + h / 2., x0 + k2 * h / 2., u, k3, A3, B3);
-			ode(t0 + h,      x0 + k3 * h     , u, k4, A4, B4);
+			ode(t0,          x0                , u, k1, A1, B1);
+			ode(t0 + h / 2., x0 + k1 * (h / 2.), u, k2, A2, B2);
+			ode(t0 + h / 2., x0 + k2 * (h / 2.), u, k3, A3, B3);
+			ode(t0 + h,      x0 + k3 * h       , u, k4, A4, B4);
 
 			// TODO: put "h / 6" in () and check how it has affected the performance...
-			x_next = x0 + (k1 + 2. * k2 + 2. * k3 + k4) * h / 6.;
+			x_next = x0 + (k1 + 2. * k2 + 2. * k3 + k4) * (h / 6.);
 
 			// Calculating sensitivities
 			auto const& A1_bar =      A1;							auto const& B1_bar =      B1;
-			auto const  A2_bar = eval(A2 + h / 2. * A2 * A1_bar);	auto const  B2_bar = eval(B2 + h / 2. * A2 * B1_bar);
-			auto const  A3_bar = eval(A3 + h / 2. * A3 * A2_bar);	auto const  B3_bar = eval(B3 + h / 2. * A3 * B2_bar);
-			auto const  A4_bar =      A4 + h      * A4 * A3_bar ;	auto const  B4_bar =      B4 + h      * A4 * B3_bar ;
+			auto const  A2_bar = eval(A2 + (h / 2.) * A2 * A1_bar);	auto const  B2_bar = eval(B2 + (h / 2.) * A2 * B1_bar);
+			auto const  A3_bar = eval(A3 + (h / 2.) * A3 * A2_bar);	auto const  B3_bar = eval(B3 + (h / 2.) * A3 * B2_bar);
+			auto const  A4_bar =      A4 +  h       * A4 * A3_bar ;	auto const  B4_bar =      B4 +  h       * A4 * B3_bar ;
 
-			A = identity<StateStateMatrix>() + h / 6. * (A1_bar + 2. * A2_bar + 2. * A3_bar + A4_bar);
-			B = 					           h / 6. * (B1_bar + 2. * B2_bar + 2. * B3_bar + B4_bar);
+			A = identity<StateStateMatrix>() + (h / 6.) * (A1_bar + 2. * A2_bar + 2. * A3_bar + A4_bar);
+			B = 					           (h / 6.) * (B1_bar + 2. * B2_bar + 2. * B3_bar + B4_bar);
 		}
 
 		//
@@ -62,13 +62,13 @@ namespace tmpc
 			auto const h = _timeStep;
 
 			// Calculating next state
-			auto const k1 = eval(ode(t0,          x0              , u));
-			auto const k2 = eval(ode(t0 + h / 2., x0 + k1 * h / 2., u));
-			auto const k3 = eval(ode(t0 + h / 2., x0 + k2 * h / 2., u));
-			auto const k4 = eval(ode(t0 + h,      x0 + k3 * h     , u));
+			auto const k1 = eval(ode(t0,          x0                , u));
+			auto const k2 = eval(ode(t0 + h / 2., x0 + k1 * (h / 2.), u));
+			auto const k3 = eval(ode(t0 + h / 2., x0 + k2 * (h / 2.), u));
+			auto const k4 = eval(ode(t0 + h,      x0 + k3 * h       , u));
 
 			// TODO: put "h / 6" in () and check how it has affected the performance...
-			return eval(x0 + (k1 + 2. * k2 + 2. * k3 + k4) * h / 6.);
+			return eval(x0 + (k1 + 2. * k2 + 2. * k3 + k4) * (h / 6.));
 		}
 
 		// TODO: should it be a parameter of Integrate() instead?
