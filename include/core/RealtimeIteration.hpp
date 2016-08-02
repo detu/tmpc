@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Trajectory.hpp"
-#include "OptimalControlProblem.hpp"
 #include "matrix.hpp"
 #include "../qp/qp.hpp"
 
@@ -15,6 +14,8 @@ namespace tmpc
 	{
 		static auto const NX = OCP::NX;
 		static auto const NU = OCP::NU;
+		static auto const NC = OCP::NC;
+		static auto const NCT = OCP::NCT;
 
 	public:
 		typedef QPSolver_ QPSolver;
@@ -90,11 +91,6 @@ namespace tmpc
 		// Initializes _G, _g, _y, _C, _c, _zMin, _zMax based on current working point _w.
 		void UpdateQP()
 		{
-			typedef typename OCP::StateVector StateVector;
-			typedef typename OCP::InputVector InputVector;
-			typedef typename OCP::StateInputVector StateInputVector;
-			typedef typename OCP::MayerHessianMatrix MayerHessianMatrix;
-
 			auto const N = _ocp.getNumberOfIntervals();
 
 			for (unsigned i = 0; i < N; ++i)
@@ -124,8 +120,7 @@ namespace tmpc
 
 				// C = [ssA, ssB];
 				// x_{k+1} = C * z_k + c_k
-				StateVector x_plus;
-
+				Eigen::Matrix<double, NX, 1> x_plus;
 				Eigen::Matrix<double, NX, NX> A;
 				Eigen::Matrix<double, NX, NU> B;
 				_integrator.Integrate(_ocp.getODE(), i * _integrator.timeStep(), _workingPoint.get_x(i), _workingPoint.get_u(i), x_plus, A, B);
@@ -136,11 +131,11 @@ namespace tmpc
 				// c = f(z_k) - x_{k+1}
 				_QP.set_b(i, x_plus - _workingPoint.get_x(i + 1));
 
-				typename OCP::ConstraintJacobianMatrix D;
-				typename OCP::ConstraintVector d_min, d_max;
+				Eigen::Matrix<double, NC, NX + NU> D;
+				Eigen::Matrix<double, NC, 1> d_min, d_max;
 				
 				{
-					StateInputVector z_i;
+					Eigen::Matrix<double, NX + NU, 1> z_i;
 					z_i << _workingPoint.get_x(i), _workingPoint.get_u(i);
 					_ocp.PathConstraints(i, z_i, D, d_min, d_max);
 				}
@@ -157,8 +152,8 @@ namespace tmpc
 			auto const xN = _workingPoint.get_x(N);
 
 			// End state constraints.
-			typename OCP::TerminalConstraintJacobianMatrix D;
-			typename OCP::TerminalConstraintVector d_min, d_max;
+			Eigen::Matrix<double, NCT, NX> D;
+			Eigen::Matrix<double, NCT, 1> d_min, d_max;
 			_ocp.TerminalConstraints(xN, D, d_min, d_max);
 			_QP.set_C_end(D);
 			_QP.set_d_end_min(d_min);
@@ -168,12 +163,12 @@ namespace tmpc
 			_QP.set_x_max(N, _ocp.getTerminalStateMax() - xN);
 
 			// Hessian and gradient of Mayer term.
-			typename OCP::MayerHessianMatrix H_T;
-			typename OCP::StateVector g_T;
+			Eigen::Matrix<double, NX, NX> H_T;
+			Eigen::Matrix<double, NX, 1> g_T;
 			_ocp.MayerTerm(xN, g_T, H_T);
 
 			// Adding Levenberg-Marquardt term to make H positive-definite.
-			_QP.set_Q(N, H_T + _levenbergMarquardt * identity<MayerHessianMatrix>());
+			_QP.set_Q(N, H_T + _levenbergMarquardt * identity<Eigen::Matrix<double, NX, NX>>());
 			_QP.set_q(N, g_T);
 		}
 

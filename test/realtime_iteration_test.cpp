@@ -2,7 +2,6 @@
 #include "../include/qp/CondensingSolver.hpp"
 #include "../include/qp/HPMPCSolver.hpp"
 #include "../include/integrator/RK4.hpp"
-#include "../include/core/OptimalControlProblem.hpp"
 
 #include <Eigen/Dense>
 
@@ -24,7 +23,7 @@ struct ODE
 	ODE() {}
 };
 
-class SampleOCP : public tmpc::OptimalControlProblem<SampleOCP, Dimensions::NX, Dimensions::NU>
+class SampleOCP
 {
 public:
 	static unsigned const NX  = Dimensions::NX;
@@ -32,14 +31,11 @@ public:
 	static unsigned const NC  = 0;
 	static unsigned const NCT = 0;
 
-	typedef double Scalar;
-	typedef Eigen::Matrix<Scalar, NC, 1> ConstraintVector;
-	typedef Eigen::Matrix<Scalar, NC, NW> ConstraintJacobianMatrix;
-	typedef Eigen::Matrix<Scalar, NCT, 1> TerminalConstraintVector;
-	typedef Eigen::Matrix<Scalar, NCT, NX> TerminalConstraintJacobianMatrix;
+	typedef Eigen::Matrix<double, NX, 1> StateVector;
+	typedef Eigen::Matrix<double, NU, 1> InputVector;
 
 	SampleOCP(std::size_t nt)
-	:	tmpc::OptimalControlProblem<SampleOCP, Dimensions::NX, Dimensions::NU>(nt)
+	:	nt_(nt)
 	{
 		_x_min << -1., -1.;
 		_x_max <<  1.,  1.;
@@ -47,6 +43,11 @@ public:
 		_u_max <<  1.;
 		_x_terminal_min << -1., -1.;
 		_x_terminal_max <<  1.,  1.;
+	}
+
+	std::size_t getNumberOfIntervals() const
+	{
+		return nt_;
 	}
 
 	ODE const& getODE() const
@@ -77,7 +78,8 @@ public:
 	InputVector const& getInputMin() const { return _u_min;	}
 	InputVector const& getInputMax() const { return _u_max;	}
 
-	void MayerTerm(const StateVector& x, StateVector& g, MayerHessianMatrix& H) const
+	template <typename StateVector, typename GradientVector, typename HessianMatrix>
+	void MayerTerm(const StateVector& x, GradientVector& g, HessianMatrix& H) const
 	{
 		H << 10, 14,
 		     14, 20;
@@ -85,17 +87,20 @@ public:
 		g << 0, 0;
 	}
 
+	template <typename StateInputVector, typename ConstraintJacobianMatrix, typename ConstraintVector>
 	void PathConstraints(unsigned i, const StateInputVector& z,
 		ConstraintJacobianMatrix& D, ConstraintVector& d_min, ConstraintVector& d_max) const
 	{
 	}
 
+	template <typename StateVector, typename TerminalConstraintJacobianMatrix, typename TerminalConstraintVector>
 	void TerminalConstraints(const StateVector& x, TerminalConstraintJacobianMatrix& D,
 		TerminalConstraintVector& d_min, TerminalConstraintVector& d_max) const
 	{
 	}
 
 private:
+	std::size_t nt_;
 	StateVector _x_min;
 	StateVector _x_max;
 	StateVector _x_terminal_min;
@@ -109,20 +114,8 @@ typedef SampleOCP OCP;
 class DiscreteTimeModel
 {
 public:
-	typedef OCP::StateVector StateVector;
-	typedef OCP::InputVector InputVector;
-
-	static unsigned const NX = OCP::NX;
-	static unsigned const NU = OCP::NU;
-
-	DiscreteTimeModel() {}
-
-	template <typename AMatrix, typename BMatrix>
-	std::enable_if_t<
-		AMatrix::RowsAtCompileTime == NX && AMatrix::ColsAtCompileTime == NX &&
-		BMatrix::RowsAtCompileTime == NX && BMatrix::ColsAtCompileTime == NU,
-		void>
-	Integrate(ODE const&, double t0, StateVector const& x0, InputVector const& u, StateVector& x_next,
+	template <typename StateVector, typename InputVector, typename NextStateVector, typename AMatrix, typename BMatrix>
+	void Integrate(ODE const&, double t0, StateVector const& x0, InputVector const& u, NextStateVector& x_next,
 			Eigen::MatrixBase<AMatrix>& A, Eigen::MatrixBase<BMatrix>& B) const
 	{
 		A << 1.,  1.,

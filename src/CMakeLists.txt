@@ -15,7 +15,6 @@
 
 set (SRC
     ${PROJECT_INCLUDE_DIR}/core/RealtimeIteration.hpp
-	${PROJECT_INCLUDE_DIR}/core/OptimalControlProblem.hpp
     ${PROJECT_INCLUDE_DIR}/core/Trajectory.hpp
     ${PROJECT_INCLUDE_DIR}/core/gauss_newton.hpp
     ${PROJECT_INCLUDE_DIR}/core/matrix.hpp
