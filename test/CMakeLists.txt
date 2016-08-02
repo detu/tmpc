@@ -29,6 +29,7 @@ target_link_libraries(tmpc_test
     tmpc
     gtest
     gtest_main
+    gmock
     )
 
 if (qpOASES_FOUND)

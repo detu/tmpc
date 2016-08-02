@@ -42,7 +42,9 @@ namespace tmpc
 		os << var_name << ".zMax{" << qp.nT() + 1 << "} = [..." << endl << get_x_end_max(qp) << "];" << endl;
 	}
 
-	// Define ostream insert operator for all classes derived from MultiStageQPSolutionBase.
+	// Define ostream insert operator for all classes derived from MultiStageQPSolutionTag.
+	// TODO: get rid of inheriting from a Tag class and define a predicate,
+	// something like is_multi_stage_qp_solution<T>::value or is_multi_stage_qp_solution<T>().
 	template <typename QPSolution>
 	inline std::enable_if_t<std::is_base_of<MultiStageQPSolutionTag, QPSolution>::value,
 		std::ostream&> operator<<(std::ostream& os, QPSolution const& solution)

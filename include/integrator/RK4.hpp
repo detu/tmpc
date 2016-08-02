@@ -40,6 +40,7 @@ namespace tmpc
 			ode(t0 + h / 2., x0 + k2 * h / 2., u, k3, A3, B3);
 			ode(t0 + h,      x0 + k3 * h     , u, k4, A4, B4);
 
+			// TODO: put "h / 6" in () and check how it has affected the performance...
 			x_next = x0 + (k1 + 2. * k2 + 2. * k3 + k4) * h / 6.;
 
 			// Calculating sensitivities
@@ -66,7 +67,8 @@ namespace tmpc
 			auto const k3 = eval(ode(t0 + h / 2., x0 + k2 * h / 2., u));
 			auto const k4 = eval(ode(t0 + h,      x0 + k3 * h     , u));
 
-			return x0 + (k1 + 2. * k2 + 2. * k3 + k4) * h / 6.;
+			// TODO: put "h / 6" in () and check how it has affected the performance...
+			return eval(x0 + (k1 + 2. * k2 + 2. * k3 + k4) * h / 6.);
 		}
 
 		// TODO: should it be a parameter of Integrate() instead?
