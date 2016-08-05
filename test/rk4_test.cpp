@@ -151,6 +151,28 @@ protected:
 	};
 };
 
+TEST_F(rk4_test, ode_correct)
+{
+	TestPoint p;
+
+	unsigned count = 0;
+	while (test_data_ >> p)
+	{
+		ODE::StateVector xdot;
+		ODE::StateStateMatrix A;
+		ODE::StateInputMatrix B;
+		ode_(p.t, p.x0, p.u, xdot, A, B);
+
+		EXPECT_TRUE(xdot.isApprox(p.xdot));
+		EXPECT_TRUE(A.isApprox(p.Aode));
+		EXPECT_TRUE(B.isApprox(p.Bode));
+
+		++count;
+	}
+
+	EXPECT_EQ(count, 600);
+}
+
 TEST_F(rk4_test, integrate_correct)
 {
 	TestPoint p;
@@ -158,27 +180,14 @@ TEST_F(rk4_test, integrate_correct)
 	unsigned count = 0;
 	while (test_data_ >> p)
 	{
-		{
-			ODE::StateVector xdot;
-			ODE::StateStateMatrix A;
-			ODE::StateInputMatrix B;
-			ode_(p.t, p.x0, p.u, xdot, A, B);
+		ODE::StateVector xplus;
+		ODE::StateStateMatrix A;
+		ODE::StateInputMatrix B;
+		integrator_.Integrate(ode_, p.t, p.x0, p.u, xplus, A, B);
 
-			EXPECT_TRUE(xdot.isApprox(p.xdot));
-			EXPECT_TRUE(A.isApprox(p.Aode));
-			EXPECT_TRUE(B.isApprox(p.Bode));
-		}
-
-		{
-			ODE::StateVector xplus;
-			ODE::StateStateMatrix A;
-			ODE::StateInputMatrix B;
-			integrator_.Integrate(ode_, p.t, p.x0, p.u, xplus, A, B);
-
-			EXPECT_THAT(as_container(xplus), testing::Pointwise(FloatNearPointwise(1e-5), as_container(p.xplus)));
-			EXPECT_THAT(as_container(A), testing::Pointwise(FloatNearPointwise(1e-5), as_container(p.A)));
-			EXPECT_THAT(as_container(B), testing::Pointwise(FloatNearPointwise(1e-5), as_container(p.B)));
-		}
+		EXPECT_THAT(as_container(xplus), testing::Pointwise(FloatNearPointwise(1e-5), as_container(p.xplus)));
+		EXPECT_THAT(as_container(A), testing::Pointwise(FloatNearPointwise(1e-5), as_container(p.A)));
+		EXPECT_THAT(as_container(B), testing::Pointwise(FloatNearPointwise(1e-5), as_container(p.B)));
 
 		++count;
 	}
@@ -193,21 +202,8 @@ TEST_F(rk4_test, integrate_no_sens_correct)
 	unsigned count = 0;
 	while (test_data_ >> p)
 	{
-		{
-			ODE::StateVector xdot;
-			ODE::StateStateMatrix A;
-			ODE::StateInputMatrix B;
-			ode_(p.t, p.x0, p.u, xdot, A, B);
-
-			EXPECT_TRUE(xdot.isApprox(p.xdot));
-			EXPECT_TRUE(A.isApprox(p.Aode));
-			EXPECT_TRUE(B.isApprox(p.Bode));
-		}
-
-		{
-			auto const xplus = integrator_.Integrate(ode_, p.t, p.x0, p.u);
-			EXPECT_THAT(as_container(xplus), testing::Pointwise(FloatNearPointwise(1e-5), as_container(p.xplus)));
-		}
+		auto const xplus = integrator_.Integrate(ode_, p.t, p.x0, p.u);
+		EXPECT_THAT(as_container(xplus), testing::Pointwise(FloatNearPointwise(1e-5), as_container(p.xplus)));
 
 		++count;
 	}
