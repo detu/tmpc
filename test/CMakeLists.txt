@@ -6,7 +6,7 @@ add_subdirectory(googletest)
 
 # Generate code and test data for rk4 test
 add_custom_command(
-    OUTPUT
+   OUTPUT
         pendulum_ode_generated.h
         pendulum_ode_generated.c
         data/rk4/pendulum.txt
@@ -35,7 +35,8 @@ set(SRC
     qp_solver_test.cpp
     eigen_print_wrap.hpp
 
-    pendulum_ode_generated.h    pendulum_ode_generated.c
+    ${CMAKE_CURRENT_BINARY_DIR}/pendulum_ode_generated.h    
+    ${CMAKE_CURRENT_BINARY_DIR}/pendulum_ode_generated.c
    )
 
 if (HPMPC_FOUND)
@@ -43,6 +44,10 @@ if (HPMPC_FOUND)
 endif()
 
 add_executable(tmpc_test ${SRC})
+
+target_include_directories(tmpc_test
+    PRIVATE ${CMAKE_CURRENT_BINARY_DIR}
+)
 
 target_link_libraries(tmpc_test
     tmpc

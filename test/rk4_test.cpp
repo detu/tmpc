@@ -97,16 +97,16 @@ public:
 
 	void operator()(double t, StateVector const& x0, InputVector const& u0,	StateVector& xdot, StateStateMatrix& A, StateInputMatrix& B) const
 	{
-		static casadi_interface::GeneratedFunction const _ode(CASADI_GENERATED_FUNCTION_INTERFACE(pendulum_ode_AB));
-		_ode({&t, x0.data(), u0.data()}, {xdot.data(), A.data(), B.data()});
+		static casadi_interface::GeneratedFunction const _ode(CASADI_GENERATED_FUNCTION_INTERFACE(pendulum_ode));
+		_ode({&t, x0.data(), u0.data()}, {xdot.data(), nullptr, A.data(), B.data(), nullptr, nullptr});
 	}
 
 	StateVector operator()(double t, StateVector const& x0, InputVector const& u0) const
 	{
-		static casadi_interface::GeneratedFunction const _ode(CASADI_GENERATED_FUNCTION_INTERFACE(pendulum_ode_AB));
+		static casadi_interface::GeneratedFunction const _ode(CASADI_GENERATED_FUNCTION_INTERFACE(pendulum_ode));
 
 		StateVector xdot;
-		_ode({&t, x0.data(), u0.data()}, {xdot.data(), nullptr, nullptr});
+		_ode({&t, x0.data(), u0.data()}, {xdot.data(), nullptr, nullptr, nullptr, nullptr, nullptr});
 
 		return xdot;
 	}
