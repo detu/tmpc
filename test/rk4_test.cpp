@@ -127,43 +127,57 @@ protected:
 	{
 		ASSERT_TRUE(test_data_);
 	}
+
+	struct TestPoint
+	{
+		double t;
+		ODE::StateVector xdot;
+		ODE::StateStateMatrix Aode;
+		ODE::StateInputMatrix Bode;
+		ODE::StateVector x0;
+		ODE::InputVector u;
+		ODE::StateVector xplus;
+		double qf;
+		ODE::StateStateMatrix A;
+		ODE::StateInputMatrix B;
+		ODE::StateVector qA;
+		ODE::InputVector qB;
+
+		friend std::istream& operator>>(std::istream& is, TestPoint& p)
+		{
+			return is >> p.t >> p.x0 >> p.u >> p.xdot >> p.Aode >> p.Bode >> p.xplus
+						>> p.qf >> p.A >> p.B >> p.qA >> p.qB;
+		};
+	};
 };
 
 TEST_F(rk4_test, integrate_correct)
 {
-	double t;
-	ODE::StateVector xdot_expected;
-	ODE::StateStateMatrix Aode_expected;
-	ODE::StateInputMatrix Bode_expected;
-	ODE::StateVector x0;
-	ODE::InputVector u;
-	ODE::StateVector xplus_expected;
-	ODE::StateStateMatrix A_expected;
-	ODE::StateInputMatrix B_expected;
+	TestPoint p;
 
 	unsigned count = 0;
-	while (test_data_ >> t >> x0 >> u >> xdot_expected >> Aode_expected >> Bode_expected >> xplus_expected >> A_expected >> B_expected)
+	while (test_data_ >> p)
 	{
 		{
 			ODE::StateVector xdot;
 			ODE::StateStateMatrix A;
 			ODE::StateInputMatrix B;
-			ode_(t, x0, u, xdot, A, B);
+			ode_(p.t, p.x0, p.u, xdot, A, B);
 
-			EXPECT_TRUE(xdot.isApprox(xdot_expected));
-			EXPECT_TRUE(A.isApprox(Aode_expected));
-			EXPECT_TRUE(B.isApprox(Bode_expected));
+			EXPECT_TRUE(xdot.isApprox(p.xdot));
+			EXPECT_TRUE(A.isApprox(p.Aode));
+			EXPECT_TRUE(B.isApprox(p.Bode));
 		}
 
 		{
 			ODE::StateVector xplus;
 			ODE::StateStateMatrix A;
 			ODE::StateInputMatrix B;
-			integrator_.Integrate(ode_, t, x0, u, xplus, A, B);
+			integrator_.Integrate(ode_, p.t, p.x0, p.u, xplus, A, B);
 
-			EXPECT_TRUE(xplus.isApprox(xplus_expected));
-			EXPECT_TRUE(A.isApprox(A_expected));
-			EXPECT_TRUE(B.isApprox(B_expected));
+			EXPECT_THAT(as_container(xplus), testing::Pointwise(FloatNearPointwise(1e-5), as_container(p.xplus)));
+			EXPECT_THAT(as_container(A), testing::Pointwise(FloatNearPointwise(1e-5), as_container(p.A)));
+			EXPECT_THAT(as_container(B), testing::Pointwise(FloatNearPointwise(1e-5), as_container(p.B)));
 		}
 
 		++count;
@@ -174,33 +188,25 @@ TEST_F(rk4_test, integrate_correct)
 
 TEST_F(rk4_test, integrate_no_sens_correct)
 {
-	double t;
-	ODE::StateVector xdot_expected;
-	ODE::StateStateMatrix Aode_expected;
-	ODE::StateInputMatrix Bode_expected;
-	ODE::StateVector x0;
-	ODE::InputVector u;
-	ODE::StateVector xplus_expected;
-	ODE::StateStateMatrix A_expected;
-	ODE::StateInputMatrix B_expected;
+	TestPoint p;
 
 	unsigned count = 0;
-	while (test_data_ >> t >> x0 >> u >> xdot_expected >> Aode_expected >> Bode_expected >> xplus_expected >> A_expected >> B_expected)
+	while (test_data_ >> p)
 	{
 		{
 			ODE::StateVector xdot;
 			ODE::StateStateMatrix A;
 			ODE::StateInputMatrix B;
-			ode_(t, x0, u, xdot, A, B);
+			ode_(p.t, p.x0, p.u, xdot, A, B);
 
-			EXPECT_TRUE(xdot.isApprox(xdot_expected));
-			EXPECT_TRUE(A.isApprox(Aode_expected));
-			EXPECT_TRUE(B.isApprox(Bode_expected));
+			EXPECT_TRUE(xdot.isApprox(p.xdot));
+			EXPECT_TRUE(A.isApprox(p.Aode));
+			EXPECT_TRUE(B.isApprox(p.Bode));
 		}
 
 		{
-			auto const xplus = integrator_.Integrate(ode_, t, x0, u);
-			EXPECT_THAT(as_container(xplus), testing::Pointwise(FloatNearPointwise(1e-6), as_container(xplus_expected)));
+			auto const xplus = integrator_.Integrate(ode_, p.t, p.x0, p.u);
+			EXPECT_THAT(as_container(xplus), testing::Pointwise(FloatNearPointwise(1e-5), as_container(p.xplus)));
 		}
 
 		++count;

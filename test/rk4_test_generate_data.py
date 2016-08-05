@@ -33,11 +33,15 @@ x     = cs.vertcat(phi, dphi)     # state vector
 z = cs.sin(phi)
 dx = cs.vertcat(dphi, -(m*g/l)*z - alpha*dphi + u/(m*l))
 ode = cs.Function('Pendulum_ODE', [x, u], [dx])
+q = dphi ** 2   # quadrature term
 
-integrator = cs.simpleRK(ode, 1)
+integrator = cs.integrator('pendulum_integrator', 'cvodes', {'x' : x, 'p' : u, 'ode' : dx, 'quad' : q}, {'tf' : ts})
 
-x_plus = integrator(x0 = x, p = u, h = ts)['xf']
-integrator_sens = cs.Function('Integrator_Sensitivities', [x, u], [x_plus, cs.jacobian(x_plus, x), cs.jacobian(x_plus, u)])
+integrator_out = integrator(x0 = x, p = u)
+x_plus = integrator_out['xf']
+qf = integrator_out['qf']
+integrator_sens = cs.Function('Integrator_Sensitivities', [x, u], [x_plus, qf, cs.jacobian(x_plus, x), cs.jacobian(x_plus, u), cs.jacobian(qf, x), cs.jacobian(qf, u)],
+                              ['x', 'u'], ['xf', 'qf', 'A', 'B', 'qA', 'qB'])
 
 #------------------------------
 # Generate C code for ODE model
@@ -63,7 +67,8 @@ gen.generate(name_c)
 #------------------------------
 x0 = cs.DM([1.0, 0.0])  # initial state
 
-data = {'t' : [], 'x0' : [], 'u' : [], 'xdot' : [], 'A_ode' : [], 'B_ode' : [], 'x_plus' : [], 'A' : [], 'B' : []}
+data = {'t' : [], 'x0' : [], 'u' : [], 'xdot' : [], 'A_ode' : [], 'B_ode' : [], 
+        'x_plus' : [], 'qf' : [], 'A' : [], 'B' : [], 'qA' : [], 'qB' : []}
 N = 600
 
 for k in range(N):
@@ -75,7 +80,7 @@ for k in range(N):
     else:
         u = 0.0
                                         
-    [x_plus, A, B] = integrator_sens(x0, u)
+    [x_plus, qf, A, B, qA, qB] = integrator_sens(x0, u)
     [xdot, A_ode, B_ode] = ode_AB(t_k, x0, u)
     
     data['t'     ].append(t_k)
@@ -85,8 +90,11 @@ for k in range(N):
     data['A_ode' ].append(A_ode)
     data['B_ode' ].append(B_ode)
     data['x_plus'].append(x_plus)
+    data['qf'    ].append(qf)
     data['A'     ].append(A)
     data['B'     ].append(B)
+    data['qA'    ].append(qA)
+    data['qB'    ].append(qB)
     x0 = x_plus
     
 ensure_dir_exist('data/rk4')
@@ -94,15 +102,18 @@ ensure_dir_exist('data/rk4')
 with open('data/rk4/pendulum.txt', 'w') as file:
     sep = ' '
     for k in range(N):
-        np.array(data['t'     ][k]).tofile(file, sep);        file.write('\t')
-        np.array(data['x0'    ][k]).tofile(file, sep);        file.write('\t')
-        np.array(data['u'     ][k]).tofile(file, sep);        file.write('\t')
-        np.array(data['xdot'  ][k]).tofile(file, sep);        file.write('\t')
-        np.array(data['A_ode' ][k]).tofile(file, sep);        file.write('\t')
-        np.array(data['B_ode' ][k]).tofile(file, sep);        file.write('\t')
-        np.array(data['x_plus'][k]).tofile(file, sep);        file.write('\t')
+        np.array(data['t'     ][k]).tofile(file, sep);        file.write('\n')
+        np.array(data['x0'    ][k]).tofile(file, sep);        file.write('\n')
+        np.array(data['u'     ][k]).tofile(file, sep);        file.write('\n')
+        np.array(data['xdot'  ][k]).tofile(file, sep);        file.write('\n')
+        np.array(data['A_ode' ][k]).tofile(file, sep);        file.write('\n')
+        np.array(data['B_ode' ][k]).tofile(file, sep);        file.write('\n')
+        np.array(data['x_plus'][k]).tofile(file, sep);        file.write('\n')
+        np.array(data['qf'    ][k]).tofile(file, sep);        file.write('\n')
         np.array(data['A'     ][k]).tofile(file, sep);        file.write('\n')
         np.array(data['B'     ][k]).tofile(file, sep);        file.write('\n')
+        np.array(data['qA'    ][k]).tofile(file, sep);        file.write('\n')
+        np.array(data['qB'    ][k]).tofile(file, sep);        file.write('\n')
         
 plt.subplot(2, 1, 1)
 plt.step(cs.vertcat(data['t']), cs.transpose(cs.horzcat(*data['u' ]))      )
