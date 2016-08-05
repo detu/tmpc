@@ -4,8 +4,27 @@
 
 add_subdirectory(googletest)
 
-# Copy test data files to binary dir
-file(COPY data DESTINATION .)
+# Generate code and test data for rk4 test
+add_custom_command(
+    OUTPUT
+        pendulum_ode_generated.h
+        pendulum_ode_generated.c
+        data/rk4/pendulum.txt
+   COMMAND 
+       python 
+   ARGS 
+       ${CMAKE_CURRENT_SOURCE_DIR}/rk4_test_generate_data.py
+   #[COMMAND command2 [ARGS] [args2...] ...]
+   #[MAIN_DEPENDENCY depend]
+   DEPENDS 
+       rk4_test_generate_data.py
+   #[IMPLICIT_DEPENDS <lang1> depend1
+   #                 [<lang2> depend2] ...]
+   WORKING_DIRECTORY 
+       ${CMAKE_CURRENT_BINARY_DIR}
+   COMMENT 
+       "Generating model code and test data for rk4..."
+)
 
 # ~~~~~~~~~~ Our tests ~~~~~~~~~~~~~~
 set(SRC

@@ -8,10 +8,21 @@ import matplotlib.pyplot as plt
 import numpy as np
 import os
 
+def ensure_dir_exist(dirname):
+    try:
+        os.makedirs(dirname)
+    except OSError:
+        if os.path.exists(dirname):
+            # We are nearly safe
+            pass
+        else:
+            # There was an error on creation, so make sure we know about it
+            raise
+
 t     = cs.MX.sym('t')       # time
 phi   = cs.MX.sym('phi')     # the angle phi
 dphi  = cs.MX.sym('dphi')    # the first derivative of phi w.r.t time
-F     = cs.MX.sym('F')       # a force acting on the pendulum
+u     = cs.MX.sym('u')       # a force acting on the pendulum
 l     = 1.                   # the length of the pendulum
 m     = 1.0                  # the mass of the pendulum
 g     = 9.81                 # the gravitational constant
@@ -20,24 +31,24 @@ ts    = 0.01                 # time step
 x     = cs.vertcat(phi, dphi)     # state vector
 
 z = cs.sin(phi)
-f = cs.vertcat(dphi, -(m*g/l)*z - alpha*dphi + F/(m*l))
-ode = cs.Function('Pendulum_ODE', [x, F], [f])
+dx = cs.vertcat(dphi, -(m*g/l)*z - alpha*dphi + u/(m*l))
+ode = cs.Function('Pendulum_ODE', [x, u], [dx])
 
 integrator = cs.simpleRK(ode, 1)
 
-x_plus = integrator(x0 = x, p = F, h = ts)['xf']
-integrator_sens = cs.Function('Integrator_Sensitivities', [x, F], [x_plus, cs.jacobian(x_plus, x), cs.jacobian(x_plus, F)])
+x_plus = integrator(x0 = x, p = u, h = ts)['xf']
+integrator_sens = cs.Function('Integrator_Sensitivities', [x, u], [x_plus, cs.jacobian(x_plus, x), cs.jacobian(x_plus, u)])
 
 #------------------------------
 # Generate C code for ODE model
 #------------------------------
 name = 'pendulum_ode'
 #x_seed = cs.MX('x_seed', x.shape);
-#u_seed = cs.MX('u_seed', F.shape);
-ode_AB = cs.Function(name + "_AB", [t, x, F], 
-                      [cs.densify(f), cs.densify(cs.jacobian(f, x)), cs.densify(cs.jacobian(f, F))], ['t', 'x0', 'u0'], ['xdot', 'A', 'B'])
-#ode_sens = cs.Function(name + "_sens", [t, x, F, x_seed, u_seed], 
-#                      [cs.densify(f), cs.densify(cs.jtimes(f, x, x_seed)), cs.densify(cs.jtimes(f, u, u_seed))], 
+#u_seed = cs.MX('u_seed', u.shape);
+ode_AB = cs.Function(name + "_AB", [t, x, u], 
+                      [cs.densify(dx), cs.densify(cs.jacobian(dx, x)), cs.densify(cs.jacobian(dx, u))], ['t', 'x0', 'u0'], ['xdot', 'A', 'B'])
+#ode_sens = cs.Function(name + "_sens", [t, x, u, x_seed, u_seed], 
+#                      [cs.densify(dx), cs.densify(cs.jtimes(dx, x, x_seed)), cs.densify(cs.jtimes(dx, u, u_seed))], 
 #                      ['t', 'x0', 'u0', 'x_seed', 'u_seed'], ['xdot', 'x_sens', 'u_sens'])
 gen = cs.CodeGenerator({'mex' : False, 'with_header' : True})
 gen.add(ode_AB)
@@ -77,6 +88,8 @@ for k in range(N):
     data['A'     ].append(A)
     data['B'     ].append(B)
     x0 = x_plus
+    
+ensure_dir_exist('data/rk4')
     
 with open('data/rk4/pendulum.txt', 'w') as file:
     sep = ' '
