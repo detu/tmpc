@@ -51,11 +51,15 @@ name = 'pendulum_ode'
 ode = cs.Function(name, [t, x, u], 
                       [cs.densify(dx), cs.densify(q), cs.densify(cs.jacobian(dx, x)), cs.densify(cs.jacobian(dx, u)), cs.densify(cs.jacobian(q, x)), cs.densify(cs.jacobian(q, u))], 
                       ['t', 'x0', 'u0'], ['xdot', 'q', 'A', 'B', 'qA', 'qB'])
-#ode_sens = cs.Function(name + "_sens", [t, x, u, x_seed, u_seed], 
-#                      [cs.densify(dx), cs.densify(cs.jtimes(dx, x, x_seed)), cs.densify(cs.jtimes(dx, u, u_seed))], 
-#                      ['t', 'x0', 'u0', 'x_seed', 'u_seed'], ['xdot', 'x_sens', 'u_sens'])
+
+x_seed = cs.MX.sym('x_seed', x.shape)
+u_seed = cs.MX.sym('u_seed', u.shape)
+ode_sens = cs.Function(name + "_sens", [t, x, u, x_seed, u_seed], 
+                      [cs.densify(dx), cs.densify(cs.jtimes(dx, x, x_seed) + cs.jtimes(dx, u, u_seed))], 
+                      ['t', 'x0', 'u0', 'x_seed', 'u_seed'], ['xdot', 'xdot_sens'])
 gen = cs.CodeGenerator({'mex' : False, 'with_header' : True})
 gen.add(ode)
+gen.add(ode_sens)
 name_c = '{0}_generated.c'.format(name)
 name_h = '{0}_generated.h'.format(name)
 gen.generate(name_c)

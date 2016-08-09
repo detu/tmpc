@@ -3,7 +3,7 @@
 #include <qp/qpOASESProgram.hpp>
 
 #include "qp_test_problems.hpp"
-#include "eigen_print_wrap.hpp"
+#include "gtest_tools_eigen.hpp"
 
 #include <gtest/gtest.h>
 

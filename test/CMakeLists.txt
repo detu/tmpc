@@ -33,7 +33,7 @@ set(SRC
     realtime_iteration_test.cpp
     qp_test.cpp
     qp_solver_test.cpp
-    eigen_print_wrap.hpp
+    gtest_tools_eigen.hpp
 
     ${CMAKE_CURRENT_BINARY_DIR}/pendulum_ode_generated.h    
     ${CMAKE_CURRENT_BINARY_DIR}/pendulum_ode_generated.c

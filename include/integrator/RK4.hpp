@@ -52,6 +52,26 @@ namespace tmpc
 			B = 					           (h / 6.) * (B1_bar + 2. * B2_bar + 2. * B3_bar + B4_bar);
 		}
 
+		template <typename ODE,
+			typename InitialStateVector, typename InputVector,
+			typename InitialStateSensitivityVector, typename InputSensitivityVector,
+			typename FinalStateVector, typename FinalStateSensitivityVector>
+		void Integrate(ODE const& ode, double t0, InitialStateVector const& x0, InputVector const& u,
+			InitialStateSensitivityVector const& seed_x0, InputSensitivityVector const& seed_u, FinalStateVector& xf, FinalStateSensitivityVector& sens_xf) const
+		{
+			Eigen::Matrix<double, rows<InitialStateVector>(),  1> k1, k2, k3, k4, sens_k1, sens_k2, sens_k3, sens_k4;
+			auto const h = _timeStep;
+
+			// Calculating next state
+			ode(t0,          x0                , u, seed_x0                     , seed_u, k1, sens_k1);
+			ode(t0 + h / 2., x0 + k1 * (h / 2.), u, seed_x0 + sens_k1 * (h / 2.), seed_u, k2, sens_k2);
+			ode(t0 + h / 2., x0 + k2 * (h / 2.), u, seed_x0 + sens_k2 * (h / 2.), seed_u, k3, sens_k3);
+			ode(t0 + h,      x0 + k3 *  h      , u, seed_x0 + sens_k3 *  h,       seed_u, k4, sens_k4);
+
+			xf      =      x0 + (     k1 + 2. *      k2 + 2. *      k3 +      k4) * (h / 6.);
+			sens_xf = seed_x0 + (sens_k1 + 2. * sens_k2 + 2. * sens_k3 + sens_k4) * (h / 6.);
+		}
+
 		//
 		// Sensitivity-free version of the Integrate() function.
 		//
@@ -111,6 +131,36 @@ namespace tmpc
 	private:
 		double const _timeStep;
 	};
+
+	template <typename Integrator, typename ODE,
+		typename InitialStateVector, typename InputVector_, typename FinalStateVector, typename AMatrix, typename BMatrix>
+	void integrate(Integrator const& integrator, ODE const& ode, double t0,
+			InitialStateVector const& x0, InputVector_ const& u, FinalStateVector& xf, AMatrix& A, BMatrix& B)
+	{
+		auto constexpr NX = rows<InitialStateVector>();
+		auto constexpr NU = rows<InputVector_      >();
+
+		typedef Eigen::Matrix<double, NX,  1> StateVector;
+		typedef Eigen::Matrix<double, NU,  1> InputVector;
+
+		for (decltype(rows<InitialStateVector>()) i = 0; i < NX; ++i)
+		{
+			StateVector seed_x0 = zero<StateVector>();
+			seed_x0(i) = 1.;
+
+			auto col_i = col(A, i);
+			integrator.Integrate(ode, t0, x0, u, seed_x0, zero<InputVector>(), xf, col_i);
+		}
+
+		for (decltype(rows<InputVector_      >()) i = 0; i < NU; ++i)
+		{
+			InputVector seed_u = zero<InputVector>();
+			seed_u(i) = 1.;
+
+			auto col_i = col(B, i);
+			integrator.Integrate(ode, t0, x0, u, zero<StateVector>(), seed_u, xf, col_i);
+		}
+	}
 }
 
 #endif /* INCLUDE_INTEGRATOR_RK4_HPP_ */
