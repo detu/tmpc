@@ -40,7 +40,6 @@ namespace tmpc
 			ode(t0 + h / 2., x0 + k2 * (h / 2.), u, k3, A3, B3);
 			ode(t0 + h,      x0 + k3 * h       , u, k4, A4, B4);
 
-			// TODO: put "h / 6" in () and check how it has affected the performance...
 			x_next = x0 + (k1 + 2. * k2 + 2. * k3 + k4) * (h / 6.);
 
 			// Calculating sensitivities
@@ -67,8 +66,43 @@ namespace tmpc
 			auto const k3 = eval(ode(t0 + h / 2., x0 + k2 * (h / 2.), u));
 			auto const k4 = eval(ode(t0 + h,      x0 + k3 * h       , u));
 
-			// TODO: put "h / 6" in () and check how it has affected the performance...
 			return eval(x0 + (k1 + 2. * k2 + 2. * k3 + k4) * (h / 6.));
+		}
+
+		// Integration including a quadrature.
+		template <typename ODE, typename Quad, typename StateVector0_, typename InputVector_, typename StateVector1_, typename AMatrix, typename BMatrix,
+			typename QuadStateSensitivityVector, typename QuadInputSensitivityVector>
+		void Integrate(ODE const& ode, Quad const& quad, double t0, StateVector0_ const& x0, InputVector_ const& u, StateVector1_& x_next, double& qf, AMatrix& A, BMatrix& B,
+				QuadStateSensitivityVector& dqf_dx0, QuadInputSensitivityVector& dqf_du) const
+		{
+			auto constexpr NX = rows<StateVector0_>();
+			auto constexpr NU = rows<InputVector_ >();
+
+			typedef Eigen::Matrix<double, NX,  1> StateVector;
+			typedef Eigen::Matrix<double, NX, NX> StateStateMatrix;
+			typedef Eigen::Matrix<double, NX, NU> StateInputMatrix;
+
+			StateVector k1, k2, k3, k4;
+			StateStateMatrix A1, A2, A3, A4;
+			StateInputMatrix B1, B2, B3, B4;
+			auto const h = _timeStep;
+
+			// Calculating next state
+			ode(t0,          x0                , u, k1, A1, B1);
+			ode(t0 + h / 2., x0 + k1 * (h / 2.), u, k2, A2, B2);
+			ode(t0 + h / 2., x0 + k2 * (h / 2.), u, k3, A3, B3);
+			ode(t0 + h,      x0 + k3 * h       , u, k4, A4, B4);
+
+			x_next = x0 + (k1 + 2. * k2 + 2. * k3 + k4) * (h / 6.);
+
+			// Calculating sensitivities
+			auto const& A1_bar =      A1;							auto const& B1_bar =      B1;
+			auto const  A2_bar = eval(A2 + (h / 2.) * A2 * A1_bar);	auto const  B2_bar = eval(B2 + (h / 2.) * A2 * B1_bar);
+			auto const  A3_bar = eval(A3 + (h / 2.) * A3 * A2_bar);	auto const  B3_bar = eval(B3 + (h / 2.) * A3 * B2_bar);
+			auto const  A4_bar =      A4 +  h       * A4 * A3_bar ;	auto const  B4_bar =      B4 +  h       * A4 * B3_bar ;
+
+			A = identity<StateStateMatrix>() + (h / 6.) * (A1_bar + 2. * A2_bar + 2. * A3_bar + A4_bar);
+			B = 					           (h / 6.) * (B1_bar + 2. * B2_bar + 2. * B3_bar + B4_bar);
 		}
 
 		// TODO: should it be a parameter of Integrate() instead?
