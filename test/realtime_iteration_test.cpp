@@ -1,7 +1,7 @@
 #include "../include/core/RealtimeIteration.hpp"
 #include "../include/qp/CondensingSolver.hpp"
 #include "../include/qp/HPMPCSolver.hpp"
-#include "../include/integrator/RK4.hpp"
+#include "../include/integrator/rk4.hpp"
 
 #include <Eigen/Dense>
 
@@ -114,21 +114,21 @@ typedef SampleOCP OCP;
 class DiscreteTimeModel
 {
 public:
-	template <typename StateVector, typename InputVector, typename NextStateVector, typename AMatrix, typename BMatrix>
-	void Integrate(ODE const&, double t0, StateVector const& x0, InputVector const& u, NextStateVector& x_next,
-			Eigen::MatrixBase<AMatrix>& A, Eigen::MatrixBase<BMatrix>& B) const
-	{
-		A << 1.,  1.,
-		     0.,  1.;
-
-		B << 0.5,
-			 1. ;
-
-		x_next = A * x0 + B * u;
-	}
-
 	double timeStep() const { return 1.; }
 };
+
+template <typename StateVector, typename InputVector, typename NextStateVector, typename AMatrix, typename BMatrix>
+void integrate(DiscreteTimeModel const& integrator, ODE const&, double t0, StateVector const& x0, InputVector const& u, NextStateVector& x_next,
+		Eigen::MatrixBase<AMatrix>& A, Eigen::MatrixBase<BMatrix>& B)
+{
+	A << 1.,  1.,
+		 0.,  1.;
+
+	B << 0.5,
+		 1. ;
+
+	x_next = A * x0 + B * u;
+}
 
 template <typename QPSolver>
 class RealtimeIterationTest : public ::testing::Test
