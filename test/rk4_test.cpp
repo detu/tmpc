@@ -1,4 +1,4 @@
-#include <integrator/RK4.hpp>
+#include <integrator/rk4.hpp>
 #include <casadi_interface/GeneratedFunction.hpp>
 
 #include "pendulum_ode_generated.h"
@@ -126,7 +126,7 @@ TEST_F(rk4_test, integrate_correct)
 		ODE::StateVector xplus;
 		ODE::StateStateMatrix A;
 		ODE::StateInputMatrix B;
-		integrator_.Integrate(ode_, p.t, p.x0, p.u, xplus, A, B);
+		integrate(integrator_, ode_, p.t, p.x0, p.u, xplus, A, B);
 
 		EXPECT_THAT(as_container(xplus), testing::Pointwise(FloatNearPointwise(1e-5), as_container(p.xplus)));
 		EXPECT_THAT(as_container(A), testing::Pointwise(FloatNearPointwise(1e-5), as_container(p.A)));
@@ -145,7 +145,7 @@ TEST_F(rk4_test, integrate_no_sens_correct)
 	unsigned count = 0;
 	while (test_data_ >> p)
 	{
-		auto const xplus = integrator_.Integrate(ode_, p.t, p.x0, p.u);
+		auto const xplus = integrate(integrator_, ode_, p.t, p.x0, p.u);
 		EXPECT_THAT(as_container(xplus), testing::Pointwise(FloatNearPointwise(1e-5), as_container(p.xplus)));
 
 		++count;

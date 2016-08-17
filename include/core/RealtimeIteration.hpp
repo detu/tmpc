@@ -123,7 +123,7 @@ namespace tmpc
 				Eigen::Matrix<double, NX, 1> x_plus;
 				Eigen::Matrix<double, NX, NX> A;
 				Eigen::Matrix<double, NX, NU> B;
-				_integrator.Integrate(_ocp.getODE(), i * _integrator.timeStep(), _workingPoint.get_x(i), _workingPoint.get_u(i), x_plus, A, B);
+				integrate(_integrator, _ocp.getODE(), i * _integrator.timeStep(), _workingPoint.get_x(i), _workingPoint.get_u(i), x_plus, A, B);
 				_QP.set_A(i, A);
 				_QP.set_B(i, B);
 

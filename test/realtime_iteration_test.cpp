@@ -1,7 +1,7 @@
 #include "../include/core/RealtimeIteration.hpp"
 #include "../include/qp/CondensingSolver.hpp"
 #include "../include/qp/HPMPCSolver.hpp"
-#include "../include/integrator/RK4.hpp"
+#include "../include/integrator/rk4.hpp"
 
 #include <Eigen/Dense>
 
