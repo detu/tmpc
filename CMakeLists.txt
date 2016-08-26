@@ -16,14 +16,19 @@ include(ExternalProject)
 option(BUILD_QPOASES "Build qpOASES along with TMPC." ON)
 option(BUILD_HPMPC "Build HPMPC along with TMPC." ON)
 option(BUILD_QPDUNES "Build qpDUNES along with TMPC." ON)
+option(REBUILD_EXTERNS "Update and rebuild external projects." OFF)
 
 if(BUILD_QPDUNES)
-    ExternalProject_Add(qpDUNES
-                        GIT_REPOSITORY https://github.com/jfrasch/qpDUNES.git
-                        CMAKE_ARGS "-DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/qpdunes-build"
-                      )
+    # Only rebuild qpDUNES if requested
+    if(NOT EXISTS ${CMAKE_BINARY_DIR}/qpdunes-build/lib/libqpdunes.a OR REBUILD_EXTERNS)
+        ExternalProject_Add(qpDUNES
+                            GIT_REPOSITORY https://github.com/jfrasch/qpDUNES.git
+                            CMAKE_ARGS "-DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/qpdunes-build"
+                          )
+    endif()
+
     set( qpDUNES_INCLUDE_DIRS ${CMAKE_BINARY_DIR}/qpdunes-build/include/qpdunes )
-    set( qpDUNES_LIBRARY_DIRS ${CMAKE_BINARY_DIR}/qpdunes-build/lib/libqpDUNES.a )
+    set( qpDUNES_LIBRARY_DIRS ${CMAKE_BINARY_DIR}/qpdunes-build/lib/libqpdunes.a )
     set( qpDUNES_FOUND TRUE )
 elseif()
     find_package(qpDUNES)
@@ -34,11 +39,15 @@ if (qpDUNES_FOUND)
 endif()
 
 if(BUILD_QPOASES)
-    ExternalProject_Add(qpOASES
-                        SVN_REPOSITORY https://projects.coin-or.org/svn/qpOASES/stable/3.2
-                        SVN_TRUST_CERT 1
-                        CMAKE_ARGS "-DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/qpoases-build"
-                      )
+    # Only rebuild qpOASES if requested
+    if(NOT EXISTS ${CMAKE_BINARY_DIR}/qpoases-build/lib/libqpOASES.a OR REBUILD_EXTERNS)
+        ExternalProject_Add(qpOASES
+                            SVN_REPOSITORY https://projects.coin-or.org/svn/qpOASES/stable/3.2
+                            SVN_TRUST_CERT 1
+                            CMAKE_ARGS "-DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/qpoases-build"
+                          )
+    endif()
+
     set( qpOASES_STATIC_LIBRARIES ${CMAKE_BINARY_DIR}/qpoases-build/lib/libqpOASES.a )
     set( qpOASES_INCLUDE_DIRS ${CMAKE_BINARY_DIR}/qpoases-build/include )
     set( qpOASES_FOUND TRUE )
@@ -51,13 +60,17 @@ if (qpOASES_FOUND)
 endif()
 
 if(BUILD_HPMPC)
-    ExternalProject_Add(hpmpc
-                        GIT_REPOSITORY https://github.com/mkotlyar/hpmpc.git
-                        BUILD_IN_SOURCE 1
-                        CONFIGURE_COMMAND ""
-                        BUILD_COMMAND make
-                        INSTALL_COMMAND make PREFIX="${CMAKE_BINARY_DIR}/hpmpc-build" install_static
-                      )
+    # Only rebuild HPMPC if requested
+    if(NOT EXISTS ${CMAKE_BINARY_DIR}/hpmpc-build/hpmpc/lib/libhpmpc.a OR REBUILD_EXTERNS)
+        ExternalProject_Add(hpmpc
+                            GIT_REPOSITORY https://github.com/mkotlyar/hpmpc.git
+                            BUILD_IN_SOURCE 1
+                            CONFIGURE_COMMAND ""
+                            BUILD_COMMAND make
+                            INSTALL_COMMAND make PREFIX="${CMAKE_BINARY_DIR}/hpmpc-build" install_static
+                          )
+    endif()
+
     set( HPMPC_STATIC_LIB ${CMAKE_BINARY_DIR}/hpmpc-build/hpmpc/lib/libhpmpc.a )
     set( HPMPC_INCLUDE_DIR ${CMAKE_BINARY_DIR}/hpmpc-build/hpmpc/include )
     set( HPMPC_FOUND TRUE )
@@ -77,3 +90,4 @@ include(CompilerOptions.cmake)
 
 add_subdirectory(src)
 add_subdirectory(test)
+add_subdirectory(doc/examples)

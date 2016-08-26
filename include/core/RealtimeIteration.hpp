@@ -60,12 +60,15 @@ namespace tmpc
 			return _workingPoint.get_u(0);
 		}
 
+    void ShiftWorkingPoint()
+    {
+      shift(_workingPoint);
+    }
+
 		void Preparation()
 		{
 			if (_prepared)
 				throw std::logic_error("ModelPredictiveController::Preparation(): controller is already prepared.");
-
-			shift(_workingPoint);
 
 			// Calculate new QP.
 			UpdateQP();
@@ -133,7 +136,7 @@ namespace tmpc
 
 				Eigen::Matrix<double, NC, NX + NU> D;
 				Eigen::Matrix<double, NC, 1> d_min, d_max;
-				
+
 				{
 					Eigen::Matrix<double, NX + NU, 1> z_i;
 					z_i << _workingPoint.get_x(i), _workingPoint.get_u(i);
@@ -143,7 +146,7 @@ namespace tmpc
 				set_CD(_QP, i, D);
 				_QP.set_d_min(i, d_min);
 				_QP.set_d_max(i, d_max);
-				
+
 				// Bound constraints.
 				_QP.set_x_min(i, _ocp.getStateMin() - _workingPoint.get_x(i));	_QP.set_u_min(i, _ocp.getInputMin() - _workingPoint.get_u(i));
 				_QP.set_x_max(i, _ocp.getStateMax() - _workingPoint.get_x(i));	_QP.set_u_max(i, _ocp.getInputMax() - _workingPoint.get_u(i));
@@ -175,7 +178,7 @@ namespace tmpc
 		// Private data members.
 		OCP const& _ocp;
 		Integrator const& _integrator;
-		
+
 		typename QPSolver::Problem _QP;
 		typename QPSolver::Solution _solution;
 		QPSolver& solver_;
