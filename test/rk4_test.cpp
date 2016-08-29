@@ -33,20 +33,20 @@ public:
 
 	void operator()(double t, StateVector const& x0, InputVector const& u0,	StateVector& xdot, StateStateMatrix& A, StateInputMatrix& B) const
 	{
-		static casadi_interface::GeneratedFunction const _ode(CASADI_GENERATED_FUNCTION_INTERFACE(pendulum_ode));
+		static casadi_interface::GeneratedFunction<CASADI_GENERATED_FUNCTION_INTERFACE(pendulum_ode), 3, 6> const _ode;
 		_ode({&t, x0.data(), u0.data()}, {xdot.data(), nullptr, A.data(), B.data(), nullptr, nullptr});
 	}
 
 	void operator()(double t, StateVector const& x0, InputVector const& u0,
 			StateVector const& x0_seed, InputVector const& u_seed, StateVector& xdot, StateVector& xdot_sens) const
 	{
-		static casadi_interface::GeneratedFunction const _ode(CASADI_GENERATED_FUNCTION_INTERFACE(pendulum_ode_sens));
+		static casadi_interface::GeneratedFunction<CASADI_GENERATED_FUNCTION_INTERFACE(pendulum_ode_sens), 5, 2> const _ode;
 		_ode({&t, x0.data(), u0.data(), x0_seed.data(), u_seed.data()}, {xdot.data(), xdot_sens.data()});
 	}
 
 	StateVector operator()(double t, StateVector const& x0, InputVector const& u0) const
 	{
-		static casadi_interface::GeneratedFunction const _ode(CASADI_GENERATED_FUNCTION_INTERFACE(pendulum_ode));
+		static casadi_interface::GeneratedFunction<CASADI_GENERATED_FUNCTION_INTERFACE(pendulum_ode), 3, 6> const _ode;
 
 		StateVector xdot;
 		_ode({&t, x0.data(), u0.data()}, {xdot.data(), nullptr, nullptr, nullptr, nullptr, nullptr});

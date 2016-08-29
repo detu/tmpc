@@ -10,60 +10,117 @@
 #include <vector>
 #include <string>
 #include <array>
-#include <initializer_list>
+//#include <initializer_list>
+#include <sstream>
 
 #ifdef real_t
 #undef real_t
 #endif
 
-#define CASADI_GENERATED_FUNCTION_INTERFACE(name) #name, name, name##_incref, name##_decref, name##_n_in, name##_n_out, \
+#define CASADI_GENERATED_FUNCTION_INTERFACE(name) /*#name,*/ name, name##_incref, name##_decref, name##_n_in, name##_n_out, \
 	name##_name_in, name##_name_out, name##_sparsity_in, name##_sparsity_out, name##_work
 
 namespace casadi_interface
 {
+	typedef double real_t;
+
+	template <
+		//char const * Name,
+		int (*_fun)(const real_t** arg, real_t** res, int* iw, real_t* w, int mem),
+		void (*_fun_incref)(void),
+		void (*_fun_decref)(void),
+		int (*_fun_n_in)(void),
+		int (*_fun_n_out)(void),
+		const char* (*_fun_name_in)(int i),
+		const char* (*_fun_name_out)(int i),
+		const int* (*_fun_sparsity_in)(int i),
+		const int* (*_fun_sparsity_out)(int i),
+		int (*_fun_work)(int *sz_arg, int* sz_res, int *sz_iw, int *sz_w),
+		std::size_t N_IN,
+		std::size_t N_OUT
+	>
 	class GeneratedFunction
 	{
 	public:
-		typedef double real_t;
+		GeneratedFunction()
+		{
+			// Check number of inputs and outputs.
+			if (_fun_n_in() != N_IN)
+				throw std::logic_error("Generated function's number of inputs is different from expected!");
 
-		GeneratedFunction(
-			const std::string& name,
-			int (*fun)(const real_t** arg, real_t** res, int* iw, real_t* w, int mem),
-			void (*fun_incref)(void),
-			void (*fun_decref)(void),
-			int (*fun_n_in)(void),
-			int (*fun_n_out)(void),
-			const char* (*fun_name_in)(int i),
-			const char* (*fun_name_out)(int i),
-			const int* (*fun_sparsity_in)(int i),
-			const int* (*fun_sparsity_out)(int i),
-			int (*fun_work)(int *sz_arg, int* sz_res, int *sz_iw, int *sz_w));
+			if (_fun_n_out() != N_OUT)
+				throw std::logic_error("Generated function's number of outputs is different from expected!");
 
-		~GeneratedFunction();
+			// Get work memory size.
+			int sz_arg, sz_res, sz_iw, sz_w;
+			if (int code = _fun_work(&sz_arg, &sz_res, &sz_iw, &sz_w) != 0)
+				throw std::runtime_error(name() + "_fun_work() returned " + std::to_string(code));
 
-		const std::string& name() const;
-		int n_in() const;
-		int n_out() const;
-		int n_row_in(int ind) const;
-		int n_col_in(int ind) const;
-		int n_row_out(int ind) const;
-		int n_col_out(int ind) const;
+			_arg.resize(sz_arg);
+			_res.resize(sz_res);
+			_iw.resize(sz_iw);
+			_w.resize(sz_w);
+		}
 
-		//void operator()(std::array<const real_t *, 3> arg, std::array<real_t *, 3> res);
-		void operator() (std::initializer_list<const real_t *> arg, std::initializer_list<real_t *> res) const;
+		static std::string const& name()
+		{
+			static std::string const n = "[FUNCTION NAME]";
+			return n;
+		}
+
+		static std::size_t constexpr n_in () { return N_IN ; }
+		static std::size_t constexpr n_out() { return N_OUT; }
+
+		int n_row_in(int ind) const
+		{
+			if (ind < 0 || ind >= n_in())
+				throw std::out_of_range("GeneratedFunction::n_row_in(): index is out of range");
+
+			return _fun_sparsity_in(ind)[0];
+		}
+
+		int n_col_in(int ind) const
+		{
+			if (ind < 0 || ind >= n_in())
+				throw std::out_of_range("GeneratedFunction::n_col_in(): index is out of range");
+
+			return _fun_sparsity_in(ind)[1];
+		}
+
+		int n_row_out(int ind) const
+		{
+			if (ind < 0 || ind >= n_out())
+				throw std::out_of_range("GeneratedFunction::n_row_out(): index is out of range");
+
+			return _fun_sparsity_out(ind)[0];
+		}
+
+		int n_col_out(int ind) const
+		{
+			if (ind < 0 || ind >= n_out())
+				throw std::out_of_range("GeneratedFunction::n_col_out(): index is out of range");
+
+			return _fun_sparsity_out(ind)[1];
+		}
+
+		void operator()(std::array<const real_t *, N_IN> arg, std::array<real_t *, N_OUT> res) const
+		{
+			std::copy(arg.begin(), arg.end(), _arg.begin());
+			std::copy(res.begin(), res.end(), _res.begin());
+
+			_fun(_arg.data(), _res.data(), _iw.data(), _w.data(), 0);
+		}
 
 	private:
-		const std::string _name;
-		int (*_fun)(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
-		void (*_fun_incref)(void);
-		void (*_fun_decref)(void);
-		int (*_fun_n_in)(void);
-		int (*_fun_n_out)(void);
-		const char* (*_fun_name_in)(int i);
-		const char* (*_fun_name_out)(int i);
-		const int* (*_fun_sparsity_in)(int i);
-		const int* (*_fun_sparsity_out)(int i);
-		int (*_fun_work)(int *sz_arg, int* sz_res, int *sz_iw, int *sz_w);
+		struct RefHolder
+		{
+			RefHolder() { _fun_incref(); }
+			~RefHolder() { _fun_decref(); }
+		};
+
+		RefHolder refHolder_;
+
+		//static std::string const _name { "Name" };
 
 		/*
 		"To allow the evaluation to be performed efficiently with a small memory footprint, the

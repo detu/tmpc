@@ -9,11 +9,25 @@
 
 #include "gtest_tools_eigen.hpp"
 
+#include <tuple>
+
 class CasADiFunctionTest : public ::testing::Test
 {
 protected:
-	casadi_interface::GeneratedFunction fun_ {CASADI_GENERATED_FUNCTION_INTERFACE(f)};
+	casadi_interface::GeneratedFunction<CASADI_GENERATED_FUNCTION_INTERFACE(f), 3, 2> fun_;
 };
+
+TEST_F(CasADiFunctionTest, incorrect_n_inputs_throws)
+{
+	typedef casadi_interface::GeneratedFunction<CASADI_GENERATED_FUNCTION_INTERFACE(f), 4, 2> wrong_fun_type;
+	ASSERT_THROW(wrong_fun_type(), std::logic_error);
+}
+
+TEST_F(CasADiFunctionTest, incorrect_n_outputs_throws)
+{
+	typedef casadi_interface::GeneratedFunction<CASADI_GENERATED_FUNCTION_INTERFACE(f), 3, 3> wrong_fun_type;
+	ASSERT_THROW(wrong_fun_type(), std::logic_error);
+}
 
 TEST_F(CasADiFunctionTest, n_in_correct)
 {
@@ -63,7 +77,16 @@ TEST_F(CasADiFunctionTest, pointer_argument_call_correct)
 	fun_({A.data(), B.data(), &x}, {X.data(), Y.data()});
 }
 
-/*
+// Some interesting ideas here: https://habrahabr.ru/post/228031/
+template <typename Function, typename... Args>
+void call(Function const& f, Args&&... args)
+{
+	auto args_ = std::forward_as_tuple(std::forward<Args>(args)...);
+
+	std::index_sequence<0, 1, 2> ind_in;
+	std::index_sequence<0, 1> ind_out;
+}
+
 TEST_F(CasADiFunctionTest, matrix_argument_call_correct)
 {
 	Eigen::Matrix<double, 3, 2> const A = Eigen::Matrix<double, 3, 2>::Zero();
@@ -73,6 +96,5 @@ TEST_F(CasADiFunctionTest, matrix_argument_call_correct)
 	Eigen::Matrix<double, 3, 2> X;
 	Eigen::Matrix<double, 1, 2> Y;
 
-	fun_(A, B, x, X, Y);
+	call(fun_, A, B, x, X, Y);
 }
-*/

@@ -19,7 +19,7 @@ set (SRC
     ${PROJECT_INCLUDE_DIR}/core/gauss_newton.hpp
     ${PROJECT_INCLUDE_DIR}/core/matrix.hpp
 
-	${PROJECT_INCLUDE_DIR}/casadi_interface/GeneratedFunction.hpp casadi_interface/CasADiGeneratedFunction.cpp
+	${PROJECT_INCLUDE_DIR}/casadi_interface/GeneratedFunction.hpp #casadi_interface/GeneratedFunction.cpp
 
 	${PROJECT_INCLUDE_DIR}/integrator/rk4.hpp
 
