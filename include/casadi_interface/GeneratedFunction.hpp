@@ -44,6 +44,10 @@ namespace casadi_interface
 		const std::string& name() const;
 		int n_in() const;
 		int n_out() const;
+		int n_row_in(int ind) const;
+		int n_col_in(int ind) const;
+		int n_row_out(int ind) const;
+		int n_col_out(int ind) const;
 
 		//void operator()(std::array<const real_t *, 3> arg, std::array<real_t *, 3> res);
 		void operator() (std::initializer_list<const real_t *> arg, std::initializer_list<real_t *> res) const;
@@ -70,9 +74,18 @@ namespace casadi_interface
 		CasADi user guide, section 5.3.
 		http://casadi.sourceforge.net/users_guide/casadi-users_guide.pdf
 		*/
-		mutable std::vector<const real_t *> _arg;
+		mutable std::vector<real_t const *> _arg;
 		mutable std::vector<real_t *> _res;
 		mutable std::vector<int> _iw;
 		mutable std::vector<real_t> _w;
 	};
+
+	// Some interesting ideas here: https://habrahabr.ru/post/228031/
+	/*
+	template <typename... Args>
+	void call(GeneratedFunction const& f, Args&&... args)
+	{
+		std::tuple<Args...> args_ = std::make_tuple(std::forward<Args>(args)...);
+	}
+	*/
 } /* namespace mpmc */

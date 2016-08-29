@@ -68,6 +68,38 @@ namespace casadi_interface
 		return _fun_n_out();
 	}
 
+	int GeneratedFunction::n_row_in(int ind) const
+	{
+		if (ind < 0 || ind >= n_in())
+			throw std::out_of_range("CasADiGeneratedFunction::n_row_in(): index is out of range");
+
+		return _fun_sparsity_in(ind)[0];
+	}
+
+	int GeneratedFunction::n_col_in(int ind) const
+	{
+		if (ind < 0 || ind >= n_in())
+			throw std::out_of_range("CasADiGeneratedFunction::n_col_in(): index is out of range");
+
+		return _fun_sparsity_in(ind)[1];
+	}
+
+	int GeneratedFunction::n_row_out(int ind) const
+	{
+		if (ind < 0 || ind >= n_out())
+			throw std::out_of_range("CasADiGeneratedFunction::n_row_out(): index is out of range");
+
+		return _fun_sparsity_out(ind)[0];
+	}
+
+	int GeneratedFunction::n_col_out(int ind) const
+	{
+		if (ind < 0 || ind >= n_out())
+			throw std::out_of_range("CasADiGeneratedFunction::n_col_out(): index is out of range");
+
+		return _fun_sparsity_out(ind)[1];
+	}
+
 	void GeneratedFunction::operator()(std::initializer_list<const real_t *> arg, std::initializer_list<real_t *> res) const
 	{
 		if (arg.size() != n_in())
