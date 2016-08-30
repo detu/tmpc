@@ -78,13 +78,10 @@ TEST_F(CasADiFunctionTest, pointer_argument_call_correct)
 }
 
 // Some interesting ideas here: https://habrahabr.ru/post/228031/
-template <typename Function, typename... Args>
-void call(Function const& f, Args&&... args)
+template <typename Function, typename TupleIn, typename TupleOut>
+void call(Function const& f, TupleIn&& in, TupleOut&& out)
 {
-	auto args_ = std::forward_as_tuple(std::forward<Args>(args)...);
-
-	std::index_sequence<0, 1, 2> ind_in;
-	std::index_sequence<0, 1> ind_out;
+	throw std::logic_error("Not implemented");
 }
 
 TEST_F(CasADiFunctionTest, matrix_argument_call_correct)
@@ -96,5 +93,5 @@ TEST_F(CasADiFunctionTest, matrix_argument_call_correct)
 	Eigen::Matrix<double, 3, 2> X;
 	Eigen::Matrix<double, 1, 2> Y;
 
-	call(fun_, A, B, x, X, Y);
+	call(fun_, std::forward_as_tuple(A, B, x), std::forward_as_tuple(X, Y));
 }

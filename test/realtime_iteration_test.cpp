@@ -130,7 +130,7 @@ void integrate(DiscreteTimeModel const& integrator, ODE const&, double t0, State
 	x_next = A * x0 + B * u;
 }
 
-template <typename QPSolver>
+template <typename RealtimeIteration>
 class RealtimeIterationTest : public ::testing::Test
 {
 public:
@@ -142,9 +142,10 @@ public:
 	}
 
 protected:
-	typedef DiscreteTimeModel Integrator;
-	typedef tmpc::RealtimeIteration<OCP, Integrator, QPSolver> RealtimeIteration;
+	typedef typename RealtimeIteration::Integrator Integrator;
+	//typedef tmpc::RealtimeIteration<OCP, Integrator, QPSolver> RealtimeIteration;
 	typedef typename RealtimeIteration::WorkingPoint WorkingPoint;
+	typedef typename RealtimeIteration::QPSolver QPSolver;
 
 	OCP _ocp;
 	Integrator _integrator;
@@ -163,11 +164,11 @@ protected:
 };
 
 typedef ::testing::Types<
-		tmpc::CondensingSolver<OCP::NX, OCP::NU, OCP::NC, OCP::NCT>
-,		tmpc::HPMPCSolver     <OCP::NX, OCP::NU, OCP::NC, OCP::NCT>
-	> QPSolvers;
+		tmpc::RealtimeIteration<OCP, DiscreteTimeModel, tmpc::CondensingSolver>
+,		tmpc::RealtimeIteration<OCP, DiscreteTimeModel, tmpc::HPMPCSolver     >
+	> RTITypes;
 
-TYPED_TEST_CASE(RealtimeIterationTest, QPSolvers);
+TYPED_TEST_CASE(RealtimeIterationTest, RTITypes);
 
 TYPED_TEST(RealtimeIterationTest, GivesCorrectU0)
 {
