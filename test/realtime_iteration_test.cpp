@@ -37,6 +37,12 @@ public:
 	SampleOCP(std::size_t nt)
 	:	nt_(nt)
 	{
+		A << 1.,  1.,
+			 0.,  1.;
+
+		B << 0.5,
+			 1. ;
+
 		_x_min << -1., -1.;
 		_x_max <<  1.,  1.;
 		_u_min << -1.;
@@ -45,6 +51,7 @@ public:
 		_x_terminal_max <<  1.,  1.;
 	}
 
+	// TODO: Move this property to RealtimeIteration?
 	std::size_t getNumberOfIntervals() const
 	{
 		return nt_;
@@ -56,47 +63,80 @@ public:
 		return ode;
 	}
 
-	template <typename StateVector, typename InputVector, typename QMatrix, typename RMatrix, typename SMatrix,
-		typename StateGradientVector, typename InputGradientVector>
-	void LagrangeTerm(unsigned i, StateVector const& x, InputVector const& u, QMatrix& Q, RMatrix& R, SMatrix& S,
-			StateGradientVector& q, InputGradientVector& r) const
+	template <typename Stage>
+	void InitStage(Stage& stage) const
 	{
+		Eigen::Matrix<double, NX, NX> Q;
 		Q << 66,  78,
 			 78,  93;
+
+		Eigen::Matrix<double, NU, NU> R;
 		R << 126;
+
+		Eigen::Matrix<double, NX, NU> S;
 		S << 90,
 			108;
+
+		Eigen::Matrix<double, NX, 1> q;
 		q << 0., 0.;
+
+		Eigen::Matrix<double, NU, 1> r;
 		r << 0.;
+
+		stage.set_Q(Q);
+		stage.set_R(R);
+		stage.set_S(S);
+		stage.set_q(q);
+		stage.set_r(r);
+
+		stage.set_A(A);
+		stage.set_B(B);
+		stage.set_x_next(A * stage.get_x() + B * stage.get_u());
+
+		stage.set_x_min(_x_min);
+		stage.set_x_max(_x_max);
+		stage.set_u_min(_u_min);
+		stage.set_u_max(_u_max);
+
+		// No path constraints:
+		//stage.set_C(...);
+		//stage.set_D(...);
+		//stage.set_d_min(...);
+		//stage.set_d_max(...);
 	}
 
-	StateVector const& getStateMin() const { return _x_min; }
-	StateVector const& getStateMax() const { return _x_max; }
-	StateVector const& getTerminalStateMin() const { return _x_terminal_min; }
-	StateVector const& getTerminalStateMax() const { return _x_terminal_max; }
-
-	InputVector const& getInputMin() const { return _u_min;	}
-	InputVector const& getInputMax() const { return _u_max;	}
-
-	template <typename StateVector, typename GradientVector, typename HessianMatrix>
-	void MayerTerm(const StateVector& x, GradientVector& g, HessianMatrix& H) const
+	template <typename Stage>
+	void InitTerminalStage(Stage& stage) const
 	{
+		Eigen::Matrix<double, NX, NX> H;
 		H << 10, 14,
-		     14, 20;
+			 14, 20;
 
+		Eigen::Matrix<double, NX, 1> g;
 		g << 0, 0;
+
+		stage.set_Q(H);
+		stage.set_q(g);
+
+		stage.set_x_min(_x_terminal_min);
+		stage.set_x_max(_x_terminal_max);
+
+		// No terminal constraints:
+		//stage.set_C(...);
+		//stage.set_d_min(...);
+		//stage.set_d_max(...);
 	}
 
-	template <typename StateInputVector, typename ConstraintJacobianMatrix, typename ConstraintVector>
-	void PathConstraints(unsigned i, const StateInputVector& z,
-		ConstraintJacobianMatrix& D, ConstraintVector& d_min, ConstraintVector& d_max) const
+	template <typename Stage>
+	void UpdateStage(Stage& stage) const
 	{
+		stage.set_x_next(A * stage.get_x() + B * stage.get_u());
 	}
 
-	template <typename StateVector, typename TerminalConstraintJacobianMatrix, typename TerminalConstraintVector>
-	void TerminalConstraints(const StateVector& x, TerminalConstraintJacobianMatrix& D,
-		TerminalConstraintVector& d_min, TerminalConstraintVector& d_max) const
+	template <typename Stage>
+	void UpdateTerminalStage(Stage& stage) const
 	{
+		// Nothing to update.
 	}
 
 private:
@@ -107,28 +147,12 @@ private:
 	StateVector _x_terminal_max;
 	InputVector _u_min;
 	InputVector _u_max;
+
+	Eigen::Matrix<double, NX, NX> A;
+	Eigen::Matrix<double, NX, NU> B;
 };
 
 typedef SampleOCP OCP;
-
-class DiscreteTimeModel
-{
-public:
-	double timeStep() const { return 1.; }
-};
-
-template <typename StateVector, typename InputVector, typename NextStateVector, typename AMatrix, typename BMatrix>
-void integrate(DiscreteTimeModel const& integrator, ODE const&, double t0, StateVector const& x0, InputVector const& u, NextStateVector& x_next,
-		Eigen::MatrixBase<AMatrix>& A, Eigen::MatrixBase<BMatrix>& B)
-{
-	A << 1.,  1.,
-		 0.,  1.;
-
-	B << 0.5,
-		 1. ;
-
-	x_next = A * x0 + B * u;
-}
 
 template <typename RealtimeIteration>
 class RealtimeIterationTest : public ::testing::Test
@@ -137,18 +161,16 @@ public:
 	RealtimeIterationTest(unsigned Nt = 2)
 	:	_ocp(Nt)
 	,	_qpSolver(Nt)
-	,	_rti(_ocp, _integrator, _qpSolver, WorkingPoint(Nt, OCP::StateVector::Zero(), OCP::InputVector::Zero()))
+	,	_rti(_ocp, _qpSolver, WorkingPoint(Nt, OCP::StateVector::Zero(), OCP::InputVector::Zero()))
 	{
 	}
 
 protected:
-	typedef typename RealtimeIteration::Integrator Integrator;
 	//typedef tmpc::RealtimeIteration<OCP, Integrator, QPSolver> RealtimeIteration;
 	typedef typename RealtimeIteration::WorkingPoint WorkingPoint;
 	typedef typename RealtimeIteration::QPSolver QPSolver;
 
 	OCP _ocp;
-	Integrator _integrator;
 	QPSolver _qpSolver;
 	RealtimeIteration _rti;
 
@@ -164,8 +186,8 @@ protected:
 };
 
 typedef ::testing::Types<
-		tmpc::RealtimeIteration<OCP, DiscreteTimeModel, tmpc::CondensingSolver>
-,		tmpc::RealtimeIteration<OCP, DiscreteTimeModel, tmpc::HPMPCSolver     >
+		tmpc::RealtimeIteration<OCP, tmpc::CondensingSolver>
+,		tmpc::RealtimeIteration<OCP, tmpc::HPMPCSolver     >
 	> RTITypes;
 
 TYPED_TEST_CASE(RealtimeIterationTest, RTITypes);

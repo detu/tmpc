@@ -52,6 +52,7 @@ set(SRC
     condensing_test.cpp
     rk4_test.cpp
     realtime_iteration_test.cpp
+    #mhe_test.cpp
     qp_test.cpp
     qp_solver_test.cpp
     casadi_function_test.cpp
