@@ -24,13 +24,13 @@ namespace tmpc
 
 		RealtimeIteration(OCP const& ocp, QPSolver& solver, WorkingPoint const& working_point)
 		:	_ocp(ocp)
-		,	_QP(working_point.nT())
-		,	workingPoint_(working_point)
+		,	work_(working_point)
 		,	solution_(working_point.nT())
 		,	solver_(solver)
 		,	_prepared(true)
 		{
 			InitQP();
+			UpdateQP();
 		}
 
 		RealtimeIteration(RealtimeIteration const&) = delete;
@@ -38,44 +38,44 @@ namespace tmpc
 		/**
 		 * \brief Number of intervals.
 		 */
-		std::size_t nT() const { return workingPoint_.nT(); }
+		std::size_t nT() const { return work_.workingPoint_.nT(); }
 
 		// Feed current state x0, get back control input u.
 		template <typename StateVector>
 		decltype(auto) Feedback(const StateVector& x0)
 		{
 			if (!_prepared)
-				throw std::logic_error("ModelPredictiveController::Feedback(): controller is not prepared.");
+				throw std::logic_error("RealtimeIteration::Feedback(): RTI is not prepared.");
 
 			/** embed current initial value */
-			auto const w0 = eval(x0 - workingPoint_.get_x(0));
-			_QP.set_x_min(0, w0);
-			_QP.set_x_max(0, w0);
+			auto const w0 = eval(x0 - work_.workingPoint_.get_x(0));
+			work_.qp_.set_x_min(0, w0);
+			work_.qp_.set_x_max(0, w0);
 
 			/** solve QP */
-			solver_.Solve(_QP, solution_);
+			solver_.Solve(work_.qp_, solution_);
 
 			// Add QP step to the working point.
 			{
 				for (std::size_t i = 0; i < nT() + 1; ++i)
-					workingPoint_.set_x(i, workingPoint_.get_x(i) + solution_.get_x(i));
+					work_.workingPoint_.set_x(i, work_.workingPoint_.get_x(i) + solution_.get_x(i));
 
 				for (std::size_t i = 0; i < nT(); ++i)
-					workingPoint_.set_u(i, workingPoint_.get_u(i) + solution_.get_u(i));
+					work_.workingPoint_.set_u(i, work_.workingPoint_.get_u(i) + solution_.get_u(i));
 			}
 
 			_prepared = false;
 
 			// Return the calculated control input.
-			return workingPoint_.get_u(0);
+			return work_.workingPoint_.get_u(0);
 		}
 
 		void Preparation()
 		{
 			if (_prepared)
-				throw std::logic_error("ModelPredictiveController::Preparation(): controller is already prepared.");
+				throw std::logic_error("RealtimeIteration::Preparation(): RTI is already prepared.");
 
-			shift(workingPoint_);
+			shift(work_.workingPoint_);
 
 			// Calculate new QP.
 			UpdateQP();
@@ -83,10 +83,10 @@ namespace tmpc
 			_prepared = true;
 		}
 
-		WorkingPoint const& getWorkingPoint() const { return workingPoint_; }
+		WorkingPoint const& getWorkingPoint() const { return work_.workingPoint_; }
 
-		double getLevenbergMarquardt() const { return _levenbergMarquardt; }
-		void setLevenbergMarquardt(double val) { _levenbergMarquardt = val; }
+		double getLevenbergMarquardt() const { return work_.levenbergMarquardt_; }
+		void setLevenbergMarquardt(double val) { work_.levenbergMarquardt_ = val; }
 
 		/*
 		unsigned nT() const { return _ocp.getNumberOfIntervals(); }
@@ -98,6 +98,8 @@ namespace tmpc
 	private:
 		typedef typename QPSolver::Solution Solution;
 		typedef typename QPSolver::Problem QP;
+
+		struct Work;
 
 		/**
 		 * \brief Interface for setting MPC stage data.
@@ -119,11 +121,22 @@ namespace tmpc
 		class Stage
 		{
 		public:
-			Stage(std::size_t i, WorkingPoint& wp, QP& qp, double lm)
-			:	i_(i), workingPoint_(wp), qp_(qp), levenbergMarquardt_(lm) {
+			Stage(std::size_t i, Work& work)
+			:	i_(i), work_(work) {
 			}
 
 			Stage(Stage const&) = delete;
+
+			/**
+			 * \brief On destruction, updates bounds of the QP.
+			 */
+			~Stage()
+			{
+				work_.qp_.set_x_min(i_, work_.lowerBound_.get_x(i_) - get_x());
+				work_.qp_.set_x_max(i_, work_.upperBound_.get_x(i_) - get_x());
+				work_.qp_.set_u_min(i_, work_.lowerBound_.get_u(i_) - get_u());
+				work_.qp_.set_u_max(i_, work_.upperBound_.get_u(i_) - get_u());
+			}
 
 			/**
 			 * \brief Returns stage index.
@@ -133,75 +146,73 @@ namespace tmpc
 			/**
 			 * \brief Returns stage state.
 			 */
-			decltype(auto) get_x() const { return workingPoint_.get_x(i_); }
+			decltype(auto) get_x() const { return work_.workingPoint_.get_x(i_); }
 
 			/**
 			 * \brief Returns stage input.
 			 */
-			decltype(auto) get_u() const { return workingPoint_.get_u(i_); }
+			decltype(auto) get_u() const { return work_.workingPoint_.get_u(i_); }
 
 			template <typename Matrix>
 			void set_Q(Matrix const &Q)	{
-				qp_.set_Q(i_, Q + levenbergMarquardt_ * identity<Matrix>());	// Adding Levenberg-Marquardt term to make H positive-definite.
+				work_.qp_.set_Q(i_, Q + work_.levenbergMarquardt_ * identity<Matrix>());	// Adding Levenberg-Marquardt term to make H positive-definite.
 			}
 
 			template <typename Matrix>
 			void set_R(Matrix const &R) {
-				qp_.set_R(i_, R + levenbergMarquardt_ * identity<Matrix>());	// Adding Levenberg-Marquardt term to make H positive-definite.
+				work_.qp_.set_R(i_, R + work_.levenbergMarquardt_ * identity<Matrix>());	// Adding Levenberg-Marquardt term to make H positive-definite.
 			}
 
 			template <typename Matrix>
-			void set_S(Matrix const &S) { qp_.set_S(i_, S); }
+			void set_S(Matrix const &S) { work_.qp_.set_S(i_, S); }
 
 			template <typename Vector>
-			void set_q(Vector const &q) { qp_.set_q(i_, q); }
+			void set_q(Vector const &q) { work_.qp_.set_q(i_, q); }
 
 			template <typename Vector>
-			void set_r(Vector const &r) { qp_.set_r(i_, r); }
+			void set_r(Vector const &r) { work_.qp_.set_r(i_, r); }
 
 			template <typename Matrix>
-			void set_A(Matrix const &A) { qp_.set_A(i_, A); }
+			void set_A(Matrix const &A) { work_.qp_.set_A(i_, A); }
 
 			template <typename Matrix>
-			void set_B(Matrix const &B) { qp_.set_B(i_, B); }
+			void set_B(Matrix const &B) { work_.qp_.set_B(i_, B); }
 
 			template <typename Vector>
 			void set_x_next(Vector const& x_next)
 			{
 				// \Delta x_{k+1} = C \Delta z_k + f(z_k) - x_{k+1}
 				// c = f(z_k) - x_{k+1}
-				qp_.set_b(i_, x_next - workingPoint_.get_x(i_ + 1));
+				work_.qp_.set_b(i_, x_next - work_.workingPoint_.get_x(i_ + 1));
 			}
 
 			template <typename Matrix>
-			void set_C(Matrix const &C) { qp_.set_C(i_, C); }
+			void set_C(Matrix const &C) { work_.qp_.set_C(i_, C); }
 
 			template <typename Matrix>
-			void set_D(Matrix const &D) { qp_.set_D(i_, D); }
+			void set_D(Matrix const &D) { work_.qp_.set_D(i_, D); }
 
 			template <typename Vector>
-			void set_d_min(Vector const& d_min) { qp_.set_d_min(i_, d_min); }
+			void set_d_min(Vector const& d_min) { work_.qp_.set_d_min(i_, d_min); }
 
 			template <typename Vector>
-			void set_d_max(Vector const& d_max) { qp_.set_d_max(i_, d_max); }
+			void set_d_max(Vector const& d_max) { work_.qp_.set_d_max(i_, d_max); }
 
 			template <typename Vector>
-			void set_x_min(Vector const& x_min) { qp_.set_x_min(i_, x_min - get_x()); }
+			void set_x_min(Vector const& x_min) { work_.lowerBound_.set_x(i_, x_min); }
 
 			template <typename Vector>
-			void set_x_max(Vector const& x_max) { qp_.set_x_max(i_, x_max - get_x()); }
+			void set_x_max(Vector const& x_max) { work_.upperBound_.set_x(i_, x_max); }
 
 			template <typename Vector>
-			void set_u_min(Vector const& u_min) { qp_.set_u_min(i_, u_min - get_u()); }
+			void set_u_min(Vector const& u_min) { work_.lowerBound_.set_u(i_, u_min); }
 
 			template <typename Vector>
-			void set_u_max(Vector const& u_max) { qp_.set_u_max(i_, u_max - get_u()); }
+			void set_u_max(Vector const& u_max) { work_.upperBound_.set_u(i_, u_max); }
 
 		private:
 			std::size_t const i_;
-			QP& qp_;
-			WorkingPoint workingPoint_;
-			double const levenbergMarquardt_;
+			Work& work_;
 		};
 
 		/**
@@ -217,50 +228,57 @@ namespace tmpc
 		class TerminalStage
 		{
 		public:
-			TerminalStage(WorkingPoint& wp, QP& qp, double lm)
-			:	workingPoint_(wp), qp_(qp), levenbergMarquardt_(lm) {
+			TerminalStage(Work& work)
+			:	work_(work) {
 				assert(wp.nT() == qp.nT());
 			}
 
 			TerminalStage(Stage const&) = delete;
 
 			/**
+			 * \brief On destruction, updates bounds of the QP.
+			 */
+			~TerminalStage()
+			{
+				work_.qp_.set_x_min(get_index(), work_.lowerBound_.get_x(get_index()) - get_x());
+				work_.qp_.set_x_max(get_index(), work_.upperBound_.get_x(get_index()) - get_x());
+			}
+
+			/**
 			 * \brief Returns stage index.
 			 */
-			std::size_t get_index() const { return workingPoint_.nT(); }
+			std::size_t get_index() const { return work_.workingPoint_.nT(); }
 
 			/**
 			 * \brief Returns stage state.
 			 */
-			decltype(auto) get_x() const { return workingPoint_.get_x(get_index()); }
+			decltype(auto) get_x() const { return work_.workingPoint_.get_x(get_index()); }
 
 			template <typename Matrix>
 			void set_Q(Matrix const &Q)	{
-				qp_.set_Q(get_index(), Q + levenbergMarquardt_ * identity<Matrix>());	// Adding Levenberg-Marquardt term to make H positive-definite.
+				work_.qp_.set_Q(get_index(), Q + work_.levenbergMarquardt_ * identity<Matrix>());	// Adding Levenberg-Marquardt term to make H positive-definite.
 			}
 
 			template <typename Vector>
-			void set_q(Vector const &q) { qp_.set_q(get_index(), q); }
+			void set_q(Vector const &q) { work_.qp_.set_q(get_index(), q); }
 
 			template <typename Matrix>
-			void set_C(Matrix const &C) { qp_.set_C_end(C); }
+			void set_C(Matrix const &C) { work_.qp_.set_C_end(C); }
 
 			template <typename Vector>
-			void set_d_end_min(Vector const& d_min) { qp_.set_d_end_min(d_min); }
+			void set_d_end_min(Vector const& d_min) { work_.qp_.set_d_end_min(d_min); }
 
 			template <typename Vector>
-			void set_d_end_max(Vector const& d_max) { qp_.set_d_end_max(d_max); }
+			void set_d_end_max(Vector const& d_max) { work_.qp_.set_d_end_max(d_max); }
 
 			template <typename Vector>
-			void set_x_min(Vector const& x_min) { qp_.set_x_min(get_index(), x_min - get_x()); }
+			void set_x_min(Vector const& x_min) { work_.lowerBound_.set_x(get_index(), x_min); }
 
 			template <typename Vector>
-			void set_x_max(Vector const& x_max) { qp_.set_x_max(get_index(), x_max - get_x()); }
+			void set_x_max(Vector const& x_max) { work_.upperBound_.set_x(get_index(), x_max); }
 
 		private:
-			QP& qp_;
-			WorkingPoint workingPoint_;
-			double const levenbergMarquardt_;
+			Work& work_;
 		};
 
 		// Uses ocp_ to initialize _QP based on current working point workingPoint_.
@@ -268,11 +286,11 @@ namespace tmpc
 		{
 			for (unsigned i = 0; i < nT(); ++i)
 			{
-				Stage stage(i, workingPoint_, _QP, _levenbergMarquardt);
+				Stage stage(i, work_);
 				_ocp.InitStage(stage);
 			}
 
-			TerminalStage terminal_stage(workingPoint_, _QP, _levenbergMarquardt);
+			TerminalStage terminal_stage(work_);
 			_ocp.InitTerminalStage(terminal_stage);
 		}
 
@@ -281,24 +299,50 @@ namespace tmpc
 		{
 			for (unsigned i = 0; i < nT(); ++i)
 			{
-				Stage stage(i, workingPoint_, _QP, _levenbergMarquardt);
+				Stage stage(i, work_);
 				_ocp.UpdateStage(stage);
 			}
 
-			TerminalStage terminal_stage(workingPoint_, _QP, _levenbergMarquardt);
+			TerminalStage terminal_stage(work_);
 			_ocp.UpdateTerminalStage(terminal_stage);
 		}
 
 		// Private data members.
 		OCP const& _ocp;
-		QP _QP;
 		Solution solution_;
 		QPSolver& solver_;
 
-		double _levenbergMarquardt = 0.;
+		/// \brief Internal work data structure.
+		struct Work
+		{
+			double levenbergMarquardt_ = 0.;
 
-		/// \brief The working point (linearization point).
-		WorkingPoint workingPoint_;
+			/// \brief The working point (linearization point).
+			WorkingPoint workingPoint_;
+
+			/// \brief Upper bound of the working point.
+			WorkingPoint upperBound_;
+
+			/// \brief Lower bound of the working point.
+			WorkingPoint lowerBound_;
+
+			/// Multistage QP.
+			QP qp_;
+
+			Work(WorkingPoint const& working_point)
+			:	workingPoint_(working_point)
+			,	lowerBound_(working_point.nT(),
+					constant<typename WorkingPoint::StateVector>(-std::numeric_limits<double>::infinity()),
+					constant<typename WorkingPoint::InputVector>(-std::numeric_limits<double>::infinity()))
+			,	upperBound_(working_point.nT(),
+					constant<typename WorkingPoint::StateVector>( std::numeric_limits<double>::infinity()),
+					constant<typename WorkingPoint::InputVector>( std::numeric_limits<double>::infinity()))
+			,	qp_(working_point.nT())
+			{
+			}
+		};
+
+		Work work_;
 
 		// Preparation() sets this flag to true, Feedback() resets it to false.
 		bool _prepared;
