@@ -32,7 +32,7 @@ x     = cs.vertcat(phi, dphi)     # state vector
 
 z = cs.sin(phi)
 dx = cs.vertcat(dphi, -(m*g/l)*z - alpha*dphi + u/(m*l))
-q = dphi ** 2   # quadrature term
+q = cs.vertcat(dphi ** 2, phi)   # quadrature term
 
 integrator = cs.integrator('pendulum_integrator', 'cvodes', {'x' : x, 'p' : u, 'ode' : dx, 'quad' : q}, {'tf' : ts})
 

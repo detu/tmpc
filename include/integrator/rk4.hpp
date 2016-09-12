@@ -97,9 +97,9 @@ namespace tmpc
 
 	// Integration including a quadrature.
 	template <typename ODE, typename Quad, typename StateVector0_, typename InputVector_, typename StateVector1_, typename AMatrix, typename BMatrix,
-		typename QuadStateSensitivityVector, typename QuadInputSensitivityVector>
-	void integrate(RK4 const& integrator, ODE const& ode, Quad const& quad, double t0, StateVector0_ const& x0, InputVector_ const& u, StateVector1_& x_next, double& qf, AMatrix& A, BMatrix& B,
-			QuadStateSensitivityVector& dqf_dx0, QuadInputSensitivityVector& dqf_du)
+		typename QuadVector, typename QuadStateMatrix, typename QuadInputMatrix>
+	void integrate(RK4 const& integrator, ODE const& ode, double t0, StateVector0_ const& x0, InputVector_ const& u,
+			StateVector1_& x_next, AMatrix& A, BMatrix& B, QuadVector& qf, QuadStateMatrix& dqf_dx0, QuadInputMatrix& dqf_du)
 	{
 		auto constexpr NX = rows<StateVector0_>();
 		auto constexpr NU = rows<InputVector_ >();

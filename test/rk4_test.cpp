@@ -25,11 +25,15 @@ class PendulumODE
 public:
 	static unsigned const NX = 2;
 	static unsigned const NU = 1;
+	static unsigned const NQ = 2;
 
 	typedef Eigen::Matrix<double, NX, 1> StateVector;
 	typedef Eigen::Matrix<double, NU, 1> InputVector;
+	typedef Eigen::Matrix<double, NQ, 1> QuadVector;
 	typedef Eigen::Matrix<double, NX, NX, Eigen::ColMajor> StateStateMatrix;
 	typedef Eigen::Matrix<double, NX, NU, Eigen::ColMajor> StateInputMatrix;
+	typedef Eigen::Matrix<double, NQ, NX, Eigen::ColMajor> QuadStateMatrix;
+	typedef Eigen::Matrix<double, NQ, NU, Eigen::ColMajor> QuadInputMatrix;
 
 	void operator()(double t, StateVector const& x0, InputVector const& u0,	StateVector& xdot, StateStateMatrix& A, StateInputMatrix& B) const
 	{
@@ -80,11 +84,11 @@ protected:
 		ODE::StateVector x0;
 		ODE::InputVector u;
 		ODE::StateVector xplus;
-		double qf;
+		ODE::QuadVector qf;
 		ODE::StateStateMatrix A;
 		ODE::StateInputMatrix B;
-		ODE::StateVector qA;
-		ODE::InputVector qB;
+		ODE::QuadStateMatrix qA;
+		ODE::QuadInputMatrix qB;
 
 		friend std::istream& operator>>(std::istream& is, TestPoint& p)
 		{

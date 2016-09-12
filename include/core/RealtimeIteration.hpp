@@ -229,8 +229,8 @@ namespace tmpc
 		{
 		public:
 			TerminalStage(Work& work)
-			:	work_(work) {
-				assert(wp.nT() == qp.nT());
+			:	work_(work)
+			{
 			}
 
 			TerminalStage(Stage const&) = delete;
