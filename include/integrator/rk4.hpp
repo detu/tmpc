@@ -13,6 +13,14 @@
 
 namespace tmpc
 {
+	/**
+	 * \defgroup integrators Integrators
+	 */
+
+	/**
+	 * \brief Explicit Runge-Kutta 4 integrator.
+	 * \ingroup integrators
+	 */
 	class RK4
 	{
 	public:
@@ -95,14 +103,41 @@ namespace tmpc
 		return eval(x0 + (k1 + 2. * k2 + 2. * k3 + k4) * (h / 6.));
 	}
 
-	// Integration including a quadrature.
-	template <typename ODE, typename Quad, typename StateVector0_, typename InputVector_, typename StateVector1_, typename AMatrix, typename BMatrix,
-		typename QuadVector, typename QuadStateMatrix, typename QuadInputMatrix>
+	/**
+	 * \brief Integration including a quadrature.
+	 * \ingroup integrators
+	 *
+	 *
+	 * Evaluates the following ODE using explicit Runge-Kutta 4 method:
+	 * \f{eqnarray*}{
+	 * \dot{\mathbf{x}} = f(t,\mathbf{x},\mathbf{u})\\
+	 * \dot{\mathbf{q}} = h(t,\mathbf{x},\mathbf{u})
+	 * \f}
+	 * on time interval \f$[t_0,t_0+h]\f$ subject to initial conditions
+	 * \f{align*}{
+	 * \mathbf{x}(t_0) & =\mathbf{x}_0\\
+	 * \mathbf{q}(t_0) & =0
+	 * \f}
+	 * \param[in] integrator -- integrator
+	 * \param[in] ode -- ODE to integrate. ode(t, x, u, k, A, B, q, qA, qB) must be a valid expression (TODO: document ode input and output).
+	 * \param[in] t0 -- start of the integration interval \f$t_0\f$
+	 * \param[in] x0 -- state of the system at the beginning of integration interval \f$\mathbf{x}_0\f$
+	 * \param[in] u -- input of the system which is assumed to be constant for the entire integration interval \f$\mathbf{u}\f$
+	 * \param[out] x_next -- state of the system which at the end of the integration interval \f$\mathbf{x}(t_0+h)\f$
+	 * \param[out] A -- sensitivity of final state w.r.t. initial state \f$\frac{\mathrm{d}\mathbf{x}(t_0+h)}{\mathrm{d}\mathbf{x}(t_0)}\f$
+	 * \param[out] B -- sensitivity of final state w.r.t. input \f$\frac{\mathrm{d}\mathbf{x}(t_0+h)}{\mathrm{d}\mathbf{u}}\f$
+	 * \param[out] qf -- quadrature state at the end of the integration interval \f$\mathbf{q}(t_0+h)\f$
+	 * \param[out] qA -- sensitivity of final quadrature state w.r.t. initial state \f$\frac{\mathrm{d}\mathbf{q}(t_0+h)}{\mathrm{d}\mathbf{x}(t_0)}\f$
+	 * \param[out] qB -- sensitivity of final quadrature state w.r.t. input \f$\frac{\mathrm{d}\mathbf{q}(t_0+h)}{\mathrm{d}\mathbf{u}}\f$
+	 */
+	template <typename ODE, typename StateVector0_, typename InputVector_, typename StateVector1_, typename AMatrix, typename BMatrix,
+		typename QuadVector_, typename QuadStateMatrix_, typename QuadInputMatrix_>
 	void integrate(RK4 const& integrator, ODE const& ode, double t0, StateVector0_ const& x0, InputVector_ const& u,
-			StateVector1_& x_next, AMatrix& A, BMatrix& B, QuadVector& qf, QuadStateMatrix& dqf_dx0, QuadInputMatrix& dqf_du)
+			StateVector1_& x_next, AMatrix& A, BMatrix& B, QuadVector_& qf, QuadStateMatrix_& qA, QuadInputMatrix_& qB)
 	{
 		auto constexpr NX = rows<StateVector0_>();
 		auto constexpr NU = rows<InputVector_ >();
+		auto constexpr NQ = rows<QuadVector_  >();
 
 		typedef Eigen::Matrix<double, NX,  1> StateVector;
 		typedef Eigen::Matrix<double, NX, NX> StateStateMatrix;
@@ -111,18 +146,20 @@ namespace tmpc
 		StateVector k1, k2, k3, k4;
 		StateStateMatrix A1, A2, A3, A4;
 		StateInputMatrix B1, B2, B3, B4;
-		QuadVector q1, q2, q3, q4;
-		QuadStateMatrix qA1, qA2, qA3, qA4;
-		QuadInputMatrix qB1, qB2, qB3, qB4;
+
+		Eigen::Matrix<double, NQ,  1> dq1, dq2, dq3, dq4;
+		Eigen::Matrix<double, NQ, NX> qA1, qA2, qA3, qA4;
+		Eigen::Matrix<double, NQ, NU> qB1, qB2, qB3, qB4;
 		auto const h = integrator.timeStep();
 
 		// Calculating next state and quadrature
-		ode(t0,          x0                , u, k1, A1, B1, q1, qA1, qB1);
-		ode(t0 + h / 2., x0 + k1 * (h / 2.), u, k2, A2, B2, q2, qA2, qB2);
-		ode(t0 + h / 2., x0 + k2 * (h / 2.), u, k3, A3, B3, q3, qA3, qB3);
-		ode(t0 + h,      x0 + k3 * h       , u, k4, A4, B4, q4, qA4, qB4);
+		ode(t0,          x0                , u, k1, A1, B1, dq1, qA1, qB1);
+		ode(t0 + h / 2., x0 + k1 * (h / 2.), u, k2, A2, B2, dq2, qA2, qB2);
+		ode(t0 + h / 2., x0 + k2 * (h / 2.), u, k3, A3, B3, dq3, qA3, qB3);
+		ode(t0 + h,      x0 + k3 * h       , u, k4, A4, B4, dq4, qA4, qB4);
 
-		x_next = x0 + (k1 + 2. * k2 + 2. * k3 + k4) * (h / 6.);
+		x_next = x0 + ( k1 + 2. *  k2 + 2. *  k3 +  k4) * (h / 6.);
+		qf     =      (dq1 + 2. * dq2 + 2. * dq3 + dq4) * (h / 6.);
 
 		// Calculating sensitivities
 		auto const& A1_bar =      A1;							auto const& B1_bar =      B1;
@@ -132,6 +169,14 @@ namespace tmpc
 
 		A = identity<StateStateMatrix>() + (h / 6.) * (A1_bar + 2. * A2_bar + 2. * A3_bar + A4_bar);
 		B = 					           (h / 6.) * (B1_bar + 2. * B2_bar + 2. * B3_bar + B4_bar);
+
+		auto const& qA1_bar =      qA1;							    auto const& qB1_bar =      qB1;
+		auto const  qA2_bar = eval(qA2 + (h / 2.) * qA2 * A1_bar);	auto const  qB2_bar = eval(qB2 + (h / 2.) * qA2 * B1_bar);
+		auto const  qA3_bar = eval(qA3 + (h / 2.) * qA3 * A2_bar);	auto const  qB3_bar = eval(qB3 + (h / 2.) * qA3 * B2_bar);
+		auto const  qA4_bar =      qA4 +  h       * qA4 * A3_bar ;	auto const  qB4_bar =      qB4 +  h       * qA4 * B3_bar ;
+
+		qA = (h / 6.) * (qA1_bar + 2. * qA2_bar + 2. * qA3_bar + qA4_bar);
+		qB = (h / 6.) * (qB1_bar + 2. * qB2_bar + 2. * qB3_bar + qB4_bar);
 	}
 
 

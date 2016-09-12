@@ -183,6 +183,34 @@ TEST_F(rk4_test, integrate_correct)
 	EXPECT_EQ(count, 600);
 }
 
+TEST_F(rk4_test, integrate_q_correct)
+{
+	TestPoint p;
+
+	unsigned count = 0;
+	while (test_data_ >> p)
+	{
+		ODE::StateVector xplus;
+		ODE::StateStateMatrix A;
+		ODE::StateInputMatrix B;
+		ODE::QuadVector qf;
+		ODE::QuadStateMatrix qA;
+		ODE::QuadInputMatrix qB;
+		integrate(integrator_, ode_, p.t, p.x0, p.u, xplus, A, B, qf, qA, qB);
+
+		EXPECT_THAT(as_container(xplus), testing::Pointwise(FloatNearPointwise(1e-5), as_container(p.xplus)));
+		EXPECT_THAT(as_container(A    ), testing::Pointwise(FloatNearPointwise(1e-5), as_container(p.A    )));
+		EXPECT_THAT(as_container(B    ), testing::Pointwise(FloatNearPointwise(1e-5), as_container(p.B    )));
+		EXPECT_THAT(as_container(qf   ), testing::Pointwise(FloatNearPointwise(1e-4), as_container(p.qf   )));
+		EXPECT_THAT(as_container(qA   ), testing::Pointwise(FloatNearPointwise(1e-5), as_container(p.qA   )));
+		EXPECT_THAT(as_container(qB   ), testing::Pointwise(FloatNearPointwise(1e-5), as_container(p.qB   )));
+
+		++count;
+	}
+
+	EXPECT_EQ(count, 600);
+}
+
 TEST_F(rk4_test, integrate_no_sens_correct)
 {
 	TestPoint p;
