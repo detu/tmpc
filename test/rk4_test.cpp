@@ -38,7 +38,14 @@ public:
 	void operator()(double t, StateVector const& x0, InputVector const& u0,	StateVector& xdot, StateStateMatrix& A, StateInputMatrix& B) const
 	{
 		static casadi_interface::GeneratedFunction<CASADI_GENERATED_FUNCTION_INTERFACE(pendulum_ode), 3, 6> const _ode;
-		_ode({&t, x0.data(), u0.data()}, {xdot.data(), nullptr, A.data(), B.data(), nullptr, nullptr});
+		_ode({&t, x0.data(), u0.data()}, {xdot.data(), A.data(), B.data(), nullptr, nullptr, nullptr});
+	}
+
+	void operator()(double t, StateVector const& x0, InputVector const& u0,	StateVector& xdot, StateStateMatrix& A, StateInputMatrix& B,
+		QuadVector& q, QuadStateMatrix& qA, QuadInputMatrix& qB) const
+	{
+		static casadi_interface::GeneratedFunction<CASADI_GENERATED_FUNCTION_INTERFACE(pendulum_ode), 3, 6> const _ode;
+		_ode({&t, x0.data(), u0.data()}, {xdot.data(), A.data(), B.data(), q.data(), qA.data(), qB.data()});
 	}
 
 	void operator()(double t, StateVector const& x0, InputVector const& u0,
@@ -81,6 +88,9 @@ protected:
 		ODE::StateVector xdot;
 		ODE::StateStateMatrix Aode;
 		ODE::StateInputMatrix Bode;
+		ODE::QuadVector q;
+		ODE::QuadStateMatrix qA_ode;
+		ODE::QuadInputMatrix qB_ode;
 		ODE::StateVector x0;
 		ODE::InputVector u;
 		ODE::StateVector xplus;
@@ -92,8 +102,11 @@ protected:
 
 		friend std::istream& operator>>(std::istream& is, TestPoint& p)
 		{
-			return is >> p.t >> p.x0 >> p.u >> p.xdot >> p.Aode >> p.Bode >> p.xplus
-						>> p.qf >> p.A >> p.B >> p.qA >> p.qB;
+			// keys = ['t', 'x0', 'u', 'xdot', 'A_ode', 'B_ode', 'q', 'qA_ode', 'qB_ode', 'x_plus', 'A', 'B', 'qf', 'qA', 'qB']
+			return is >> p.t >> p.x0 >> p.u >> p.xdot  >> p.Aode   >> p.Bode
+					                        >> p.q     >> p.qA_ode >> p.qB_ode
+					                        >> p.xplus >> p.A      >> p.B
+						                    >> p.qf    >> p.qA     >> p.qB;
 		};
 	};
 };
@@ -113,6 +126,34 @@ TEST_F(rk4_test, ode_correct)
 		EXPECT_TRUE(xdot.isApprox(p.xdot));
 		EXPECT_TRUE(A.isApprox(p.Aode));
 		EXPECT_TRUE(B.isApprox(p.Bode));
+
+		++count;
+	}
+
+	EXPECT_EQ(count, 600);
+}
+
+TEST_F(rk4_test, ode_q_correct)
+{
+	TestPoint p;
+
+	unsigned count = 0;
+	while (test_data_ >> p)
+	{
+		ODE::StateVector xdot;
+		ODE::StateStateMatrix A;
+		ODE::StateInputMatrix B;
+		ODE::QuadVector q;
+		ODE::QuadStateMatrix qA;
+		ODE::QuadInputMatrix qB;
+		ode_(p.t, p.x0, p.u, xdot, A, B, q, qA, qB);
+
+		EXPECT_TRUE(xdot.isApprox(p.xdot));
+		EXPECT_TRUE(A.isApprox(p.Aode));
+		EXPECT_TRUE(B.isApprox(p.Bode));
+		EXPECT_TRUE(q.isApprox(p.q));
+		EXPECT_TRUE(qA.isApprox(p.qA_ode));
+		EXPECT_TRUE(qB.isApprox(p.qB_ode));
 
 		++count;
 	}

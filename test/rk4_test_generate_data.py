@@ -39,8 +39,8 @@ integrator = cs.integrator('pendulum_integrator', 'cvodes', {'x' : x, 'p' : u, '
 integrator_out = integrator(x0 = x, p = u)
 x_plus = integrator_out['xf']
 qf = integrator_out['qf']
-integrator_sens = cs.Function('Integrator_Sensitivities', [x, u], [x_plus, qf, cs.jacobian(x_plus, x), cs.jacobian(x_plus, u), cs.jacobian(qf, x), cs.jacobian(qf, u)],
-                              ['x', 'u'], ['xf', 'qf', 'A', 'B', 'qA', 'qB'])
+integrator_sens = cs.Function('Integrator_Sensitivities', [x, u], [x_plus, cs.jacobian(x_plus, x), cs.jacobian(x_plus, u), qf, cs.jacobian(qf, x), cs.jacobian(qf, u)],
+                              ['x', 'u'], ['xf', 'A', 'B', 'qf', 'qA', 'qB'])
 
 #------------------------------
 # Generate C code for ODE model
@@ -49,8 +49,8 @@ name = 'pendulum_ode'
 #x_seed = cs.MX('x_seed', x.shape);
 #u_seed = cs.MX('u_seed', u.shape);
 ode = cs.Function(name, [t, x, u], 
-                      [cs.densify(dx), cs.densify(q), cs.densify(cs.jacobian(dx, x)), cs.densify(cs.jacobian(dx, u)), cs.densify(cs.jacobian(q, x)), cs.densify(cs.jacobian(q, u))], 
-                      ['t', 'x0', 'u0'], ['xdot', 'q', 'A', 'B', 'qA', 'qB'])
+                      [cs.densify(dx), cs.densify(cs.jacobian(dx, x)), cs.densify(cs.jacobian(dx, u)), cs.densify(q), cs.densify(cs.jacobian(q, x)), cs.densify(cs.jacobian(q, u))], 
+                      ['t', 'x0', 'u0'], ['xdot', 'A', 'B', 'q', 'qA', 'qB'])
 
 x_seed = cs.MX.sym('x_seed', x.shape)
 u_seed = cs.MX.sym('u_seed', u.shape)
@@ -71,8 +71,12 @@ gen.generate(name_c)
 #------------------------------
 x0 = cs.DM([1.0, 0.0])  # initial state
 
-data = {'t' : [], 'x0' : [], 'u' : [], 'xdot' : [], 'A_ode' : [], 'B_ode' : [], 
-        'x_plus' : [], 'qf' : [], 'A' : [], 'B' : [], 'qA' : [], 'qB' : []}
+keys = ['t', 'x0', 'u', 'xdot', 'A_ode', 'B_ode', 'q', 'qA_ode', 'qB_ode', 'x_plus', 'A', 'B', 'qf', 'qA', 'qB']
+data = {}
+
+for key in keys:
+    data[key] = []
+
 N = 600
 
 for k in range(N):
@@ -84,8 +88,8 @@ for k in range(N):
     else:
         u = 0.0
                                         
-    [x_plus, qf, A, B, qA, qB] = integrator_sens(x0, u)
-    [xdot, q, A_ode, B_ode, qA_ode, qB_ode] = ode(t_k, x0, u)
+    [x_plus, A, B, qf, qA, qB] = integrator_sens(x0, u)
+    [xdot, A_ode, B_ode, q, qA_ode, qB_ode] = ode(t_k, x0, u)
     
     data['t'     ].append(t_k)
     data['x0'    ].append(x0)
@@ -93,10 +97,13 @@ for k in range(N):
     data['xdot'  ].append(xdot)
     data['A_ode' ].append(A_ode)
     data['B_ode' ].append(B_ode)
+    data['q'     ].append(q)
+    data['qA_ode'].append(qA_ode)
+    data['qB_ode'].append(qB_ode)
     data['x_plus'].append(x_plus)
-    data['qf'    ].append(qf)
     data['A'     ].append(A)
     data['B'     ].append(B)
+    data['qf'    ].append(qf)
     data['qA'    ].append(qA)
     data['qB'    ].append(qB)
     x0 = x_plus
@@ -106,18 +113,9 @@ ensure_dir_exist('data/rk4')
 with open('data/rk4/pendulum.txt', 'w') as file:
     sep = ' '
     for k in range(N):
-        np.array(data['t'     ][k]).tofile(file, sep);        file.write('\n')
-        np.array(data['x0'    ][k]).tofile(file, sep);        file.write('\n')
-        np.array(data['u'     ][k]).tofile(file, sep);        file.write('\n')
-        np.array(data['xdot'  ][k]).tofile(file, sep);        file.write('\n')
-        np.array(data['A_ode' ][k]).tofile(file, sep);        file.write('\n')
-        np.array(data['B_ode' ][k]).tofile(file, sep);        file.write('\n')
-        np.array(data['x_plus'][k]).tofile(file, sep);        file.write('\n')
-        np.array(data['qf'    ][k]).tofile(file, sep);        file.write('\n')
-        np.array(data['A'     ][k]).tofile(file, sep);        file.write('\n')
-        np.array(data['B'     ][k]).tofile(file, sep);        file.write('\n')
-        np.array(data['qA'    ][k]).tofile(file, sep);        file.write('\n')
-        np.array(data['qB'    ][k]).tofile(file, sep);        file.write('\n')
+        for key in keys:
+            np.array(data[key][k]).tofile(file, sep)        
+            file.write('\n')
         
 plt.subplot(2, 1, 1)
 plt.step(cs.vertcat(data['t']), cs.transpose(cs.horzcat(*data['u' ]))      )

@@ -111,13 +111,16 @@ namespace tmpc
 		StateVector k1, k2, k3, k4;
 		StateStateMatrix A1, A2, A3, A4;
 		StateInputMatrix B1, B2, B3, B4;
+		QuadVector q1, q2, q3, q4;
+		QuadStateMatrix qA1, qA2, qA3, qA4;
+		QuadInputMatrix qB1, qB2, qB3, qB4;
 		auto const h = integrator.timeStep();
 
-		// Calculating next state
-		ode(t0,          x0                , u, k1, A1, B1);
-		ode(t0 + h / 2., x0 + k1 * (h / 2.), u, k2, A2, B2);
-		ode(t0 + h / 2., x0 + k2 * (h / 2.), u, k3, A3, B3);
-		ode(t0 + h,      x0 + k3 * h       , u, k4, A4, B4);
+		// Calculating next state and quadrature
+		ode(t0,          x0                , u, k1, A1, B1, q1, qA1, qB1);
+		ode(t0 + h / 2., x0 + k1 * (h / 2.), u, k2, A2, B2, q2, qA2, qB2);
+		ode(t0 + h / 2., x0 + k2 * (h / 2.), u, k3, A3, B3, q3, qA3, qB3);
+		ode(t0 + h,      x0 + k3 * h       , u, k4, A4, B4, q4, qA4, qB4);
 
 		x_next = x0 + (k1 + 2. * k2 + 2. * k3 + k4) * (h / 6.);
 
