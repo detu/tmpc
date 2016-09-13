@@ -10,6 +10,7 @@
 #include <Eigen/Dense>
 
 #include "../core/matrix.hpp"
+#include "../core/gauss_newton.hpp"
 
 namespace tmpc
 {
@@ -119,7 +120,7 @@ namespace tmpc
 	 * \mathbf{q}(t_0) & =0
 	 * \f}
 	 * \param[in] integrator -- integrator
-	 * \param[in] ode -- ODE to integrate. ode(t, x, u, k, A, B, q, qA, qB) must be a valid expression (TODO: document ode input and output).
+	 * \param[in] ode -- ODE to integrate. ode(t, x, u, k, A, B, h, hA, hB) must be a valid expression (TODO: document ode input and output).
 	 * \param[in] t0 -- start of the integration interval \f$t_0\f$
 	 * \param[in] x0 -- state of the system at the beginning of integration interval \f$\mathbf{x}_0\f$
 	 * \param[in] u -- input of the system which is assumed to be constant for the entire integration interval \f$\mathbf{u}\f$
@@ -179,6 +180,121 @@ namespace tmpc
 		qB = (h / 6.) * (qB1_bar + 2. * qB2_bar + 2. * qB3_bar + qB4_bar);
 	}
 
+	/**
+	 * \brief Integration including a quadrature and a cost term.
+	 * \ingroup integrators
+	 *
+	 *
+	 * Evaluates the following ODE using explicit Runge-Kutta 4 method:
+	 * \f{align*}{
+	 * \dot{\mathbf{x}} &= f(t,\mathbf{x},\mathbf{u})\\
+	 * \dot{\mathbf{q}} &= h(t,\mathbf{x},\mathbf{u})\\
+	 * \dot{c} &= \frac{1}{2} \Vert r(t,\mathbf{x},\mathbf{u}) \Vert^2
+	 * \f}
+	 * on time interval \f$[t_0,t_0+h]\f$ subject to initial conditions
+	 * \f{align*}{
+	 * \mathbf{x}(t_0) & =\mathbf{x}_0\\
+	 * \mathbf{q}(t_0) & =0\\
+	 * c(t_0) & =0
+	 * \f}
+	 * \param[in] integrator -- integrator
+	 * \param[in] ode -- ODE to integrate. ode(t, x, u, k, A, B, h, hA, hB, r, rA, rB) must be a valid expression (TODO: document ode input and output).
+	 * \param[in] t0 -- start of the integration interval \f$t_0\f$
+	 * \param[in] x0 -- state of the system at the beginning of integration interval \f$\mathbf{x}_0\f$
+	 * \param[in] u -- input of the system which is assumed to be constant for the entire integration interval \f$\mathbf{u}\f$
+	 * \param[out] x_next -- state of the system which at the end of the integration interval \f$\mathbf{x}(t_0+h)\f$
+	 * \param[out] A -- sensitivity of final state w.r.t. initial state \f$\frac{\mathrm{d}\mathbf{x}(t_0+h)}{\mathrm{d}\mathbf{x}(t_0)}\f$
+	 * \param[out] B -- sensitivity of final state w.r.t. input \f$\frac{\mathrm{d}\mathbf{x}(t_0+h)}{\mathrm{d}\mathbf{u}}\f$
+	 * \param[out] qf -- quadrature state at the end of the integration interval \f$\mathbf{q}(t_0+h)\f$
+	 * \param[out] qA -- sensitivity of final quadrature state w.r.t. initial state \f$\frac{\mathrm{d}\mathbf{q}(t_0+h)}{\mathrm{d}\mathbf{x}(t_0)}\f$
+	 * \param[out] qB -- sensitivity of final quadrature state w.r.t. input \f$\frac{\mathrm{d}\mathbf{q}(t_0+h)}{\mathrm{d}\mathbf{u}}\f$
+	 * \param[out] cf -- cost value at the end of the integration interval \f$c(t_0+h)\f$
+	 * \param[out] cA -- sensitivity of final cost w.r.t. initial state \f$\frac{\mathrm{d}c(t_0+h)}{\mathrm{d}\mathbf{x}(t_0)}\f$
+	 * \param[out] cB -- sensitivity of final cost w.r.t. input \f$\frac{\mathrm{d}c(t_0+h)}{\mathrm{d}\mathbf{u}}\f$
+	 * \param[out] cQ -- second derivative of final cost w.r.t. initial state \f$\frac{\mathrm{d}^2 c(t_0+h)}{\mathrm{d}\mathbf{x}(t_0)^2}\f$
+	 * \param[out] cR -- second derivative of final cost w.r.t. input \f$\frac{\mathrm{d}^2 c(t_0+h)}{\mathrm{d}\mathbf{u}^2}\f$
+	 * \param[out] cS -- second derivative of final cost w.r.t. initial state and input \f$\frac{\mathrm{d}^2 c(t_0+h)}{\mathrm{d}\mathbf{x}(t_0)\mathrm{d}\mathbf{u}}\f$
+	 */
+	template <typename ODE, typename StateVector0_, typename InputVector_, typename StateVector1_, typename AMatrix, typename BMatrix,
+		typename QuadVector_, typename QuadStateMatrix_, typename QuadInputMatrix_,
+		typename StateVector2_,	typename InputVector2_,	typename QMatrix, typename RMatrix, typename SMatrix>
+	void integrate(RK4 const& integrator, ODE const& ode, double t0, StateVector0_ const& x0, InputVector_ const& u,
+			StateVector1_& x_next, AMatrix& A, BMatrix& B, QuadVector_& qf, QuadStateMatrix_& qA, QuadInputMatrix_& qB,
+			double& cf, StateVector2_& cA, InputVector2_& cB, QMatrix& cQ, RMatrix& cR, SMatrix& cS)
+	{
+		auto constexpr NX = rows<StateVector0_>();
+		auto constexpr NU = rows<InputVector_ >();
+		auto constexpr NQ = rows<QuadVector_  >();
+		auto constexpr NR = ODE::NR;
+
+		typedef Eigen::Matrix<double, NX,  1> StateVector;
+		typedef Eigen::Matrix<double, NU,  1> InputVector;
+		typedef Eigen::Matrix<double, NX, NX> StateStateMatrix;
+		typedef Eigen::Matrix<double, NX, NU> StateInputMatrix;
+		typedef Eigen::Matrix<double, NU, NU> InputInputMatrix;
+
+		StateVector k1, k2, k3, k4;
+		StateStateMatrix A1, A2, A3, A4;
+		StateInputMatrix B1, B2, B3, B4;
+
+		Eigen::Matrix<double, NQ,  1> dq1, dq2, dq3, dq4;
+		Eigen::Matrix<double, NQ, NX> qA1, qA2, qA3, qA4;
+		Eigen::Matrix<double, NQ, NU> qB1, qB2, qB3, qB4;
+		Eigen::Matrix<double, NR,  1>  r1,  r2,  r3,  r4;
+		Eigen::Matrix<double, NR, NX> rA1, rA2, rA3, rA4;
+		Eigen::Matrix<double, NR, NU> rB1, rB2, rB3, rB4;
+		auto const h = integrator.timeStep();
+
+		// Calculating next state, quadrature and cost
+		ode(t0,          x0                , u, k1, A1, B1, dq1, qA1, qB1, r1, rA1, rB1);
+		ode(t0 + h / 2., x0 + k1 * (h / 2.), u, k2, A2, B2, dq2, qA2, qB2, r2, rA2, rB2);
+		ode(t0 + h / 2., x0 + k2 * (h / 2.), u, k3, A3, B3, dq3, qA3, qB3, r3, rA3, rB3);
+		ode(t0 + h,      x0 + k3 * h       , u, k4, A4, B4, dq4, qA4, qB4, r4, rA4, rB4);
+
+		x_next =  x0 + (                k1 + 2. *                 k2 + 2. *                 k3 +                 k4) * (h / 6.);
+		qf     =       (               dq1 + 2. *                dq2 + 2. *                dq3 +                dq4) * (h / 6.);
+		cf     = 0.5 * (transpose(r1) * r1 + 2. * transpose(r2) * r2 + 2. * transpose(r3) * r3 + transpose(r4) * r4) * (h / 6.);
+
+		// Calculating sensitivities
+		auto const& A1_bar =      A1;							auto const& B1_bar =      B1;
+		auto const  A2_bar = eval(A2 + (h / 2.) * A2 * A1_bar);	auto const  B2_bar = eval(B2 + (h / 2.) * A2 * B1_bar);
+		auto const  A3_bar = eval(A3 + (h / 2.) * A3 * A2_bar);	auto const  B3_bar = eval(B3 + (h / 2.) * A3 * B2_bar);
+		auto const  A4_bar =      A4 +  h       * A4 * A3_bar ;	auto const  B4_bar =      B4 +  h       * A4 * B3_bar ;
+
+		A = identity<StateStateMatrix>() + (h / 6.) * (A1_bar + 2. * A2_bar + 2. * A3_bar + A4_bar);
+		B = 					           (h / 6.) * (B1_bar + 2. * B2_bar + 2. * B3_bar + B4_bar);
+
+		auto const& qA1_bar =      qA1;							    auto const& qB1_bar =      qB1;
+		auto const  qA2_bar = eval(qA2 + (h / 2.) * qA2 * A1_bar);	auto const  qB2_bar = eval(qB2 + (h / 2.) * qA2 * B1_bar);
+		auto const  qA3_bar = eval(qA3 + (h / 2.) * qA3 * A2_bar);	auto const  qB3_bar = eval(qB3 + (h / 2.) * qA3 * B2_bar);
+		auto const  qA4_bar =      qA4 +  h       * qA4 * A3_bar ;	auto const  qB4_bar =      qB4 +  h       * qA4 * B3_bar ;
+
+		qA = (h / 6.) * (qA1_bar + 2. * qA2_bar + 2. * qA3_bar + qA4_bar);
+		qB = (h / 6.) * (qB1_bar + 2. * qB2_bar + 2. * qB3_bar + qB4_bar);
+
+		auto const& rA1_bar =      rA1;							    auto const& rB1_bar =      rB1;
+		auto const  rA2_bar = eval(rA2 + (h / 2.) * rA2 * A1_bar);	auto const  rB2_bar = eval(rB2 + (h / 2.) * rA2 * B1_bar);
+		auto const  rA3_bar = eval(rA3 + (h / 2.) * rA3 * A2_bar);	auto const  rB3_bar = eval(rB3 + (h / 2.) * rA3 * B2_bar);
+		auto const  rA4_bar = eval(rA4 +  h       * rA4 * A3_bar);	auto const  rB4_bar = eval(rB4 +  h       * rA4 * B3_bar);
+
+		cA = (h / 6.) * (transpose(r1) * rA1_bar + 2. * transpose(r2) * rA2_bar + 2. * transpose(r3) * rA3_bar + transpose(r4) * rA4_bar);
+		cB = (h / 6.) * (transpose(r1) * rB1_bar + 2. * transpose(r2) * rB2_bar + 2. * transpose(r3) * rB3_bar + transpose(r4) * rB4_bar);
+
+		StateVector      cq1, cq2, cq3, cq4;
+		InputVector      cr1, cr2, cr3, cr4;
+		StateStateMatrix cQ1, cQ2, cQ3, cQ4;
+		InputInputMatrix cR1, cR2, cR3, cR4;
+		StateInputMatrix cS1, cS2, cS3, cS4;
+
+		Gauss_Newton_approximation(r1, rA1_bar, rB1_bar, cQ1, cR1, cS1, cq1, cr1);
+		Gauss_Newton_approximation(r2, rA2_bar, rB2_bar, cQ2, cR2, cS2, cq2, cr2);
+		Gauss_Newton_approximation(r3, rA3_bar, rB3_bar, cQ3, cR3, cS3, cq3, cr3);
+		Gauss_Newton_approximation(r4, rA4_bar, rB4_bar, cQ4, cR4, cS4, cq4, cr4);
+
+		cQ = (h / 6.) * (cQ1 + 2. * cQ2 + 2. * cQ3 + cQ4);
+		cR = (h / 6.) * (cR1 + 2. * cR2 + 2. * cR3 + cR4);
+		cS = (h / 6.) * (cS1 + 2. * cS2 + 2. * cS3 + cS4);
+	}
 
 	/*
 	// Version of integrate() working with backward-mode ODE sensitivities. Not implemented properly yet.
