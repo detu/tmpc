@@ -173,9 +173,14 @@ TEST_F(rk4_test, integrate_correct)
 		ODE::StateInputMatrix B;
 		integrate(integrator_, ode_, p.t, p.x0, p.u, xplus, A, B);
 
-		EXPECT_THAT(as_container(xplus), testing::Pointwise(FloatNearPointwise(1e-5), as_container(p.xplus)));
-		EXPECT_THAT(as_container(A), testing::Pointwise(FloatNearPointwise(1e-5), as_container(p.A)));
-		EXPECT_THAT(as_container(B), testing::Pointwise(FloatNearPointwise(1e-5), as_container(p.B)));
+		/*
+		EXPECT_EQ(print_wrap(xplus), print_wrap(p.xplus));
+		EXPECT_EQ(print_wrap(A), print_wrap(p.A));
+		EXPECT_EQ(print_wrap(B), print_wrap(p.B));
+		*/
+		EXPECT_THAT(as_container(xplus), testing::Pointwise(FloatNearPointwise(1e-10), as_container(p.xplus)));
+		EXPECT_THAT(as_container(A), testing::Pointwise(FloatNearPointwise(1e-10), as_container(p.A)));
+		EXPECT_THAT(as_container(B), testing::Pointwise(FloatNearPointwise(1e-10), as_container(p.B)));
 
 		++count;
 	}

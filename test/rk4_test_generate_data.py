@@ -18,6 +18,26 @@ def ensure_dir_exist(dirname):
         else:
             # There was an error on creation, so make sure we know about it
             raise
+        
+# Gauss-Newton RK4 integrator
+def rk4gn(name, ode, options):
+    t = cs.MX.sym('t')
+    h = options['tf']
+    f = cs.Function('f', [ode['x'], ode['p'], t], [ode['ode'], ode['quad'], ode['r']],
+                    ['x', 'p', 't'], ['ode', 'quad', 'r'])
+    
+    x0 = cs.MX.sym('x0', ode['x'].shape)
+    t0 = cs.MX.sym('t0')
+    
+    k1 = f(t = t0         , x = x0                       , p = u)
+    k2 = f(t = t0 + h / 2., x = x0 + k1['ode'] * (h / 2.), p = u)
+    k3 = f(t = t0 + h / 2., x = x0 + k2['ode'] * (h / 2.), p = u)
+    k4 = f(t = t0 + h,      x = x0 + k3['ode'] *  h      , p = u)
+
+    xf = x0 + (k1['ode' ] + 2. * k2['ode' ] + 2. * k3['ode' ] + k4['ode' ]) * (h / 6.)
+    qf =      (k1['quad'] + 2. * k2['quad'] + 2. * k3['quad'] + k4['quad']) * (h / 6.)
+    
+    return cs.Function(name, [x0, u, t0], [xf, qf], ['x0', 'p', 't0'], ['xf', 'qf'])
 
 t     = cs.MX.sym('t')       # time
 phi   = cs.MX.sym('phi')     # the angle phi
@@ -33,14 +53,16 @@ x     = cs.vertcat(phi, dphi)     # state vector
 z = cs.sin(phi)
 dx = cs.vertcat(dphi, -(m*g/l)*z - alpha*dphi + u/(m*l))
 q = cs.vertcat(dphi ** 2, phi)   # quadrature term
+r = cs.vertcat(cs.cos(phi), u) # residual term
 
-integrator = cs.integrator('pendulum_integrator', 'cvodes', {'x' : x, 'p' : u, 'ode' : dx, 'quad' : q}, {'tf' : ts})
+#integrator = cs.integrator('pendulum_integrator', 'cvodes', {'x' : x, 'p' : u, 'ode' : dx, 'quad' : q}, {'tf' : ts})
+integrator = rk4gn('pendulum_integrator', {'x' : x, 'p' : u, 'ode' : dx, 'quad' : q, 'r' : r}, {'tf' : ts})
 
-integrator_out = integrator(x0 = x, p = u)
+integrator_out = integrator(x0 = x, p = u, t0 = t)
 x_plus = integrator_out['xf']
 qf = integrator_out['qf']
-integrator_sens = cs.Function('Integrator_Sensitivities', [x, u], [x_plus, cs.jacobian(x_plus, x), cs.jacobian(x_plus, u), qf, cs.jacobian(qf, x), cs.jacobian(qf, u)],
-                              ['x', 'u'], ['xf', 'A', 'B', 'qf', 'qA', 'qB'])
+integrator_sens = cs.Function('Integrator_Sensitivities', [t, x, u], [x_plus, cs.jacobian(x_plus, x), cs.jacobian(x_plus, u), qf, cs.jacobian(qf, x), cs.jacobian(qf, u)],
+                              ['t0', 'x0', 'u'], ['xf', 'A', 'B', 'qf', 'qA', 'qB'])
 
 #------------------------------
 # Generate C code for ODE model
@@ -88,7 +110,7 @@ for k in range(N):
     else:
         u = 0.0
                                         
-    [x_plus, A, B, qf, qA, qB] = integrator_sens(x0, u)
+    [x_plus, A, B, qf, qA, qB] = integrator_sens(t_k, x0, u)
     [xdot, A_ode, B_ode, q, qA_ode, qB_ode] = ode(t_k, x0, u)
     
     data['t'     ].append(t_k)
