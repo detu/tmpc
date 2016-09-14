@@ -71,8 +71,10 @@ name = 'pendulum_ode'
 #x_seed = cs.MX('x_seed', x.shape);
 #u_seed = cs.MX('u_seed', u.shape);
 ode = cs.Function(name, [t, x, u], 
-                      [cs.densify(dx), cs.densify(cs.jacobian(dx, x)), cs.densify(cs.jacobian(dx, u)), cs.densify(q), cs.densify(cs.jacobian(q, x)), cs.densify(cs.jacobian(q, u))], 
-                      ['t', 'x0', 'u0'], ['xdot', 'A', 'B', 'q', 'qA', 'qB'])
+                      [cs.densify(dx), cs.densify(cs.jacobian(dx, x)), cs.densify(cs.jacobian(dx, u)), 
+                       cs.densify( q), cs.densify(cs.jacobian( q, x)), cs.densify(cs.jacobian( q, u)),
+                       cs.densify( r), cs.densify(cs.jacobian( r, x)), cs.densify(cs.jacobian( r, u))], 
+                      ['t', 'x0', 'u0'], ['xdot', 'A', 'B', 'q', 'qA', 'qB', 'r', 'rA', 'rB'])
 
 x_seed = cs.MX.sym('x_seed', x.shape)
 u_seed = cs.MX.sym('u_seed', u.shape)
@@ -93,7 +95,7 @@ gen.generate(name_c)
 #------------------------------
 x0 = cs.DM([1.0, 0.0])  # initial state
 
-keys = ['t', 'x0', 'u', 'xdot', 'A_ode', 'B_ode', 'q', 'qA_ode', 'qB_ode', 'x_plus', 'A', 'B', 'qf', 'qA', 'qB']
+keys = ['t', 'x0', 'u', 'xdot', 'A_ode', 'B_ode', 'q', 'qA_ode', 'qB_ode', 'x_plus', 'A', 'B', 'qf', 'qA', 'qB', 'r', 'rA_ode', 'rB_ode']
 data = {}
 
 for key in keys:
@@ -111,7 +113,7 @@ for k in range(N):
         u = 0.0
                                         
     [x_plus, A, B, qf, qA, qB] = integrator_sens(t_k, x0, u)
-    [xdot, A_ode, B_ode, q, qA_ode, qB_ode] = ode(t_k, x0, u)
+    [xdot, A_ode, B_ode, q, qA_ode, qB_ode, r, rA_ode, rB_ode] = ode(t_k, x0, u)
     
     data['t'     ].append(t_k)
     data['x0'    ].append(x0)
@@ -128,6 +130,9 @@ for k in range(N):
     data['qf'    ].append(qf)
     data['qA'    ].append(qA)
     data['qB'    ].append(qB)
+    data['r'     ].append(r)
+    data['rA_ode'].append(rA_ode)
+    data['rB_ode'].append(rB_ode)
     x0 = x_plus
     
 ensure_dir_exist('data/rk4')

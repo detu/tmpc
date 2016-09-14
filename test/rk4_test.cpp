@@ -26,26 +26,34 @@ public:
 	static unsigned const NX = 2;
 	static unsigned const NU = 1;
 	static unsigned const NQ = 2;
+	static unsigned const NR = 2;
 
 	typedef Eigen::Matrix<double, NX, 1> StateVector;
 	typedef Eigen::Matrix<double, NU, 1> InputVector;
 	typedef Eigen::Matrix<double, NQ, 1> QuadVector;
+	typedef Eigen::Matrix<double, NR, 1> ResVector;
 	typedef Eigen::Matrix<double, NX, NX, Eigen::ColMajor> StateStateMatrix;
 	typedef Eigen::Matrix<double, NX, NU, Eigen::ColMajor> StateInputMatrix;
 	typedef Eigen::Matrix<double, NQ, NX, Eigen::ColMajor> QuadStateMatrix;
 	typedef Eigen::Matrix<double, NQ, NU, Eigen::ColMajor> QuadInputMatrix;
+	typedef Eigen::Matrix<double, NR, NX, Eigen::ColMajor> ResStateMatrix;
+	typedef Eigen::Matrix<double, NR, NU, Eigen::ColMajor> ResInputMatrix;
 
 	void operator()(double t, StateVector const& x0, InputVector const& u0,	StateVector& xdot, StateStateMatrix& A, StateInputMatrix& B) const
 	{
-		static casadi_interface::GeneratedFunction<CASADI_GENERATED_FUNCTION_INTERFACE(pendulum_ode), 3, 6> const _ode;
-		_ode({&t, x0.data(), u0.data()}, {xdot.data(), A.data(), B.data(), nullptr, nullptr, nullptr});
+		_ode({&t, x0.data(), u0.data()}, {xdot.data(), A.data(), B.data(), nullptr, nullptr, nullptr, nullptr, nullptr, nullptr});
 	}
 
 	void operator()(double t, StateVector const& x0, InputVector const& u0,	StateVector& xdot, StateStateMatrix& A, StateInputMatrix& B,
 		QuadVector& q, QuadStateMatrix& qA, QuadInputMatrix& qB) const
 	{
-		static casadi_interface::GeneratedFunction<CASADI_GENERATED_FUNCTION_INTERFACE(pendulum_ode), 3, 6> const _ode;
-		_ode({&t, x0.data(), u0.data()}, {xdot.data(), A.data(), B.data(), q.data(), qA.data(), qB.data()});
+		_ode({&t, x0.data(), u0.data()}, {xdot.data(), A.data(), B.data(), q.data(), qA.data(), qB.data(), nullptr, nullptr, nullptr});
+	}
+
+	void operator()(double t, StateVector const& x0, InputVector const& u0,	StateVector& xdot, StateStateMatrix& A, StateInputMatrix& B,
+		QuadVector& q, QuadStateMatrix& qA, QuadInputMatrix& qB, ResVector& r, ResStateMatrix& rA, ResInputMatrix& rB) const
+	{
+		_ode({&t, x0.data(), u0.data()}, {xdot.data(), A.data(), B.data(), q.data(), qA.data(), qB.data(), r.data(), rA.data(), rB.data()});
 	}
 
 	void operator()(double t, StateVector const& x0, InputVector const& u0,
@@ -57,13 +65,14 @@ public:
 
 	StateVector operator()(double t, StateVector const& x0, InputVector const& u0) const
 	{
-		static casadi_interface::GeneratedFunction<CASADI_GENERATED_FUNCTION_INTERFACE(pendulum_ode), 3, 6> const _ode;
-
 		StateVector xdot;
-		_ode({&t, x0.data(), u0.data()}, {xdot.data(), nullptr, nullptr, nullptr, nullptr, nullptr});
+		_ode({&t, x0.data(), u0.data()}, {xdot.data(), nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr});
 
 		return xdot;
 	}
+
+private:
+	casadi_interface::GeneratedFunction<CASADI_GENERATED_FUNCTION_INTERFACE(pendulum_ode), 3, 9> const _ode;
 };
 
 class rk4_test : public ::testing::Test
@@ -99,6 +108,9 @@ protected:
 		ODE::StateInputMatrix B;
 		ODE::QuadStateMatrix qA;
 		ODE::QuadInputMatrix qB;
+		ODE::ResVector r;
+		ODE::ResStateMatrix rA_ode;
+		ODE::ResInputMatrix rB_ode;
 
 		friend std::istream& operator>>(std::istream& is, TestPoint& p)
 		{
@@ -106,7 +118,8 @@ protected:
 			return is >> p.t >> p.x0 >> p.u >> p.xdot  >> p.Aode   >> p.Bode
 					                        >> p.q     >> p.qA_ode >> p.qB_ode
 					                        >> p.xplus >> p.A      >> p.B
-						                    >> p.qf    >> p.qA     >> p.qB;
+						                    >> p.qf    >> p.qA     >> p.qB
+											>> p.r	   >> p.rA_ode >> p.rB_ode;
 		};
 	};
 };
@@ -154,6 +167,40 @@ TEST_F(rk4_test, ode_q_correct)
 		EXPECT_TRUE(q.isApprox(p.q));
 		EXPECT_TRUE(qA.isApprox(p.qA_ode));
 		EXPECT_TRUE(qB.isApprox(p.qB_ode));
+
+		++count;
+	}
+
+	EXPECT_EQ(count, 600);
+}
+
+TEST_F(rk4_test, ode_qr_correct)
+{
+	TestPoint p;
+
+	unsigned count = 0;
+	while (test_data_ >> p)
+	{
+		ODE::StateVector xdot;
+		ODE::StateStateMatrix A;
+		ODE::StateInputMatrix B;
+		ODE::QuadVector q;
+		ODE::QuadStateMatrix qA;
+		ODE::QuadInputMatrix qB;
+		ODE::ResVector r;
+		ODE::ResStateMatrix rA;
+		ODE::ResInputMatrix rB;
+		ode_(p.t, p.x0, p.u, xdot, A, B, q, qA, qB, r, rA, rB);
+
+		EXPECT_TRUE(xdot.isApprox(p.xdot));
+		EXPECT_TRUE(A.isApprox(p.Aode));
+		EXPECT_TRUE(B.isApprox(p.Bode));
+		EXPECT_TRUE(q.isApprox(p.q));
+		EXPECT_TRUE(qA.isApprox(p.qA_ode));
+		EXPECT_TRUE(qB.isApprox(p.qB_ode));
+		EXPECT_TRUE(r.isApprox(p.r));
+		EXPECT_TRUE(rA.isApprox(p.rA_ode));
+		EXPECT_TRUE(rB.isApprox(p.rB_ode));
 
 		++count;
 	}
