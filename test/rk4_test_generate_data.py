@@ -19,6 +19,18 @@ def ensure_dir_exist(dirname):
             # There was an error on creation, so make sure we know about it
             raise
         
+def Gauss_Newton_approximation(r, C, D):
+    # H = G^T G
+    #   = [Q S
+    #      S R]
+    #
+
+    Q = cs.mtimes(cs.transpose(C), C)
+    R = cs.mtimes(cs.transpose(D), D)
+    S = cs.mtimes(cs.transpose(C), D)
+    
+    return Q, R, S
+        
 # Gauss-Newton RK4 integrator
 def rk4gn(name, ode, options):
     t = cs.MX.sym('t')
@@ -29,14 +41,23 @@ def rk4gn(name, ode, options):
     x0 = cs.MX.sym('x0', ode['x'].shape)
     t0 = cs.MX.sym('t0')
     
-    k1 = f(t = t0         , x = x0                       , p = u)
-    k2 = f(t = t0 + h / 2., x = x0 + k1['ode'] * (h / 2.), p = u)
-    k3 = f(t = t0 + h / 2., x = x0 + k2['ode'] * (h / 2.), p = u)
-    k4 = f(t = t0 + h,      x = x0 + k3['ode'] *  h      , p = u)
+    k1 = f(t = t0         , x = x0                       , p = ode['p'])
+    k2 = f(t = t0 + h / 2., x = x0 + k1['ode'] * (h / 2.), p = ode['p'])
+    k3 = f(t = t0 + h / 2., x = x0 + k2['ode'] * (h / 2.), p = ode['p'])
+    k4 = f(t = t0 + h,      x = x0 + k3['ode'] *  h      , p = ode['p'])
 
     xf = x0 + (k1['ode' ] + 2. * k2['ode' ] + 2. * k3['ode' ] + k4['ode' ]) * (h / 6.)
     qf =      (k1['quad'] + 2. * k2['quad'] + 2. * k3['quad'] + k4['quad']) * (h / 6.)
     cf = 0.5 * (cs.mtimes(k1['r'].T, k1['r']) + 2. * cs.mtimes(k2['r'].T, k2['r']) + 2. * cs.mtimes(k3['r'].T, k3['r']) + cs.mtimes(k4['r'].T, k4['r'])) * (h / 6.)
+    
+    cQ1, cR1, cS1 = Gauss_Newton_approximation(k1['r'], cs.jacobian(k1['r'], x0), cs.jacobian(k1['r'], ode['p']))
+    cQ2, cR2, cS2 = Gauss_Newton_approximation(k2['r'], cs.jacobian(k2['r'], x0), cs.jacobian(k2['r'], ode['p']))
+    cQ3, cR3, cS3 = Gauss_Newton_approximation(k3['r'], cs.jacobian(k3['r'], x0), cs.jacobian(k3['r'], ode['p']))
+    cQ4, cR4, cS4 = Gauss_Newton_approximation(k4['r'], cs.jacobian(k4['r'], x0), cs.jacobian(k4['r'], ode['p']))
+    
+    cQ = (h / 6.) * (cQ1 + 2. * cQ2 + 2. * cQ3 + cQ4);
+    cR = (h / 6.) * (cR1 + 2. * cR2 + 2. * cR3 + cR4);
+    cS = (h / 6.) * (cS1 + 2. * cS2 + 2. * cS3 + cS4);
     
     return cs.Function(name, [x0, u, t0], [xf, qf, cf], ['x0', 'p', 't0'], ['xf', 'qf', 'cf'])
 
