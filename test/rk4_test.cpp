@@ -34,6 +34,7 @@ public:
 	typedef Eigen::Matrix<double, NR, 1> ResVector;
 	typedef Eigen::Matrix<double, NX, NX, Eigen::ColMajor> StateStateMatrix;
 	typedef Eigen::Matrix<double, NX, NU, Eigen::ColMajor> StateInputMatrix;
+	typedef Eigen::Matrix<double, NU, NU, Eigen::ColMajor> InputInputMatrix;
 	typedef Eigen::Matrix<double, NQ, NX, Eigen::ColMajor> QuadStateMatrix;
 	typedef Eigen::Matrix<double, NQ, NU, Eigen::ColMajor> QuadInputMatrix;
 	typedef Eigen::Matrix<double, NR, NX, Eigen::ColMajor> ResStateMatrix;
@@ -111,6 +112,9 @@ protected:
 		ODE::ResVector r;
 		ODE::ResStateMatrix rA_ode;
 		ODE::ResInputMatrix rB_ode;
+		double cf;
+		ODE::StateVector cA;
+		ODE::InputVector cB;
 
 		friend std::istream& operator>>(std::istream& is, TestPoint& p)
 		{
@@ -119,7 +123,8 @@ protected:
 					                        >> p.q     >> p.qA_ode >> p.qB_ode
 					                        >> p.xplus >> p.A      >> p.B
 						                    >> p.qf    >> p.qA     >> p.qB
-											>> p.r	   >> p.rA_ode >> p.rB_ode;
+											>> p.r	   >> p.rA_ode >> p.rB_ode
+											>> p.cf    >> p.cA     >> p.cB;
 		};
 	};
 };
@@ -257,6 +262,42 @@ TEST_F(rk4_test, integrate_q_correct)
 		EXPECT_THAT(as_container(qA   ), testing::Pointwise(FloatNearPointwise(1e-5), as_container(p.qA   )));
 		EXPECT_THAT(as_container(qB   ), testing::Pointwise(FloatNearPointwise(1e-5), as_container(p.qB   )));
 
+		++count;
+	}
+
+	EXPECT_EQ(count, 600);
+}
+
+TEST_F(rk4_test, integrate_qr_correct)
+{
+	TestPoint p;
+
+	unsigned count = 0;
+	while (test_data_ >> p)
+	{
+		ODE::StateVector xplus;
+		ODE::StateStateMatrix A;
+		ODE::StateInputMatrix B;
+		ODE::QuadVector qf;
+		ODE::QuadStateMatrix qA;
+		ODE::QuadInputMatrix qB;
+		double cf;
+		ODE::StateVector cA;
+		ODE::InputVector cB;
+		ODE::StateStateMatrix cQ;
+		ODE::InputInputMatrix cR;
+		ODE::StateInputMatrix cS;
+		integrate(integrator_, ode_, p.t, p.x0, p.u, xplus, A, B, qf, qA, qB, cf, cA, cB, cQ, cR, cS);
+
+		EXPECT_THAT(as_container(xplus), testing::Pointwise(FloatNearPointwise(1e-5), as_container(p.xplus)));
+		EXPECT_THAT(as_container(A    ), testing::Pointwise(FloatNearPointwise(1e-5), as_container(p.A    )));
+		EXPECT_THAT(as_container(B    ), testing::Pointwise(FloatNearPointwise(1e-5), as_container(p.B    )));
+		EXPECT_THAT(as_container(qf   ), testing::Pointwise(FloatNearPointwise(1e-4), as_container(p.qf   )));
+		EXPECT_THAT(as_container(qA   ), testing::Pointwise(FloatNearPointwise(1e-5), as_container(p.qA   )));
+		EXPECT_THAT(as_container(qB   ), testing::Pointwise(FloatNearPointwise(1e-5), as_container(p.qB   )));
+		EXPECT_NEAR(cf, p.cf, 1e-10);
+		EXPECT_THAT(as_container(cA   ), testing::Pointwise(FloatNearPointwise(1e-5), as_container(p.cA   )));
+		EXPECT_THAT(as_container(cB   ), testing::Pointwise(FloatNearPointwise(1e-5), as_container(p.cB   )));
 		++count;
 	}
 

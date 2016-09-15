@@ -251,9 +251,9 @@ namespace tmpc
 		ode(t0 + h / 2., x0 + k2 * (h / 2.), u, k3, A3, B3, dq3, qA3, qB3, r3, rA3, rB3);
 		ode(t0 + h,      x0 + k3 * h       , u, k4, A4, B4, dq4, qA4, qB4, r4, rA4, rB4);
 
-		x_next =  x0 + (                k1 + 2. *                 k2 + 2. *                 k3 +                 k4) * (h / 6.);
-		qf     =       (               dq1 + 2. *                dq2 + 2. *                dq3 +                dq4) * (h / 6.);
-		cf     = 0.5 * (transpose(r1) * r1 + 2. * transpose(r2) * r2 + 2. * transpose(r3) * r3 + transpose(r4) * r4) * (h / 6.);
+		x_next =  x0 + (             k1  + 2. *               k2 + 2. *               k3 +               k4) * (h / 6.);
+		qf     =       (             dq1 + 2. *              dq2 + 2. *              dq3 +              dq4) * (h / 6.);
+		cf     = 0.5 * (squared_norm(r1) + 2. * squared_norm(r2) + 2. * squared_norm(r3) + squared_norm(r4)) * (h / 6.);
 
 		// Calculating sensitivities
 		auto const& A1_bar =      A1;							auto const& B1_bar =      B1;

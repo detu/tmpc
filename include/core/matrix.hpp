@@ -232,4 +232,10 @@ namespace tmpc
 	{
 		return m.diagonal();
 	}
+
+	template <typename Matrix>
+	decltype(auto) squared_norm(Eigen::MatrixBase<Matrix> const& m)
+	{
+		return m.squaredNorm();
+	}
 }
