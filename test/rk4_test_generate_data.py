@@ -59,7 +59,7 @@ def rk4gn(name, ode, options):
     cR = (h / 6.) * (cR1 + 2. * cR2 + 2. * cR3 + cR4);
     cS = (h / 6.) * (cS1 + 2. * cS2 + 2. * cS3 + cS4);
     
-    return cs.Function(name, [x0, u, t0], [xf, qf, cf], ['x0', 'p', 't0'], ['xf', 'qf', 'cf'])
+    return cs.Function(name, [x0, u, t0], [xf, qf, cf, cQ, cR, cS], ['x0', 'p', 't0'], ['xf', 'qf', 'cf', 'cQ', 'cR', 'cS'])
 
 t     = cs.MX.sym('t')       # time
 phi   = cs.MX.sym('phi')     # the angle phi
@@ -88,9 +88,10 @@ integrator_sens = cs.Function('Integrator_Sensitivities',
                               [t, x, u], 
                               [x_plus, cs.jacobian(x_plus, x), cs.jacobian(x_plus, u), 
                                qf    , cs.jacobian(    qf, x), cs.jacobian(    qf, u),
-                               cf    , cs.jacobian(    cf, x), cs.jacobian(    cf, u)],
+                               cf    , cs.jacobian(    cf, x), cs.jacobian(    cf, u),
+                               integrator_out['cQ'], integrator_out['cR'], integrator_out['cS']],
                               ['t0', 'x0', 'u'], 
-                              ['xf', 'A', 'B', 'qf', 'qA', 'qB', 'cf', 'cA', 'cB'])
+                              ['xf', 'A', 'B', 'qf', 'qA', 'qB', 'cf', 'cA', 'cB', 'cQ', 'cR', 'cS'])
 
 #------------------------------
 # Generate C code for ODE model
@@ -125,7 +126,7 @@ x0 = cs.DM([1.0, 0.0])  # initial state
 
 keys = ['t', 'x0', 'u', 'xdot', 'A_ode', 'B_ode', 'q', 'qA_ode', 'qB_ode', 
         'x_plus', 'A', 'B', 'qf', 'qA', 'qB', 'r', 'rA_ode', 'rB_ode', 
-        'cf', 'cA', 'cB']
+        'cf', 'cA', 'cB', 'cQ', 'cR', 'cS']
 data = {}
 
 for key in keys:
@@ -142,7 +143,7 @@ for k in range(N):
     else:
         u = 0.0
                                         
-    [x_plus, A, B, qf, qA, qB, cf, cA, cB] = integrator_sens(t_k, x0, u)
+    [x_plus, A, B, qf, qA, qB, cf, cA, cB, cQ, cR, cS] = integrator_sens(t_k, x0, u)
     [xdot, A_ode, B_ode, q, qA_ode, qB_ode, r, rA_ode, rB_ode] = ode(t_k, x0, u)
     
     data['t'     ].append(t_k)
@@ -166,6 +167,9 @@ for k in range(N):
     data['cf'    ].append(cf)
     data['cA'    ].append(cA)
     data['cB'    ].append(cB)
+    data['cQ'    ].append(cQ)
+    data['cR'    ].append(cR)
+    data['cS'    ].append(cS)
     x0 = x_plus
     
 ensure_dir_exist('data/rk4')

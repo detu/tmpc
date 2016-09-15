@@ -115,6 +115,9 @@ protected:
 		double cf;
 		ODE::StateVector cA;
 		ODE::InputVector cB;
+		ODE::StateStateMatrix cQ;
+		ODE::InputInputMatrix cR;
+		ODE::StateInputMatrix cS;
 
 		friend std::istream& operator>>(std::istream& is, TestPoint& p)
 		{
@@ -124,7 +127,8 @@ protected:
 					                        >> p.xplus >> p.A      >> p.B
 						                    >> p.qf    >> p.qA     >> p.qB
 											>> p.r	   >> p.rA_ode >> p.rB_ode
-											>> p.cf    >> p.cA     >> p.cB;
+											>> p.cf    >> p.cA     >> p.cB
+											>> p.cQ    >> p.cR     >> p.cS;
 		};
 	};
 };
@@ -296,8 +300,11 @@ TEST_F(rk4_test, integrate_qr_correct)
 		EXPECT_THAT(as_container(qA   ), testing::Pointwise(FloatNearPointwise(1e-5), as_container(p.qA   )));
 		EXPECT_THAT(as_container(qB   ), testing::Pointwise(FloatNearPointwise(1e-5), as_container(p.qB   )));
 		EXPECT_NEAR(cf, p.cf, 1e-10);
-		EXPECT_THAT(as_container(cA   ), testing::Pointwise(FloatNearPointwise(1e-5), as_container(p.cA   )));
-		EXPECT_THAT(as_container(cB   ), testing::Pointwise(FloatNearPointwise(1e-5), as_container(p.cB   )));
+		EXPECT_THAT(as_container(cA   ), testing::Pointwise(FloatNearPointwise(1e-10), as_container(p.cA   )));
+		EXPECT_THAT(as_container(cB   ), testing::Pointwise(FloatNearPointwise(1e-10), as_container(p.cB   )));
+		EXPECT_THAT(as_container(cQ   ), testing::Pointwise(FloatNearPointwise(1e-10), as_container(p.cQ   )));
+		EXPECT_THAT(as_container(cR   ), testing::Pointwise(FloatNearPointwise(1e-10), as_container(p.cR   )));
+		EXPECT_THAT(as_container(cS   ), testing::Pointwise(FloatNearPointwise(1e-10), as_container(p.cS   )));
 		++count;
 	}
 
