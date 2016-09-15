@@ -280,16 +280,14 @@ namespace tmpc
 		cA = (h / 6.) * (transpose(r1) * rA1_bar + 2. * transpose(r2) * rA2_bar + 2. * transpose(r3) * rA3_bar + transpose(r4) * rA4_bar);
 		cB = (h / 6.) * (transpose(r1) * rB1_bar + 2. * transpose(r2) * rB2_bar + 2. * transpose(r3) * rB3_bar + transpose(r4) * rB4_bar);
 
-		StateVector      cq1, cq2, cq3, cq4;
-		InputVector      cr1, cr2, cr3, cr4;
 		StateStateMatrix cQ1, cQ2, cQ3, cQ4;
 		InputInputMatrix cR1, cR2, cR3, cR4;
 		StateInputMatrix cS1, cS2, cS3, cS4;
 
-		Gauss_Newton_approximation(r1, rA1_bar, rB1_bar, cQ1, cR1, cS1, cq1, cr1);
-		Gauss_Newton_approximation(r2, rA2_bar, rB2_bar, cQ2, cR2, cS2, cq2, cr2);
-		Gauss_Newton_approximation(r3, rA3_bar, rB3_bar, cQ3, cR3, cS3, cq3, cr3);
-		Gauss_Newton_approximation(r4, rA4_bar, rB4_bar, cQ4, cR4, cS4, cq4, cr4);
+		Gauss_Newton_approximation(r1, rA1_bar, rB1_bar, cQ1, cR1, cS1);
+		Gauss_Newton_approximation(r2, rA2_bar, rB2_bar, cQ2, cR2, cS2);
+		Gauss_Newton_approximation(r3, rA3_bar, rB3_bar, cQ3, cR3, cS3);
+		Gauss_Newton_approximation(r4, rA4_bar, rB4_bar, cQ4, cR4, cS4);
 
 		cQ = (h / 6.) * (cQ1 + 2. * cQ2 + 2. * cQ3 + cQ4);
 		cR = (h / 6.) * (cR1 + 2. * cR2 + 2. * cR3 + cR4);
