@@ -10,7 +10,6 @@
 #include <Eigen/Dense>
 
 #include "../core/matrix.hpp"
-#include "../core/gauss_newton.hpp"
 
 #include <array>
 
@@ -283,23 +282,18 @@ namespace tmpc
 			c_acc += b[i] * 0.5 * squared_norm(r);
 
 			// Calculating sensitivities
-			auto const rA_bar = eval(rA + c[i] * rA * A_bar);
-			auto const rB_bar = eval(rB + c[i] * rA * B_bar);
+			auto const rA_bar = i == 0 ? rA : eval(rA + c[i] * rA * A_bar);
+			auto const rB_bar = i == 0 ? rB : eval(rB + c[i] * rA * B_bar);
 			cA_acc += b[i] * transpose(r) * rA_bar;
 			cB_acc += b[i] * transpose(r) * rB_bar;
 
-			StateStateMatrix Q;
-			InputInputMatrix R;
-			StateInputMatrix S;
+			// Gauss-Newton approximation of the Hessian
+			cQ_acc += b[i] * transpose(rA_bar) * rA_bar;
+			cR_acc += b[i] * transpose(rB_bar) * rB_bar;
+			cS_acc += b[i] * transpose(rA_bar) * rB_bar;
 
-			Gauss_Newton_approximation(rA_bar, rB_bar, Q, R, S);
-
-			cQ_acc += b[i] * Q;
-			cR_acc += b[i] * R;
-			cS_acc += b[i] * S;
-
-			A_bar = eval(A + c[i] * A * A_bar);
-			B_bar = eval(B + c[i] * A * B_bar);
+			A_bar = i == 0 ? A : eval(A + c[i] * A * A_bar);
+			B_bar = i == 0 ? B : eval(B + c[i] * A * B_bar);
 			xA_acc += b[i] * A_bar;
 			xB_acc += b[i] * B_bar;
 		}
