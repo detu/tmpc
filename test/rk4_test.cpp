@@ -20,7 +20,7 @@ std::istream& operator>>(std::istream& is, Eigen::MatrixBase<Matrix>& m)
 	return is;
 }
 
-class PendulumODE
+class PendulumODEBase
 {
 public:
 	static unsigned const NX = 2;
@@ -40,17 +40,33 @@ public:
 	typedef Eigen::Matrix<double, NR, NX, Eigen::ColMajor> ResStateMatrix;
 	typedef Eigen::Matrix<double, NR, NU, Eigen::ColMajor> ResInputMatrix;
 
+protected:
+	casadi_interface::GeneratedFunction<CASADI_GENERATED_FUNCTION_INTERFACE(pendulum_ode), 3, 9> const _ode;
+};
+
+class PendulumODE : public PendulumODEBase
+{
+public:
+	/**
+	 * \brief Evaluates ODE.
+	 */
 	void operator()(double t, StateVector const& x0, InputVector const& u0,	StateVector& xdot, StateStateMatrix& A, StateInputMatrix& B) const
 	{
 		_ode({&t, x0.data(), u0.data()}, {xdot.data(), A.data(), B.data(), nullptr, nullptr, nullptr, nullptr, nullptr, nullptr});
 	}
 
+	/**
+	 * \brief Evaluates ODE and quadrature.
+	 */
 	void operator()(double t, StateVector const& x0, InputVector const& u0,	StateVector& xdot, StateStateMatrix& A, StateInputMatrix& B,
 		QuadVector& q, QuadStateMatrix& qA, QuadInputMatrix& qB) const
 	{
 		_ode({&t, x0.data(), u0.data()}, {xdot.data(), A.data(), B.data(), q.data(), qA.data(), qB.data(), nullptr, nullptr, nullptr});
 	}
 
+	/**
+	 * \brief Evaluates ODE, quadrature and residuals.
+	 */
 	void operator()(double t, StateVector const& x0, InputVector const& u0,	StateVector& xdot, StateStateMatrix& A, StateInputMatrix& B,
 		QuadVector& q, QuadStateMatrix& qA, QuadInputMatrix& qB, ResVector& r, ResStateMatrix& rA, ResInputMatrix& rB) const
 	{
@@ -64,6 +80,9 @@ public:
 		_ode({&t, x0.data(), u0.data(), x0_seed.data(), u_seed.data()}, {xdot.data(), xdot_sens.data()});
 	}
 
+	/**
+	 * \brief Evaluates ODE without sensitivities.
+	 */
 	StateVector operator()(double t, StateVector const& x0, InputVector const& u0) const
 	{
 		StateVector xdot;
@@ -71,18 +90,29 @@ public:
 
 		return xdot;
 	}
+};
 
-private:
-	casadi_interface::GeneratedFunction<CASADI_GENERATED_FUNCTION_INTERFACE(pendulum_ode), 3, 9> const _ode;
+class PendulumODE_r : public PendulumODEBase
+{
+public:
+	/**
+	 * \brief Evaluates ODE and residuals.
+	 */
+	void operator()(double t, StateVector const& x0, InputVector const& u0,	StateVector& xdot, StateStateMatrix& A, StateInputMatrix& B,
+		ResVector& r, ResStateMatrix& rA, ResInputMatrix& rB) const
+	{
+		_ode({&t, x0.data(), u0.data()}, {xdot.data(), A.data(), B.data(), nullptr, nullptr, nullptr, r.data(), rA.data(), rB.data()});
+	}
 };
 
 class rk4_test : public ::testing::Test
 {
 protected:
-	typedef PendulumODE ODE;
+	typedef PendulumODEBase ODE;
 	typedef tmpc::RK4 Integrator;
 
-	ODE ode_;
+	PendulumODE ode_;
+	PendulumODE_r ode_r_;
 	Integrator integrator_ {0.01};
 
 	std::ifstream test_data_ {"test/data/rk4/pendulum.txt"};
@@ -266,6 +296,39 @@ TEST_F(rk4_test, integrate_q_correct)
 		EXPECT_THAT(as_container(qA   ), testing::Pointwise(FloatNearPointwise(1e-5), as_container(p.qA   )));
 		EXPECT_THAT(as_container(qB   ), testing::Pointwise(FloatNearPointwise(1e-5), as_container(p.qB   )));
 
+		++count;
+	}
+
+	EXPECT_EQ(count, 600);
+}
+
+TEST_F(rk4_test, integrate_r_correct)
+{
+	TestPoint p;
+
+	unsigned count = 0;
+	while (test_data_ >> p)
+	{
+		ODE::StateVector xplus;
+		ODE::StateStateMatrix A;
+		ODE::StateInputMatrix B;
+		double cf;
+		ODE::StateVector cA;
+		ODE::InputVector cB;
+		ODE::StateStateMatrix cQ;
+		ODE::InputInputMatrix cR;
+		ODE::StateInputMatrix cS;
+		integrate(integrator_, ode_r_, p.t, p.x0, p.u, xplus, A, B, cf, cA, cB, cQ, cR, cS);
+
+		EXPECT_THAT(as_container(xplus), testing::Pointwise(FloatNearPointwise(1e-5), as_container(p.xplus)));
+		EXPECT_THAT(as_container(A    ), testing::Pointwise(FloatNearPointwise(1e-5), as_container(p.A    )));
+		EXPECT_THAT(as_container(B    ), testing::Pointwise(FloatNearPointwise(1e-5), as_container(p.B    )));
+		EXPECT_NEAR(cf, p.cf, 1e-10);
+		EXPECT_THAT(as_container(cA   ), testing::Pointwise(FloatNearPointwise(1e-10), as_container(p.cA   )));
+		EXPECT_THAT(as_container(cB   ), testing::Pointwise(FloatNearPointwise(1e-10), as_container(p.cB   )));
+		EXPECT_THAT(as_container(cQ   ), testing::Pointwise(FloatNearPointwise(1e-10), as_container(p.cQ   )));
+		EXPECT_THAT(as_container(cR   ), testing::Pointwise(FloatNearPointwise(1e-10), as_container(p.cR   )));
+		EXPECT_THAT(as_container(cS   ), testing::Pointwise(FloatNearPointwise(1e-10), as_container(p.cS   )));
 		++count;
 	}
 

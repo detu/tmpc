@@ -40,6 +40,10 @@ namespace tmpc
 		auto constexpr NX = rows<StateVector0_>();
 		auto constexpr NU = rows<InputVector_ >();
 
+		static_assert(rows<StateVector1_>() == NX && cols<StateVector1_>() ==  1, "x_next must be of size NX*1");
+		static_assert(rows<AMatrix      >() == NX && cols<AMatrix      >() == NX, "A must be of size NX*NX"    );
+		static_assert(rows<BMatrix      >() == NX && cols<BMatrix      >() == NU, "B must be of size NX*NU"    );
+
 		typedef Eigen::Matrix<double, NX,  1> StateVector;
 		typedef Eigen::Matrix<double, NX, NX> StateStateMatrix;
 		typedef Eigen::Matrix<double, NX, NU> StateInputMatrix;
@@ -140,6 +144,13 @@ namespace tmpc
 		auto constexpr NU = rows<InputVector_ >();
 		auto constexpr NQ = rows<QuadVector_  >();
 
+		static_assert(rows<StateVector1_   >() == NX && cols<StateVector1_   >() ==  1, "x_next must be of size NX*1");
+		static_assert(rows<AMatrix         >() == NX && cols<AMatrix         >() == NX, "A must be of size NX*NX"    );
+		static_assert(rows<BMatrix         >() == NX && cols<BMatrix         >() == NU, "B must be of size NX*NU"    );
+		static_assert(rows<QuadVector_     >() == NQ && cols<QuadVector_     >() ==  1, "qf must be of size NQ*1"    );
+		static_assert(rows<QuadStateMatrix_>() == NQ && cols<QuadStateMatrix_>() == NX, "qA must be of size NQ*NX"   );
+		static_assert(rows<QuadInputMatrix_>() == NQ && cols<QuadInputMatrix_>() == NU, "qB must be of size NQ*NU"   );
+
 		typedef Eigen::Matrix<double, NX,  1> StateVector;
 		typedef Eigen::Matrix<double, NX, NX> StateStateMatrix;
 		typedef Eigen::Matrix<double, NX, NU> StateInputMatrix;
@@ -178,6 +189,110 @@ namespace tmpc
 
 		qA = (h / 6.) * (qA1_bar + 2. * qA2_bar + 2. * qA3_bar + qA4_bar);
 		qB = (h / 6.) * (qB1_bar + 2. * qB2_bar + 2. * qB3_bar + qB4_bar);
+	}
+
+	/**
+	 * \brief Integration including a cost term.
+	 * \ingroup integrators
+	 *
+	 *
+	 * Evaluates the following ODE using explicit Runge-Kutta 4 method:
+	 * \f{align*}{
+	 * \dot{\mathbf{x}} &= f(t,\mathbf{x},\mathbf{u})\\
+	 * \dot{c} &= \frac{1}{2} \Vert r(t,\mathbf{x},\mathbf{u}) \Vert^2
+	 * \f}
+	 * on time interval \f$[t_0,t_0+h]\f$ subject to initial conditions
+	 * \f{align*}{
+	 * \mathbf{x}(t_0) & =\mathbf{x}_0\\
+	 * c(t_0) & =0
+	 * \f}
+	 * \param[in] integrator -- integrator
+	 * \param[in] ode -- ODE to integrate. ode(t, x, u, k, A, B, r, rA, rB) must be a valid expression (TODO: document ode input and output).
+	 * \param[in] t0 -- start of the integration interval \f$t_0\f$
+	 * \param[in] x0 -- state of the system at the beginning of integration interval \f$\mathbf{x}_0\f$
+	 * \param[in] u -- input of the system which is assumed to be constant for the entire integration interval \f$\mathbf{u}\f$
+	 * \param[out] x_next -- state of the system which at the end of the integration interval \f$\mathbf{x}(t_0+h)\f$
+	 * \param[out] A -- sensitivity of final state w.r.t. initial state \f$\frac{\mathrm{d}\mathbf{x}(t_0+h)}{\mathrm{d}\mathbf{x}(t_0)}\f$
+	 * \param[out] B -- sensitivity of final state w.r.t. input \f$\frac{\mathrm{d}\mathbf{x}(t_0+h)}{\mathrm{d}\mathbf{u}}\f$
+	 * \param[out] cf -- cost value at the end of the integration interval \f$c(t_0+h)\f$
+	 * \param[out] cA -- sensitivity of final cost w.r.t. initial state \f$\frac{\mathrm{d}c(t_0+h)}{\mathrm{d}\mathbf{x}(t_0)}\f$
+	 * \param[out] cB -- sensitivity of final cost w.r.t. input \f$\frac{\mathrm{d}c(t_0+h)}{\mathrm{d}\mathbf{u}}\f$
+	 * \param[out] cQ -- second derivative of final cost w.r.t. initial state \f$\frac{\mathrm{d}^2 c(t_0+h)}{\mathrm{d}\mathbf{x}(t_0)^2}\f$
+	 * \param[out] cR -- second derivative of final cost w.r.t. input \f$\frac{\mathrm{d}^2 c(t_0+h)}{\mathrm{d}\mathbf{u}^2}\f$
+	 * \param[out] cS -- second derivative of final cost w.r.t. initial state and input \f$\frac{\mathrm{d}^2 c(t_0+h)}{\mathrm{d}\mathbf{x}(t_0)\mathrm{d}\mathbf{u}}\f$
+	 */
+	template <typename ODE, typename StateVector0_, typename InputVector_, typename StateVector1_, typename AMatrix, typename BMatrix,
+		typename StateVector2_,	typename InputVector2_,	typename QMatrix, typename RMatrix, typename SMatrix>
+	void integrate(RK4 const& integrator, ODE const& ode, double t0, StateVector0_ const& x0, InputVector_ const& u,
+			StateVector1_& x_next, AMatrix& A, BMatrix& B,
+			double& cf, StateVector2_& cA, InputVector2_& cB, QMatrix& cQ, RMatrix& cR, SMatrix& cS)
+	{
+		auto constexpr NX = rows<StateVector0_>();
+		auto constexpr NU = rows<InputVector_ >();
+		auto constexpr NR = ODE::NR;
+
+		static_assert(rows<StateVector1_>() == NX && cols<StateVector1_>() ==  1, "x_next must be of size NX*1");
+		static_assert(rows<AMatrix      >() == NX && cols<AMatrix      >() == NX, "A must be of size NX*NX"    );
+		static_assert(rows<BMatrix      >() == NX && cols<BMatrix      >() == NU, "B must be of size NX*NU"    );
+		static_assert(rows<StateVector2_>() == NX && cols<StateVector2_>() ==  1, "cA must be of size NX*1"    );
+		static_assert(rows<InputVector2_>() == NU && cols<StateVector2_>() ==  1, "cB must be of size NU*1"    );
+		static_assert(rows<QMatrix      >() == NX && cols<QMatrix      >() == NX, "cQ must be of size NX*NX"   );
+		static_assert(rows<RMatrix      >() == NU && cols<RMatrix      >() == NU, "cR must be of size NX*NX"   );
+		static_assert(rows<SMatrix      >() == NX && cols<SMatrix      >() == NU, "cS must be of size NX*NU"   );
+
+		typedef Eigen::Matrix<double, NX,  1> StateVector;
+		typedef Eigen::Matrix<double, NU,  1> InputVector;
+		typedef Eigen::Matrix<double, NX, NX> StateStateMatrix;
+		typedef Eigen::Matrix<double, NX, NU> StateInputMatrix;
+		typedef Eigen::Matrix<double, NU, NU> InputInputMatrix;
+
+		StateVector k1, k2, k3, k4;
+		StateStateMatrix A1, A2, A3, A4;
+		StateInputMatrix B1, B2, B3, B4;
+
+		Eigen::Matrix<double, NR,  1>  r1,  r2,  r3,  r4;
+		Eigen::Matrix<double, NR, NX> rA1, rA2, rA3, rA4;
+		Eigen::Matrix<double, NR, NU> rB1, rB2, rB3, rB4;
+		auto const h = integrator.timeStep();
+
+		// Calculating next state, quadrature and cost
+		ode(t0,          x0                , u, k1, A1, B1, r1, rA1, rB1);
+		ode(t0 + h / 2., x0 + k1 * (h / 2.), u, k2, A2, B2, r2, rA2, rB2);
+		ode(t0 + h / 2., x0 + k2 * (h / 2.), u, k3, A3, B3, r3, rA3, rB3);
+		ode(t0 + h,      x0 + k3 * h       , u, k4, A4, B4, r4, rA4, rB4);
+
+		x_next =  x0 + (             k1  + 2. *               k2 + 2. *               k3 +               k4) * (h / 6.);
+		cf     = 0.5 * (squared_norm(r1) + 2. * squared_norm(r2) + 2. * squared_norm(r3) + squared_norm(r4)) * (h / 6.);
+
+		// Calculating sensitivities
+		auto const& A1_bar =      A1;							auto const& B1_bar =      B1;
+		auto const  A2_bar = eval(A2 + (h / 2.) * A2 * A1_bar);	auto const  B2_bar = eval(B2 + (h / 2.) * A2 * B1_bar);
+		auto const  A3_bar = eval(A3 + (h / 2.) * A3 * A2_bar);	auto const  B3_bar = eval(B3 + (h / 2.) * A3 * B2_bar);
+		auto const  A4_bar =      A4 +  h       * A4 * A3_bar ;	auto const  B4_bar =      B4 +  h       * A4 * B3_bar ;
+
+		A = identity<StateStateMatrix>() + (h / 6.) * (A1_bar + 2. * A2_bar + 2. * A3_bar + A4_bar);
+		B = 					           (h / 6.) * (B1_bar + 2. * B2_bar + 2. * B3_bar + B4_bar);
+
+		auto const& rA1_bar =      rA1;							    auto const& rB1_bar =      rB1;
+		auto const  rA2_bar = eval(rA2 + (h / 2.) * rA2 * A1_bar);	auto const  rB2_bar = eval(rB2 + (h / 2.) * rA2 * B1_bar);
+		auto const  rA3_bar = eval(rA3 + (h / 2.) * rA3 * A2_bar);	auto const  rB3_bar = eval(rB3 + (h / 2.) * rA3 * B2_bar);
+		auto const  rA4_bar = eval(rA4 +  h       * rA4 * A3_bar);	auto const  rB4_bar = eval(rB4 +  h       * rA4 * B3_bar);
+
+		cA = (h / 6.) * (transpose(r1) * rA1_bar + 2. * transpose(r2) * rA2_bar + 2. * transpose(r3) * rA3_bar + transpose(r4) * rA4_bar);
+		cB = (h / 6.) * (transpose(r1) * rB1_bar + 2. * transpose(r2) * rB2_bar + 2. * transpose(r3) * rB3_bar + transpose(r4) * rB4_bar);
+
+		StateStateMatrix cQ1, cQ2, cQ3, cQ4;
+		InputInputMatrix cR1, cR2, cR3, cR4;
+		StateInputMatrix cS1, cS2, cS3, cS4;
+
+		Gauss_Newton_approximation(r1, rA1_bar, rB1_bar, cQ1, cR1, cS1);
+		Gauss_Newton_approximation(r2, rA2_bar, rB2_bar, cQ2, cR2, cS2);
+		Gauss_Newton_approximation(r3, rA3_bar, rB3_bar, cQ3, cR3, cS3);
+		Gauss_Newton_approximation(r4, rA4_bar, rB4_bar, cQ4, cR4, cS4);
+
+		cQ = (h / 6.) * (cQ1 + 2. * cQ2 + 2. * cQ3 + cQ4);
+		cR = (h / 6.) * (cR1 + 2. * cR2 + 2. * cR3 + cR4);
+		cS = (h / 6.) * (cS1 + 2. * cS2 + 2. * cS3 + cS4);
 	}
 
 	/**
@@ -226,6 +341,18 @@ namespace tmpc
 		auto constexpr NU = rows<InputVector_ >();
 		auto constexpr NQ = rows<QuadVector_  >();
 		auto constexpr NR = ODE::NR;
+
+		static_assert(rows<StateVector1_   >() == NX && cols<StateVector1_   >() ==  1, "x_next must be of size NX*1");
+		static_assert(rows<AMatrix         >() == NX && cols<AMatrix         >() == NX, "A must be of size NX*NX"    );
+		static_assert(rows<BMatrix         >() == NX && cols<BMatrix         >() == NU, "B must be of size NX*NU"    );
+		static_assert(rows<QuadVector_     >() == NQ && cols<QuadVector_     >() ==  1, "qf must be of size NQ*1"    );
+		static_assert(rows<QuadStateMatrix_>() == NQ && cols<QuadStateMatrix_>() == NX, "qA must be of size NQ*NX"   );
+		static_assert(rows<QuadInputMatrix_>() == NQ && cols<QuadInputMatrix_>() == NU, "qB must be of size NQ*NU"   );
+		static_assert(rows<StateVector2_   >() == NX && cols<StateVector2_   >() ==  1, "cA must be of size NX*1"    );
+		static_assert(rows<InputVector2_   >() == NU && cols<StateVector2_   >() ==  1, "cB must be of size NU*1"    );
+		static_assert(rows<QMatrix         >() == NX && cols<QMatrix         >() == NX, "cQ must be of size NX*NX"   );
+		static_assert(rows<RMatrix         >() == NU && cols<RMatrix         >() == NU, "cR must be of size NX*NX"   );
+		static_assert(rows<SMatrix         >() == NX && cols<SMatrix         >() == NU, "cS must be of size NX*NU"   );
 
 		typedef Eigen::Matrix<double, NX,  1> StateVector;
 		typedef Eigen::Matrix<double, NU,  1> InputVector;
