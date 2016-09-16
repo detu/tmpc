@@ -285,10 +285,10 @@ namespace tmpc
 		InputInputMatrix cR1, cR2, cR3, cR4;
 		StateInputMatrix cS1, cS2, cS3, cS4;
 
-		Gauss_Newton_approximation(r1, rA1_bar, rB1_bar, cQ1, cR1, cS1);
-		Gauss_Newton_approximation(r2, rA2_bar, rB2_bar, cQ2, cR2, cS2);
-		Gauss_Newton_approximation(r3, rA3_bar, rB3_bar, cQ3, cR3, cS3);
-		Gauss_Newton_approximation(r4, rA4_bar, rB4_bar, cQ4, cR4, cS4);
+		Gauss_Newton_approximation(rA1_bar, rB1_bar, cQ1, cR1, cS1);
+		Gauss_Newton_approximation(rA2_bar, rB2_bar, cQ2, cR2, cS2);
+		Gauss_Newton_approximation(rA3_bar, rB3_bar, cQ3, cR3, cS3);
+		Gauss_Newton_approximation(rA4_bar, rB4_bar, cQ4, cR4, cS4);
 
 		cQ = (h / 6.) * (cQ1 + 2. * cQ2 + 2. * cQ3 + cQ4);
 		cR = (h / 6.) * (cR1 + 2. * cR2 + 2. * cR3 + cR4);
@@ -411,10 +411,10 @@ namespace tmpc
 		InputInputMatrix cR1, cR2, cR3, cR4;
 		StateInputMatrix cS1, cS2, cS3, cS4;
 
-		Gauss_Newton_approximation(r1, rA1_bar, rB1_bar, cQ1, cR1, cS1);
-		Gauss_Newton_approximation(r2, rA2_bar, rB2_bar, cQ2, cR2, cS2);
-		Gauss_Newton_approximation(r3, rA3_bar, rB3_bar, cQ3, cR3, cS3);
-		Gauss_Newton_approximation(r4, rA4_bar, rB4_bar, cQ4, cR4, cS4);
+		Gauss_Newton_approximation(rA1_bar, rB1_bar, cQ1, cR1, cS1);
+		Gauss_Newton_approximation(rA2_bar, rB2_bar, cQ2, cR2, cS2);
+		Gauss_Newton_approximation(rA3_bar, rB3_bar, cQ3, cR3, cS3);
+		Gauss_Newton_approximation(rA4_bar, rB4_bar, cQ4, cR4, cS4);
 
 		cQ = (h / 6.) * (cQ1 + 2. * cQ2 + 2. * cQ3 + cQ4);
 		cR = (h / 6.) * (cR1 + 2. * cR2 + 2. * cR3 + cR4);
