@@ -3,9 +3,9 @@
 namespace tmpc
 {
 	// Gauss-Newton approximation of a Hessian.
-	template <typename ResidualVector, typename CMatrix, typename DMatrix,
+	template <typename CMatrix, typename DMatrix,
 		typename QMatrix, typename RMatrix, typename SMatrix>
-	void Gauss_Newton_approximation(ResidualVector const& res, CMatrix const& C, DMatrix const& D,
+	void Gauss_Newton_approximation(CMatrix const& C, DMatrix const& D,
 			QMatrix& Q, RMatrix& R, SMatrix& S)
 	{
 		// H = G^T G
