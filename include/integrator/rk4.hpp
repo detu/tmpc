@@ -10,7 +10,6 @@
 #include <Eigen/Dense>
 
 #include "../core/matrix.hpp"
-#include "../core/gauss_newton.hpp"
 
 namespace tmpc
 {
@@ -281,18 +280,10 @@ namespace tmpc
 		cA = (h / 6.) * (transpose(r1) * rA1_bar + 2. * transpose(r2) * rA2_bar + 2. * transpose(r3) * rA3_bar + transpose(r4) * rA4_bar);
 		cB = (h / 6.) * (transpose(r1) * rB1_bar + 2. * transpose(r2) * rB2_bar + 2. * transpose(r3) * rB3_bar + transpose(r4) * rB4_bar);
 
-		StateStateMatrix cQ1, cQ2, cQ3, cQ4;
-		InputInputMatrix cR1, cR2, cR3, cR4;
-		StateInputMatrix cS1, cS2, cS3, cS4;
-
-		Gauss_Newton_approximation(rA1_bar, rB1_bar, cQ1, cR1, cS1);
-		Gauss_Newton_approximation(rA2_bar, rB2_bar, cQ2, cR2, cS2);
-		Gauss_Newton_approximation(rA3_bar, rB3_bar, cQ3, cR3, cS3);
-		Gauss_Newton_approximation(rA4_bar, rB4_bar, cQ4, cR4, cS4);
-
-		cQ = (h / 6.) * (cQ1 + 2. * cQ2 + 2. * cQ3 + cQ4);
-		cR = (h / 6.) * (cR1 + 2. * cR2 + 2. * cR3 + cR4);
-		cS = (h / 6.) * (cS1 + 2. * cS2 + 2. * cS3 + cS4);
+		// Gauss-Newton approximation of the Hessian.
+		cQ = (h / 6.) * (transpose(rA1_bar) * rA1_bar + 2. * transpose(rA2_bar) * rA2_bar + 2. * transpose(rA3_bar) * rA3_bar + transpose(rA4_bar) * rA4_bar);
+		cR = (h / 6.) * (transpose(rB1_bar) * rB1_bar + 2. * transpose(rB2_bar) * rB2_bar + 2. * transpose(rB3_bar) * rB3_bar + transpose(rB4_bar) * rB4_bar);
+		cS = (h / 6.) * (transpose(rA1_bar) * rB1_bar + 2. * transpose(rA2_bar) * rB2_bar + 2. * transpose(rA3_bar) * rB3_bar + transpose(rA4_bar) * rB4_bar);
 	}
 
 	/**
@@ -407,18 +398,10 @@ namespace tmpc
 		cA = (h / 6.) * (transpose(r1) * rA1_bar + 2. * transpose(r2) * rA2_bar + 2. * transpose(r3) * rA3_bar + transpose(r4) * rA4_bar);
 		cB = (h / 6.) * (transpose(r1) * rB1_bar + 2. * transpose(r2) * rB2_bar + 2. * transpose(r3) * rB3_bar + transpose(r4) * rB4_bar);
 
-		StateStateMatrix cQ1, cQ2, cQ3, cQ4;
-		InputInputMatrix cR1, cR2, cR3, cR4;
-		StateInputMatrix cS1, cS2, cS3, cS4;
-
-		Gauss_Newton_approximation(rA1_bar, rB1_bar, cQ1, cR1, cS1);
-		Gauss_Newton_approximation(rA2_bar, rB2_bar, cQ2, cR2, cS2);
-		Gauss_Newton_approximation(rA3_bar, rB3_bar, cQ3, cR3, cS3);
-		Gauss_Newton_approximation(rA4_bar, rB4_bar, cQ4, cR4, cS4);
-
-		cQ = (h / 6.) * (cQ1 + 2. * cQ2 + 2. * cQ3 + cQ4);
-		cR = (h / 6.) * (cR1 + 2. * cR2 + 2. * cR3 + cR4);
-		cS = (h / 6.) * (cS1 + 2. * cS2 + 2. * cS3 + cS4);
+		// Gauss-Newton approximation of the Hessian.
+		cQ = (h / 6.) * (transpose(rA1_bar) * rA1_bar + 2. * transpose(rA2_bar) * rA2_bar + 2. * transpose(rA3_bar) * rA3_bar + transpose(rA4_bar) * rA4_bar);
+		cR = (h / 6.) * (transpose(rB1_bar) * rB1_bar + 2. * transpose(rB2_bar) * rB2_bar + 2. * transpose(rB3_bar) * rB3_bar + transpose(rB4_bar) * rB4_bar);
+		cS = (h / 6.) * (transpose(rA1_bar) * rB1_bar + 2. * transpose(rA2_bar) * rB2_bar + 2. * transpose(rA3_bar) * rB3_bar + transpose(rA4_bar) * rB4_bar);
 	}
 
 	/*
