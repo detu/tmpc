@@ -247,61 +247,75 @@ namespace tmpc
 		typedef Eigen::Matrix<double, NX, NX> StateStateMatrix;
 		typedef Eigen::Matrix<double, NX, NU> StateInputMatrix;
 		typedef Eigen::Matrix<double, NU, NU> InputInputMatrix;
+		typedef Eigen::Matrix<double, NR, NX> ResStateMatrix;
+		typedef Eigen::Matrix<double, NR, NU> ResInputMatrix;
 
-		StateStateMatrix A[4];
-		StateInputMatrix B[4];
-
-		Eigen::Matrix<double, NR,  1>  r[4];
-		Eigen::Matrix<double, NR, NX> rA[4];
-		Eigen::Matrix<double, NR, NU> rB[4];
 		auto const h = integrator.timeStep();
 
-		// Calculating next state, quadrature and cost
 		std::array<double, 4> const c = {0.    , h / 2., h / 2., h     };
 		std::array<double, 4> const b = {h / 6., h / 3., h / 3., h / 6.};
+
 		StateVector k     = zero<StateVector>();
 		StateVector x_acc = zero<StateVector>();
 		double      c_acc = 0.;
+		StateStateMatrix A_bar  = zero<StateStateMatrix>();
+		StateInputMatrix B_bar  = zero<StateInputMatrix>();
+		StateStateMatrix xA_acc = zero<StateStateMatrix>();
+		StateInputMatrix xB_acc = zero<StateInputMatrix>();
+		StateVector      cA_acc = zero<StateVector     >();
+		InputVector      cB_acc = zero<InputVector     >();
+		StateStateMatrix cQ_acc = zero<StateStateMatrix>();
+		InputInputMatrix cR_acc = zero<InputInputMatrix>();
+		StateInputMatrix cS_acc = zero<StateInputMatrix>();
 
 		for (int i = 0; i < 4; ++i)
 		{
-			ode(t0 + c[i], x0 + k * c[i], u, k, A[i], B[i], r[i], rA[i], rB[i]);
+			// Calculating next state, quadrature and cost
+			StateStateMatrix A;
+			StateInputMatrix B;
+
+			Eigen::Matrix<double, NR,  1>  r;
+			Eigen::Matrix<double, NR, NX> rA;
+			Eigen::Matrix<double, NR, NU> rB;
+
+			ode(t0 + c[i], eval(x0 + k * c[i]), u, k, A, B, r, rA, rB);
 			x_acc += b[i] * k;
-			c_acc += b[i] * 0.5 * squared_norm(r[i]);
+			c_acc += b[i] * 0.5 * squared_norm(r);
+
+			// Calculating sensitivities
+			auto const rA_bar = eval(rA + c[i] * rA * A_bar);
+			auto const rB_bar = eval(rB + c[i] * rA * B_bar);
+			cA_acc += b[i] * transpose(r) * rA_bar;
+			cB_acc += b[i] * transpose(r) * rB_bar;
+
+			StateStateMatrix Q;
+			InputInputMatrix R;
+			StateInputMatrix S;
+
+			Gauss_Newton_approximation(r, rA_bar, rB_bar, Q, R, S);
+
+			cQ_acc += b[i] * Q;
+			cR_acc += b[i] * R;
+			cS_acc += b[i] * S;
+
+			A_bar = eval(A + c[i] * A * A_bar);
+			B_bar = eval(B + c[i] * A * B_bar);
+			xA_acc += b[i] * A_bar;
+			xB_acc += b[i] * B_bar;
 		}
 
 		x_next =  x0 + x_acc;
 		cf     =  c_acc;
 
-		// Calculating sensitivities
-		auto const& A1_bar =      A[0];							    auto const& B1_bar =      B[0];
-		auto const  A2_bar = eval(A[1] + (h / 2.) * A[1] * A1_bar);	auto const  B2_bar = eval(B[1] + (h / 2.) * A[1] * B1_bar);
-		auto const  A3_bar = eval(A[2] + (h / 2.) * A[2] * A2_bar);	auto const  B3_bar = eval(B[2] + (h / 2.) * A[2] * B2_bar);
-		auto const  A4_bar =      A[3] +  h       * A[3] * A3_bar ;	auto const  B4_bar =      B[3] +  h       * A[3] * B3_bar ;
+		xA = identity<StateStateMatrix>() + xA_acc;
+		xB = 					            xB_acc;
 
-		xA = identity<StateStateMatrix>() + (h / 6.) * (A1_bar + 2. * A2_bar + 2. * A3_bar + A4_bar);
-		xB = 					            (h / 6.) * (B1_bar + 2. * B2_bar + 2. * B3_bar + B4_bar);
+		cA = cA_acc;
+		cB = cB_acc;
 
-		auto const& rA1_bar =      rA[0];							    auto const& rB1_bar =      rB[0];
-		auto const  rA2_bar = eval(rA[1] + (h / 2.) * rA[1] * A1_bar);	auto const  rB2_bar = eval(rB[1] + (h / 2.) * rA[1] * B1_bar);
-		auto const  rA3_bar = eval(rA[2] + (h / 2.) * rA[2] * A2_bar);	auto const  rB3_bar = eval(rB[2] + (h / 2.) * rA[2] * B2_bar);
-		auto const  rA4_bar = eval(rA[3] +  h       * rA[3] * A3_bar);	auto const  rB4_bar = eval(rB[3] +  h       * rA[3] * B3_bar);
-
-		cA = (h / 6.) * (transpose(r[0]) * rA1_bar + 2. * transpose(r[1]) * rA2_bar + 2. * transpose(r[2]) * rA3_bar + transpose(r[3]) * rA4_bar);
-		cB = (h / 6.) * (transpose(r[0]) * rB1_bar + 2. * transpose(r[1]) * rB2_bar + 2. * transpose(r[2]) * rB3_bar + transpose(r[3]) * rB4_bar);
-
-		StateStateMatrix cQ1, cQ2, cQ3, cQ4;
-		InputInputMatrix cR1, cR2, cR3, cR4;
-		StateInputMatrix cS1, cS2, cS3, cS4;
-
-		Gauss_Newton_approximation(r[0], rA1_bar, rB1_bar, cQ1, cR1, cS1);
-		Gauss_Newton_approximation(r[1], rA2_bar, rB2_bar, cQ2, cR2, cS2);
-		Gauss_Newton_approximation(r[2], rA3_bar, rB3_bar, cQ3, cR3, cS3);
-		Gauss_Newton_approximation(r[3], rA4_bar, rB4_bar, cQ4, cR4, cS4);
-
-		cQ = (h / 6.) * (cQ1 + 2. * cQ2 + 2. * cQ3 + cQ4);
-		cR = (h / 6.) * (cR1 + 2. * cR2 + 2. * cR3 + cR4);
-		cS = (h / 6.) * (cS1 + 2. * cS2 + 2. * cS3 + cS4);
+		cQ = cQ_acc;
+		cR = cR_acc;
+		cS = cS_acc;
 	}
 
 	/**
