@@ -30,6 +30,24 @@ namespace tmpc
 	}
 
 	template <typename Matrix>
+	typename Matrix::ConstantReturnType zero(typename Matrix::Index M, typename Matrix::Index N)
+	{
+		return Matrix::Zero(M, N);
+	}
+
+	template <typename Matrix>
+	typename Matrix::ConstantReturnType zero(typename Matrix::Index N)
+	{
+		return Matrix::Zero(N);
+	}
+
+	template <typename Matrix>
+	typename Matrix::ConstantReturnType zero()
+	{
+		return Matrix::Zero();
+	}
+
+	template <typename Matrix>
 	typename Matrix::ConstantReturnType signaling_nan(typename Matrix::Index M, typename Matrix::Index N)
 	{
 		return Matrix::Constant(M, N, std::numeric_limits<typename Matrix::Scalar>::signaling_NaN());
@@ -51,6 +69,30 @@ namespace tmpc
 	typename Matrix::ConstTransposeReturnType transpose(Eigen::MatrixBase<Matrix> const& m)
 	{
 		return m.transpose();
+	}
+
+	template <typename Matrix>
+	decltype(auto) row(Eigen::MatrixBase<Matrix> const& m, typename Matrix::Index i)
+	{
+		return m.row(i);
+	}
+
+	template <typename Matrix>
+	decltype(auto) row(Eigen::MatrixBase<Matrix>& m, typename Matrix::Index i)
+	{
+		return m.row(i);
+	}
+
+	template <typename Matrix>
+	decltype(auto) col(Eigen::MatrixBase<Matrix> const& m, typename Matrix::Index i)
+	{
+		return m.col(i);
+	}
+
+	template <typename Matrix>
+	decltype(auto) col(Eigen::MatrixBase<Matrix>& m, typename Matrix::Index i)
+	{
+		return m.col(i);
 	}
 
 	template <std::size_t N, typename Matrix>
@@ -189,5 +231,11 @@ namespace tmpc
 	decltype(auto) diagonal(Eigen::MatrixBase<Matrix>& m)
 	{
 		return m.diagonal();
+	}
+
+	template <typename Matrix>
+	decltype(auto) squared_norm(Eigen::MatrixBase<Matrix> const& m)
+	{
+		return m.squaredNorm();
 	}
 }

@@ -7,63 +7,76 @@
 
 namespace tmpc
 {
-	template <unsigned NX, unsigned NU>
+	template <unsigned NX, unsigned NU, unsigned NW = 0, unsigned NY = 0>
 	class Trajectory
 	{
 	public:
 		typedef Eigen::Matrix<double, NX, 1> StateVector;
 		typedef Eigen::Matrix<double, NU, 1> InputVector;
+		typedef Eigen::Matrix<double, NW, 1> DisturbanceVector;
+		typedef Eigen::Matrix<double, NY, 1> OutputVector;
 
-		Trajectory(std::size_t n) : _x(n + 1), _u(n) {}
+		/**
+		 * \brief Default constructor.
+		 */
+		Trajectory(std::size_t n) : x_(n + 1), u_(n), w_(n), y_(n) {}
 
+		/**
+		 * \brief Constructor for MPC.
+		 */
 		template <typename StateVector_, typename InputVector_>
-		Trajectory(std::size_t n, Eigen::MatrixBase<StateVector_> const& x, Eigen::MatrixBase<InputVector_> const& u)
-		: _x(n + 1, x), _u(n, u) {}
+		Trajectory(std::size_t n, StateVector_ const& x, InputVector_ const& u)
+		: x_(n + 1, x), u_(n, u), w_(n), y_(n) {}
 
-		StateVector const& get_x(std::size_t i) const { return _x.at(i); }
-		template <typename Matrix> void set_x(std::size_t i, Eigen::MatrixBase<Matrix> const& val) { _x.at(i) = val; }
+		/**
+		 * \brief Constructor for MHE.
+		 */
+		template <typename StateVector_, typename InputVector_, typename DisturbanceVector_, typename OutputVector_>
+		Trajectory(std::size_t n, StateVector_ const& x, InputVector_ const& u,	DisturbanceVector_ const& w, OutputVector_ const& y)
+		: x_(n + 1, x), u_(n, u), w_(n, w), y_(n, y) {}
 
-		InputVector const& get_u(std::size_t i) const { return _u.at(i); }
-		template <typename Matrix> void set_u(std::size_t i, Eigen::MatrixBase<Matrix> const& val) { _u.at(i) = val; }
+		StateVector const& get_x(std::size_t i) const { return x_.at(i); }
+		template <typename Matrix> void set_x(std::size_t i, Eigen::MatrixBase<Matrix> const& val) { x_.at(i) = val; }
 
-		std::size_t nT() const { return _u.size(); }
+		InputVector const& get_u(std::size_t i) const { return u_.at(i); }
+		template <typename Matrix> void set_u(std::size_t i, Eigen::MatrixBase<Matrix> const& val) { u_.at(i) = val; }
 
-		template<typename Other>
-		Trajectory& operator+=(Other const& rhs)
-		{
-			if (rhs.nT() != nT())
-				throw std::invalid_argument("Trajectory::operator+=(): arguments must have same number of time steps!");
+		DisturbanceVector const& get_w(std::size_t i) const { return w_.at(i); }
+		template <typename Matrix> void set_w(std::size_t i, Eigen::MatrixBase<Matrix> const& val) { w_.at(i) = val; }
 
-			for (std::size_t i = 0; i < nT() + 1; ++i)
-				_x[i] += rhs.get_x(i);
+		OutputVector const& get_y(std::size_t i) const { return y_.at(i); }
+		template <typename Matrix> void set_y(std::size_t i, Eigen::MatrixBase<Matrix> const& val) { y_.at(i) = val; }
 
-			for (std::size_t i = 0; i < nT(); ++i)
-			    _u[i] += rhs.get_u(i);
-
-			return *this;
-		}
+		std::size_t nT() const { return u_.size(); }
 
 	private:
-		std::vector<StateVector> _x;
-		std::vector<InputVector> _u;
+		std::vector<StateVector      > x_;
+		std::vector<InputVector      > u_;
+		std::vector<DisturbanceVector> w_;
+		std::vector<OutputVector     > y_;
 	};
 
-	template<unsigned NX_, unsigned NU_>
-	void shift(Trajectory<NX_, NU_>& tr)
+	template<unsigned NX_, unsigned NU_, unsigned NW_, unsigned NY_>
+	void shift(Trajectory<NX_, NU_, NW_, NY_>& tr)
 	{
 		for (std::size_t i = 0; i < tr.nT(); ++i)
 			tr.set_x(i, tr.get_x(i + 1));
 
 		for (std::size_t i = 0; i + 1 < tr.nT(); ++i)
+		{
 			tr.set_u(i, tr.get_u(i + 1));
+			tr.set_w(i, tr.get_w(i + 1));
+			tr.set_y(i, tr.get_y(i + 1));
+		}
 	}
 
 	// The following gives me "unable to deduce template arguments" error:
-	template<unsigned NX_, unsigned NU_>
-	inline std::ostream& operator<<(std::ostream& os, Trajectory<NX_, NU_> const& tr)
+	template<unsigned NX_, unsigned NU_, unsigned NW_, unsigned NY_>
+	inline std::ostream& operator<<(std::ostream& os, Trajectory<NX_, NU_, NW_, NY_> const& tr)
 	{
 		for (std::size_t i = 0; i < tr.nT(); ++i)
-			os << tr.get_x(i).transpose() << "\t" << tr.get_u(i).transpose() << std::endl;
+			os << tr.get_x(i).transpose() << "\t" << tr.get_u(i).transpose()
+			   << tr.get_w(i).transpose() << "\t" << tr.get_y(i).transpose() << std::endl;
 
 		return os << tr.get_x(tr.nT()).transpose() << std::endl;
 	}
