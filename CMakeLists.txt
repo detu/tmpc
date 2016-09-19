@@ -15,8 +15,17 @@ option(BUILD_QPOASES "Build qpOASES along with TMPC." ON)
 option(BUILD_HPMPC "Build HPMPC along with TMPC." ON)
 option(BUILD_QPDUNES "Build qpDUNES along with TMPC." ON)
 
-set(EXTERN_DIR "${CMAKE_BINARY_DIR}/extern")
+set(EXTERN_DIR "${CMAKE_CURRENT_BINARY_DIR}/extern")
 #set(EP_PREFIX ${CMAKE_BINARY_DIR}/extern)
+
+include_directories("${EXTERN_DIR}/include")
+link_directories("${EXTERN_DIR}/lib")
+
+ExternalProject_Add(googletest
+    PREFIX ${EXTERN_DIR}
+    GIT_REPOSITORY https://github.com/google/googletest.git
+    CMAKE_ARGS "-DCMAKE_INSTALL_PREFIX=${EXTERN_DIR}" "-DBUILD_GMOCK=ON"
+)
 
 if(BUILD_QPDUNES)
     ExternalProject_Add(qpDUNES

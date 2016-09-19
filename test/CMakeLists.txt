@@ -2,8 +2,6 @@
 # test
 #
 
-add_subdirectory(googletest)
-
 # Generate code and test data for rk4 test
 add_custom_command(
    OUTPUT
@@ -64,6 +62,8 @@ add_executable(tmpc_test
     ${CMAKE_CURRENT_BINARY_DIR}/casadi_function_test_generated.c
 )
 
+add_dependencies(tmpc_test googletest)
+
 if (HPMPC_FOUND)
     target_sources(tmpc_test
         PRIVATE hpmpc_test.cpp
@@ -71,7 +71,7 @@ if (HPMPC_FOUND)
 endif()
 
 target_include_directories(tmpc_test
-    PRIVATE ${CMAKE_CURRENT_BINARY_DIR}
+    PRIVATE "${CMAKE_CURRENT_BINARY_DIR}"
 )
 
 target_link_libraries(tmpc_test
