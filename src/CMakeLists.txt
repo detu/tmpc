@@ -22,6 +22,8 @@ add_library(tmpc STATIC ${SRC})
 # Add qpDUNES interface 
 #
 if (qpDUNES_FOUND)
+    add_dependencies(tmpc qpDUNES)
+    
     target_sources(tmpc
         PRIVATE ${PROJECT_INCLUDE_DIR}/qp/qpDUNESProgram.hpp
 	)
@@ -39,6 +41,8 @@ endif()
 # Add qpOASES interface 
 #
 if (qpOASES_FOUND)
+    add_dependencies(tmpc qpDUNES)
+
     target_sources(tmpc
         PRIVATE ${PROJECT_INCLUDE_DIR}/qp/CondensingSolver.hpp  
         PRIVATE qp/CondensingSolver.cpp
@@ -59,6 +63,8 @@ endif()
 # Add HPMPC interface 
 #
 if (HPMPC_FOUND)
+    add_dependencies(tmpc hpmpc)
+    
     target_sources(tmpc
         PRIVATE ${PROJECT_INCLUDE_DIR}/qp/HPMPCSolver.hpp
         PRIVATE qp/HPMPCSolver.cpp
