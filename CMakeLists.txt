@@ -19,8 +19,9 @@ option(BUILD_QPDUNES "Build qpDUNES along with TMPC." ON)
 
 if(BUILD_QPDUNES)
     ExternalProject_Add(qpDUNES
-                        GIT_REPOSITORY https://github.com/jfrasch/qpDUNES.git
-                        CMAKE_ARGS "-DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/qpdunes-build"
+                        GIT_REPOSITORY https://github.com/mkotlyar/qpDUNES.git
+                        CMAKE_ARGS -DQPDUNES_MAKE_EXAMPLES=OFF
+                        INSTALL_DIR "${CMAKE_BINARY_DIR}/qpdunes-build"
                       )
     set( qpDUNES_INCLUDE_DIRS ${CMAKE_BINARY_DIR}/qpdunes-build/include/qpdunes )
     set( qpDUNES_LIBRARY_DIRS ${CMAKE_BINARY_DIR}/qpdunes-build/lib/libqpDUNES.a )
@@ -35,9 +36,13 @@ endif()
 
 if(BUILD_QPOASES)
     ExternalProject_Add(qpOASES
-                        SVN_REPOSITORY https://projects.coin-or.org/svn/qpOASES/stable/3.2
-                        SVN_TRUST_CERT 1
-                        CMAKE_ARGS "-DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/qpoases-build"
+                        #SVN_REPOSITORY https://projects.coin-or.org/svn/qpOASES/stable/3.2
+                        #SVN_TRUST_CERT 1
+                        GIT_REPOSITORY https://github.com/mkotlyar/qpOASES.git
+                        CMAKE_ARGS -DqpOASES_MAKE_EXAMPLES=OFF
+                        INSTALL_DIR "${CMAKE_BINARY_DIR}/qpoases-build"
+                        #BINARY_DIR "${CMAKE_BINARY_DIR}/qpoases-build"
+                        #INSTALL_COMMAND ""
                       )
     set( qpOASES_STATIC_LIBRARIES ${CMAKE_BINARY_DIR}/qpoases-build/lib/libqpOASES.a )
     set( qpOASES_INCLUDE_DIRS ${CMAKE_BINARY_DIR}/qpoases-build/include )
