@@ -17,6 +17,7 @@ unsigned const NT = 2;
 
 typedef tmpc::HPMPCProblem<NX, NU, NC, NCT> Problem;
 
+// TODO: make it a templated test for all multistage QP interfaces, not only HPMPC
 TEST(HPMPCProblemTest, hpmpc_interface_works)
 {
 	Problem qp(NT);

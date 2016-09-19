@@ -2,17 +2,6 @@
 # tmpc/src
 #
 
-# Disable alignment of fixed-sized Eigen matrices.
-# With alignment enabled, this error appears in the 32-bit version:
-#
-# ******************************************************************************************************************
-# Expression: (reinterpret_cast<size_t>(array) & 0xf) == 0 && "this assertion is explained here:
-# " "http://eigen.tuxfamily.org/dox-devel/group__TopicUnalignedArrayAssert.html" " **** READ THIS WEB PAGE !!! ****"
-# ******************************************************************************************************************
-#
-# See this link for more details: http://eigen.tuxfamily.org/dox-devel/group__TopicStructHavingEigenMembers.html
-#add_definitions(-DEIGEN_DONT_ALIGN_STATICALLY)
-
 set (SRC
     ${PROJECT_INCLUDE_DIR}/core/RealtimeIteration.hpp
     ${PROJECT_INCLUDE_DIR}/core/Trajectory.hpp
@@ -24,19 +13,68 @@ set (SRC
 	${PROJECT_INCLUDE_DIR}/integrator/rk4.hpp
 
 	${PROJECT_INCLUDE_DIR}/qp/Condensing.hpp
-	${PROJECT_INCLUDE_DIR}/qp/CondensingSolver.hpp  qp/CondensingSolver.cpp
-	${PROJECT_INCLUDE_DIR}/qp/qpDUNESProgram.hpp
-	${PROJECT_INCLUDE_DIR}/qp/qpOASESProgram.hpp    qp/qpOASESProgram.cpp
 	${PROJECT_INCLUDE_DIR}/qp/MultiStageQPSolution.hpp
 )
 
-if (HPMPC_FOUND)
-    set(SRC ${SRC}
-        ${PROJECT_INCLUDE_DIR}/qp/HPMPCSolver.hpp     qp/HPMPCSolver.cpp
-        ${PROJECT_INCLUDE_DIR}/qp/HPMPCProblem.hpp
-        ${PROJECT_INCLUDE_DIR}/qp/HPMPCSolution.hpp
-        qp/HPMPCProblemExport.hpp                  qp/HPMPCProblemExport.cpp
+add_library(tmpc STATIC ${SRC})
+
+#
+# Add qpDUNES interface 
+#
+if (qpDUNES_FOUND)
+    target_sources(tmpc
+        PRIVATE ${PROJECT_INCLUDE_DIR}/qp/qpDUNESProgram.hpp
+	)
+	
+	target_include_directories(tmpc
+        PRIVATE ${qpDUNES_INCLUDE_DIRS}
+    )
+    
+    target_link_libraries(tmpc
+        PUBLIC ${qpDUNES_LIBRARY_DIRS}
     )
 endif()
 
-add_library(tmpc STATIC ${SRC})
+#
+# Add qpOASES interface 
+#
+if (qpOASES_FOUND)
+    target_sources(tmpc
+        PRIVATE ${PROJECT_INCLUDE_DIR}/qp/CondensingSolver.hpp  
+        PRIVATE qp/CondensingSolver.cpp
+        PRIVATE ${PROJECT_INCLUDE_DIR}/qp/qpOASESProgram.hpp    
+        PRIVATE qp/qpOASESProgram.cpp	
+	)
+	
+	target_include_directories(tmpc
+        PRIVATE ${qpOASES_INCLUDE_DIRS}
+    )
+    
+    target_link_libraries(tmpc
+        PUBLIC ${qpOASES_STATIC_LIBRARIES}
+    )
+endif()
+
+#
+# Add HPMPC interface 
+#
+if (HPMPC_FOUND)
+    target_sources(tmpc
+        PRIVATE ${PROJECT_INCLUDE_DIR}/qp/HPMPCSolver.hpp
+        PRIVATE qp/HPMPCSolver.cpp
+        PRIVATE ${PROJECT_INCLUDE_DIR}/qp/HPMPCProblem.hpp
+        PRIVATE ${PROJECT_INCLUDE_DIR}/qp/HPMPCSolution.hpp
+        PRIVATE qp/HPMPCProblemExport.hpp
+        PRIVATE qp/HPMPCProblemExport.cpp
+    )
+    
+    target_include_directories(tmpc
+        PRIVATE ${HPMPC_INCLUDE_DIR}
+    )
+    
+    target_link_libraries(tmpc
+        PUBLIC ${HPMPC_STATIC_LIB}
+    )
+endif()
+
+

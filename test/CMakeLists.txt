@@ -48,7 +48,7 @@ add_custom_command(
 )
 
 # ~~~~~~~~~~ Our tests ~~~~~~~~~~~~~~
-set(SRC
+add_executable(tmpc_test
     condensing_test.cpp
     rk4_test.cpp
     realtime_iteration_test.cpp
@@ -62,13 +62,13 @@ set(SRC
     ${CMAKE_CURRENT_BINARY_DIR}/pendulum_ode_generated.c
     ${CMAKE_CURRENT_BINARY_DIR}/casadi_function_test_generated.h    
     ${CMAKE_CURRENT_BINARY_DIR}/casadi_function_test_generated.c
-   )
+)
 
 if (HPMPC_FOUND)
-    set(SRC ${SRC} hpmpc_test.cpp)
+    target_sources(tmpc_test
+        PRIVATE hpmpc_test.cpp
+    )
 endif()
-
-add_executable(tmpc_test ${SRC})
 
 target_include_directories(tmpc_test
     PRIVATE ${CMAKE_CURRENT_BINARY_DIR}
@@ -80,16 +80,6 @@ target_link_libraries(tmpc_test
     gtest_main
     gmock
     )
-
-if (qpOASES_FOUND)
-    target_link_libraries(tmpc_test ${qpOASES_STATIC_LIBRARIES})
-endif ()
-
-if (HPMPC_FOUND)
-    target_link_libraries(tmpc_test ${HPMPC_STATIC_LIB})
-endif ()
-
-#target_link_libraries(tmpc_test ${PROJECT_DEPENDENCY_LIBS})
 
 #enable_testing()
 #add_test(AllTests tmpc_test)
