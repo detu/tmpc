@@ -15,7 +15,7 @@ option(BUILD_QPOASES "Build qpOASES along with TMPC." ON)
 option(BUILD_HPMPC "Build HPMPC along with TMPC." ON)
 option(BUILD_QPDUNES "Build qpDUNES along with TMPC." ON)
 
-set(EXTERN_DIR ${CMAKE_BINARY_DIR}/extern)
+set(EXTERN_DIR "${CMAKE_BINARY_DIR}/extern")
 #set(EP_PREFIX ${CMAKE_BINARY_DIR}/extern)
 
 if(BUILD_QPDUNES)
@@ -24,8 +24,8 @@ if(BUILD_QPDUNES)
                         GIT_REPOSITORY https://github.com/jfrasch/qpDUNES.git
                         CMAKE_ARGS "-DCMAKE_INSTALL_PREFIX=${EXTERN_DIR}"
                       )
-    set( qpDUNES_INCLUDE_DIRS ${EXTERN_DIR}/include/qpdunes )
-    set( qpDUNES_LIBRARY_DIRS ${EXTERN_DIR}/lib/libqpdunes.a )
+    set( qpDUNES_INCLUDE_DIRS "${EXTERN_DIR}/include/qpdunes" )
+    set( qpDUNES_LIBRARY_DIRS "${EXTERN_DIR}/lib/libqpdunes.a" )
     set( qpDUNES_FOUND TRUE )
 elseif()
     find_package(qpDUNES)
@@ -38,8 +38,8 @@ if(BUILD_QPOASES)
                         SVN_TRUST_CERT 1
                         CMAKE_ARGS "-DCMAKE_INSTALL_PREFIX=${EXTERN_DIR}"
                       )
-    set( qpOASES_STATIC_LIBRARIES ${EXTERN_DIR}/lib/libqpOASES.a )
-    set( qpOASES_INCLUDE_DIRS ${EXTERN_DIR}/include )
+    set( qpOASES_STATIC_LIBRARIES "${EXTERN_DIR}/lib/libqpOASES.a" )
+    set( qpOASES_INCLUDE_DIRS "${EXTERN_DIR}/include" )
     set( qpOASES_FOUND TRUE )
 elseif()
     find_package(qpOASES)
@@ -52,11 +52,13 @@ if(BUILD_HPMPC)
                         BUILD_IN_SOURCE 1
                         CONFIGURE_COMMAND ""
                         BUILD_COMMAND make static_library
-                        BUILD_BYPRODUCTS "${EXTERN_DIR}/src/hpmpc/libhpmpc.a"
+                        #BUILD_BYPRODUCTS "${EXTERN_DIR}/src/hpmpc/libhpmpc.a"
                         INSTALL_COMMAND make PREFIX="${EXTERN_DIR}" install_static
                       )
-    set( HPMPC_STATIC_LIB ${EXTERN_DIR}/hpmpc/lib/libhpmpc.a )
-    set( HPMPC_INCLUDE_DIR ${EXTERN_DIR}/hpmpc/include )
+    set( HPMPC_STATIC_LIB "${EXTERN_DIR}/hpmpc/lib/libhpmpc.a" )
+    #set( HPMPC_STATIC_LIB "${EXTERN_DIR}/src/hpmpc/libhpmpc.a" )
+    set( HPMPC_INCLUDE_DIR "${EXTERN_DIR}/hpmpc/include" )
+    #set( HPMPC_INCLUDE_DIR "${EXTERN_DIR}/src/hpmpc/include" )
     set( HPMPC_FOUND TRUE )
 elseif()
     find_package(HPMPC)
