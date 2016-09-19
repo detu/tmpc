@@ -84,7 +84,7 @@ void call(Function const& f, TupleIn&& in, TupleOut&& out)
 	throw std::logic_error("Not implemented");
 }
 
-TEST_F(CasADiFunctionTest, matrix_argument_call_correct)
+TEST_F(CasADiFunctionTest, DISABLED_matrix_argument_call_correct)
 {
 	Eigen::Matrix<double, 3, 2> const A = Eigen::Matrix<double, 3, 2>::Zero();
 	Eigen::Matrix<double, 2, 2> const B = Eigen::Matrix<double, 2, 2>::Zero();
