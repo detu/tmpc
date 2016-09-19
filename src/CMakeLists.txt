@@ -18,6 +18,10 @@ set (SRC
 
 add_library(tmpc STATIC ${SRC})
 
+target_include_directories(tmpc
+    PUBLIC ${PROJECT_INCLUDE_DIR}
+)
+
 #
 # Add qpDUNES interface 
 #
@@ -41,7 +45,7 @@ endif()
 # Add qpOASES interface 
 #
 if (qpOASES_FOUND)
-    add_dependencies(tmpc qpDUNES)
+    add_dependencies(tmpc qpOASES)
 
     target_sources(tmpc
         PRIVATE ${PROJECT_INCLUDE_DIR}/qp/CondensingSolver.hpp  

@@ -30,8 +30,8 @@ ExternalProject_Add(googletest
 if(BUILD_QPDUNES)
     ExternalProject_Add(qpDUNES
                         PREFIX ${EXTERN_DIR}
-                        GIT_REPOSITORY https://github.com/jfrasch/qpDUNES.git
-                        CMAKE_ARGS "-DCMAKE_INSTALL_PREFIX=${EXTERN_DIR}"
+                        GIT_REPOSITORY https://github.com/mkotlyar/qpDUNES.git
+                        CMAKE_ARGS "-DCMAKE_INSTALL_PREFIX=${EXTERN_DIR}" "-DQPDUNES_MAKE_EXAMPLES=OFF"
                       )
     set( qpDUNES_INCLUDE_DIRS "${EXTERN_DIR}/include/qpdunes" )
     set( qpDUNES_LIBRARY_DIRS "${EXTERN_DIR}/lib/libqpdunes.a" )
@@ -43,9 +43,10 @@ endif()
 if(BUILD_QPOASES)
     ExternalProject_Add(qpOASES
                         PREFIX ${EXTERN_DIR}
-                        SVN_REPOSITORY https://projects.coin-or.org/svn/qpOASES/stable/3.2
-                        SVN_TRUST_CERT 1
-                        CMAKE_ARGS "-DCMAKE_INSTALL_PREFIX=${EXTERN_DIR}"
+                        #SVN_REPOSITORY https://projects.coin-or.org/svn/qpOASES/stable/3.2
+                        #SVN_TRUST_CERT 1
+                        GIT_REPOSITORY https://github.com/mkotlyar/qpOASES.git
+                        CMAKE_ARGS "-DCMAKE_INSTALL_PREFIX=${EXTERN_DIR}" "-DqpOASES_MAKE_EXAMPLES=OFF"
                       )
     set( qpOASES_STATIC_LIBRARIES "${EXTERN_DIR}/lib/libqpOASES.a" )
     set( qpOASES_INCLUDE_DIRS "${EXTERN_DIR}/include" )
@@ -72,8 +73,6 @@ if(BUILD_HPMPC)
 elseif()
     find_package(HPMPC)
 endif()
-
-include_directories(${PROJECT_INCLUDE_DIR})
 
 include(CompilerOptions.cmake)
 
