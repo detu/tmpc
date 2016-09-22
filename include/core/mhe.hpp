@@ -37,9 +37,9 @@ namespace tmpc
 		,	solution_(working_point.nT())
 		,	solver_(solver)
 		,	work_(working_point)
-		,	_prepared(true)
+		,	_prepared(false)
 		{
-			UpdateQP();
+			InitQP();
 		}
 
 		MovingHorizonEstimator(MovingHorizonEstimator const&) = delete;
@@ -205,10 +205,10 @@ namespace tmpc
 			void set_x_max(Vector const& x_max) { work_.upperBound_.set_x(i_, x_max); }
 
 			template <typename Vector>
-			void set_u_min(Vector const& u_min) { work_.lowerBound_.set_u(i_, u_min); }
+			void set_w_min(Vector const& u_min) { work_.lowerBound_.set_w(i_, u_min); }
 
 			template <typename Vector>
-			void set_u_max(Vector const& u_max) { work_.upperBound_.set_u(i_, u_max); }
+			void set_w_max(Vector const& u_max) { work_.upperBound_.set_w(i_, u_max); }
 
 		private:
 			std::size_t const i_;
@@ -293,16 +293,18 @@ namespace tmpc
 		/// \brief Internal work data structure.
 		struct Work
 		{
+			typedef Trajectory<NX, 0, NW, 0> Bound;
+
 			double levenbergMarquardt_ = 0.;
 
 			/// \brief The working point (linearization point).
 			WorkingPoint workingPoint_;
 
-			/// \brief Lower bound of the working point.
-			WorkingPoint lowerBound_;
+			/// \brief Lower bound of state and disturbance.
+			Bound lowerBound_;
 
-			/// \brief Upper bound of the working point.
-			WorkingPoint upperBound_;
+			/// \brief Upper bound of state and disturbance.
+			Bound upperBound_;
 
 			/// Multistage QP.
 			QP qp_;
@@ -310,11 +312,15 @@ namespace tmpc
 			Work(WorkingPoint const& working_point)
 			:	workingPoint_(working_point)
 			,	lowerBound_(working_point.nT(),
-					constant<typename WorkingPoint::StateVector>(-std::numeric_limits<double>::infinity()),
-					constant<typename WorkingPoint::InputVector>(-std::numeric_limits<double>::infinity()))
+					constant<typename Bound::StateVector>(-std::numeric_limits<double>::infinity()),
+					constant<typename Bound::InputVector>(-std::numeric_limits<double>::infinity()),
+					constant<typename Bound::DisturbanceVector>(-std::numeric_limits<double>::infinity()),
+					constant<typename Bound::MeasurementVector>(-std::numeric_limits<double>::infinity()))
 			,	upperBound_(working_point.nT(),
-					constant<typename WorkingPoint::StateVector>( std::numeric_limits<double>::infinity()),
-					constant<typename WorkingPoint::InputVector>( std::numeric_limits<double>::infinity()))
+					constant<typename Bound::StateVector>( std::numeric_limits<double>::infinity()),
+					constant<typename Bound::InputVector>( std::numeric_limits<double>::infinity()),
+					constant<typename Bound::DisturbanceVector>( std::numeric_limits<double>::infinity()),
+					constant<typename Bound::MeasurementVector>( std::numeric_limits<double>::infinity()))
 			,	qp_(working_point.nT())
 			{
 			}

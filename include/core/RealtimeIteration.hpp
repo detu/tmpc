@@ -25,8 +25,8 @@ namespace tmpc
 		RealtimeIteration(OCP const& ocp, QPSolver& solver, WorkingPoint const& working_point)
 		:	_ocp(ocp)
 		,	solution_(working_point.nT())
-		,	work_(working_point)
 		,	solver_(solver)
+		,	work_(working_point)
 		,	_prepared(true)
 		{
 			InitQP();	// TODO: remove it and force the user to call Preparation() before the first call to Feedback().
@@ -307,11 +307,6 @@ namespace tmpc
 			_ocp.UpdateTerminalStage(terminal_stage);
 		}
 
-		// Private data members.
-		OCP const& _ocp;
-		Solution solution_;
-		QPSolver& solver_;
-
 		/// \brief Internal work data structure.
 		struct Work
 		{
@@ -342,6 +337,10 @@ namespace tmpc
 			}
 		};
 
+		// Private data members.
+		OCP const& _ocp;
+		Solution solution_;
+		QPSolver& solver_;
 		Work work_;
 
 		// Preparation() sets this flag to true, Feedback() resets it to false.
