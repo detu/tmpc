@@ -54,10 +54,10 @@ namespace tmpc
 		typedef Eigen::VectorXd StateInputVector;
 
 		CondensingSolver(size_type nt, qpOASESOptions const& options = qpOASESOptions::MPC().setPrintLevel(qpOASES::PL_LOW))
-		:	_condensedQP(nIndep(nt), nDep(nt) + nConstr(nt))
+		:	_Nt(nt)
+		,	_condensedQP(nIndep(nt), nDep(nt) + nConstr(nt))
 		,	_condensedSolution(nIndep(nt))
 		,	_problem(nIndep(nt), nDep(nt) + nConstr(nt))
-		,	_Nt(nt)
 		{
 			_problem.setOptions(options);
 		}
@@ -118,8 +118,9 @@ namespace tmpc
 	};
 
 	template<unsigned NX_, unsigned NU_, unsigned NC_, unsigned NCT_>
-	struct CondensingSolver<NX_, NU_, NC_, NCT_>::SolveException : public std::runtime_error
+	class CondensingSolver<NX_, NU_, NC_, NCT_>::SolveException : public std::runtime_error
 	{
+	public:
 		SolveException(qpOASES::returnValue code, qpOASESProgram const& cqp) :
 			std::runtime_error("CondensingSolver::Solve() failed. qpOASES return code " + std::to_string(code)),
 			_code(code), _CondensedQP(cqp)

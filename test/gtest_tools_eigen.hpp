@@ -40,7 +40,7 @@ public:
 	class const_iterator
 	{
 	public:
-		const_iterator(Matrix const &m, size_type i, size_type j) : m_(m), i_(i), j_(j) {}
+		const_iterator(Matrix const &m, size_type i, size_type j) : i_(i), j_(j), m_(m) {}
 
 		const_iterator& operator++()
 		{

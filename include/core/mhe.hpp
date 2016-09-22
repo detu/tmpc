@@ -13,7 +13,7 @@ namespace tmpc
 	 * \brief Implements moving horizon estimation algorithm.
 	 * \tparam <Problem> A class describing Trajectory Estimation Problem.
 	 */
-	template <typename Problem, typename Integrator_,
+	template <typename Problem,
 		template <unsigned, unsigned, unsigned, unsigned> class QPSolver_>
 	class MovingHorizonEstimator
 	{
@@ -25,21 +25,18 @@ namespace tmpc
 
 	public:
 		typedef QPSolver_<NX, NW, NC, 0> QPSolver;
-		typedef Integrator_ Integrator;
 		typedef Trajectory<NX, NU, NW, NY> WorkingPoint;
 
 		/**
 		 * \brief Constructor.
 		 * TODO: Change aggregation to containment and init using rvalue references?
 		 */
-		MovingHorizonEstimator(Problem const& problem, Integrator const& integrator,
+		MovingHorizonEstimator(Problem const& problem,
 				QPSolver& solver, WorkingPoint const& working_point)
 		:	problem_(problem)
-		,	_QP(working_point.nT())
-		,	workingPoint_(working_point)
-		,	_solution(working_point.nT())
+		,	solution_(working_point.nT())
 		,	solver_(solver)
-		,	_integrator(integrator)
+		,	work_(working_point)
 		,	_prepared(true)
 		{
 			UpdateQP();
@@ -50,13 +47,13 @@ namespace tmpc
 		/**
 		 * \brief Number of intervals.
 		 */
-		std::size_t nT() const { return workingPoint_.nT(); }
+		std::size_t nT() const { return work_.workingPoint_.nT(); }
 
 		/**
-		 * \brief Feed input u[N-1] and measurement y[N-1], get back current state estimate x[N].
-		 * \param [in] u -- input vector at previous time instant
-		 * \param [out] y -- measurement vector at previous time instant
-		 * \return State estimate at current time instant
+		 * \brief Feed input u[k] and measurement y[k], get back current state estimate x[k+1].
+		 * \param [in] u -- input vector at time interval k
+		 * \param [out] y -- measurement vector at time instant k
+		 * \return State estimate at time instant k+1
 		 */
 		template <typename InputVector, typename OutputVector>
 		decltype(auto) Feedback(InputVector const& u, OutputVector const& y)
@@ -64,35 +61,35 @@ namespace tmpc
 			if (!_prepared)
 				throw std::logic_error("MovingHorizonEstimator::Feedback(): estimator is not prepared.");
 
-			// Update the last stage of QP.
-			workingPoint_.set_u(nT() - 1, u);
-			workingPoint_.set_y(nT() - 1, y);
+			// Update the last stage of the QP.
+			work_.workingPoint_.set_u(nT() - 1, u);
+			work_.workingPoint_.set_y(nT() - 1, y);
 			UpdateQP(nT() - 1);
 
 			/** solve QP */
-			solver_.Solve(_QP, _solution);
+			solver_.Solve(work_.qp_, solution_);
 
 			// Add QP step to the working point.
 			{
 				for (std::size_t i = 0; i < nT() + 1; ++i)
-					workingPoint_.set_x(i, workingPoint_.get_x(i) + _solution.get_x(i));
+					work_.workingPoint_.set_x(i, work_.workingPoint_.get_x(i) + solution_.get_x(i));
 
 				for (std::size_t i = 0; i < nT(); ++i)
-					workingPoint_.set_w(i, workingPoint_.get_w(i) + _solution.get_u(i));
+					work_.workingPoint_.set_w(i, work_.workingPoint_.get_w(i) + solution_.get_u(i));
 			}
 
 			_prepared = false;
 
 			// Return the estimated state.
-			return workingPoint_.get_x(nT());
+			return work_.workingPoint_.get_x(nT());
 		}
 
 		void Preparation()
 		{
 			if (_prepared)
-				throw std::logic_error("ModelPredictiveController::Preparation(): controller is already prepared.");
+				throw std::logic_error("MovingHorizonEstimator::Preparation(): estimator is already prepared.");
 
-			shift(workingPoint_);
+			shift(work_.workingPoint_);
 
 			// Calculate new QP.
 			UpdateQP();
@@ -100,10 +97,10 @@ namespace tmpc
 			_prepared = true;
 		}
 
-		WorkingPoint const& getWorkingPoint() const { return workingPoint_; }
+		WorkingPoint const& getWorkingPoint() const { return work_.workingPoint_; }
 
-		double getLevenbergMarquardt() const { return _levenbergMarquardt; }
-		void setLevenbergMarquardt(double val) { _levenbergMarquardt = val; }
+		double getLevenbergMarquardt() const { return work_.levenbergMarquardt_; }
+		void setLevenbergMarquardt(double val) { work_.levenbergMarquardt_ = val; }
 
 		/*
 		unsigned nT() const { return _ocp.getNumberOfIntervals(); }
@@ -114,108 +111,239 @@ namespace tmpc
 
 	private:
 		typedef typename QPSolver::Solution Solution;
+		typedef typename QPSolver::Problem QP;
 
-		// Initializes _G, _g, _y, _C, _c, _zMin, _zMax based on current working point _w.
-		void UpdateQP()
+		struct Work;
+
+		/**
+		 * \brief Interface for setting MPC stage data.
+		 * OCP::InitStage() and OCP::UpdateStage() use this interface to set Hessian of the stage cost,
+		 * gradient of the stage cost, linearized stage constraints, state and input bounds.
+		 *
+		 * Hessian and gradient of Lagrange term:
+		 * H = [Q, S
+		 *      S, R]
+		 * g = [q
+		 *      r]
+		 *
+		 * NOTE:
+		 * Potential issue with this implementation: it is easy to not to set one of the properties.
+		 * But a single function with 11 arguments would look ugly.
+		 * On the other hand, re-evaluation of the stage may be not necessary for some problems,
+		 * and previous values would be kept. This allows more efficient implementations in some cases.
+		 */
+		class Stage
 		{
-			auto const N = nT();
-
-			for (unsigned i = 0; i < N; ++i)
-			{
-				// Hessian and gradient of stage cost.
-				// H = [Q, S
-				//      S, R]
-				// g = [q
-				//      r]
-
-				Eigen::Matrix<double, NX, NX> Q;
-				Eigen::Matrix<double, NU, NU> R;
-				Eigen::Matrix<double, NX, NU> S;
-				Eigen::Matrix<double, NX,  1> q;
-				Eigen::Matrix<double, NU,  1> r;
-
-				// TODO: change the interface of QP so that it can one can write
-				// _ocp.LagrangeTerm(... , ... , ... , qp.Q(i), qp.R(i), qp.S(i), qp.q(i), qp.r(i));
-				// i.e. Q(i), R(i), etc. are references of some proxy objects?
-				// HINT: Use rvalue references?
-				problem_.StageCost(i, workingPoint_.get_x(i), workingPoint_.get_u(i),
-						              workingPoint_.get_w(i), workingPoint_.get_y(i), Q, R, S, q, r);
-
-				_QP.set_Q(i, Q + _levenbergMarquardt * identity<decltype(Q)>());	// Adding Levenberg-Marquardt term to make H positive-definite.
-				_QP.set_R(i, R + _levenbergMarquardt * identity<decltype(R)>());	// Adding Levenberg-Marquardt term to make H positive-definite.
-				_QP.set_S(i, S);
-				_QP.set_q(i, q);
-				_QP.set_r(i, r);
-
-				// C = [ssA, ssB];
-				// x_{k+1} = C * z_k + c_k
-				Eigen::Matrix<double, NX, 1> x_plus;
-				Eigen::Matrix<double, NX, NX> A;
-				Eigen::Matrix<double, NX, NU> B;
-				integrate(_integrator, problem_.getODE(workingPoint_.get_u(i)),
-						i * _integrator.timeStep(), workingPoint_.get_x(i), workingPoint_.get_w(i), x_plus, A, B);
-				_QP.set_A(i, A);
-				_QP.set_B(i, B);
-
-				// \Delta x_{k+1} = C \Delta z_k + f(z_k) - x_{k+1}
-				// c = f(z_k) - x_{k+1}
-				_QP.set_b(i, x_plus - workingPoint_.get_x(i + 1));
-
-				Eigen::Matrix<double, NC, NX + NU> D;
-				Eigen::Matrix<double, NC, 1> d_min, d_max;
-				
-				{
-					Eigen::Matrix<double, NX + NU, 1> z_i;
-					z_i << workingPoint_.get_x(i), workingPoint_.get_u(i);
-					problem_.PathConstraints(i, z_i, D, d_min, d_max);
-				}
-
-				set_CD(_QP, i, D);
-				_QP.set_d_min(i, d_min);
-				_QP.set_d_max(i, d_max);
-				
-				// Bound constraints.
-				_QP.set_x_min(i, problem_.getStateMin() - workingPoint_.get_x(i));	_QP.set_u_min(i, problem_.getInputMin() - workingPoint_.get_u(i));
-				_QP.set_x_max(i, problem_.getStateMax() - workingPoint_.get_x(i));	_QP.set_u_max(i, problem_.getInputMax() - workingPoint_.get_u(i));
+		public:
+			Stage(std::size_t i, Work& work)
+			:	i_(i), work_(work) {
 			}
 
-			auto const xN = workingPoint_.get_x(N);
+			Stage(Stage const&) = delete;
 
-			// Hessian and gradient of arrival cost.
-			Eigen::Matrix<double, NX, NX> H_arr;
-			Eigen::Matrix<double, NX, 1> g_arr;
-			problem_.ArrivalCost(workingPoint_.get_x(0), g_arr, H_arr);
+			/**
+			 * \brief On destruction, updates bounds of the QP.
+			 * NOTICE that "u" in QP corresponds to the disturbance "w".
+			 */
+			~Stage()
+			{
+				work_.qp_.set_x_min(i_, work_.lowerBound_.get_x(i_) - get_x());
+				work_.qp_.set_x_max(i_, work_.upperBound_.get_x(i_) - get_x());
+				work_.qp_.set_u_min(i_, work_.lowerBound_.get_w(i_) - get_w());
+				work_.qp_.set_u_max(i_, work_.upperBound_.get_w(i_) - get_w());
+			}
 
-			// Arrival cost is added to the cost of stage 0.
-			_QP.set_Q(0, _QP.get_Q(0) + H_arr);
-			_QP.set_q(0, _QP.get_q(0) + g_arr);
+			template <typename Matrix>
+			void set_Q(Matrix const &Q)	{
+				work_.qp_.set_Q(i_, Q + work_.levenbergMarquardt_ * identity<Matrix>());	// Adding Levenberg-Marquardt term to make H positive-definite.
+			}
 
-			// The total cost does not depend on x[N],
-			// but we add Levenberg-Marquardt term to H[N] make H positive-definite.
-			_QP.set_Q(N, _levenbergMarquardt * identity<Eigen::Matrix<double, NX, NX>>());
-			_QP.set_q(N, zero<Eigen::Matrix<double, NX, 1>>());
+			template <typename Matrix>
+			void set_R(Matrix const &R) {
+				work_.qp_.set_R(i_, R + work_.levenbergMarquardt_ * identity<Matrix>());	// Adding Levenberg-Marquardt term to make H positive-definite.
+			}
 
-			// Terminal state constraints are empty.
-			assert(_QP.nDT() == 0);
+			template <typename Matrix>
+			void set_S(Matrix const &S) { work_.qp_.set_S(i_, S); }
 
-			// Bounds for terminal state the same as for other states.
-			_QP.set_x_min(N, problem_.getStateMin() - xN);
-			_QP.set_x_max(N, problem_.getStateMax() - xN);
+			template <typename Vector>
+			void set_q(Vector const &q) { work_.qp_.set_q(i_, q); }
+
+			template <typename Vector>
+			void set_r(Vector const &r) { work_.qp_.set_r(i_, r); }
+
+			template <typename Matrix>
+			void set_A(Matrix const &A) { work_.qp_.set_A(i_, A); }
+
+			template <typename Matrix>
+			void set_B(Matrix const &B) { work_.qp_.set_B(i_, B); }
+
+			template <typename Vector>
+			void set_x_next(Vector const& x_next)
+			{
+				// \Delta x_{k+1} = C \Delta z_k + f(z_k) - x_{k+1}
+				// c = f(z_k) - x_{k+1}
+				work_.qp_.set_b(i_, x_next - work_.workingPoint_.get_x(i_ + 1));
+			}
+
+			template <typename Matrix>
+			void set_C(Matrix const &C) { work_.qp_.set_C(i_, C); }
+
+			template <typename Matrix>
+			void set_D(Matrix const &D) { work_.qp_.set_D(i_, D); }
+
+			template <typename Vector>
+			void set_d_min(Vector const& d_min) { work_.qp_.set_d_min(i_, d_min); }
+
+			template <typename Vector>
+			void set_d_max(Vector const& d_max) { work_.qp_.set_d_max(i_, d_max); }
+
+			template <typename Vector>
+			void set_x_min(Vector const& x_min) { work_.lowerBound_.set_x(i_, x_min); }
+
+			template <typename Vector>
+			void set_x_max(Vector const& x_max) { work_.upperBound_.set_x(i_, x_max); }
+
+			template <typename Vector>
+			void set_u_min(Vector const& u_min) { work_.lowerBound_.set_u(i_, u_min); }
+
+			template <typename Vector>
+			void set_u_max(Vector const& u_max) { work_.upperBound_.set_u(i_, u_max); }
+
+		private:
+			std::size_t const i_;
+			Work& work_;
+
+			decltype(auto) get_x() const { return work_.workingPoint_.get_x(i_); }
+			decltype(auto) get_w() const { return work_.workingPoint_.get_w(i_); }
+		};
+
+		/**
+		 * \brief Interface for setting MPC terminal stage data.
+		 * OCP::InitTerminalStage() and OCP::UpdateTerminalStage() use this interface to set Hessian of the terminal stage cost,
+		 * gradient of the terminal stage cost, linearized terminal stage constraints, and terminal state bounds.
+		 *
+		 * Hessian and gradient of Mayer term:
+		 * H = [Q]
+		 * g = [q]
+		 *
+		 */
+		class TerminalStage
+		{
+		public:
+			TerminalStage(Work& work)
+			:	work_(work)
+			{
+			}
+
+			TerminalStage(Stage const&) = delete;
+
+			/**
+			 * \brief On destruction, updates bounds of the QP.
+			 */
+			~TerminalStage()
+			{
+				work_.qp_.set_x_min(get_index(), work_.lowerBound_.get_x(get_index()) - get_x());
+				work_.qp_.set_x_max(get_index(), work_.upperBound_.get_x(get_index()) - get_x());
+			}
+
+			template <typename Matrix>
+			void set_Q(Matrix const &Q)	{
+				work_.qp_.set_Q(get_index(), Q + work_.levenbergMarquardt_ * identity<Matrix>());	// Adding Levenberg-Marquardt term to make H positive-definite.
+			}
+
+			template <typename Vector>
+			void set_q(Vector const &q) { work_.qp_.set_q(get_index(), q); }
+
+			template <typename Matrix>
+			void set_C(Matrix const &C) { work_.qp_.set_C_end(C); }
+
+			template <typename Vector>
+			void set_d_end_min(Vector const& d_min) { work_.qp_.set_d_end_min(d_min); }
+
+			template <typename Vector>
+			void set_d_end_max(Vector const& d_max) { work_.qp_.set_d_end_max(d_max); }
+
+			template <typename Vector>
+			void set_x_min(Vector const& x_min) { work_.lowerBound_.set_x(get_index(), x_min); }
+
+			template <typename Vector>
+			void set_x_max(Vector const& x_max) { work_.upperBound_.set_x(get_index(), x_max); }
+
+		private:
+			Work& work_;
+
+			decltype(auto) get_x() const { return work_.workingPoint_.get_x(get_index()); }
+			decltype(auto) get_index() const { return work_.workingPoint_.nT(); }
+		};
+
+		// Uses ocp_ to initialize _QP based on current working point workingPoint_.
+		void InitQP()
+		{
+			for (unsigned i = 0; i < nT(); ++i)
+			{
+				Stage stage(i, work_);
+				problem_.InitStage(i, stage);
+			}
+
+			TerminalStage terminal_stage(work_);
+			problem_.InitTerminalStage(terminal_stage);
+		}
+
+		/// \brief Internal work data structure.
+		struct Work
+		{
+			double levenbergMarquardt_ = 0.;
+
+			/// \brief The working point (linearization point).
+			WorkingPoint workingPoint_;
+
+			/// \brief Lower bound of the working point.
+			WorkingPoint lowerBound_;
+
+			/// \brief Upper bound of the working point.
+			WorkingPoint upperBound_;
+
+			/// Multistage QP.
+			QP qp_;
+
+			Work(WorkingPoint const& working_point)
+			:	workingPoint_(working_point)
+			,	lowerBound_(working_point.nT(),
+					constant<typename WorkingPoint::StateVector>(-std::numeric_limits<double>::infinity()),
+					constant<typename WorkingPoint::InputVector>(-std::numeric_limits<double>::infinity()))
+			,	upperBound_(working_point.nT(),
+					constant<typename WorkingPoint::StateVector>( std::numeric_limits<double>::infinity()),
+					constant<typename WorkingPoint::InputVector>( std::numeric_limits<double>::infinity()))
+			,	qp_(working_point.nT())
+			{
+			}
+		};
+
+		// Uses ocp_ to update _QP based on current working point workingPoint_.
+		void UpdateQP()
+		{
+			for (unsigned i = 0; i < nT(); ++i)
+				UpdateQP(i);
+
+			TerminalStage terminal_stage(work_);
+			problem_.UpdateTerminalStage(work_.workingPoint_.get_x(nT()), terminal_stage);
+		}
+
+		void UpdateQP(unsigned i)
+		{
+			assert(i < nT());
+
+			Stage stage(i, work_);
+			problem_.UpdateStage(i, work_.workingPoint_.get_x(i), work_.workingPoint_.get_u(i),
+					work_.workingPoint_.get_w(i), work_.workingPoint_.get_y(i), stage);
 		}
 
 		// Private data members.
-
 		Problem const& problem_;
-		Integrator const& _integrator;
-		
-		typename QPSolver::Problem _QP;
-		typename QPSolver::Solution _solution;
+		Solution solution_;
 		QPSolver& solver_;
-
-		double _levenbergMarquardt = 0.;
-
-		// Working point (linearization point).
-		WorkingPoint workingPoint_;
+		Work work_;
 
 		// Preparation() sets this flag to true, Feedback() resets it to false.
 		bool _prepared;

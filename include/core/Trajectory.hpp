@@ -14,7 +14,7 @@ namespace tmpc
 		typedef Eigen::Matrix<double, NX, 1> StateVector;
 		typedef Eigen::Matrix<double, NU, 1> InputVector;
 		typedef Eigen::Matrix<double, NW, 1> DisturbanceVector;
-		typedef Eigen::Matrix<double, NY, 1> OutputVector;
+		typedef Eigen::Matrix<double, NY, 1> MeasurementVector;
 
 		/**
 		 * \brief Default constructor.
@@ -31,8 +31,8 @@ namespace tmpc
 		/**
 		 * \brief Constructor for MHE.
 		 */
-		template <typename StateVector_, typename InputVector_, typename DisturbanceVector_, typename OutputVector_>
-		Trajectory(std::size_t n, StateVector_ const& x, InputVector_ const& u,	DisturbanceVector_ const& w, OutputVector_ const& y)
+		template <typename StateVector_, typename InputVector_, typename DisturbanceVector_, typename MeasurementVector_>
+		Trajectory(std::size_t n, StateVector_ const& x, InputVector_ const& u,	DisturbanceVector_ const& w, MeasurementVector_ const& y)
 		: x_(n + 1, x), u_(n, u), w_(n, w), y_(n, y) {}
 
 		StateVector const& get_x(std::size_t i) const { return x_.at(i); }
@@ -44,7 +44,7 @@ namespace tmpc
 		DisturbanceVector const& get_w(std::size_t i) const { return w_.at(i); }
 		template <typename Matrix> void set_w(std::size_t i, Eigen::MatrixBase<Matrix> const& val) { w_.at(i) = val; }
 
-		OutputVector const& get_y(std::size_t i) const { return y_.at(i); }
+		MeasurementVector const& get_y(std::size_t i) const { return y_.at(i); }
 		template <typename Matrix> void set_y(std::size_t i, Eigen::MatrixBase<Matrix> const& val) { y_.at(i) = val; }
 
 		std::size_t nT() const { return u_.size(); }
@@ -53,7 +53,7 @@ namespace tmpc
 		std::vector<StateVector      > x_;
 		std::vector<InputVector      > u_;
 		std::vector<DisturbanceVector> w_;
-		std::vector<OutputVector     > y_;
+		std::vector<MeasurementVector> y_;
 	};
 
 	template<unsigned NX_, unsigned NU_, unsigned NW_, unsigned NY_>

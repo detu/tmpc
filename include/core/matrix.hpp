@@ -238,4 +238,10 @@ namespace tmpc
 	{
 		return m.squaredNorm();
 	}
+
+	template <typename Matrix>
+	decltype(auto) inverse(Eigen::MatrixBase<Matrix> const& m)
+	{
+		return m.inverse();
+	}
 }

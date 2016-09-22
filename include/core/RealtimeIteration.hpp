@@ -24,12 +24,12 @@ namespace tmpc
 
 		RealtimeIteration(OCP const& ocp, QPSolver& solver, WorkingPoint const& working_point)
 		:	_ocp(ocp)
-		,	work_(working_point)
 		,	solution_(working_point.nT())
+		,	work_(working_point)
 		,	solver_(solver)
 		,	_prepared(true)
 		{
-			InitQP();
+			InitQP();	// TODO: remove it and force the user to call Preparation() before the first call to Feedback().
 			UpdateQP();
 		}
 
@@ -320,11 +320,11 @@ namespace tmpc
 			/// \brief The working point (linearization point).
 			WorkingPoint workingPoint_;
 
-			/// \brief Upper bound of the working point.
-			WorkingPoint upperBound_;
-
 			/// \brief Lower bound of the working point.
 			WorkingPoint lowerBound_;
+
+			/// \brief Upper bound of the working point.
+			WorkingPoint upperBound_;
 
 			/// Multistage QP.
 			QP qp_;

@@ -240,10 +240,8 @@ namespace tmpc
 		static_assert(rows<SMatrix      >() == NX && cols<SMatrix      >() == NU, "cS must be of size NX*NU"   );
 
 		typedef Eigen::Matrix<double, NX,  1> StateVector;
-		typedef Eigen::Matrix<double, NU,  1> InputVector;
 		typedef Eigen::Matrix<double, NX, NX> StateStateMatrix;
 		typedef Eigen::Matrix<double, NX, NU> StateInputMatrix;
-		typedef Eigen::Matrix<double, NU, NU> InputInputMatrix;
 
 		StateVector k1, k2, k3, k4;
 		StateStateMatrix A1, A2, A3, A4;
@@ -346,10 +344,8 @@ namespace tmpc
 		static_assert(rows<SMatrix         >() == NX && cols<SMatrix         >() == NU, "cS must be of size NX*NU"   );
 
 		typedef Eigen::Matrix<double, NX,  1> StateVector;
-		typedef Eigen::Matrix<double, NU,  1> InputVector;
 		typedef Eigen::Matrix<double, NX, NX> StateStateMatrix;
 		typedef Eigen::Matrix<double, NX, NU> StateInputMatrix;
-		typedef Eigen::Matrix<double, NU, NU> InputInputMatrix;
 
 		StateVector k1, k2, k3, k4;
 		StateStateMatrix A1, A2, A3, A4;

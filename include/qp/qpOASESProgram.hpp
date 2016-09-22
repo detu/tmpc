@@ -25,11 +25,11 @@ namespace tmpc
 		qpOASESProgram(size_type nx, size_type nc)
 		:	_H(signaling_nan<Matrix>(nx, nx))
 		,	_g(signaling_nan<Vector>(nx))
+		, 	_lb(signaling_nan<Vector>(nx))
+		, 	_ub(signaling_nan<Vector>(nx))
 		, 	_A(signaling_nan<Matrix>(nc, nx))
 		, 	_lbA(signaling_nan<Vector>(nc))
 		, 	_ubA(signaling_nan<Vector>(nc))
-		, 	_lb(signaling_nan<Vector>(nx))
-		, 	_ub(signaling_nan<Vector>(nx))
 		{
 		}
 
