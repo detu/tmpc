@@ -86,7 +86,7 @@ namespace tmpc
 		ConstraintInputMatrix const& get_D(size_type i) const { return stage(i).D; }
 		template <typename Matrix> void set_D(size_type i, Eigen::MatrixBase<Matrix> const& val) { stage(i).D = val; }
 
-		ConstraintStateMatrix const& get_C_end() const { return _C_end; }
+		EndConstraintStateMatrix const& get_C_end() const { return _C_end; }
 		template <typename Matrix> void set_C_end(Eigen::MatrixBase<Matrix> const& val) { _C_end = val; }
 
 		ConstraintVector const& get_d_min(size_type i) const { return stage(i).d_min; }
