@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Trajectory.hpp"
-#include "matrix.hpp"
 #include "../qp/qp.hpp"
 
 #include <stdexcept>
@@ -9,16 +8,23 @@
 
 namespace tmpc
 {
-	template <typename OCP, typename QPSolver_>
+	/**
+	 * \brief Implements an MPC controller with realtime iteration scheme.
+	 *
+	 * \tparam K is a class implementing Kernel concept
+	 */
+	template <typename K, typename OCP, typename QPSolver_>
 	class RealtimeIteration
 	{
-		static auto const NX = OCP::NX;
-		static auto const NU = OCP::NU;
-		static auto const NC = OCP::NC;
-		static auto const NCT = OCP::NCT;
+		static auto constexpr NX = K::NX;
+		static auto constexpr NU = K::NU;
+		static auto constexpr NC = K::NC;
+		static auto constexpr NCT = K::NCT;
 
 	public:
 		typedef QPSolver_ QPSolver;
+
+		// TODO: parameterize Trajectory with K
 		typedef Trajectory<NX, NU> WorkingPoint;
 
 		RealtimeIteration(OCP const& ocp, QPSolver& solver, WorkingPoint const& working_point)
@@ -47,7 +53,7 @@ namespace tmpc
 				throw std::logic_error("RealtimeIteration::Feedback(): RTI is not prepared.");
 
 			/** embed current initial value */
-			auto const w0 = eval(x0 - work_.workingPoint_.get_x(0));
+			auto const w0 = K::eval(x0 - work_.workingPoint_.get_x(0));
 			work_.qp_.set_x_min(0, w0);
 			work_.qp_.set_x_max(0, w0);
 
@@ -326,11 +332,11 @@ namespace tmpc
 			Work(WorkingPoint const& working_point)
 			:	workingPoint_(working_point)
 			,	lowerBound_(working_point.nT(),
-					constant<typename WorkingPoint::StateVector>(-std::numeric_limits<double>::infinity()),
-					constant<typename WorkingPoint::InputVector>(-std::numeric_limits<double>::infinity()))
+					K::template constant<typename K::StateVector>(-std::numeric_limits<typename K::Scalar>::infinity()),
+					K::template constant<typename K::InputVector>(-std::numeric_limits<typename K::Scalar>::infinity()))
 			,	upperBound_(working_point.nT(),
-					constant<typename WorkingPoint::StateVector>( std::numeric_limits<double>::infinity()),
-					constant<typename WorkingPoint::InputVector>( std::numeric_limits<double>::infinity()))
+					K::template constant<typename K::StateVector>( std::numeric_limits<typename K::Scalar>::infinity()),
+					K::template constant<typename K::InputVector>( std::numeric_limits<typename K::Scalar>::infinity()))
 			,	qp_(working_point.nT())
 			{
 			}

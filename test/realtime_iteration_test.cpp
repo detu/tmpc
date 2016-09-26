@@ -191,8 +191,8 @@ protected:
 };
 
 typedef ::testing::Types<
-		tmpc::RealtimeIteration<OCP, tmpc::CondensingSolver<K>>
-,		tmpc::RealtimeIteration<OCP, tmpc::HPMPCSolver<K>>
+		tmpc::RealtimeIteration<K, OCP, tmpc::CondensingSolver<K>>
+,		tmpc::RealtimeIteration<K, OCP, tmpc::HPMPCSolver     <K>>
 	> RTITypes;
 
 TYPED_TEST_CASE(RealtimeIterationTest, RTITypes);
