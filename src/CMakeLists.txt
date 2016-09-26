@@ -22,6 +22,12 @@ target_include_directories(tmpc
     PUBLIC ${PROJECT_INCLUDE_DIR}
 )
 
+if (EIGEN3_FOUND)
+    target_sources(tmpc
+        PUBLIC ${PROJECT_INCLUDE_DIR}/kernel/eigen.hpp
+    )
+endif()
+
 #
 # Add qpDUNES interface 
 #

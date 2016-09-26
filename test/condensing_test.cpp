@@ -1,6 +1,7 @@
 #include <qp/CondensingSolver.hpp>
 #include <qp/Condensing.hpp>
 #include <qp/qpOASESProgram.hpp>
+#include <kernel/eigen.hpp>
 
 #include "qp_test_problems.hpp"
 #include "gtest_tools_eigen.hpp"
@@ -9,14 +10,14 @@
 
 #include <iostream>
 
-unsigned const NX = 2;
-unsigned const NU = 1;
-unsigned const NZ = NX + NU;
-unsigned const NC = 0;
-unsigned const NCT = 0;
-unsigned const NT = 2;
+// Define a kernel
+typedef tmpc::EigenKernel<double, 2 /*NX*/, 1 /*NU*/, 0 /*NW*/,
+		0 /*NY*/, 0 /*NP*/, 0 /*NC*/, 0 /*unsigned NCT*/> K;
 
-typedef tmpc::CondensingSolver<NX, NU, NC, NCT> Solver;
+auto constexpr NT = 2u;
+auto constexpr NZ = K::NX + K::NU;
+
+typedef tmpc::CondensingSolver<K::NX, K::NU, K::NC, K::NCT> Solver;
 typedef Solver::Problem Problem;
 typedef Solver::Solution Solution;
 
@@ -30,21 +31,18 @@ std::ostream& operator<<(std::ostream& os, Solution const& point)
 
 TEST(CondensingSolver_test, condensing_test)
 {
-	typedef Eigen::Matrix<double, NX, 1> StateVector;
-	typedef Eigen::Matrix<double, NU, 1> InputVector;
-
 	Problem qp(NT);
 
-	qp.set_x_min(0, Problem::StateVector::Constant(-1.));	qp.set_x_max(0, Problem::StateVector::Constant(1.));
-	qp.set_u_min(0, Problem::InputVector::Constant(-1.));	qp.set_u_max(0, Problem::InputVector::Constant(1.));
+	qp.set_x_min(0, K::StateVector::Constant(-1.));	qp.set_x_max(0, K::StateVector::Constant(1.));
+	qp.set_u_min(0, K::InputVector::Constant(-1.));	qp.set_u_max(0, K::InputVector::Constant(1.));
 
-	qp.set_x_min(1, Problem::StateVector::Constant(-1.));	qp.set_x_max(1, Problem::StateVector::Constant(1.));
-	qp.set_u_min(1, Problem::InputVector::Constant(-1.));	qp.set_u_max(1, Problem::InputVector::Constant(1.));
+	qp.set_x_min(1, K::StateVector::Constant(-1.));	qp.set_x_max(1, K::StateVector::Constant(1.));
+	qp.set_u_min(1, K::InputVector::Constant(-1.));	qp.set_u_max(1, K::InputVector::Constant(1.));
 
-	qp.set_x_min(2, Problem::StateVector::Constant(-1.));	qp.set_x_max(2, Problem::StateVector::Constant(1.));
+	qp.set_x_min(2, K::StateVector::Constant(-1.));	qp.set_x_max(2, K::StateVector::Constant(1.));
 
 	// Stage 0
-	Eigen::Matrix<double, NZ, NZ> H0;
+	K::Matrix<NZ, NZ> H0;
 	H0 << 1, 2, 3, 4, 5, 6, 7, 8, 9;
 	H0 = H0.transpose() * H0;	// Make positive definite.
 
@@ -53,17 +51,17 @@ TEST(CondensingSolver_test, condensing_test)
 	const Eigen::MatrixXd S0 = H0.topRightCorner(qp.nX(), qp.nU());
 	const Eigen::MatrixXd S0T = H0.bottomLeftCorner(qp.nU(), qp.nX());
 
-	Problem::StateStateMatrix A0;
+	K::StateStateMatrix A0;
 	A0 << 1, 1, 0, 1;
 
-	Problem::StateInputMatrix B0(qp.nX(), qp.nU());
+	K::StateInputMatrix B0(qp.nX(), qp.nU());
 	B0 << 0.5, 1.0;
 
 	Eigen::VectorXd a0(qp.nX());
 	a0 << 1, 2;
 
 	// Stage 1
-	Eigen::Matrix<double, NZ, NZ> H1;
+	K::Matrix<NZ, NZ> H1;
 	H1 << 1, 2, 3, 4, 5, 6, 7, 8, 9;
 	H1 = H1.transpose() * H1;	// Make positive definite.
 
@@ -82,23 +80,23 @@ TEST(CondensingSolver_test, condensing_test)
 	a1 << 1, 2;
 
 	// Stage 2
-	Eigen::Matrix<double, NX, NX> H2;
+	K::StateStateMatrix H2;
 	H2 << 1, 2, 3, 4;
 	H2 = H2.transpose() * H2;	// Make positive definite.
 
 	const Eigen::MatrixXd Q2 = H2.topLeftCorner(qp.nX(), qp.nX());
 
 	// Setup QP
-	set_H(qp, 0, H0);	qp.set_q(0, StateVector::Zero());	qp.set_r(0, InputVector::Zero());
-	set_H(qp, 1, H1);	qp.set_q(1, StateVector::Zero());	qp.set_r(1, InputVector::Zero());
-	set_Q_end(qp, H2);	qp.set_q(2, StateVector::Zero());
+	set_H(qp, 0, H0);	qp.set_q(0, K::StateVector::Zero());	qp.set_r(0, K::InputVector::Zero());
+	set_H(qp, 1, H1);	qp.set_q(1, K::StateVector::Zero());	qp.set_r(1, K::InputVector::Zero());
+	set_Q_end(qp, H2);	qp.set_q(2, K::StateVector::Zero());
 
 	qp.set_A(0, A0);	qp.set_B(0, B0);	qp.set_b(0, a0);
 	qp.set_A(1, A1);	qp.set_B(1, B1);	qp.set_b(1, a1);
 
 	// Condense
-	camels::qpOASESProgram condensed(nIndep(qp), nDep(qp) + nConstr(qp));
-	camels::Condense(qp, condensed);
+	tmpc::qpOASESProgram condensed(nIndep(qp), nDep(qp) + nConstr(qp));
+	tmpc::Condense(qp, condensed);
 
 	const auto Hc = condensed.H();
 	Eigen::MatrixXd Hc_expected(nIndep(qp), nIndep(qp));
