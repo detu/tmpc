@@ -22,15 +22,20 @@ namespace tmpc
 		int d_ip_ocp_hard_tv_work_space_size_bytes(int N, int const *nx, int const *nu, int const *nb, int const *ng);
 	}
 
-	template<unsigned NX_, unsigned NU_, unsigned NC_, unsigned NCT_>
+	/**
+	 * \brief Multistage QP solver using qpOASES
+	 *
+	 * \tparam K a class implementing the Kernel concept
+	 */
+	template <typename K>
 	class HPMPCSolver
 	{
 	public:
-		static unsigned const NX = NX_;
-		static unsigned const NU = NU_;
-		static unsigned const NZ = NX + NU;
-		static unsigned const NC = NC_;
-		static unsigned const NCT = NCT_;
+		static auto constexpr NX = K::NX;
+		static auto constexpr NU = K::NU;
+		static auto constexpr NZ = K::NX + K::NU;
+		static auto constexpr NC = K::NC;
+		static auto constexpr NCT = K::NCT;
 
 		typedef HPMPCProblem<NX, NU, NC, NCT> Problem;
 		typedef HPMPCSolution<NX, NU, NC, NCT> Solution;

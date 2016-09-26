@@ -2,6 +2,7 @@
 #include "../include/qp/CondensingSolver.hpp"
 #include "../include/qp/HPMPCSolver.hpp"
 #include "../include/integrator/rk4.hpp"
+#include <kernel/eigen.hpp>
 
 #include <Eigen/Dense>
 
@@ -16,6 +17,10 @@ struct Dimensions
 	static unsigned const ND = 0;
 	static unsigned const NDT = 0;
 };
+
+// Define a kernel
+typedef tmpc::EigenKernel<double, Dimensions::NX, Dimensions::NU, 0 /*NW*/,
+		0 /*NY*/, 0 /*NP*/, Dimensions::ND /*NC*/, Dimensions::NDT /*unsigned NCT*/> K;
 
 // An empty class for ODE, since we provide the discrete-time dynamics ourselves.
 struct ODE
@@ -186,8 +191,8 @@ protected:
 };
 
 typedef ::testing::Types<
-		tmpc::RealtimeIteration<OCP, tmpc::CondensingSolver>
-,		tmpc::RealtimeIteration<OCP, tmpc::HPMPCSolver     >
+		tmpc::RealtimeIteration<OCP, tmpc::CondensingSolver<K>>
+,		tmpc::RealtimeIteration<OCP, tmpc::HPMPCSolver<K>>
 	> RTITypes;
 
 TYPED_TEST_CASE(RealtimeIterationTest, RTITypes);

@@ -27,15 +27,20 @@ namespace tmpc
 		qpOASES::Options _options;
 	};
 
-	template<unsigned NX_, unsigned NU_, unsigned NC_, unsigned NCT_>
+	/**
+	 * \brief Condensing solver using qpOASES
+	 *
+	 * \tparam K a class implementing the Kernel concept
+	 */
+	template <typename K>
 	class CondensingSolver
 	{
 	public:
-		static unsigned const NX = NX_;
-		static unsigned const NU = NU_;
-		static unsigned const NZ = NX + NU;
-		static unsigned const NC = NC_;
-		static unsigned const NCT = NCT_;
+		static auto constexpr NX = K::NX;
+		static auto constexpr NU = K::NU;
+		static auto constexpr NZ = K::NX + K::NU;
+		static auto constexpr NC = K::NC;
+		static auto constexpr NCT = K::NCT;
 
 		typedef qpOASESProgram CondensedQP;
 
@@ -48,10 +53,8 @@ namespace tmpc
 		// Exception that can be thrown from the Solve() member function.
 		class SolveException;
 
-		typedef unsigned size_type;
-		typedef Eigen::VectorXd Vector;
-		typedef Eigen::VectorXd StateVector;
-		typedef Eigen::VectorXd StateInputVector;
+		typedef typename K::size_t size_type;
+		typedef typename K::DynamicVector Vector;
 
 		CondensingSolver(size_type nt, qpOASESOptions const& options = qpOASESOptions::MPC().setPrintLevel(qpOASES::PL_LOW))
 		:	_Nt(nt)
@@ -117,8 +120,8 @@ namespace tmpc
 		unsigned _maxWorkingSetRecalculations = 1000;
 	};
 
-	template<unsigned NX_, unsigned NU_, unsigned NC_, unsigned NCT_>
-	class CondensingSolver<NX_, NU_, NC_, NCT_>::SolveException : public std::runtime_error
+	template <typename K>
+	class CondensingSolver<K>::SolveException : public std::runtime_error
 	{
 	public:
 		SolveException(qpOASES::returnValue code, qpOASESProgram const& cqp) :
@@ -135,8 +138,8 @@ namespace tmpc
 		qpOASESProgram const _CondensedQP;
 	};
 
-	template<unsigned NX_, unsigned NU_, unsigned NC_, unsigned NCT_>
-	void CondensingSolver<NX_, NU_, NC_, NCT_>::Solve(Problem const& msqp, Solution& solution)
+	template <typename K>
+	void CondensingSolver<K>::Solve(Problem const& msqp, Solution& solution)
 	{
 		// Check argument sizes.
 		if (msqp.nT() != nT())
@@ -167,10 +170,10 @@ namespace tmpc
 		//problem.getDualSolution(yOpt);
 
 		// Calculate the solution of the multi-stage QP.
-		solution.set_x(0, _condensedSolution.topRows<NX>());
+		solution.set_x(0, K::template top_rows<NX>(_condensedSolution));
 		for (size_type i = 0; i < nT(); ++i)
 		{
-			solution.set_u(i, _condensedSolution.middleRows<NU>(NX + i * NU));
+			solution.set_u(i, K::template middle_rows<NU>(_condensedSolution, NX + i * NU));
 			solution.set_x(i + 1, msqp.get_A(i) * solution.get_x(i) + msqp.get_B(i) * solution.get_u(i) + msqp.get_b(i));
 		}
 	}

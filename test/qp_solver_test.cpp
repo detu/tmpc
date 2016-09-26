@@ -9,6 +9,8 @@
 #include "../include/qp/HPMPCSolver.hpp"
 #include "../include/qp/Printing.hpp"
 
+#include <kernel/eigen.hpp>
+
 #include "qp_test_problems.hpp"
 
 #include <gtest/gtest.h>
@@ -32,9 +34,13 @@ protected:
 	Solver solver_;
 };
 
+// Define a kernel
+typedef tmpc::EigenKernel<double, 2 /*NX*/, 1 /*NU*/, 0 /*NW*/,
+		0 /*NY*/, 0 /*NP*/, 0 /*NC*/, 0 /*unsigned NCT*/> K;
+
 typedef ::testing::Types<
-		tmpc::CondensingSolver<2, 1, 0, 0>
-,		tmpc::HPMPCSolver     <2, 1, 0, 0>
+		tmpc::CondensingSolver<K>
+,		tmpc::HPMPCSolver     <K>
 	> SolverTypes;
 
 TYPED_TEST_CASE(QPSolverTest, SolverTypes);

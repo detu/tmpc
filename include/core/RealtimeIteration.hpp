@@ -9,8 +9,7 @@
 
 namespace tmpc
 {
-	template <typename OCP,
-		template <unsigned, unsigned, unsigned, unsigned> class QPSolver_>
+	template <typename OCP, typename QPSolver_>
 	class RealtimeIteration
 	{
 		static auto const NX = OCP::NX;
@@ -19,7 +18,7 @@ namespace tmpc
 		static auto const NCT = OCP::NCT;
 
 	public:
-		typedef QPSolver_<NX, NU, NC, NCT> QPSolver;
+		typedef QPSolver_ QPSolver;
 		typedef Trajectory<NX, NU> WorkingPoint;
 
 		RealtimeIteration(OCP const& ocp, QPSolver& solver, WorkingPoint const& working_point)

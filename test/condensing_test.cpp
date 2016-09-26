@@ -17,7 +17,7 @@ typedef tmpc::EigenKernel<double, 2 /*NX*/, 1 /*NU*/, 0 /*NW*/,
 auto constexpr NT = 2u;
 auto constexpr NZ = K::NX + K::NU;
 
-typedef tmpc::CondensingSolver<K::NX, K::NU, K::NC, K::NCT> Solver;
+typedef tmpc::CondensingSolver<K> Solver;
 typedef Solver::Problem Problem;
 typedef Solver::Solution Solution;
 
