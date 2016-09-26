@@ -96,7 +96,7 @@ TEST(CondensingSolver_test, condensing_test)
 
 	// Condense
 	tmpc::qpOASESProgram condensed(nIndep(qp), nDep(qp) + nConstr(qp));
-	tmpc::Condense(qp, condensed);
+	tmpc::Condense<K>(qp, condensed);
 
 	const auto Hc = condensed.H();
 	Eigen::MatrixXd Hc_expected(nIndep(qp), nIndep(qp));

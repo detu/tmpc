@@ -100,6 +100,12 @@ public:
 	}
 
 	template <typename Matrix>
+	static void set_zero(Eigen::MatrixBase<Matrix>& m)
+	{
+		m.setZero();
+	}
+
+	template <typename Matrix>
 	static typename Matrix::ConstantReturnType signaling_nan(typename Matrix::Index M, typename Matrix::Index N)
 	{
 		return Matrix::Constant(M, N, std::numeric_limits<typename Matrix::Scalar>::signaling_NaN());
@@ -171,6 +177,18 @@ public:
 		return m.template topRows<N>();
 	}
 
+	template <typename Matrix>
+	static decltype(auto) top_rows(Eigen::MatrixBase<Matrix>& m, size_t N)
+	{
+		return m.template topRows(N);
+	}
+
+	template <typename Matrix>
+	static decltype(auto) top_rows(Eigen::MatrixBase<Matrix> const& m, size_t N)
+	{
+		return m.template topRows(N);
+	}
+
 	template<unsigned N, typename Matrix>
 	static decltype(auto) bottom_rows(Eigen::MatrixBase<Matrix>& m)
 	{
@@ -195,6 +213,18 @@ public:
 		return m.template leftCols<N>();
 	}
 
+	template<typename Matrix>
+	static decltype(auto) left_cols(Eigen::MatrixBase<Matrix>& m, size_t N)
+	{
+		return m.template leftCols(N);
+	}
+
+	template<typename Matrix>
+	static decltype(auto) left_cols(Eigen::MatrixBase<Matrix> const& m, size_t N)
+	{
+		return m.template leftCols(N);
+	}
+
 	template<unsigned N, typename Matrix>
 	static decltype(auto) right_cols(Eigen::MatrixBase<Matrix>& m)
 	{
@@ -207,16 +237,58 @@ public:
 		return m.template rightCols<N>();
 	}
 
+	template<unsigned N, typename Matrix>
+	static decltype(auto) middle_cols(Eigen::MatrixBase<Matrix>& m, size_t j)
+	{
+		return m.template middleCols<N>(j);
+	}
+
+	template<unsigned N, typename Matrix>
+	static decltype(auto) middle_cols(Eigen::MatrixBase<Matrix> const& m, size_t j)
+	{
+		return m.template middleCols<N>(j);
+	}
+
+	template<unsigned M, unsigned N, typename Matrix>
+	static decltype(auto) top_left_corner(Eigen::MatrixBase<Matrix>& m)
+	{
+		return m.template topLeftCorner<M, N>();
+	}
+
 	template<unsigned M, unsigned N, typename Matrix>
 	static decltype(auto) top_left_corner(Eigen::MatrixBase<Matrix> const& m)
 	{
 		return m.template topLeftCorner<M, N>();
 	}
 
+	template<typename Matrix>
+	static decltype(auto) top_left_corner(Eigen::MatrixBase<Matrix>& m, size_t M, size_t N)
+	{
+		return m.template topLeftCorner(M, N);
+	}
+
+	template<typename Matrix>
+	static decltype(auto) top_left_corner(Eigen::MatrixBase<Matrix> const& m, size_t M, size_t N)
+	{
+		return m.template topLeftCorner(M, N);
+	}
+
 	template<unsigned M, unsigned N, typename Matrix>
 	static decltype(auto) top_right_corner(Eigen::MatrixBase<Matrix> const& m)
 	{
 		return m.template topRightCorner<M, N>();
+	}
+
+	template <typename Matrix>
+	static decltype(auto) top_right_corner(Eigen::MatrixBase<Matrix>& m, size_t M, size_t N)
+	{
+		return m.template topRightCorner(M, N);
+	}
+
+	template <typename Matrix>
+	static decltype(auto) top_right_corner(Eigen::MatrixBase<Matrix> const& m, size_t M, size_t N)
+	{
+		return m.template topRightCorner(M, N);
 	}
 
 	template<unsigned M, unsigned N, typename Matrix>
@@ -226,15 +298,38 @@ public:
 	}
 
 	template<unsigned M, unsigned N, typename Matrix>
+	static decltype(auto) bottom_right_corner(Eigen::MatrixBase<Matrix>& m)
+	{
+		return m.template bottomRightCorner<M, N>();
+	}
+
+	template<unsigned M, unsigned N, typename Matrix>
 	static decltype(auto) bottom_right_corner(Eigen::MatrixBase<Matrix> const& m)
 	{
 		return m.template bottomRightCorner<M, N>();
+	}
+
+	template<unsigned M, unsigned N, typename Matrix>
+	static decltype(auto) block(Eigen::MatrixBase<Matrix>& m, size_t i, size_t j)
+	{
+		return m.template block<M, N>(i, j);
+	}
+
+	template<unsigned M, unsigned N, typename Matrix>
+	static decltype(auto) block(Eigen::MatrixBase<Matrix> const& m, size_t i, size_t j)
+	{
+		return m.template block<M, N>(i, j);
 	}
 
 	template <typename Matrix>
 	static std::enable_if_t<std::is_base_of<Eigen::MatrixBase<Matrix>, Matrix>::value, typename Matrix::IdentityReturnType> identity()
 	{
 		return Matrix::Identity();
+	}
+
+	static typename DynamicMatrix::IdentityReturnType identity(size_t M, size_t N)
+	{
+		return DynamicMatrix::Identity(M, N);
 	}
 
 	template <typename Matrix>
@@ -244,9 +339,21 @@ public:
 	}
 
 	template <typename Matrix>
+	static size_t rows(Eigen::MatrixBase<Matrix> const& m)
+	{
+		return m.rows();
+	}
+
+	template <typename Matrix>
 	static std::enable_if_t<std::is_base_of<Eigen::MatrixBase<Matrix>, Matrix>::value, typename Matrix::Index> constexpr cols()
 	{
 		return Matrix::ColsAtCompileTime;
+	}
+
+	template <typename Matrix>
+	static size_t cols(Eigen::MatrixBase<Matrix> const& m)
+	{
+		return m.cols();
 	}
 
 	template <typename Matrix>
@@ -295,6 +402,42 @@ public:
 	static decltype(auto) inverse(Eigen::MatrixBase<Matrix> const& m)
 	{
 		return m.inverse();
+	}
+
+	template <typename Matrix>
+	static decltype(auto) selfadjoint_view_upper(Eigen::MatrixBase<Matrix>& m)
+	{
+		return m.template selfadjointView<Eigen::Upper>();
+	}
+
+	template <typename Matrix>
+	static decltype(auto) selfadjoint_view_upper(Eigen::MatrixBase<Matrix>&& m)
+	{
+		return m.template selfadjointView<Eigen::Upper>();
+	}
+
+	template <typename Matrix>
+	static decltype(auto) selfadjoint_view_upper(Eigen::MatrixBase<Matrix> const& m)
+	{
+		return m.template selfadjointView<Eigen::Upper>();
+	}
+
+	template <typename Matrix>
+	static decltype(auto) triangular_view_upper(Eigen::MatrixBase<Matrix>& m)
+	{
+		return m.template triangularView<Eigen::Upper>();
+	}
+
+	template <typename Matrix>
+	static decltype(auto) triangular_view_upper(Eigen::MatrixBase<Matrix>&& m)
+	{
+		return m.template triangularView<Eigen::Upper>();
+	}
+
+	template <typename Matrix>
+	static decltype(auto) triangular_view_upper(Eigen::MatrixBase<Matrix> const& m)
+	{
+		return m.template triangularView<Eigen::Upper>();
 	}
 };
 

@@ -149,7 +149,7 @@ namespace tmpc
 			throw std::invalid_argument("CondensingSolver::Solve(): size of solution Point does not match solver sizes, sorry.");
 
 		// Make a condensed problem.
-		Condense(msqp, _condensedQP);
+		Condense<K>(msqp, _condensedQP);
 
 		/* Solve the condensed QP. */
 		int nWSR = static_cast<int>(_maxWorkingSetRecalculations);
