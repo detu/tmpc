@@ -11,20 +11,20 @@ namespace tmpc
 {
 	/**
 	 * \brief Implements moving horizon estimation algorithm.
+	 *
+	 * \tparam <K> A class implementing the Kernel concept
 	 * \tparam <Problem> A class describing Trajectory Estimation Problem.
 	 */
-	template <typename Problem,
-		template <unsigned, unsigned, unsigned, unsigned> class QPSolver_>
+	template <typename K, typename Problem, typename QPSolver_>
 	class MovingHorizonEstimator
 	{
-		static auto const NX = Problem::NX;
-		static auto const NU = Problem::NU;
-		static auto const NW = Problem::NW;
-		static auto const NY = Problem::NY;
-		static auto const NC = Problem::NC;
+		static auto constexpr NX = K::NX;
+		static auto constexpr NU = K::NU;
+		static auto constexpr NW = K::NW;
+		static auto constexpr NY = K::NY;
 
 	public:
-		typedef QPSolver_<NX, NW, NC, 0> QPSolver;
+		typedef QPSolver_ QPSolver;
 		typedef Trajectory<NX, NU, NW, NY> WorkingPoint;
 
 		/**

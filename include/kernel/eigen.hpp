@@ -59,6 +59,7 @@ public:
 	typedef Matrix<NC, NU> ConstraintInputMatrix;
 	typedef Matrix<NY, NX> OutputStateMatrix;
 	typedef Matrix<NY, NU> OutputInputMatrix;
+	typedef Matrix<NY, NW> OutputDisturbanceMatrix;
 	typedef Matrix<NY, NY> OutputOutputMatrix;
 	typedef Matrix<NW, NW> DisturbanceDisturbanceMatrix;
 
