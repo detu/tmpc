@@ -19,7 +19,7 @@ namespace tmpc
 	// Provides a generic solution interface for multistage QP solvers.
 	//
 	template<unsigned NX_, unsigned NU_, unsigned NC_, unsigned NCT_>
-	class MultiStageQPSolution : public MultiStageQPSolutionTag
+	class MultiStageQPSolution
 	{
 	public:
 		typedef std::size_t size_type;

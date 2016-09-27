@@ -28,8 +28,8 @@ namespace tmpc
 	*	nX < nZ
 	*	nU = nZ - nX
 	*/
-	template<unsigned NX_, unsigned NU_, unsigned NC_, unsigned NCT_>
-	class MultiStageQuadraticProblem : public MultiStageQPTag
+	template <unsigned NX_, unsigned NU_, unsigned NC_, unsigned NCT_>
+	class MultiStageQuadraticProblem
 	{
 	public:
 		typedef unsigned int size_type;

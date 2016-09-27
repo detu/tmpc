@@ -20,7 +20,7 @@ namespace tmpc
 	// Provides solution interface for the HPMPC solver.
 	//
 	template<unsigned NX_, unsigned NU_, unsigned NC_, unsigned NCT_>
-	class HPMPCSolution : public MultiStageQPSolutionTag
+	class HPMPCSolution
 	{
 	public:
 		typedef std::size_t size_type;

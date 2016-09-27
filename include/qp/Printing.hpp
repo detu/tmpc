@@ -1,15 +1,19 @@
 #pragma once
 
 #include "qp.hpp"
-#include "../core/matrix.hpp"
 
-#include <type_traits>
 #include <ostream>
 
 namespace tmpc
 {
-	template<typename QP>
-	inline std::enable_if_t<std::is_base_of<MultiStageQPTag, QP>::value, void> Print_MATLAB(std::ostream& os, QP const& qp_, const std::string& var_name)
+	/**
+	 * \brief Print a multistage QP as a MATLAB script.
+	 *
+	 * TODO: move all QPs to a qp namespace. Then move the printing function to the QP namespace.
+	 * Then if a Print*** function is called for a QP class, it will be the function from the qp namespace.
+	 */
+	template <typename QP>
+	inline void PrintMultistageQpMatlab(std::ostream& os, QP const& qp_, const std::string& var_name)
 	{
 		using std::endl;
 
@@ -42,12 +46,11 @@ namespace tmpc
 		os << var_name << ".zMax{" << qp.nT() + 1 << "} = [..." << endl << get_x_end_max(qp) << "];" << endl;
 	}
 
-	// Define ostream insert operator for all classes derived from MultiStageQPSolutionTag.
-	// TODO: get rid of inheriting from a Tag class and define a predicate,
-	// something like is_multi_stage_qp_solution<T>::value or is_multi_stage_qp_solution<T>().
+	/**
+	 * \brief Print a multistage QP solution in a human-readable form.
+	 */
 	template <typename QPSolution>
-	inline std::enable_if_t<std::is_base_of<MultiStageQPSolutionTag, QPSolution>::value,
-		std::ostream&> operator<<(std::ostream& os, QPSolution const& solution)
+	inline void PrintMultistageQpSolution(std::ostream& os, QPSolution const& solution)
 	{
 		for (std::size_t i = 0; i <= solution.nT(); ++i)
 		{
@@ -77,7 +80,5 @@ namespace tmpc
 
 			os << std::endl;
 		}
-
-		return os;
 	}
 }

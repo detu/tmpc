@@ -55,7 +55,7 @@ namespace tmpc
 	*	nU = nZ - nX
 	*/
 	template<unsigned NX_, unsigned NU_, unsigned NC_, unsigned NCT_>
-	class HPMPCProblem : public MultiStageQPTag
+	class HPMPCProblem
 	{
 	public:
 		typedef unsigned int size_type;

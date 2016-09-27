@@ -1,3 +1,5 @@
+// TODO: get rid of all nasty deprecated stuff
+
 #pragma once
 
 #include "../core/matrix.hpp"
@@ -6,9 +8,6 @@
 
 namespace tmpc
 {
-	class MultiStageQPSolutionTag {};
-	class MultiStageQPTag {};
-
 	template<typename QP>
 	std::size_t constexpr n_xu(QP const& qp) { return qp.nX() + qp.nU(); }
 

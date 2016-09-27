@@ -117,4 +117,3 @@ TEST(CondensingSolver_test, condensing_test)
 
 	EXPECT_EQ(print_wrap(gc), print_wrap(gc_expected));
 }
-
