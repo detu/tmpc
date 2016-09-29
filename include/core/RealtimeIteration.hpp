@@ -4,6 +4,7 @@
 #include "../qp/qp.hpp"
 
 #include <stdexcept>
+#include <limits>
 //#include <type_traits>
 
 namespace tmpc
@@ -32,10 +33,9 @@ namespace tmpc
 		,	solution_(working_point.nT())
 		,	solver_(solver)
 		,	work_(working_point)
-		,	_prepared(true)
+		,	_prepared(false)
 		{
-			InitQP();	// TODO: remove it and force the user to call Preparation() before the first call to Feedback().
-			UpdateQP();
+			InitQP();
 		}
 
 		RealtimeIteration(RealtimeIteration const&) = delete;
@@ -90,8 +90,23 @@ namespace tmpc
 
 		WorkingPoint const& getWorkingPoint() const { return work_.workingPoint_; }
 
-		double getLevenbergMarquardt() const { return work_.levenbergMarquardt_; }
-		void setLevenbergMarquardt(double val) { work_.levenbergMarquardt_ = val; }
+		// TODO: change LevenbergMarquardt to be an argument of Preparation()?
+		typename K::Scalar getLevenbergMarquardt() const { return work_.levenbergMarquardt_; }
+
+		void setLevenbergMarquardt(typename K::Scalar val)
+		{
+			if (_prepared)
+				throw std::logic_error("RealtimeIteration::setLevenbergMarquardt(): RTI must not be prepared when setting LevenbergMarquardt.");
+
+			if (val < 0.)
+				throw std::invalid_argument("RealtimeIteration::setLevenbergMarquardt(): LevenbergMarquardt must be non-negative.");
+
+			if (work_.levenbergMarquardt_ != val)
+			{
+				InitQP();	// Re-initialize QPs because of the changing levenbergMarquardt_ value.
+				work_.levenbergMarquardt_ = val;
+			}
+		}
 
 		/*
 		unsigned nT() const { return _ocp.getNumberOfIntervals(); }
@@ -169,7 +184,24 @@ namespace tmpc
 			}
 
 			template <typename Matrix>
+			void set_R(typename K::size_t i, typename K::size_t j, Matrix const &R)
+			{
+				auto constexpr M = K::template rows<Matrix>();
+				auto constexpr N = K::template cols<Matrix>();
+
+				auto const I = K::template identity<typename K::InputInputMatrix>();
+				work_.qp_.set_R(i_, i, j, R + work_.levenbergMarquardt_ * K::template block<M, N>(I, i, j));
+										   // ^ Adding Levenberg-Marquardt term to make H positive-definite.
+			}
+
+			template <typename Matrix>
 			void set_S(Matrix const &S) { work_.qp_.set_S(i_, S); }
+
+			template <typename Matrix>
+			void set_S(typename K::size_t i, typename K::size_t j, Matrix const &S)
+			{
+				work_.qp_.set_S(i_, i, j, S);
+			}
 
 			template <typename Vector>
 			void set_q(Vector const &q) { work_.qp_.set_q(i_, q); }
@@ -177,11 +209,23 @@ namespace tmpc
 			template <typename Vector>
 			void set_r(Vector const &r) { work_.qp_.set_r(i_, r); }
 
+			template <typename Vector>
+			void set_r(typename K::size_t i, Vector const &r)
+			{
+				work_.qp_.set_r(i_, i, r);
+			}
+
 			template <typename Matrix>
 			void set_A(Matrix const &A) { work_.qp_.set_A(i_, A); }
 
 			template <typename Matrix>
 			void set_B(Matrix const &B) { work_.qp_.set_B(i_, B); }
+
+			template <typename Matrix>
+			void set_B(typename K::size_t i, typename K::size_t j, Matrix const &B)
+			{
+				work_.qp_.set_B(i_, i, j, B);
+			}
 
 			template <typename Vector>
 			void set_x_next(Vector const& x_next)
@@ -210,10 +254,28 @@ namespace tmpc
 			void set_x_max(Vector const& x_max) { work_.upperBound_.set_x(i_, x_max); }
 
 			template <typename Vector>
-			void set_u_min(Vector const& u_min) { work_.lowerBound_.set_u(i_, u_min); }
+			void set_u_min(Vector const& u_min)
+			{
+				work_.lowerBound_.set_u(i_, u_min);
+			}
 
 			template <typename Vector>
-			void set_u_max(Vector const& u_max) { work_.upperBound_.set_u(i_, u_max); }
+			void set_u_min(typename K::size_t i, Vector const& u_min)
+			{
+				work_.lowerBound_.set_u(i_, i, u_min);
+			}
+
+			template <typename Vector>
+			void set_u_max(Vector const& u_max)
+			{
+				work_.upperBound_.set_u(i_, u_max);
+			}
+
+			template <typename Vector>
+			void set_u_max(typename K::size_t i, Vector const& u_max)
+			{
+				work_.upperBound_.set_u(i_, i, u_max);
+			}
 
 		private:
 			std::size_t const i_;
@@ -286,9 +348,53 @@ namespace tmpc
 			Work& work_;
 		};
 
+		/**
+		 * \brief Set all data of the QP to NaN.
+		 */
+		void SetQpNaN()
+		{
+			auto constexpr nan = std::numeric_limits<typename K::Scalar>::signaling_NaN();
+			auto& qp = work_.qp_;
+
+			for (unsigned i = 0; i < nT(); ++i)
+			{
+				qp.set_Q(i, K::template constant<typename K::StateStateMatrix>(nan));
+				qp.set_R(i, K::template constant<typename K::InputInputMatrix>(nan));
+				qp.set_S(i, K::template constant<typename K::StateInputMatrix>(nan));
+				qp.set_q(i, K::template constant<typename K::StateVector>(nan));
+				qp.set_r(i, K::template constant<typename K::InputVector>(nan));
+
+				qp.set_A(i, K::template constant<typename K::StateStateMatrix>(nan));
+				qp.set_B(i, K::template constant<typename K::StateInputMatrix>(nan));
+
+				qp.set_x_min(i, K::template constant<typename K::StateVector>(nan));
+				qp.set_x_max(i, K::template constant<typename K::StateVector>(nan));
+				qp.set_u_min(i, K::template constant<typename K::InputVector>(nan));
+				qp.set_u_max(i, K::template constant<typename K::InputVector>(nan));
+
+				qp.set_C(i, K::template constant<typename K::ConstraintStateMatrix>(nan));
+				qp.set_D(i, K::template constant<typename K::ConstraintInputMatrix>(nan));
+
+				qp.set_d_min(i, K::template constant<typename K::ConstraintVector>(nan));
+				qp.set_d_max(i, K::template constant<typename K::ConstraintVector>(nan));
+			}
+
+			set_Q_end(qp, K::template constant<typename K::StateStateMatrix>(nan));
+			set_q_end(qp, K::template constant<typename K::StateVector>(nan));
+
+			set_x_end_min(qp, K::template constant<typename K::StateVector>(nan));
+			set_x_end_max(qp, K::template constant<typename K::StateVector>(nan));
+
+			qp.set_C_end(K::template constant<typename K::TerminalConstraintStateMatrix>(nan));
+			qp.set_d_end_min(K::template constant<typename K::TerminalConstraintVector>(nan));
+			qp.set_d_end_max(K::template constant<typename K::TerminalConstraintVector>(nan));
+		}
+
 		// Uses ocp_ to initialize _QP based on current working point workingPoint_.
 		void InitQP()
 		{
+			SetQpNaN();
+
 			for (unsigned i = 0; i < nT(); ++i)
 			{
 				Stage stage(i, work_);
@@ -315,7 +421,7 @@ namespace tmpc
 		/// \brief Internal work data structure.
 		struct Work
 		{
-			double levenbergMarquardt_ = 0.;
+			typename K::Scalar levenbergMarquardt_ = 0.;
 
 			/// \brief The working point (linearization point).
 			WorkingPoint workingPoint_;
@@ -332,23 +438,25 @@ namespace tmpc
 			Work(WorkingPoint const& working_point)
 			:	workingPoint_(working_point)
 			,	lowerBound_(working_point.nT(),
-					K::template constant<typename K::StateVector>(-std::numeric_limits<typename K::Scalar>::infinity()),
-					K::template constant<typename K::InputVector>(-std::numeric_limits<typename K::Scalar>::infinity()))
+					K::template constant<typename K::StateVector>(-inf_),
+					K::template constant<typename K::InputVector>(-inf_))
 			,	upperBound_(working_point.nT(),
-					K::template constant<typename K::StateVector>( std::numeric_limits<typename K::Scalar>::infinity()),
-					K::template constant<typename K::InputVector>( std::numeric_limits<typename K::Scalar>::infinity()))
+					K::template constant<typename K::StateVector>( inf_),
+					K::template constant<typename K::InputVector>( inf_))
 			,	qp_(working_point.nT())
 			{
 			}
 		};
 
 		// Private data members.
-		OCP const& _ocp;
+		OCP const& _ocp;	// <-- TODO: change to value semantics
 		Solution solution_;
-		QPSolver& solver_;
+		QPSolver& solver_;	// <-- TODO: change to value semantics
 		Work work_;
 
 		// Preparation() sets this flag to true, Feedback() resets it to false.
 		bool _prepared;
+
+		static auto constexpr inf_ = std::numeric_limits<typename K::Scalar>::infinity();
 	};
 }

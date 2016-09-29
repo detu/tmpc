@@ -52,16 +52,26 @@ public:
 	typedef Vector<NX> StateVector;
 	typedef Vector<NY> OutputVector;
 	typedef Vector<NC> ConstraintVector;
+	typedef Vector<NCT> TerminalConstraintVector;
+
 	typedef Matrix<NX, NX> StateStateMatrix;
 	typedef Matrix<NX, NU> StateInputMatrix;
-	typedef Matrix<NU, NU> InputInputMatrix;
 	typedef Matrix<NX, NW> StateDisturbanceMatrix;
+
+	typedef Matrix<NU, NU> InputInputMatrix;
+
+	typedef Matrix<NW, NW> DisturbanceDisturbanceMatrix;
+
 	typedef Matrix<NC, NU> ConstraintInputMatrix;
+	typedef Matrix<NC, NX> ConstraintStateMatrix;
+
+	typedef Matrix<NCT, NU> TerminalConstraintInputMatrix;
+	typedef Matrix<NCT, NX> TerminalConstraintStateMatrix;
+
 	typedef Matrix<NY, NX> OutputStateMatrix;
 	typedef Matrix<NY, NU> OutputInputMatrix;
 	typedef Matrix<NY, NW> OutputDisturbanceMatrix;
 	typedef Matrix<NY, NY> OutputOutputMatrix;
-	typedef Matrix<NW, NW> DisturbanceDisturbanceMatrix;
 
 	/*
 	template <typename Matrix>

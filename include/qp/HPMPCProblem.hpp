@@ -8,6 +8,7 @@
 
 namespace tmpc
 {
+	// TODO: make these types rely on a Kernel and move them away from tmpc namespace.
 	template< unsigned M, unsigned N >
 	struct HPMPCMatrixType
 	{
@@ -35,8 +36,10 @@ namespace tmpc
 	template< unsigned NX, unsigned NU >
 	using HPMPCMatrix = typename HPMPCMatrixType<NX, NU>::type;
 
-	/* Stores data for a multistage QP problem.
+	/* \brief Stores data for a multistage QP problem.
 	 * The storage format is what is expected by the c_order_d_ip_ocp_hard_tv() function from HPMPC.
+	 *
+	 * TODO: convert the formulas to LaTeX/Doxygen format
 	 *
 	 *  The problem is stated as following:
 	*
@@ -53,8 +56,10 @@ namespace tmpc
 	*
 	*	nX < nZ
 	*	nU = nZ - nX
+	*
+	*	TODO: parameterize HPMPCProblem by a kernel class.
 	*/
-	template<unsigned NX_, unsigned NU_, unsigned NC_, unsigned NCT_>
+	template <unsigned NX_, unsigned NU_, unsigned NC_, unsigned NCT_>
 	class HPMPCProblem
 	{
 	public:
@@ -97,25 +102,115 @@ namespace tmpc
 		template<class Matrix> void set_Q(std::size_t i, Eigen::MatrixBase<Matrix> const& Q) { stage(i, 1)._Q = Q; }
 		HPMPC_QMatrix const& get_Q(std::size_t i) const { return stage(i, 1)._Q; }
 
-		template<class Matrix> void set_R(std::size_t i, Eigen::MatrixBase<Matrix> const& R) { stage(i)._R = R; }
+		/**
+		 * \brief Set R matrix of stage k
+		 */
+		template<class Matrix>
+		void set_R(std::size_t k, size_type i, size_type j, Eigen::MatrixBase<Matrix> const& R)
+		{
+			stage(k)._R.template block<Matrix::RowsAtCompileTime, Matrix::ColsAtCompileTime>(i, j) = R;
+		}
+
+		/**
+		 * \brief Set block of R matrix of stage k with its top left corner at (i, j)
+		 */
+		template<class Matrix>
+		void set_R(std::size_t k, Eigen::MatrixBase<Matrix> const& R)
+		{
+			stage(k)._R = R;
+		}
+
+		/**
+		 * \brief Get R matrix of stage i
+		 */
 		HPMPC_RMatrix const& get_R(std::size_t i) const { return stage(i)._R; }
 
-		// HPMPC "S" size is NUxNX, whereas the MultiStageQuadraticProblem interface assumes NXxNU,
-		// hence the transposes.
-		template<class Matrix> void set_S(std::size_t i, Eigen::MatrixBase<Matrix> const& S) { stage(i)._S = S.transpose(); }
-		decltype(auto) get_S(std::size_t i) const { return stage(i)._S.transpose(); }
+		/**
+		 * \brief Set S matrix of stage k
+		 */
+		template<class Matrix>
+		void set_S(std::size_t k, Eigen::MatrixBase<Matrix> const& S)
+		{
+			// HPMPC "S" size is NUxNX, whereas the MultiStageQuadraticProblem interface assumes NXxNU,
+			// hence the transpose.
+			stage(k)._S = S.transpose();
+		}
+
+		/**
+		 * \brief Set block of S matrix of stage k with its top left corner at (i, j)
+		 */
+		template<class Matrix>
+		void set_S(std::size_t k, size_type i, size_type j, Eigen::MatrixBase<Matrix> const& S)
+		{
+			// HPMPC "S" size is NUxNX, whereas the MultiStageQuadraticProblem interface assumes NXxNU,
+			// hence the transpose and swapping of indices and sizes:
+			// (i, j) -> (j, i)
+			// <Matrix::RowsAtCompileTime, Matrix::ColsAtCompileTime> -> <Matrix::ColsAtCompileTime, Matrix::RowsAtCompileTime>
+			stage(k)._S.template block<Matrix::ColsAtCompileTime, Matrix::RowsAtCompileTime>(j, i) = S.transpose();
+		}
+
+		/**
+		 * \brief Get S matrix of stage k
+		 */
+		decltype(auto) get_S(std::size_t k) const { return stage(k)._S.transpose(); }
 
 		template<class Matrix> void set_q(std::size_t i, Eigen::MatrixBase<Matrix> const& q) { stage(i, 1)._q = q; }
 		StateVector const& get_q(std::size_t i) const { return stage(i, 1)._q; }
 
-		template<class Matrix> void set_r(std::size_t i, Eigen::MatrixBase<Matrix> const& r) { stage(i)._r = r; }
-		InputVector const& get_r(std::size_t i) const { return stage(i)._r; }
+		/**
+		 * \brief Set r vector of stage k
+		 */
+		template <class Matrix>
+		void set_r(std::size_t k, Eigen::MatrixBase<Matrix> const& r)
+		{
+			stage(k)._r = r;
+		}
+
+		/**
+		 * \brief Set a block of r vector of stage k starting from element i
+		 */
+		template <class Matrix>
+		void set_r(std::size_t k, size_type i, Eigen::MatrixBase<Matrix> const& r)
+		{
+			stage(k)._r.template middleRows<Matrix::RowsAtCompileTime>(i) = r;
+		}
+
+		/**
+		 * \brief Get r vector of stage k
+		 */
+		InputVector const& get_r(std::size_t k) const
+		{
+			return stage(k)._r;
+		}
 
 		template<class Matrix> void set_A(std::size_t i, Eigen::MatrixBase<Matrix> const& A) { stage(i)._A = A; }
 		HPMPC_AMatrix const& get_A(std::size_t i) const { return stage(i)._A; }
 
-		template<class Matrix> void set_B(std::size_t i, Eigen::MatrixBase<Matrix> const& B) { stage(i)._B = B; }
-		HPMPC_BMatrix const& get_B(std::size_t i) const { return stage(i)._B; }
+		/**
+		 * \brief Set B matrix of stage k
+		 */
+		template <class Matrix>
+		void set_B(std::size_t k, Eigen::MatrixBase<Matrix> const& B)
+		{
+			stage(k)._B = B;
+		}
+
+		/**
+		 * \brief Set a block of B matrix of stage k with its top left corner at (i, j)
+		 */
+		template <class Matrix>
+		void set_B(std::size_t k, size_type i, size_type j, Eigen::MatrixBase<Matrix> const& B)
+		{
+			stage(k)._B.template block<Matrix::RowsAtCompileTime, Matrix::ColsAtCompileTime>(i, j) = B;
+		}
+
+		/**
+		 * \brief Get B matrix of stage k
+		 */
+		HPMPC_BMatrix const& get_B(std::size_t k) const
+		{
+			return stage(k)._B;
+		}
 
 		template<class Matrix> void set_b(std::size_t i, Eigen::MatrixBase<Matrix> const& val) { stage(i)._b = val; }
 		StateVector const& get_b(std::size_t i) const { return stage(i)._b; }
@@ -157,11 +252,57 @@ namespace tmpc
 			return stage(i, 1)._ub.template middleRows<NX>(i < nT() ? NU : 0);
 		}
 
-		template<class Matrix> void set_u_min(std::size_t i, Eigen::MatrixBase<Matrix> const& val) { stage(i)._lb.template topRows<NU>() = val; }
-		decltype(auto) get_u_min(std::size_t i) const { return stage(i)._lb.template topRows<NU>(); }
+		/**
+		 * \brief Set lower input bound for stage k
+		 */
+		template <class Vector>
+		void set_u_min(std::size_t k, Eigen::MatrixBase<Vector> const& val)
+		{
+			stage(k)._lb.template topRows<NU>() = val;
+		}
 
-		template<class Matrix> void set_u_max(std::size_t i, Eigen::MatrixBase<Matrix> const& val) { stage(i)._ub.template topRows<NU>() = val; }
-		decltype(auto) get_u_max(std::size_t i) const { return stage(i)._ub.template topRows<NU>(); }
+		/**
+		 * \brief Set part of lower input bound for stage k starting from element i
+		 */
+		template <class Vector>
+		void set_u_min(std::size_t k, size_type i, Eigen::MatrixBase<Vector> const& val)
+		{
+			stage(k)._lb.template topRows<NU>().template middleRows<Vector::RowsAtCompileTime>(i) = val;
+		}
+
+		/**
+		 * \brief Get lower input bound for stage k
+		 */
+		decltype(auto) get_u_min(std::size_t k) const
+		{
+			return stage(k)._lb.template topRows<NU>();
+		}
+
+		/**
+		 * \brief Set upper input bound for stage k
+		 */
+		template <class Vector>
+		void set_u_max(std::size_t k, Eigen::MatrixBase<Vector> const& val)
+		{
+			stage(k)._ub.template topRows<NU>() = val;
+		}
+
+		/**
+		 * \brief Set upper input bound for stage k starting from element i
+		 */
+		template <class Vector>
+		void set_u_max(std::size_t k, size_type i, Eigen::MatrixBase<Vector> const& val)
+		{
+			stage(k)._ub.template topRows<NU>().template middleRows<Vector::RowsAtCompileTime>(i) = val;
+		}
+
+		/**
+		 * \brief Get upper input bound for stage k
+		 */
+		decltype(auto) get_u_max(std::size_t k) const
+		{
+			return stage(k)._ub.template topRows<NU>();
+		}
 
 		// ******************************************************
 		//                HPMPC raw data interface.

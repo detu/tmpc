@@ -204,9 +204,10 @@ TYPED_TEST(RealtimeIterationTest, GivesCorrectU0)
 
 	// Step 0
 	{
+		this->Preparation();
+
 		x << 1, 0;
 		u = this->Feedback(x);
-		this->Preparation();
 
 		OCP::InputVector u_expected;
 		u_expected << -0.690877362606266;
@@ -216,6 +217,8 @@ TYPED_TEST(RealtimeIterationTest, GivesCorrectU0)
 
 	// Step 1
 	{
+		this->Preparation();
+
 		{
 			OCP::StateVector x;
 			OCP::InputVector u;

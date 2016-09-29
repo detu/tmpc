@@ -38,8 +38,31 @@ namespace tmpc
 		StateVector const& get_x(std::size_t i) const { return x_.at(i); }
 		template <typename Matrix> void set_x(std::size_t i, Eigen::MatrixBase<Matrix> const& val) { x_.at(i) = val; }
 
-		InputVector const& get_u(std::size_t i) const { return u_.at(i); }
-		template <typename Matrix> void set_u(std::size_t i, Eigen::MatrixBase<Matrix> const& val) { u_.at(i) = val; }
+		/**
+		 * \brief Get input value at stage k
+		 */
+		InputVector const& get_u(std::size_t k) const
+		{
+			return u_.at(k);
+		}
+
+		/**
+		 * \brief Set input value at stage k
+		 */
+		template <typename Vector>
+		void set_u(std::size_t k, Eigen::MatrixBase<Vector> const& val)
+		{
+			u_.at(k) = val;
+		}
+
+		/**
+		 * \brief Set part of input value at stage k starting from element i
+		 */
+		template <typename Vector>
+		void set_u(std::size_t k, Eigen::Index i, Eigen::MatrixBase<Vector> const& val)
+		{
+			u_.at(k).template middleRows<Vector::RowsAtCompileTime>(i) = val;
+		}
 
 		DisturbanceVector const& get_w(std::size_t i) const { return w_.at(i); }
 		template <typename Matrix> void set_w(std::size_t i, Eigen::MatrixBase<Matrix> const& val) { w_.at(i) = val; }

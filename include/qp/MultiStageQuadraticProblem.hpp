@@ -59,24 +59,122 @@ namespace tmpc
 		StateStateMatrix const& get_Q(size_type i) const { return stage(i, 1).Q; }
 		template <typename Matrix> void set_Q(size_type i, Eigen::MatrixBase<Matrix> const& val) { stage(i, 1).Q = val; }
 
-		InputInputMatrix const& get_R(size_type i) const { return stage(i).R; }
-		template <typename Matrix> void set_R(size_type i, Eigen::MatrixBase<Matrix> const& val) { stage(i).R = val; }
+		/**
+		 * \brief Get R matrix of stage k
+		 */
+		InputInputMatrix const& get_R(size_type k) const
+		{
+			return stage(k).R;
+		}
 
-		StateInputMatrix const& get_S(size_type i) const { return stage(i).S; }
-		template <typename Matrix> void set_S(size_type i, Eigen::MatrixBase<Matrix> const& val) { stage(i).S = val; }
+		/**
+		 * \brief Set R matrix of a given stage
+		 */
+		template <typename Matrix>
+		void set_R(size_type k, Eigen::MatrixBase<Matrix> const& val)
+		{
+			stage(k).R = val;
+		}
 
+		/**
+		 * \brief Set block of R matrix of stage k with its top left corner at (i, j)
+		 */
+		template <typename Matrix>
+		void set_R(size_type k, Eigen::Index i, Eigen::Index j, Eigen::MatrixBase<Matrix> const& val)
+		{
+			stage(k).R.template block<Matrix::RowsAtCompileTime, Matrix::ColsAtCompileTime>(i, j) = val;
+		}
+
+		/**
+		 * \brief Get S matrix of stage k
+		 */
+		StateInputMatrix const& get_S(size_type k) const
+		{
+			return stage(k).S;
+		}
+		
+		/**
+		 * \brief Set S matrix of stage k
+		 */
+		template <typename Matrix>
+		void set_S(size_type k, Eigen::MatrixBase<Matrix> const& val)
+		{
+			stage(k).S = val;
+		}
+		
+		/**
+		 * \brief Set block of S matrix of stage k with its top left corner at (i, j)
+		 */
+		template <typename Matrix>
+		void set_S(size_type k, Eigen::Index i, Eigen::Index j, Eigen::MatrixBase<Matrix> const& val)
+		{
+			stage(k).S.template block<Matrix::RowsAtCompileTime, Matrix::ColsAtCompileTime>(i, j) = val;
+		}
+
+		/**
+		*/
 		StateVector const& get_q(size_type i) const { return stage(i, 1).q; }
 		template <typename Matrix> void set_q(size_type i, Eigen::MatrixBase<Matrix> const& val) { stage(i, 1).q = val; }
 
-		InputVector const& get_r(size_type i) const { return stage(i).r; }
-		template <typename Matrix> void set_r(size_type i, Eigen::MatrixBase<Matrix> const& val) { stage(i).r = val; }
+		/**
+		 * \brief Get r vector of stage k
+		 */
+		InputVector const& get_r(size_type k) const
+		{
+			return stage(k).r;
+		}
 
+		/**
+		 * \brief Set r vector of stage k
+		 */
+		template <typename Matrix>
+		void set_r(size_type k, Eigen::MatrixBase<Matrix> const& val)
+		{
+			stage(k).r = val;
+		}
+		
+		/**
+		 * \brief Set a block of r vector of stage k starting from element i
+		 */
+		template <typename Matrix>
+		void set_r(size_type k, Eigen::Index i, Eigen::MatrixBase<Matrix> const& val)
+		{
+			stage(k).r.template middleRows<Matrix::RowsAtCompileTime>(i) = val;
+		}
+		 
+		/**
+		*/
 		StateStateMatrix const& get_A(size_type i) const { return stage(i).A; }
 		template <typename Matrix> void set_A(size_type i, Eigen::MatrixBase<Matrix> const& val) { stage(i).A = val; }
 
-		StateInputMatrix const& get_B(size_type i) const { return stage(i).B; }
-		template <typename Matrix> void set_B(size_type i, Eigen::MatrixBase<Matrix> const& val) { stage(i).B = val; }
+		/**
+		 * \brief Get B matrix of stage k
+		 */
+		StateInputMatrix const& get_B(size_type k) const
+		{
+			return stage(k).B;
+		}
 
+		/**
+		 * \brief Set B matrix of stage k
+		 */
+		template <typename Matrix>
+		void set_B(size_type k, Eigen::MatrixBase<Matrix> const& val)
+		{
+			stage(k).B = val;
+		}
+
+		/**
+		 * \brief Set a block of B matrix of stage k with its top left corner at (i, j)
+		 */
+		template <typename Matrix>
+		void set_B(size_type k, Eigen::Index i, Eigen::Index j, Eigen::MatrixBase<Matrix> const& val)
+		{
+			stage(k).B.template block<Matrix::RowsAtCompileTime, Matrix::ColsAtCompileTime>(i, j) = val;
+		}
+
+		/**
+		*/
 		StateVector const& get_b(size_type i) const { return stage(i).b; }
 		template <typename Matrix> void set_b(size_type i, Eigen::MatrixBase<Matrix> const& val) { stage(i).b = val; }
 

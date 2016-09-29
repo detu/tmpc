@@ -84,13 +84,37 @@ namespace tmpc
 		qp.set_u_max(i, QP::InputVector::Constant(val));
 	}
 
-	template<typename QP>
+	/**
+	 * \brief Set terminal state lower bound
+	 */
+	template <typename QP, typename Matrix>
+	void set_x_end_min(QP& qp, Matrix const& val)
+	{
+		qp.set_x_min(qp.nT(), val);
+	}
+
+	/**
+	 * \brief Set terminal state lower bound
+	 */
+	template <typename QP>
 	void set_x_end_min(QP& qp, double val)
 	{
 		qp.set_x_min(qp.nT(), QP::StateVector::Constant(val));
 	}
 
-	template<typename QP>
+	/**
+	 * \brief Set terminal state upper bound
+	 */
+	template <typename QP, typename Matrix>
+	void set_x_end_max(QP& qp, Matrix const& val)
+	{
+		qp.set_x_max(qp.nT(), val);
+	}
+
+	/**
+	 * \brief Set terminal state upper bound
+	 */
+	template <typename QP>
 	void set_x_end_max(QP& qp, double val)
 	{
 		qp.set_x_max(qp.nT(), QP::StateVector::Constant(val));
