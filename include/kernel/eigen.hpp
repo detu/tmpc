@@ -400,6 +400,12 @@ public:
 	}
 
 	template <typename Matrix>
+	static decltype(auto) norm_2(Eigen::MatrixBase<Matrix> const& m)
+	{
+		return m.norm();
+	}
+
+	template <typename Matrix>
 	static decltype(auto) inverse(Eigen::MatrixBase<Matrix> const& m)
 	{
 		return m.inverse();
