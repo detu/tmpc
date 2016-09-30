@@ -23,6 +23,38 @@ template <typename Scalar_, unsigned NX_, unsigned NU_, unsigned NW_,
 	unsigned NY_, unsigned NP_, unsigned NC_, unsigned NCT_, int EigenOptions = Eigen::ColMajor>
 class EigenKernel
 {
+	template <unsigned M, unsigned N>
+	struct MatrixTypeSelector
+	{
+		typedef Eigen::Matrix<Scalar_, M, N, EigenOptions> type;
+	};
+
+	/*
+	template <unsigned M>
+	struct MatrixTypeSelector<M, 1>
+	{
+		typedef Eigen::Matrix<Scalar_, M, 1, EigenOptions> type;
+	};
+	*/
+
+	/**
+	 * 1-by-N matrices must be Eigen::RowMajor, otherwise the following error is spit from Eigen:
+	 * /usr/local/include/eigen3/Eigen/src/Core/PlainObjectBase.h:862:7:  error: static_assert failed "INVALID_MATRIX_TEMPLATE_PARAMETERS"
+	 */
+	template< unsigned N >
+	struct MatrixTypeSelector<1, N>
+	{
+		typedef Eigen::Matrix<Scalar_, 1, N, Eigen::RowMajor> type;
+	};
+
+	/*
+	template<>
+	struct MatrixTypeSelector<1, 1>
+	{
+		typedef Eigen::Matrix<double, 1, 1, EigenOptions> type;
+	};
+	*/
+
 public:
 	EigenKernel() = delete;
 
@@ -38,7 +70,7 @@ public:
 	static size_t constexpr NCT = NCT_;
 
 	template <unsigned M, unsigned N>
-	using Matrix = Eigen::Matrix<Scalar, M, N, EigenOptions>;
+	using Matrix = typename MatrixTypeSelector<M, N>::type;
 
 	template <unsigned M>
 	using Vector = Eigen::Matrix<Scalar, M, 1, EigenOptions>;
@@ -64,6 +96,7 @@ public:
 
 	typedef Matrix<NC, NU> ConstraintInputMatrix;
 	typedef Matrix<NC, NX> ConstraintStateMatrix;
+	typedef Matrix<NC, NC> ConstraintConstraintMatrix;
 
 	typedef Matrix<NCT, NU> TerminalConstraintInputMatrix;
 	typedef Matrix<NCT, NX> TerminalConstraintStateMatrix;

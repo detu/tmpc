@@ -24,6 +24,7 @@ namespace tmpc
 
 	public:
 		typedef QPSolver_ QPSolver;
+		typedef typename QPSolver::Problem QP;
 
 		// TODO: parameterize Trajectory with K
 		typedef Trajectory<NX, NU> WorkingPoint;
@@ -103,9 +104,14 @@ namespace tmpc
 
 			if (work_.levenbergMarquardt_ != val)
 			{
-				InitQP();	// Re-initialize QPs because of the changing levenbergMarquardt_ value.
 				work_.levenbergMarquardt_ = val;
+				InitQP();	// Re-initialize QPs because of the changed levenbergMarquardt_ value.
 			}
+		}
+
+		QP const& getQP() const
+		{
+			return work_.qp_;
 		}
 
 		/*
@@ -117,7 +123,6 @@ namespace tmpc
 
 	private:
 		typedef typename QPSolver::Solution Solution;
-		typedef typename QPSolver::Problem QP;
 
 		struct Work;
 
