@@ -65,7 +65,19 @@ namespace tmpc
 			_problem.setOptions(options);
 		}
 
+		/**
+		 * \brief Copy constructor.
+		 *
+		 * Copying is not allowed.
+		 */
 		CondensingSolver(CondensingSolver const&) = delete;
+
+		/**
+		 * \brief Move constructor.
+		 *
+		 * Move-construction is ok.
+		 */
+		CondensingSolver(CondensingSolver&&) = default;
 
 		size_type nT() const { return _Nt; }
 		size_type constexpr nX() { return NX; }
@@ -116,6 +128,10 @@ namespace tmpc
 		int _nWSR = 0;
 
 		bool _hotStart = false;
+
+		// TODO: wrap _problem into a pimpl to
+		// a) Reduce dependencies
+		// b) Avoid deep-copy of qpOASES::SQProblem object of move-construction of CondensingSolver.
 		qpOASES::SQProblem _problem;
 		unsigned _maxWorkingSetRecalculations = 1000;
 	};

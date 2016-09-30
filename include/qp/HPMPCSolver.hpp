@@ -81,7 +81,19 @@ namespace tmpc
 					static_cast<int>(nt), _nx.data(), _nu.data(), _nb.data(), _ng.data()));
 		}
 
+		/**
+		 * \brief Copy constructor
+		 *
+		 * Copying is not allowed.
+		 */
 		HPMPCSolver(HPMPCSolver const&) = delete;
+
+		/**
+		 * \brief Move constructor
+		 *
+		 * Move-construction is ok.
+		 */
+		HPMPCSolver(HPMPCSolver&& rhs) = default;
 
 		void Solve(Problem const& p, Solution& s)
 		{
@@ -147,7 +159,7 @@ namespace tmpc
 		 *
 		 * Normal infinity will not, so don't forget to change it to something else if you are going to use infinite bounds!
 		 */
-		void setInfinity(Scalar val) const
+		void setInfinity(Scalar val)
 		{
 			if (!(val > 0.))
 				throw std::invalid_argument("HPMPCSolver::setInvinity(): infinity must be greater than 0.");

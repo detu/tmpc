@@ -127,6 +127,18 @@ public:
 		return Matrix::Constant(val);
 	}
 
+	template <size_t M, size_t N>
+	static typename Matrix<M, N>::ConstantReturnType constant(Scalar val)
+	{
+		return Matrix<M, N>::Constant(val);
+	}
+
+	template <size_t M>
+	static typename Vector<M>::ConstantReturnType constant(Scalar val)
+	{
+		return Vector<M>::Constant(val);
+	}
+
 	static typename DynamicMatrix::ConstantReturnType zero(size_t M, size_t N)
 	{
 		return DynamicMatrix::Zero(M, N);
@@ -141,6 +153,18 @@ public:
 	static typename Matrix::ConstantReturnType zero()
 	{
 		return Matrix::Zero();
+	}
+
+	template <size_t M, size_t N>
+	static typename Matrix<M, N>::ConstantReturnType zero()
+	{
+		return Matrix<M, N>::Zero();
+	}
+
+	template <size_t M>
+	static typename Vector<M>::ConstantReturnType zero()
+	{
+		return Vector<M>::Zero();
 	}
 
 	template <typename Matrix>
@@ -374,6 +398,12 @@ public:
 	static typename DynamicMatrix::IdentityReturnType identity(size_t M, size_t N)
 	{
 		return DynamicMatrix::Identity(M, N);
+	}
+
+	template <size_t M, size_t N>
+	static typename Matrix<M, N>::IdentityReturnType identity()
+	{
+		return Matrix<M, N>::Identity();
 	}
 
 	template <typename Matrix>
