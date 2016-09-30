@@ -61,7 +61,7 @@ namespace tmpc
 				using namespace hpmpc_problem_export;
 
 				{
-					std::ofstream os("failed_qp.m");
+					std::ofstream os("failed_qp_hpmpc.m");
 					os << std::scientific << std::setprecision(std::numeric_limits<double>::digits10 + 1);
 
 					MATLABFormatter f(os, "qp.");
@@ -77,7 +77,7 @@ namespace tmpc
 				}
 
 				{
-					std::ofstream os("failed_qp.c");
+					std::ofstream os("failed_qp_hpmpc.c");
 					os << std::scientific << std::setprecision(std::numeric_limits<double>::digits10 + 1);
 
 					CFormatter f(os);
@@ -92,7 +92,7 @@ namespace tmpc
 						C, D, lg, ug, x, u);
 				}
 
-				throw_hpmpc_error(ret, "The QP dumped to failed_qp.m and failed_qp.c");
+				throw_hpmpc_error(ret, "The QP dumped to failed_qp_hpmpc.m and failed_qp_hpmpc.c");
 			}
 		}
 
