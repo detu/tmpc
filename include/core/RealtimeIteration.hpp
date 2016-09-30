@@ -1,10 +1,11 @@
 #pragma once
 
+#include <qp/diagnostics.hpp>
 #include "Trajectory.hpp"
 #include "../qp/qp.hpp"
-
 #include <stdexcept>
 #include <limits>
+#include <iterator>
 //#include <type_traits>
 
 namespace tmpc
@@ -421,6 +422,22 @@ namespace tmpc
 
 			TerminalStage terminal_stage(work_);
 			_ocp.UpdateTerminalStage(terminal_stage);
+
+#ifndef NDEBUG
+			// Error catching: check if we have any unexpected NaNs of infs in QP after update.
+
+			std::vector<std::string> messages;
+			qp::diagnose<K>(work_.qp_, std::back_inserter(messages));
+
+			if (!messages.empty())
+			{
+				std::stringstream err_msg;
+				err_msg << "RealtimeIteration encountered an ill-formed QP. Messages follow:" << std::endl;
+				std::copy(messages.begin(), messages.end(), std::ostream_iterator<std::string>(err_msg, "\n"));
+
+				throw std::logic_error(err_msg.str());
+			}
+#endif
 		}
 
 		/// \brief Internal work data structure.

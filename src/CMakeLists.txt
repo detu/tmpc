@@ -1,6 +1,8 @@
 #
 # tmpc/src
 #
+# TODO: add all sources from the root CMakeLists.txt
+#
 
 set (SRC
     ${PROJECT_INCLUDE_DIR}/core/RealtimeIteration.hpp
@@ -14,6 +16,8 @@ set (SRC
 
 	${PROJECT_INCLUDE_DIR}/qp/Condensing.hpp
 	${PROJECT_INCLUDE_DIR}/qp/MultiStageQPSolution.hpp
+	
+	${PROJECT_INCLUDE_DIR}/qp/diagnostics.hpp
 )
 
 add_library(tmpc STATIC ${SRC})

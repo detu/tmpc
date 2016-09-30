@@ -5,6 +5,7 @@
 #include "../core/matrix.hpp"
 
 #include <cstddef>
+#include <stdexcept>
 
 namespace tmpc
 {
