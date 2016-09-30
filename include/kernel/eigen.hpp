@@ -519,6 +519,24 @@ public:
 	{
 		return m.template triangularView<Eigen::Upper>();
 	}
+
+	/**
+	 * \brief Returns true if at least one of the elements of m is NaN
+	 */
+	template <typename Matrix>
+	static bool has_NaN(Eigen::MatrixBase<Matrix> const& m)
+	{
+		return m.hasNaN();
+	}
+
+	/**
+	 * \brief Returns true if all elements of m are finite (not NaN of inf).
+	 */
+	template <typename Matrix>
+	static bool all_finite(Eigen::MatrixBase<Matrix> const& m)
+	{
+		return m.allFinite();
+	}
 };
 
 }
