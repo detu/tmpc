@@ -9,6 +9,7 @@ set (SRC
     ${PROJECT_INCLUDE_DIR}/core/Trajectory.hpp
     ${PROJECT_INCLUDE_DIR}/core/gauss_newton.hpp
     ${PROJECT_INCLUDE_DIR}/core/matrix.hpp
+    ${PROJECT_INCLUDE_DIR}/core/problem_specific.hpp
 
 	${PROJECT_INCLUDE_DIR}/casadi_interface/GeneratedFunction.hpp
 

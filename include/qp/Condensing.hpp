@@ -8,9 +8,14 @@ namespace tmpc
 	/**
 	 * \brief Condense a multistage (sparse) QP to a dense QP.
 	 *
-	 * \tparam K class implementing the Kernel concept
+	 * \tparam <K> Class implementing the Kernel concept
+	 * \tparam <D> Class defining problem dimensions
+	 * \tparam <MultiStageQP_> Class implementing MultiStageQP concept
+	 * \tparam <CondensedQP_> Class implementing DenseQP concept
+	 *
+	 * TODO: should D be deduced from MultiStageQP_ or not?
 	 * */
-	template <typename K, typename MultiStageQP_, typename CondensedQP_>
+	template <typename K, typename D, typename MultiStageQP_, typename CondensedQP_>
 	void Condense(MultiStageQP_ const& msqp, CondensedQP_& condensed_qp)
 	{
 		if (nIndep(msqp) != condensed_qp.nx())
@@ -29,16 +34,16 @@ namespace tmpc
 			throw std::invalid_argument(msg.str());
 		}
 
-		auto constexpr nX = K::NX;
-		auto constexpr nU = K::NU;
-		auto constexpr nD = K::NC;
-		auto constexpr nDT = K::NCT;
+		auto constexpr nX = D::NX;
+		auto constexpr nU = D::NU;
+		auto constexpr nD = D::NC;
+		auto constexpr nDT = D::NCT;
 		auto const nT = msqp.nT();
 		auto const n_indep = nIndep(msqp);
 		auto constexpr nC = nX + nD;
 
 		typename K::DynamicMatrix M = K::identity(nX, n_indep);
-		typename K::StateVector v = K::template zero<typename K::StateVector>();
+		typename K::template Vector<D::NX> v = K::template zero<D::NX>();
 
 		auto& Hc = condensed_qp.H();
 		auto& gc = condensed_qp.g();

@@ -2,6 +2,7 @@
 #include <qp/Condensing.hpp>
 #include <qp/qpOASESProgram.hpp>
 #include <kernel/eigen.hpp>
+#include <core/problem_specific.hpp>
 
 #include "qp_test_problems.hpp"
 #include "gtest_tools_eigen.hpp"
@@ -10,14 +11,27 @@
 
 #include <iostream>
 
-// Define a kernel
-typedef tmpc::EigenKernel<double, 2 /*NX*/, 1 /*NU*/, 0 /*NW*/,
-		0 /*NY*/, 0 /*NP*/, 0 /*NC*/, 0 /*unsigned NCT*/> K;
+// Define dimensions
+struct Dimensions
+{
+	static unsigned constexpr NX = 2;
+	static unsigned constexpr NU = 1;
+	static unsigned constexpr NW = 0;
+	static unsigned constexpr NY = 0;
+	static unsigned constexpr NP = 0;
+	static unsigned constexpr NC = 0;
+	static unsigned constexpr NCT = 0;
+};
+
+typedef tmpc::EigenKernel<double> KBase;
+
+// Define a kernel augmented with problem-specific types
+struct K : KBase, tmpc::ProblemSpecific<KBase, Dimensions> {};
 
 auto constexpr NT = 2u;
 auto constexpr NZ = K::NX + K::NU;
 
-typedef tmpc::CondensingSolver<K> Solver;
+typedef tmpc::CondensingSolver<K, Dimensions> Solver;
 typedef Solver::Problem Problem;
 typedef Solver::Solution Solution;
 
@@ -96,7 +110,7 @@ TEST(CondensingSolver_test, condensing_test)
 
 	// Condense
 	tmpc::qpOASESProgram condensed(nIndep(qp), nDep(qp) + nConstr(qp));
-	tmpc::Condense<K>(qp, condensed);
+	tmpc::Condense<K, Dimensions>(qp, condensed);
 
 	const auto Hc = condensed.H();
 	Eigen::MatrixXd Hc_expected(nIndep(qp), nIndep(qp));

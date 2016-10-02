@@ -10,6 +10,7 @@
 #include "../include/qp/Printing.hpp"
 
 #include <kernel/eigen.hpp>
+#include <core/problem_specific.hpp>
 
 #include "qp_test_problems.hpp"
 
@@ -34,13 +35,26 @@ protected:
 	Solver solver_;
 };
 
+// Define dimensions
+struct Dimensions
+{
+	static unsigned constexpr NX = 2;
+	static unsigned constexpr NU = 1;
+	static unsigned constexpr NW = 0;
+	static unsigned constexpr NY = 0;
+	static unsigned constexpr NP = 0;
+	static unsigned constexpr NC = 0;
+	static unsigned constexpr NCT = 0;
+};
+
 // Define a kernel
-typedef tmpc::EigenKernel<double, 2 /*NX*/, 1 /*NU*/, 0 /*NW*/,
-		0 /*NY*/, 0 /*NP*/, 0 /*NC*/, 0 /*unsigned NCT*/> K;
+typedef tmpc::EigenKernel<double> K;
+
+typedef tmpc::ProblemSpecific<tmpc::EigenKernel<double>, Dimensions> PS;
 
 typedef ::testing::Types<
-		tmpc::CondensingSolver<K>
-,		tmpc::HPMPCSolver     <K>
+		tmpc::CondensingSolver<K, Dimensions>
+,		tmpc::HPMPCSolver     <K, Dimensions>
 	> SolverTypes;
 
 TYPED_TEST_CASE(QPSolverTest, SolverTypes);
@@ -53,8 +67,8 @@ TYPED_TEST(QPSolverTest, solve_test_0)
 	typename TestFixture::Solver::Solution solution(this->solver_.nT());
 	this->solver_.Solve(qp, solution);
 
-	Eigen::Matrix<double, TestFixture::Solver::NX, 1> x_expected;
-	Eigen::Matrix<double, TestFixture::Solver::NU, 1> u_expected;
+	PS::StateVector x_expected;
+	PS::InputVector u_expected;
 
 	x_expected << 1., -1.;	u_expected << -1;
 	EXPECT_TRUE(solution.get_x(0).isApprox(x_expected));
@@ -76,8 +90,8 @@ TYPED_TEST(QPSolverTest, solve_test_1)
 	typename TestFixture::Solver::Solution solution(this->solver_.nT());
 	this->solver_.Solve(qp, solution);
 
-	Eigen::Matrix<double, TestFixture::Solver::NX, 1> x_expected;
-	Eigen::Matrix<double, TestFixture::Solver::NU, 1> u_expected;
+	PS::StateVector x_expected;
+	PS::InputVector u_expected;
 
 	x_expected << 1., 0.;	u_expected << -0.690877362606266;
 	EXPECT_TRUE(solution.get_x(0).isApprox(x_expected, 1e-6));

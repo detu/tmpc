@@ -3,6 +3,7 @@
 #include "../include/qp/HPMPCSolver.hpp"
 #include "../include/integrator/rk4.hpp"
 #include <kernel/eigen.hpp>
+#include <core/problem_specific.hpp>
 
 #include <Eigen/Dense>
 
@@ -14,13 +15,17 @@ struct Dimensions
 {
 	static unsigned const NX = 2;
 	static unsigned const NU = 1;
-	static unsigned const ND = 0;
-	static unsigned const NDT = 0;
+	static unsigned const NW = 0;
+	static unsigned const NY = 0;
+	static unsigned const NP = 0;
+	static unsigned const NC = 0;
+	static unsigned const NCT = 0;
 };
 
 // Define a kernel
-typedef tmpc::EigenKernel<double, Dimensions::NX, Dimensions::NU, 0 /*NW*/,
-		0 /*NY*/, 0 /*NP*/, Dimensions::ND /*NC*/, Dimensions::NDT /*unsigned NCT*/> K;
+typedef tmpc::EigenKernel<double> K;
+
+typedef tmpc::ProblemSpecific<K, Dimensions> PS;
 
 // An empty class for ODE, since we provide the discrete-time dynamics ourselves.
 struct ODE
@@ -36,8 +41,8 @@ public:
 	static unsigned const NC  = 0;
 	static unsigned const NCT = 0;
 
-	typedef Eigen::Matrix<double, NX, 1> StateVector;
-	typedef Eigen::Matrix<double, NU, 1> InputVector;
+	typedef K::Vector<NX> StateVector;
+	typedef K::Vector<NU> InputVector;
 
 	SampleOCP(std::size_t nt)
 	:	nt_(nt)
@@ -71,21 +76,21 @@ public:
 	template <typename Stage>
 	void InitStage(Stage& stage) const
 	{
-		Eigen::Matrix<double, NX, NX> Q;
+		K::Matrix<NX, NX> Q;
 		Q << 66,  78,
 			 78,  93;
 
-		Eigen::Matrix<double, NU, NU> R;
+		K::Matrix<NU, NU> R;
 		R << 126;
 
-		Eigen::Matrix<double, NX, NU> S;
+		K::Matrix<NX, NU> S;
 		S << 90,
 			108;
 
-		Eigen::Matrix<double, NX, 1> q;
+		K::Vector<NX> q;
 		q << 0., 0.;
 
-		Eigen::Matrix<double, NU, 1> r;
+		K::Vector<NU> r;
 		r << 0.;
 
 		stage.set_Q(Q);
@@ -113,11 +118,11 @@ public:
 	template <typename Stage>
 	void InitTerminalStage(Stage& stage) const
 	{
-		Eigen::Matrix<double, NX, NX> H;
+		K::Matrix<NX, NX> H;
 		H << 10, 14,
 			 14, 20;
 
-		Eigen::Matrix<double, NX, 1> g;
+		K::Vector<NX> g;
 		g << 0, 0;
 
 		stage.set_Q(H);
@@ -153,8 +158,8 @@ private:
 	InputVector _u_min;
 	InputVector _u_max;
 
-	Eigen::Matrix<double, NX, NX> A;
-	Eigen::Matrix<double, NX, NU> B;
+	K::Matrix<NX, NX> A;
+	K::Matrix<NX, NU> B;
 };
 
 typedef SampleOCP OCP;
@@ -191,16 +196,17 @@ protected:
 };
 
 typedef ::testing::Types<
-		tmpc::RealtimeIteration<K, OCP, tmpc::CondensingSolver<K>>
-,		tmpc::RealtimeIteration<K, OCP, tmpc::HPMPCSolver     <K>>
+		// TODO: make Solver a template template parameter of RealtimeIteration?
+		tmpc::RealtimeIteration<K, Dimensions, OCP, tmpc::CondensingSolver<K, Dimensions>>
+,		tmpc::RealtimeIteration<K, Dimensions, OCP, tmpc::HPMPCSolver     <K, Dimensions>>
 	> RTITypes;
 
 TYPED_TEST_CASE(RealtimeIterationTest, RTITypes);
 
 TYPED_TEST(RealtimeIterationTest, GivesCorrectU0)
 {
-	OCP::StateVector x;
-	OCP::InputVector u;
+	PS::StateVector x;
+	PS::InputVector u;
 
 	// Step 0
 	{
@@ -209,7 +215,7 @@ TYPED_TEST(RealtimeIterationTest, GivesCorrectU0)
 		x << 1, 0;
 		u = this->Feedback(x);
 
-		OCP::InputVector u_expected;
+		PS::InputVector u_expected;
 		u_expected << -0.690877362606266;
 
 		EXPECT_TRUE(u.isApprox(u_expected, 1e-6));
@@ -220,8 +226,8 @@ TYPED_TEST(RealtimeIterationTest, GivesCorrectU0)
 		this->Preparation();
 
 		{
-			OCP::StateVector x;
-			OCP::InputVector u;
+			PS::StateVector x;
+			PS::InputVector u;
 
 			x << 0.654561318696867,	 -0.690877362606266;	u << 0.215679569867116;
 			EXPECT_TRUE(this->_rti.getWorkingPoint().get_x(0).isApprox(x, 1e-6));
@@ -238,7 +244,7 @@ TYPED_TEST(RealtimeIterationTest, GivesCorrectU0)
 		x << 0.654561318696867,	-0.690877362606266;
 		u = this->Feedback(x);
 
-		OCP::InputVector u_expected;
+		PS::InputVector u_expected;
 		u_expected << 0.218183;
 		EXPECT_TRUE(u.isApprox(u_expected, 1e-5));
 	}
