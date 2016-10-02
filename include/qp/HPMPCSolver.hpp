@@ -30,19 +30,21 @@ namespace tmpc
 	/**
 	 * \brief Multistage QP solver using qpOASES
 	 *
-	 * \tparam K a class implementing the Kernel concept
+	 * \tparam <K> Class implementing the Kernel concept
+	 * \tparam <D> Class defining problem dimensions
 	 */
-	template <typename K>
+	template <typename K, typename D>
 	class HPMPCSolver
 	{
-	public:
-		static auto constexpr NX = K::NX;
-		static auto constexpr NU = K::NU;
-		static auto constexpr NZ = K::NX + K::NU;
-		static auto constexpr NC = K::NC;
-		static auto constexpr NCT = K::NCT;
+		static auto constexpr NX = D::NX;
+		static auto constexpr NU = D::NU;
+		static auto constexpr NZ = D::NX + D::NU;
+		static auto constexpr NC = D::NC;
+		static auto constexpr NCT = D::NCT;
 
 		typedef typename K::Scalar Scalar;
+
+	public:
 
 		typedef HPMPCProblem<NX, NU, NC, NCT> Problem;
 		typedef HPMPCSolution<NX, NU, NC, NCT> Solution;

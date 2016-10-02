@@ -4,23 +4,16 @@
 
 namespace tmpc
 {
-
 /**
- * \brief Class defining problem dimensions, vector and matrix types,
+ * \brief Class defining vector types, matrix types
  * and algebraic operations using Eigen3 library.
  *
  * \tparam Scalar_ scalar type used for matrices and vectors
- * \tparam NX_ number of states
- * \tparam NU_ number of inputs
- * \tparam NW_ number of unmeasured disturbances
- * \tparam NY_ number of measured outputs
- * \tparam NP_ number of system parameters
- * \tparam NC_ number of path constraints
- * \tparam NCT_ number of terminal path constraints
  * \tparam EigenOptions options for Eigen controlling matrix layout (ColMajor/RowMajor) and alignment.
+ *
+ * NOTE: Can be conveniently used as a mix-in class.
  */
-template <typename Scalar_, unsigned NX_, unsigned NU_, unsigned NW_,
-	unsigned NY_, unsigned NP_, unsigned NC_, unsigned NCT_, int EigenOptions = Eigen::ColMajor>
+template <typename Scalar_, int EigenOptions = Eigen::ColMajor>
 class EigenKernel
 {
 	template <unsigned M, unsigned N>
@@ -56,18 +49,8 @@ class EigenKernel
 	*/
 
 public:
-	EigenKernel() = delete;
-
 	typedef Scalar_ Scalar;
 	typedef Eigen::Index size_t;
-
-	static size_t constexpr NX = NX_;
-	static size_t constexpr NU = NU_;
-	static size_t constexpr NY = NY_;
-	static size_t constexpr NW = NW_;
-	static size_t constexpr NP = NP_;
-	static size_t constexpr NC = NC_;
-	static size_t constexpr NCT = NCT_;
 
 	template <unsigned M, unsigned N>
 	using Matrix = typename MatrixTypeSelector<M, N>::type;
@@ -77,34 +60,6 @@ public:
 
 	typedef Eigen::Matrix<Scalar, Eigen::Dynamic, Eigen::Dynamic, EigenOptions> DynamicMatrix;
 	typedef Eigen::Matrix<Scalar, Eigen::Dynamic, 1, EigenOptions> DynamicVector;
-
-	typedef Vector<NP> ParameterVector;
-	typedef Vector<NU> InputVector;
-	typedef Vector<NW> DisturbanceVector;
-	typedef Vector<NX> StateVector;
-	typedef Vector<NY> OutputVector;
-	typedef Vector<NC> ConstraintVector;
-	typedef Vector<NCT> TerminalConstraintVector;
-
-	typedef Matrix<NX, NX> StateStateMatrix;
-	typedef Matrix<NX, NU> StateInputMatrix;
-	typedef Matrix<NX, NW> StateDisturbanceMatrix;
-
-	typedef Matrix<NU, NU> InputInputMatrix;
-
-	typedef Matrix<NW, NW> DisturbanceDisturbanceMatrix;
-
-	typedef Matrix<NC, NU> ConstraintInputMatrix;
-	typedef Matrix<NC, NX> ConstraintStateMatrix;
-	typedef Matrix<NC, NC> ConstraintConstraintMatrix;
-
-	typedef Matrix<NCT, NU> TerminalConstraintInputMatrix;
-	typedef Matrix<NCT, NX> TerminalConstraintStateMatrix;
-
-	typedef Matrix<NY, NX> OutputStateMatrix;
-	typedef Matrix<NY, NU> OutputInputMatrix;
-	typedef Matrix<NY, NW> OutputDisturbanceMatrix;
-	typedef Matrix<NY, NY> OutputOutputMatrix;
 
 	/*
 	template <typename Matrix>

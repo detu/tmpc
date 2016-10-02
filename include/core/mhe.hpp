@@ -12,16 +12,18 @@ namespace tmpc
 	/**
 	 * \brief Implements moving horizon estimation algorithm.
 	 *
-	 * \tparam <K> A class implementing the Kernel concept
-	 * \tparam <Problem> A class describing Trajectory Estimation Problem.
+	 * \tparam <K> Class implementing the Kernel concept
+	 * \tparam <D> Class defining problem dimensions
+	 * \tparam <Problem> Class describing Trajectory Estimation Problem.
+	 * \tparam <QPSolver_> QP solver class.
 	 */
-	template <typename K, typename Problem, typename QPSolver_>
+	template <typename K, typename D, typename Problem, typename QPSolver_>
 	class MovingHorizonEstimator
 	{
-		static auto constexpr NX = K::NX;
-		static auto constexpr NU = K::NU;
-		static auto constexpr NW = K::NW;
-		static auto constexpr NY = K::NY;
+		static auto constexpr NX = D::NX;
+		static auto constexpr NU = D::NU;
+		static auto constexpr NW = D::NW;
+		static auto constexpr NY = D::NY;
 
 	public:
 		typedef QPSolver_ QPSolver;
@@ -190,7 +192,7 @@ namespace tmpc
 			void set_C(Matrix const &C) { work_.qp_.set_C(i_, C); }
 
 			template <typename Matrix>
-			void set_D(Matrix const &D) { work_.qp_.set_D(i_, D); }
+			void set_D(Matrix const &val) { work_.qp_.set_D(i_, val); }
 
 			template <typename Vector>
 			void set_d_min(Vector const& d_min) { work_.qp_.set_d_min(i_, d_min); }
@@ -312,15 +314,15 @@ namespace tmpc
 			Work(WorkingPoint const& working_point)
 			:	workingPoint_(working_point)
 			,	lowerBound_(working_point.nT(),
-					constant<typename Bound::StateVector>(-std::numeric_limits<double>::infinity()),
-					constant<typename Bound::InputVector>(-std::numeric_limits<double>::infinity()),
-					constant<typename Bound::DisturbanceVector>(-std::numeric_limits<double>::infinity()),
-					constant<typename Bound::MeasurementVector>(-std::numeric_limits<double>::infinity()))
+					K::template constant<NX>(-std::numeric_limits<typename K::Scalar>::infinity()),
+					K::template constant<0>(-std::numeric_limits<typename K::Scalar>::infinity()),
+					K::template constant<NW>(-std::numeric_limits<typename K::Scalar>::infinity()),
+					K::template constant<0>(-std::numeric_limits<typename K::Scalar>::infinity()))
 			,	upperBound_(working_point.nT(),
-					constant<typename Bound::StateVector>( std::numeric_limits<double>::infinity()),
-					constant<typename Bound::InputVector>( std::numeric_limits<double>::infinity()),
-					constant<typename Bound::DisturbanceVector>( std::numeric_limits<double>::infinity()),
-					constant<typename Bound::MeasurementVector>( std::numeric_limits<double>::infinity()))
+					K::template constant<NX>( std::numeric_limits<typename K::Scalar>::infinity()),
+					K::template constant<0>( std::numeric_limits<typename K::Scalar>::infinity()),
+					K::template constant<NW>( std::numeric_limits<typename K::Scalar>::infinity()),
+					K::template constant<0>( std::numeric_limits<typename K::Scalar>::infinity()))
 			,	qp_(working_point.nT())
 			{
 			}

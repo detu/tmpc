@@ -13,15 +13,16 @@ namespace tmpc
 	/**
 	 * \brief Implements an MPC controller with realtime iteration scheme.
 	 *
-	 * \tparam K is a class implementing Kernel concept
+	 * \tparam <K> Class implementing the Kernel concept
+	 * \tparam <D> Class defining problem dimensions
 	 */
-	template <typename K, typename OCP, typename QPSolver_>
+	template <typename K, typename D, typename OCP, typename QPSolver_>
 	class RealtimeIteration
 	{
-		static auto constexpr NX = K::NX;
-		static auto constexpr NU = K::NU;
-		static auto constexpr NC = K::NC;
-		static auto constexpr NCT = K::NCT;
+		static auto constexpr NX = D::NX;
+		static auto constexpr NU = D::NU;
+		static auto constexpr NC = D::NC;
+		static auto constexpr NCT = D::NCT;
 
 	public:
 		typedef QPSolver_ QPSolver;
@@ -195,7 +196,7 @@ namespace tmpc
 				auto constexpr M = K::template rows<Matrix>();
 				auto constexpr N = K::template cols<Matrix>();
 
-				auto const I = K::template identity<typename K::InputInputMatrix>();
+				auto const I = K::template identity<D::NU, D::NU>();
 				work_.qp_.set_R(i_, i, j, R + work_.levenbergMarquardt_ * K::template block<M, N>(I, i, j));
 										   // ^ Adding Levenberg-Marquardt term to make H positive-definite.
 			}
@@ -245,7 +246,7 @@ namespace tmpc
 			void set_C(Matrix const &C) { work_.qp_.set_C(i_, C); }
 
 			template <typename Matrix>
-			void set_D(Matrix const &D) { work_.qp_.set_D(i_, D); }
+			void set_D(Matrix const &val) { work_.qp_.set_D(i_, val); }
 
 			template <typename Vector>
 			void set_d_min(Vector const& d_min) { work_.qp_.set_d_min(i_, d_min); }
@@ -364,36 +365,36 @@ namespace tmpc
 
 			for (unsigned i = 0; i < nT(); ++i)
 			{
-				qp.set_Q(i, K::template constant<typename K::StateStateMatrix>(nan));
-				qp.set_R(i, K::template constant<typename K::InputInputMatrix>(nan));
-				qp.set_S(i, K::template constant<typename K::StateInputMatrix>(nan));
-				qp.set_q(i, K::template constant<typename K::StateVector>(nan));
-				qp.set_r(i, K::template constant<typename K::InputVector>(nan));
+				qp.set_Q(i, K::template constant<D::NX, D::NX>(nan));
+				qp.set_R(i, K::template constant<D::NU, D::NU>(nan));
+				qp.set_S(i, K::template constant<D::NX, D::NU>(nan));
+				qp.set_q(i, K::template constant<D::NX>(nan));
+				qp.set_r(i, K::template constant<D::NU>(nan));
 
-				qp.set_A(i, K::template constant<typename K::StateStateMatrix>(nan));
-				qp.set_B(i, K::template constant<typename K::StateInputMatrix>(nan));
+				qp.set_A(i, K::template constant<D::NX, D::NX>(nan));
+				qp.set_B(i, K::template constant<D::NX, D::NU>(nan));
 
-				qp.set_x_min(i, K::template constant<typename K::StateVector>(nan));
-				qp.set_x_max(i, K::template constant<typename K::StateVector>(nan));
-				qp.set_u_min(i, K::template constant<typename K::InputVector>(nan));
-				qp.set_u_max(i, K::template constant<typename K::InputVector>(nan));
+				qp.set_x_min(i, K::template constant<D::NX>(nan));
+				qp.set_x_max(i, K::template constant<D::NX>(nan));
+				qp.set_u_min(i, K::template constant<D::NU>(nan));
+				qp.set_u_max(i, K::template constant<D::NU>(nan));
 
-				qp.set_C(i, K::template constant<typename K::ConstraintStateMatrix>(nan));
-				qp.set_D(i, K::template constant<typename K::ConstraintInputMatrix>(nan));
+				qp.set_C(i, K::template constant<D::NC, D::NX>(nan));
+				qp.set_D(i, K::template constant<D::NC, D::NU>(nan));
 
-				qp.set_d_min(i, K::template constant<typename K::ConstraintVector>(nan));
-				qp.set_d_max(i, K::template constant<typename K::ConstraintVector>(nan));
+				qp.set_d_min(i, K::template constant<D::NC>(nan));
+				qp.set_d_max(i, K::template constant<D::NC>(nan));
 			}
 
-			set_Q_end(qp, K::template constant<typename K::StateStateMatrix>(nan));
-			set_q_end(qp, K::template constant<typename K::StateVector>(nan));
+			set_Q_end(qp, K::template constant<D::NX, D::NX>(nan));
+			set_q_end(qp, K::template constant<D::NX>(nan));
 
-			set_x_end_min(qp, K::template constant<typename K::StateVector>(nan));
-			set_x_end_max(qp, K::template constant<typename K::StateVector>(nan));
+			set_x_end_min(qp, K::template constant<D::NX>(nan));
+			set_x_end_max(qp, K::template constant<D::NX>(nan));
 
-			qp.set_C_end(K::template constant<typename K::TerminalConstraintStateMatrix>(nan));
-			qp.set_d_end_min(K::template constant<typename K::TerminalConstraintVector>(nan));
-			qp.set_d_end_max(K::template constant<typename K::TerminalConstraintVector>(nan));
+			qp.set_C_end(K::template constant<D::NCT, D::NX>(nan));
+			qp.set_d_end_min(K::template constant<D::NCT>(nan));
+			qp.set_d_end_max(K::template constant<D::NCT>(nan));
 		}
 
 		// Uses ocp_ to initialize _QP based on current working point workingPoint_.
@@ -460,11 +461,11 @@ namespace tmpc
 			Work(WorkingPoint const& working_point)
 			:	workingPoint_(working_point)
 			,	lowerBound_(working_point.nT(),
-					K::template constant<typename K::StateVector>(-inf_),
-					K::template constant<typename K::InputVector>(-inf_))
+					K::template constant<D::NX>(-inf_),
+					K::template constant<D::NU>(-inf_))
 			,	upperBound_(working_point.nT(),
-					K::template constant<typename K::StateVector>( inf_),
-					K::template constant<typename K::InputVector>( inf_))
+					K::template constant<D::NX>( inf_),
+					K::template constant<D::NU>( inf_))
 			,	qp_(working_point.nT())
 			{
 			}
