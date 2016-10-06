@@ -126,11 +126,7 @@ namespace tmpc
 					_workspace.data(), _stat[0].data());
 
 			// Warmstarting disabled on purpose.
-			// 1. After the Simulink model is executed about 3 times, next runs produce
-			// the "HPMPC returned -1" error. This happens randomly. To make sure that
-			// this bug has nothing to do with warmstarting, I disable it.
-			//_warmStart = true;
-			// 2. On AMD K8 (hpmpc compiled for SSE3), WITHOUT warmstarting it is significantly
+			// On AMD K8 (hpmpc compiled for SSE3), WITHOUT warmstarting it is significantly
 			// FASTER (9ms vs 14ms per time step) than with warmstarting. I am curious why.
 			_warmStart = false;
 		}
