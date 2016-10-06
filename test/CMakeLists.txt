@@ -1,6 +1,7 @@
 #
 # test
 #
+find_package(Threads REQUIRED)    # required for gtest
 
 # Generate code and test data for rk4 test
 add_custom_command(
@@ -79,6 +80,7 @@ target_link_libraries(tmpc_test
     gtest
     gtest_main
     gmock
+    ${CMAKE_THREAD_LIBS_INIT}    # Needed for gtest
     )
 
 #enable_testing()
