@@ -21,12 +21,6 @@ set(EXTERN_DIR "${CMAKE_CURRENT_BINARY_DIR}/extern")
 include_directories("${EXTERN_DIR}/include")
 link_directories("${EXTERN_DIR}/lib")
 
-ExternalProject_Add(googletest
-    PREFIX ${EXTERN_DIR}
-    GIT_REPOSITORY https://github.com/google/googletest.git
-    CMAKE_ARGS "-DCMAKE_INSTALL_PREFIX=${EXTERN_DIR}" "-DBUILD_GMOCK=ON"
-)
-
 if(BUILD_QPDUNES)
     ExternalProject_Add(qpDUNES
                         PREFIX ${EXTERN_DIR}
