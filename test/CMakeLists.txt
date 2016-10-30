@@ -1,6 +1,13 @@
 #
 # test
 #
+ExternalProject_Add(googletest
+    PREFIX ${EXTERN_DIR}
+    GIT_REPOSITORY https://github.com/google/googletest.git
+    CMAKE_ARGS "-DCMAKE_INSTALL_PREFIX=${EXTERN_DIR}" "-DBUILD_GMOCK=ON"
+)
+
+find_package(Threads REQUIRED)    # required for gtest
 
 # Generate code and test data for rk4 test
 add_custom_command(
@@ -79,6 +86,7 @@ target_link_libraries(tmpc_test
     gtest
     gtest_main
     gmock
+    ${CMAKE_THREAD_LIBS_INIT}    # Needed for gtest
     )
 
 #enable_testing()

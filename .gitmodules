@@ -1,3 +1,0 @@
-[submodule "extern/hpmpc"]
-	path = extern/hpmpc
-	url = git@github.com:mkotlyar/hpmpc.git
