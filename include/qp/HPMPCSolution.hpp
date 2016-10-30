@@ -121,6 +121,12 @@ namespace tmpc
 		double * const * t_data() { return _t.data(); }
 		double * inf_norm_res_data() { return _inf_norm_res.data(); }
 
+		/// \brief Get number of iterations performed by the QP solver.
+		unsigned getNumIter() const { return numIter_; }
+
+		/// \brief Set number of iterations performed by the QP solver (called by the solver).
+		void setNumIter(unsigned n) { numIter_ = n; }
+
 	private:
 		struct StageData
 		{
@@ -159,5 +165,8 @@ namespace tmpc
 			assert(i < nT());
 			return _stage[i];
 		}
+
+		/// \brief Number of iterations performed by the QP solver.
+		unsigned numIter_ = 0;
 	};
 }

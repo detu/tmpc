@@ -87,6 +87,12 @@ namespace tmpc
 		decltype(auto) get_lam_d_end_min() const { return signaling_nan<EndStageConstraintVector>(); }
 		decltype(auto) get_lam_d_end_max() const { return signaling_nan<EndStageConstraintVector>(); }
 
+		/// \brief Get number of iterations performed by the QP solver.
+		unsigned getNumIter() const { return numIter_; }
+
+		/// \brief Set number of iterations performed by the QP solver (called by the solver).
+		void setNumIter(unsigned n) { numIter_ = n; }
+
 	private:
 		struct StageData
 		{
@@ -113,5 +119,8 @@ namespace tmpc
 			assert(i < nT());
 			return _stage[i];
 		}
+
+		/// \brief Number of iterations performed by the QP solver.
+		unsigned numIter_ = 0;
 	};
 }

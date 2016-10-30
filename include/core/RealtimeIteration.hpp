@@ -78,6 +78,9 @@ namespace tmpc
 			return work_.workingPoint_.get_u(0);
 		}
 
+		/// \brief Number of iterations performed by the QP solver during the last Feedback phase.
+		unsigned getNumIter() const { return solution_.getNumIter(); }
+
 		void Preparation()
 		{
 			if (_prepared)
