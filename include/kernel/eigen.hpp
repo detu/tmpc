@@ -50,7 +50,7 @@ class EigenKernel
 
 public:
 	typedef Scalar_ Scalar;
-	typedef Eigen::Index size_t;
+	typedef unsigned size_t;
 
 	template <unsigned M, unsigned N>
 	using Matrix = typename MatrixTypeSelector<M, N>::type;

@@ -4,10 +4,13 @@ project (tmpc)
 SET(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/CMakeModules;${CMAKE_MODULE_PATH})
 set(PROJECT_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/include)
 
-find_package(Eigen3 3.2.92)
+find_package(Eigen3 3.2.10 REQUIRED)
 
 if (EIGEN3_FOUND)
+    message(STATUS "Eigen3 Found in ${EIGEN3_INCLUDE_DIR}") 
     include_directories(${EIGEN3_INCLUDE_DIR})
+else()
+    message(STATUS "Eigen3 NOT FOUND") 
 endif()
 
 include(ExternalProject)

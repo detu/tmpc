@@ -80,7 +80,7 @@ namespace tmpc
 		 * \brief Set block of R matrix of stage k with its top left corner at (i, j)
 		 */
 		template <typename Matrix>
-		void set_R(size_type k, Eigen::Index i, Eigen::Index j, Eigen::MatrixBase<Matrix> const& val)
+		void set_R(size_type k, unsigned i, unsigned j, Eigen::MatrixBase<Matrix> const& val)
 		{
 			stage(k).R.template block<Matrix::RowsAtCompileTime, Matrix::ColsAtCompileTime>(i, j) = val;
 		}
@@ -106,7 +106,7 @@ namespace tmpc
 		 * \brief Set block of S matrix of stage k with its top left corner at (i, j)
 		 */
 		template <typename Matrix>
-		void set_S(size_type k, Eigen::Index i, Eigen::Index j, Eigen::MatrixBase<Matrix> const& val)
+		void set_S(size_type k, unsigned i, unsigned j, Eigen::MatrixBase<Matrix> const& val)
 		{
 			stage(k).S.template block<Matrix::RowsAtCompileTime, Matrix::ColsAtCompileTime>(i, j) = val;
 		}
@@ -137,7 +137,7 @@ namespace tmpc
 		 * \brief Set a block of r vector of stage k starting from element i
 		 */
 		template <typename Matrix>
-		void set_r(size_type k, Eigen::Index i, Eigen::MatrixBase<Matrix> const& val)
+		void set_r(size_type k, unsigned i, Eigen::MatrixBase<Matrix> const& val)
 		{
 			stage(k).r.template middleRows<Matrix::RowsAtCompileTime>(i) = val;
 		}
@@ -168,7 +168,7 @@ namespace tmpc
 		 * \brief Set a block of B matrix of stage k with its top left corner at (i, j)
 		 */
 		template <typename Matrix>
-		void set_B(size_type k, Eigen::Index i, Eigen::Index j, Eigen::MatrixBase<Matrix> const& val)
+		void set_B(size_type k, unsigned i, unsigned j, Eigen::MatrixBase<Matrix> const& val)
 		{
 			stage(k).B.template block<Matrix::RowsAtCompileTime, Matrix::ColsAtCompileTime>(i, j) = val;
 		}

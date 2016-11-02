@@ -59,7 +59,7 @@ namespace tmpc
 		 * \brief Set part of input value at stage k starting from element i
 		 */
 		template <typename Vector>
-		void set_u(std::size_t k, Eigen::Index i, Eigen::MatrixBase<Vector> const& val)
+		void set_u(std::size_t k, unsigned i, Eigen::MatrixBase<Vector> const& val)
 		{
 			u_.at(k).template middleRows<Vector::RowsAtCompileTime>(i) = val;
 		}
