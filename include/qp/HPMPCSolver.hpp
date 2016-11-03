@@ -125,6 +125,8 @@ namespace tmpc
 					lg_.data(), ug_.data(), s.x_data(), s.u_data(), s.pi_data(), s.lam_data(), s.t_data(), s.inf_norm_res_data(),
 					_workspace.data(), _stat[0].data());
 
+			s.setNumIter(num_iter);
+
 			// Warmstarting disabled on purpose.
 			// On AMD K8 (hpmpc compiled for SSE3), WITHOUT warmstarting it is significantly
 			// FASTER (9ms vs 14ms per time step) than with warmstarting. I am curious why.
