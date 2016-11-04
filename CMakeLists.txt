@@ -14,8 +14,6 @@ else()
 endif()
 
 include(ExternalProject)
-option(BUILD_QPOASES "Build qpOASES along with TMPC." ON)
-option(BUILD_HPMPC "Build HPMPC along with TMPC." ON)
 option(BUILD_QPDUNES "Build qpDUNES along with TMPC." ON)
 
 set(EXTERN_DIR "${CMAKE_CURRENT_BINARY_DIR}/extern")
@@ -37,21 +35,7 @@ elseif()
     find_package(qpDUNES)
 endif()
 
-if(BUILD_QPOASES)
-    ExternalProject_Add(qpOASES
-                        PREFIX ${EXTERN_DIR}
-                        #SVN_REPOSITORY https://projects.coin-or.org/svn/qpOASES/stable/3.2
-                        #SVN_TRUST_CERT 1
-                        GIT_REPOSITORY https://github.com/mkotlyar/qpOASES.git
-                        CMAKE_ARGS "-DCMAKE_INSTALL_PREFIX=${EXTERN_DIR}" "-DqpOASES_MAKE_EXAMPLES=OFF"
-                      )
-    set( qpOASES_STATIC_LIBRARIES "${EXTERN_DIR}/lib/libqpOASES.a" )
-    set( qpOASES_INCLUDE_DIRS "${EXTERN_DIR}/include" )
-    set( qpOASES_FOUND TRUE )
-elseif()
-    find_package(qpOASES)
-endif()
-
+find_package(qpOASES)
 find_package(HPMPC)
 
 include(CompilerOptions.cmake)
