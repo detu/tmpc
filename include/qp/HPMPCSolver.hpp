@@ -95,7 +95,32 @@ namespace tmpc
 		 *
 		 * Move-construction is ok.
 		 */
-		HPMPCSolver(HPMPCSolver&& rhs) = default;
+		HPMPCSolver(HPMPCSolver&& rhs)
+		:	_nx(std::move(rhs._nx))
+		,	_nu(std::move(rhs._nu))
+		,	_nb(std::move(rhs._nb))
+		,	_ng(std::move(rhs._ng))
+		,	_workspace(std::move(rhs._workspace))
+		,	_stat(std::move(rhs._stat))
+		,	_mu0(rhs._mu0)
+		,	_muTol(rhs._muTol)
+		,	_warmStart(rhs._warmStart)
+		,	infinity_(rhs.infinity_)
+		,	stageBounds_(std::move(rhs.stageBounds_))
+		,	terminalStageBounds_(rhs.terminalStageBounds_)
+		,	lb_(std::move(rhs.lb_))
+		,	ub_(std::move(rhs.ub_))
+		,	lg_(std::move(rhs.lg_))
+		,	ug_(std::move(rhs.ug_))
+		{
+			lb_.back() = terminalStageBounds_.lb.data();
+			ub_.back() = terminalStageBounds_.ub.data();
+			lg_.back() = terminalStageBounds_.lg.data();
+			ug_.back() = terminalStageBounds_.ug.data();
+		}
+
+		HPMPCSolver& operator= (HPMPCSolver const&) = delete;
+		HPMPCSolver& operator= (HPMPCSolver &&) = delete;
 
 		void Solve(Problem const& p, Solution& s)
 		{

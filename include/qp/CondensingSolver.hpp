@@ -80,7 +80,19 @@ public:
 	 *
 	 * Move-construction is ok.
 	 */
-	CondensingSolver(CondensingSolver&&) = default;
+	CondensingSolver(CondensingSolver&& rhs)
+	:	_Nt(rhs._Nt)
+	,	_condensedQP(rhs._condensedQP)
+	,	_condensedSolution(rhs._condensedSolution)
+	,	_hotStart(rhs._hotStart)
+	,	_problem(rhs._problem)
+	,	_maxWorkingSetRecalculations(rhs._maxWorkingSetRecalculations)
+	{
+
+	}
+
+	CondensingSolver& operator=(CondensingSolver const&) = delete;
+	CondensingSolver& operator=(CondensingSolver&&) = delete;
 
 	size_type nT() const { return _Nt; }
 	size_type constexpr nX() { return NX; }

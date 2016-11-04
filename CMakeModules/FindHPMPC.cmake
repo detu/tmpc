@@ -1,12 +1,11 @@
 MESSAGE( STATUS "********************************************************************************" )
 MESSAGE( STATUS "Looking for HPMPC package: \n" )
-
 #
 # Include folders
 #
 MESSAGE( STATUS "Looking for HPMPC include directories" )
 
-FIND_PATH(HPMPC_INCLUDE_DIR "c_interface.h"
+FIND_PATH(HPMPC_INCLUDE_DIR "hpmpc/c_interface.h"
 	HINTS ${HPMPC_DIR}/include $ENV{HPMPC_DIR}/include
 )
 IF( HPMPC_INCLUDE_DIR )

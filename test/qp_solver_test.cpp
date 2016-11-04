@@ -17,6 +17,7 @@
 #include <gtest/gtest.h>
 
 #include <iostream>
+#include <utility>
 
 template <typename Solver_>
 class QPSolverTest : public ::testing::Test
@@ -58,6 +59,32 @@ typedef ::testing::Types<
 	> SolverTypes;
 
 TYPED_TEST_CASE(QPSolverTest, SolverTypes);
+
+/// \brief Check if QPSolver move constructor works and the solver works after move constructor.
+TYPED_TEST(QPSolverTest, move_constructor_test)
+{
+	typename TestFixture::Solver::Problem qp(this->solver_.nT());
+	tmpc_test::qp_problems::problem_0(qp);
+
+	typename TestFixture::Solver::Solution solution(this->solver_.nT());
+
+	typename TestFixture::Solver solver = std::move(this->solver_);
+	solver.Solve(qp, solution);
+
+	PS::StateVector x_expected;
+	PS::InputVector u_expected;
+
+	x_expected << 1., -1.;	u_expected << -1;
+	EXPECT_TRUE(solution.get_x(0).isApprox(x_expected));
+	EXPECT_TRUE(solution.get_u(0).isApprox(u_expected));
+
+	x_expected << 0.5, 0.;	u_expected << -1;
+	EXPECT_TRUE(solution.get_x(1).isApprox(x_expected));
+	EXPECT_TRUE(solution.get_u(1).isApprox(u_expected));
+
+	x_expected << 1., 1;
+	EXPECT_TRUE(solution.get_x(2).isApprox(x_expected));
+}
 
 TYPED_TEST(QPSolverTest, solve_test_0)
 {

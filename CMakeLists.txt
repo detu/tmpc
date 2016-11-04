@@ -52,25 +52,7 @@ elseif()
     find_package(qpOASES)
 endif()
 
-if(BUILD_HPMPC)
-    ExternalProject_Add(hpmpc
-                        PREFIX ${EXTERN_DIR}
-                        GIT_REPOSITORY https://github.com/mkotlyar/hpmpc.git
-                        #BUILD_IN_SOURCE 1
-                        #CONFIGURE_COMMAND ""
-                        #BUILD_COMMAND make static_library
-                        #BUILD_BYPRODUCTS "${EXTERN_DIR}/src/hpmpc/libhpmpc.a"
-                        #INSTALL_COMMAND make PREFIX="${EXTERN_DIR}" install_static
-                        CMAKE_ARGS "-DCMAKE_INSTALL_PREFIX=${EXTERN_DIR}"
-                      )
-    set( HPMPC_STATIC_LIB "${EXTERN_DIR}/lib/libhpmpc.a" )
-    #set( HPMPC_STATIC_LIB "${EXTERN_DIR}/src/hpmpc/libhpmpc.a" )
-    set( HPMPC_INCLUDE_DIR "${EXTERN_DIR}/include/hpmpc" )
-    #set( HPMPC_INCLUDE_DIR "${EXTERN_DIR}/src/hpmpc/include" )
-    set( HPMPC_FOUND TRUE )
-elseif()
-    find_package(HPMPC)
-endif()
+find_package(HPMPC)
 
 include(CompilerOptions.cmake)
 

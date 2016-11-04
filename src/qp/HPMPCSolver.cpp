@@ -7,7 +7,7 @@
 
 #include "HPMPCProblemExport.hpp"
 
-#include <c_interface.h>	// TODO: "c_interface.h" is a very general name; change the design so that it is <hpmpc/c_interface.h>, for example.
+#include <hpmpc/c_interface.h>
 
 #include <stdexcept>
 #include <sstream>
