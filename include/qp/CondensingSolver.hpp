@@ -11,21 +11,9 @@
 
 namespace tmpc {
 
-class qpOASESOptions
-{
-public:
-	static qpOASESOptions Reliable();
-	static qpOASESOptions MPC();
-
-	operator qpOASES::Options const&() const;
-	qpOASES::PrintLevel getPrintLevel() const;
-	qpOASESOptions& setPrintLevel(qpOASES::PrintLevel level);
-
-private:
-	qpOASESOptions(qpOASES::Options const& options);
-
-	qpOASES::Options _options;
-};
+namespace detail {
+qpOASES::Options qpOASES_DefaultOptions();
+}
 
 /**
  * \brief Condensing solver using qpOASES
@@ -59,7 +47,7 @@ public:
 	typedef typename K::size_t size_type;
 	typedef typename K::DynamicVector Vector;
 
-	CondensingSolver(size_type nt, qpOASESOptions const& options = qpOASESOptions::MPC().setPrintLevel(qpOASES::PL_LOW))
+	CondensingSolver(size_type nt, qpOASES::Options const& options = detail::qpOASES_DefaultOptions())
 	:	_Nt(nt)
 	,	_condensedQP(nIndep(nt), nDep(nt) + nConstr(nt))
 	,	_condensedSolution(nIndep(nt))
