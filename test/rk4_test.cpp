@@ -115,7 +115,7 @@ protected:
 	PendulumODE_r ode_r_;
 	Integrator integrator_ {0.01};
 
-	std::ifstream test_data_ {"test/data/rk4/pendulum.txt"};
+	std::ifstream test_data_ {std::string(TEST_DATA_PATH) + "/rk4/pendulum.txt"};
 
 	void SetUp() override
 	{

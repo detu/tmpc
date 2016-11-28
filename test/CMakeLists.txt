@@ -9,16 +9,18 @@ ExternalProject_Add(googletest
 
 find_package(Threads REQUIRED)    # required for gtest
 
+set(TEST_DATA_PATH ${CMAKE_CURRENT_BINARY_DIR}/data)
+
 # Generate code and test data for rk4 test
 add_custom_command(
    OUTPUT
         pendulum_ode_generated.h
         pendulum_ode_generated.c
-        data/rk4/pendulum.txt
+        ${TEST_DATA_PATH}/rk4/pendulum.txt
    COMMAND 
        python 
    ARGS 
-       ${CMAKE_CURRENT_SOURCE_DIR}/rk4_test_generate_data.py
+       ${CMAKE_CURRENT_SOURCE_DIR}/rk4_test_generate_data.py ${TEST_DATA_PATH}
    #[COMMAND command2 [ARGS] [args2...] ...]
    #[MAIN_DEPENDENCY depend]
    DEPENDS 
@@ -68,6 +70,9 @@ add_executable(tmpc_test
     ${CMAKE_CURRENT_BINARY_DIR}/casadi_function_test_generated.h    
     ${CMAKE_CURRENT_BINARY_DIR}/casadi_function_test_generated.c
 )
+
+target_compile_definitions(tmpc_test
+    PRIVATE TEST_DATA_PATH="${TEST_DATA_PATH}")
 
 add_dependencies(tmpc_test googletest)
 
