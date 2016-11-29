@@ -1,8 +1,8 @@
-#include <qp/CondensingSolver.hpp>
-#include <qp/Condensing.hpp>
-#include <qp/qpOASESProgram.hpp>
-#include <kernel/eigen.hpp>
-#include <core/problem_specific.hpp>
+#include <tmpc/qp/CondensingSolver.hpp>
+#include <tmpc/qp/Condensing.hpp>
+#include <tmpc/qp/qpOASESProgram.hpp>
+#include <tmpc/kernel/eigen.hpp>
+#include <tmpc/core/problem_specific.hpp>
 
 #include "qp_test_problems.hpp"
 #include "gtest_tools_eigen.hpp"

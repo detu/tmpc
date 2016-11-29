@@ -5,9 +5,9 @@
  *      Author: kotlyar
  */
 
-#include "../include/qp/MultiStageQuadraticProblem.hpp"
-#include "../include/qp/HPMPCProblem.hpp"
-#include "../include/qp/Printing.hpp"
+#include <tmpc/qp/MultiStageQuadraticProblem.hpp>
+#include <tmpc/qp/HPMPCProblem.hpp>
+#include <tmpc/qp/Printing.hpp>
 
 #include <gtest/gtest.h>
 

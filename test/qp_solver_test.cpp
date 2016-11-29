@@ -5,12 +5,11 @@
  *      Author: kotlyar
  */
 
-#include "../include/qp/CondensingSolver.hpp"
-#include "../include/qp/HPMPCSolver.hpp"
-#include "../include/qp/Printing.hpp"
-
-#include <kernel/eigen.hpp>
-#include <core/problem_specific.hpp>
+#include <tmpc/qp/CondensingSolver.hpp>
+#include <tmpc/qp/HPMPCSolver.hpp>
+#include <tmpc/qp/Printing.hpp>
+#include <tmpc/kernel/eigen.hpp>
+#include <tmpc/core/problem_specific.hpp>
 
 #include "qp_test_problems.hpp"
 
