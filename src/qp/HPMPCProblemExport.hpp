@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../include/qp/qp.hpp"
+#include "qp/qp.hpp"
 
 #include <ostream>
 #include <string>

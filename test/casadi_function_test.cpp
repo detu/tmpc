@@ -1,4 +1,4 @@
-#include <casadi_interface/GeneratedFunction.hpp>
+#include <tmpc/casadi_interface/GeneratedFunction.hpp>
 
 #include "casadi_function_test_generated.h"
 

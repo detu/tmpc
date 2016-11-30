@@ -1,5 +1,5 @@
-#include <integrator/rk4.hpp>
-#include <casadi_interface/GeneratedFunction.hpp>
+#include <tmpc/integrator/rk4.hpp>
+#include <tmpc/casadi_interface/GeneratedFunction.hpp>
 
 #include "pendulum_ode_generated.h"
 #include <gtest/gtest.h>

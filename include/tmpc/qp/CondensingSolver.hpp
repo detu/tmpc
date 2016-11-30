@@ -3,9 +3,9 @@
 #include "qpOASESProgram.hpp"
 
 #include <qpOASES.hpp>
-#include <qp/Condensing.hpp>
-#include <qp/MultiStageQuadraticProblem.hpp>
-#include <qp/MultiStageQPSolution.hpp>
+#include "Condensing.hpp"
+#include "MultiStageQuadraticProblem.hpp"
+#include "MultiStageQPSolution.hpp"
 
 #include <ostream>
 

@@ -5,7 +5,7 @@
  *      Author: kotlyar
  */
 
-#include "../include/qp/HPMPCProblem.hpp"
+#include <tmpc/qp/HPMPCProblem.hpp>
 
 #include <gtest/gtest.h>
 

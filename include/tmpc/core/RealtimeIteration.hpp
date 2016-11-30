@@ -1,8 +1,9 @@
 #pragma once
 
-#include <qp/diagnostics.hpp>
+#include "../qp/diagnostics.hpp"
 #include "Trajectory.hpp"
 #include "../qp/qp.hpp"
+
 #include <stdexcept>
 #include <limits>
 #include <iterator>

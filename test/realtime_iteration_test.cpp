@@ -1,9 +1,9 @@
-#include "../include/core/RealtimeIteration.hpp"
-#include "../include/qp/CondensingSolver.hpp"
-#include "../include/qp/HPMPCSolver.hpp"
-#include "../include/integrator/rk4.hpp"
-#include <kernel/eigen.hpp>
-#include <core/problem_specific.hpp>
+#include <tmpc/core/RealtimeIteration.hpp>
+#include <tmpc/qp/CondensingSolver.hpp>
+#include <tmpc/qp/HPMPCSolver.hpp>
+#include <tmpc/integrator/rk4.hpp>
+#include <tmpc/kernel/eigen.hpp>
+#include <tmpc/core/problem_specific.hpp>
 
 #include <Eigen/Dense>
 
