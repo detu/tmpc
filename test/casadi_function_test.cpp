@@ -14,18 +14,18 @@
 class CasADiFunctionTest : public ::testing::Test
 {
 protected:
-	casadi_interface::GeneratedFunction<CASADI_GENERATED_FUNCTION_INTERFACE(f), 3, 2> fun_;
+	CASADI_GENERATED_FUNCTION_CLASS(f, 3, 2) fun_;
 };
 
 TEST_F(CasADiFunctionTest, incorrect_n_inputs_throws)
 {
-	typedef casadi_interface::GeneratedFunction<CASADI_GENERATED_FUNCTION_INTERFACE(f), 4, 2> wrong_fun_type;
+	typedef CASADI_GENERATED_FUNCTION_CLASS(f, 4, 2) wrong_fun_type;
 	ASSERT_THROW(wrong_fun_type(), std::logic_error);
 }
 
 TEST_F(CasADiFunctionTest, incorrect_n_outputs_throws)
 {
-	typedef casadi_interface::GeneratedFunction<CASADI_GENERATED_FUNCTION_INTERFACE(f), 3, 3> wrong_fun_type;
+	typedef CASADI_GENERATED_FUNCTION_CLASS(f, 3, 3) wrong_fun_type;
 	ASSERT_THROW(wrong_fun_type(), std::logic_error);
 }
 

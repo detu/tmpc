@@ -216,7 +216,8 @@ namespace tmpc
 		,	_stage(nt + 1)	// only some fields of _stage[nt] are used
 		{}
 
-		MultiStageQuadraticProblem(MultiStageQuadraticProblem const&) = delete;
+		// Default copy constructor is ok.
+		MultiStageQuadraticProblem(MultiStageQuadraticProblem const&) = default;
 
 	private:
 		struct StageData

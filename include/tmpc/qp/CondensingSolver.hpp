@@ -6,14 +6,65 @@
 #include "Condensing.hpp"
 #include "MultiStageQuadraticProblem.hpp"
 #include "MultiStageQPSolution.hpp"
+#include "Printing.hpp"
 
 #include <ostream>
+#include <memory>
 
 namespace tmpc {
 
 namespace detail {
 qpOASES::Options qpOASES_DefaultOptions();
 }
+
+class QpOasesSolveException : public std::runtime_error
+{
+public:
+	template <typename QP>
+	QpOasesSolveException(qpOASES::returnValue code, qpOASESProgram const& cqp, QP const& qp) :
+		std::runtime_error("CondensingSolver::Solve() failed. qpOASES return code " + std::to_string(code)),
+		_code(code),
+		_CondensedQP(cqp),
+		qpData_(new QpDataImpl<QP>(qp))
+	{
+	}
+
+	qpOASES::returnValue getCode() const	{ return _code;	}
+	qpOASESProgram const& getCondensedQP() const { return _CondensedQP; }
+
+	void PrintQpAsMatlab(std::ostream& os) const
+	{
+		qpData_->PrintQpAsMatlab(os);
+	}
+
+private:
+	class QpData
+	{
+	public:
+		virtual ~QpData() {}
+		virtual void PrintQpAsMatlab(std::ostream& os) const = 0;
+	};
+
+	template <typename QP>
+	class QpDataImpl : public QpData
+	{
+	public:
+		QpDataImpl(QP const& qp) : qp_(qp) {}
+
+		void PrintQpAsMatlab(std::ostream& os) const override
+		{
+			PrintMultistageQpMatlab(os, qp_, "qp");
+		}
+
+	private:
+		/// \brief Original multistage QP that failed.
+		QP const qp_;
+	};
+
+	qpOASES::returnValue const _code;
+	qpOASESProgram const _CondensedQP;
+	std::unique_ptr<QpData> qpData_;
+};
 
 /**
  * \brief Condensing solver using qpOASES
@@ -132,23 +183,6 @@ private:
 	unsigned _maxWorkingSetRecalculations = 1000;
 
 public:
-	class SolveException : public std::runtime_error
-	{
-	public:
-		SolveException(qpOASES::returnValue code, qpOASESProgram const& cqp) :
-			std::runtime_error("CondensingSolver::Solve() failed. qpOASES return code " + std::to_string(code)),
-			_code(code), _CondensedQP(cqp)
-		{
-		}
-
-		qpOASES::returnValue getCode() const	{ return _code;	}
-		qpOASESProgram const& getCondensedQP() const { return _CondensedQP; }
-
-	private:
-		qpOASES::returnValue const _code;
-		qpOASESProgram const _CondensedQP;
-	};
-
 	void Solve(Problem const& msqp, Solution& solution)
 	{
 		// Check argument sizes.
@@ -170,7 +204,7 @@ public:
 					_condensedQP.lb_data(), _condensedQP.ub_data(), _condensedQP.lbA_data(), _condensedQP.ubA_data(), nWSR);
 
 		if (res != qpOASES::SUCCESSFUL_RETURN)
-			throw SolveException(res, _condensedQP);
+			throw QpOasesSolveException(res, _condensedQP, msqp);
 
 		solution.setNumIter(nWSR);
 		_hotStart = true;

@@ -17,8 +17,10 @@
 #undef real_t
 #endif
 
-#define CASADI_GENERATED_FUNCTION_INTERFACE(name) /*#name,*/ name, name##_incref, name##_decref, name##_n_in, name##_n_out, \
-	name##_name_in, name##_name_out, name##_sparsity_in, name##_sparsity_out, name##_work
+#define CASADI_GENERATED_FUNCTION_INTERFACE(name, N_IN, N_OUT) /*#name,*/ name, name##_incref, name##_decref, name##_n_in, name##_n_out, \
+	name##_name_in, name##_name_out, name##_sparsity_in, name##_sparsity_out, name##_work, N_IN, N_OUT
+#define CASADI_GENERATED_FUNCTION_CLASS(name, N_IN, N_OUT) \
+	::casadi_interface::GeneratedFunction<CASADI_GENERATED_FUNCTION_INTERFACE(name, N_IN, N_OUT)>
 
 namespace casadi_interface
 {

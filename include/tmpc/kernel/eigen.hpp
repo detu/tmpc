@@ -2,6 +2,8 @@
 
 #include <Eigen/Dense>
 
+#include <initializer_list>
+
 namespace tmpc
 {
 /**
@@ -65,6 +67,18 @@ public:
 	template <typename Matrix>
 	using LLT = Eigen::LLT<Matrix>;
 	*/
+
+	template <size_t M>
+	static Vector<M> init_vector(std::initializer_list<Scalar> const val)
+	{
+		if (val.size() > M)
+			throw std::invalid_argument("Invalid number of elements in Vector<> initializer list");
+
+		Vector<M> result;
+		std::copy(val.begin(), val.end(), result.data());
+
+		return result;
+	}
 
 	static typename DynamicMatrix::ConstantReturnType constant(size_t M, size_t N, Scalar val)
 	{
@@ -146,6 +160,10 @@ public:
 		return Matrix::Constant(std::numeric_limits<typename Matrix::Scalar>::signaling_NaN());
 	}
 
+	// TODO:
+	// The reasons to have transpose() as a member of Kernel:
+	// 1. No possibility for name conflicts
+	// 2. Additional level of indirection => for example, call statistics can be gathered, etc.
 	template <typename Matrix>
 	static typename Matrix::ConstTransposeReturnType transpose(Eigen::MatrixBase<Matrix> const& m)
 	{
@@ -494,4 +512,17 @@ public:
 	}
 };
 
+}
+
+// TODO:
+// The reasons to have transpose() as a member of global namespace:
+// 1. Easy syntax, no need to specify kernel. The overload of transpose() is determined by the argument type.
+// 2. Kernel can be made a namespace rather than class, which will make syntax even shorter (using "using").
+//
+// Or should it rather be a member of Kernel, and Kernel be a namespace?
+// Con: if Kernel is a namespace, it can't be parameterized.
+template <typename Matrix>
+static typename Matrix::ConstTransposeReturnType transpose(Eigen::MatrixBase<Matrix> const& m)
+{
+	return m.transpose();
 }
