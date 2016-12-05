@@ -16,6 +16,7 @@ set (SRC
 
 	${TMPC_INCLUDE_DIR}/integrator/rk4.hpp
 
+    ${TMPC_INCLUDE_DIR}/qp/QpSize.hpp
 	${TMPC_INCLUDE_DIR}/qp/Condensing.hpp
 	${TMPC_INCLUDE_DIR}/qp/MultiStageQPSolution.hpp
 	
@@ -26,7 +27,7 @@ add_library(tmpc STATIC ${SRC})
 
 target_include_directories(tmpc
     PRIVATE ${TMPC_INCLUDE_DIR}
-    INTERFACE ${PROJECT_INCLUDE_DIR}
+    PUBLIC ${PROJECT_INCLUDE_DIR}
 )
 
 if (EIGEN3_FOUND)

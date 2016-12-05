@@ -203,7 +203,7 @@ typedef ::testing::Types<
 
 TYPED_TEST_CASE(RealtimeIterationTest, RTITypes);
 
-TYPED_TEST(RealtimeIterationTest, GivesCorrectU0)
+TYPED_TEST(RealtimeIterationTest, DISABLED_GivesCorrectU0)
 {
 	PS::StateVector x;
 	PS::InputVector u;

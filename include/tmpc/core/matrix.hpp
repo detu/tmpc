@@ -1,5 +1,7 @@
 /*
  * Common matrix types and operations.
+ *
+ * NOTE: this file is obsolete. Use tmpc/kernel instead.
  */
 
 #pragma once
