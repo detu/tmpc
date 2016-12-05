@@ -336,9 +336,15 @@ namespace tmpc
 			 */
 			decltype(auto) get_x() const { return work_.workingPoint_.get_x(get_index()); }
 
+			// TODO: Isn't it more flexible and clear to add Lev-Mar in the OCP?
 			template <typename Matrix>
 			void set_Q(Matrix const &Q)	{
 				work_.qp_.set_Q(get_index(), Q + work_.levenbergMarquardt_ * identity<Matrix>());	// Adding Levenberg-Marquardt term to make H positive-definite.
+			}
+
+			decltype(auto) get_Q() const
+			{
+				return work_.qp_.get_Q(get_index());
 			}
 
 			template <typename Vector>

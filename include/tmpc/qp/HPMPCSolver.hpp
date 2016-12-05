@@ -1,18 +1,19 @@
 #pragma once
 
+#include "HPMPCProblem.hpp"
+#include "HPMPCSolution.hpp"
+#include "UnsolvedQpException.hpp"
+
 #include <limits>
 #include <stdexcept>
 #include <algorithm>
 #include <cmath>
 
-#include "HPMPCProblem.hpp"
-#include "HPMPCSolution.hpp"
-
 namespace tmpc
 {
 	namespace hpmpc_wrapper
 	{
-		void c_order_d_ip_ocp_hard_tv(	int *kk, int k_max, double mu0, double mu_tol,
+		int c_order_d_ip_ocp_hard_tv(	int *kk, int k_max, double mu0, double mu_tol,
 										int N, int const *nx, int const *nu, int const *nb, int const *ng,
 										int warm_start,
 										double const * const *A, double const * const *B, double const * const *b,
@@ -26,6 +27,25 @@ namespace tmpc
 
 		int d_ip_ocp_hard_tv_work_space_size_bytes(int N, int const *nx, int const *nu, int const *nb, int const *ng);
 	}
+
+	class HpmpcUnsolvedQpException : public UnsolvedQpException
+	{
+	public:
+		template <typename QP>
+		HpmpcUnsolvedQpException(QP const& qp, int code)
+		:	UnsolvedQpException("HPMPC", qp),
+			_code(code),
+			msg_(std::string(UnsolvedQpException::what()) + "\nReturn code " + std::to_string(code))
+		{
+		}
+
+		int getCode() const	{ return _code;	}
+		char const * what() const noexcept override { return msg_.c_str(); }
+
+	private:
+		int const _code;
+		std::string const msg_;
+	};
 
 	/**
 	 * \brief Multistage QP solver using qpOASES
@@ -144,11 +164,16 @@ namespace tmpc
 			// Call HPMPC
 			int num_iter = 0;
 
-			hpmpc_wrapper::c_order_d_ip_ocp_hard_tv(&num_iter, getMaxIter(), _mu0, _muTol, nT(),
+			auto const ret = hpmpc_wrapper::c_order_d_ip_ocp_hard_tv(&num_iter, getMaxIter(), _mu0, _muTol, nT(),
 					_nx.data(), _nu.data(), _nb.data(), _ng.data(), _warmStart ? 1 : 0, p.A_data(), p.B_data(), p.b_data(),
 					p.Q_data(), p.S_data(), p.R_data(), p.q_data(), p.r_data(), lb_.data(), ub_.data(), p.C_data(), p.D_data(),
 					lg_.data(), ug_.data(), s.x_data(), s.u_data(), s.pi_data(), s.lam_data(), s.t_data(), s.inf_norm_res_data(),
 					_workspace.data(), _stat[0].data());
+
+			if (ret != 0)
+			{
+				throw HpmpcUnsolvedQpException(p, ret);
+			}
 
 			s.setNumIter(num_iter);
 
