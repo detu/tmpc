@@ -28,6 +28,7 @@ namespace tmpc
 	public:
 		typedef QPSolver_ QPSolver;
 		typedef typename QPSolver::Problem QP;
+		typedef typename QPSolver::Solution Solution;
 
 		// TODO: parameterize Trajectory with K
 		typedef Trajectory<NX, NU> WorkingPoint;
@@ -124,6 +125,11 @@ namespace tmpc
 			return work_.qp_;
 		}
 
+		Solution const& getSolution() const
+		{
+			return solution_;
+		}
+
 		/*
 		unsigned nT() const { return _ocp.getNumberOfIntervals(); }
 		unsigned nU() const	noexcept { return _Nu; }
@@ -132,7 +138,6 @@ namespace tmpc
 		*/
 
 	private:
-		typedef typename QPSolver::Solution Solution;
 
 		struct Work;
 
@@ -348,7 +353,15 @@ namespace tmpc
 			}
 
 			template <typename Vector>
-			void set_q(Vector const &q) { work_.qp_.set_q(get_index(), q); }
+			void set_q(Vector const &q)
+			{
+				work_.qp_.set_q(get_index(), q);
+			}
+
+			decltype(auto) get_q() const
+			{
+				return work_.qp_.get_q(get_index());
+			}
 
 			template <typename Matrix>
 			void set_C(Matrix const &C) { work_.qp_.set_C_end(C); }
