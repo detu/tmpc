@@ -89,7 +89,7 @@ namespace tmpc
 				throw std::logic_error("RealtimeIteration::Preparation(): RTI is already prepared.");
 
 			// MK: Working point shifting is disabled. The main reason is that it is possible to have
-			// time step in MPC different (typicaly bigger than) from the controller sampling time.
+			// time step in MPC different (typically bigger than) from the controller sampling time.
 			// Perhaps, shifting policy can be defined externally.
 
 			// shift(work_.workingPoint_);

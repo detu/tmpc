@@ -26,6 +26,182 @@ public:
 	typedef double Scalar;
 	typedef Eigen::Matrix<Scalar, Eigen::Dynamic, Eigen::Dynamic, Options> Matrix;
 	typedef Eigen::Matrix<Scalar, Eigen::Dynamic, 1> Vector;
+	typedef Eigen::Map<Matrix, Eigen::Unaligned, Eigen::OuterStride<>> MatrixMap;
+	typedef Eigen::Map<Vector> VectorMap;
+
+	class Stage
+	{
+	public:
+		Stage(QpSize const& sz, std::size_t nx_next, std::size_t stride,
+				Scalar * H, Scalar * g,	Scalar * lb, Scalar * ub, Scalar * A, Scalar * lbA, Scalar * ubA);
+
+		Stage(Stage const&) = delete;
+		Stage(Stage &&) = default;
+
+		const MatrixMap& get_A() const {
+			return A_;
+		}
+
+		template <typename T>
+		void set_A(const Eigen::MatrixBase<T>& a) {
+			A_ = a;
+		}
+
+		decltype(auto) get_b() const {
+			return -lbb_;
+		}
+
+		template <typename T>
+		void set_b(const Eigen::MatrixBase<T>& b) {
+			lbb_ = ubb_ = -b;
+		}
+
+		const MatrixMap& get_B() const {
+			return B_;
+		}
+
+		template <typename T>
+		void set_B(const Eigen::MatrixBase<T>& b) {
+			B_ = b;
+		}
+
+		const MatrixMap& get_C() const {
+			return C_;
+		}
+
+		template <typename T>
+		void set_C(const Eigen::MatrixBase<T>& c) {
+			C_ = c;
+		}
+
+		const MatrixMap& get_D() const {
+			return D_;
+		}
+
+		template <typename T>
+		void set_D(const Eigen::MatrixBase<T>& d) {
+			D_ = d;
+		}
+
+		const VectorMap& get_lbd() const {
+			return lbd_;
+		}
+
+		template <typename T>
+		void set_lbd(const Eigen::MatrixBase<T>& lbd) {
+			lbd_ = lbd;
+		}
+
+		const VectorMap& get_lbu() const {
+			return lbu_;
+		}
+
+		template <typename T>
+		void set_lbu(const Eigen::MatrixBase<T>& lbu) {
+			lbu_ = lbu;
+		}
+
+		const VectorMap& get_lbx() const {
+			return lbx_;
+		}
+
+		template <typename T>
+		void set_lbx(const Eigen::MatrixBase<T>& lbx) {
+			lbx_ = lbx;
+		}
+
+		const VectorMap& get_q() const {
+			return q_;
+		}
+
+		template <typename T>
+		void set_q(const Eigen::MatrixBase<T>& q) {
+			q_ = q;
+		}
+
+		const MatrixMap& get_Q() const {
+			return Q_;
+		}
+
+		void set_Q(const MatrixMap& q) {
+			Q_ = q;
+		}
+
+		const VectorMap& get_r() const {
+			return r_;
+		}
+
+		template <typename T>
+		void set_r(const Eigen::MatrixBase<T>& r) {
+			r_ = r;
+		}
+
+		const MatrixMap& get_R() const {
+			return R_;
+		}
+
+		template <typename T>
+		void set_R(const Eigen::MatrixBase<T>& r) {
+			R_ = r;
+		}
+
+		const MatrixMap& get_S() const {
+			return S_;
+		}
+
+		template <typename T>
+		void set_S(const Eigen::MatrixBase<T>& s) {
+			S_ = s;
+			ST_ = s.transpose();
+		}
+
+		const VectorMap& get_ubd() const {
+			return ubd_;
+		}
+
+		template <typename T>
+		void set_ubd(const Eigen::MatrixBase<T>& ubd) {
+			ubd_ = ubd;
+		}
+
+		const VectorMap& get_ubu() const {
+			return ubu_;
+		}
+
+		template <typename T>
+		void set_ubu(const Eigen::MatrixBase<T>& ubu) {
+			ubu_ = ubu;
+		}
+
+		const VectorMap& get_ubx() const {
+			return ubx_;
+		}
+
+		template <typename T>
+		void set_ubx(const Eigen::MatrixBase<T>& ubx) {
+			ubx_ = ubx;
+		}
+
+	private:
+		MatrixMap Q_;
+		MatrixMap R_;
+		MatrixMap S_;
+		MatrixMap ST_;
+		VectorMap q_;
+		VectorMap r_;
+		VectorMap lbx_;
+		VectorMap ubx_;
+		VectorMap lbu_;
+		VectorMap ubu_;
+		MatrixMap A_;
+		MatrixMap B_;
+		VectorMap lbb_;
+		VectorMap ubb_;
+		MatrixMap C_;
+		MatrixMap D_;
+		VectorMap lbd_;
+		VectorMap ubd_;
+	};
 
 	qpOASESProgram(size_type nx, size_type nc);
 	/**
@@ -47,13 +223,274 @@ public:
 	{
 	}
 
-	qpOASESProgram(qpOASESProgram const&) = default;
+	qpOASESProgram(qpOASESProgram const& rhs);
+	qpOASESProgram(qpOASESProgram &&) = default;
 
 	size_type nx() const { return static_cast<size_type>(_H.rows()); }
 	size_type nc() const { return static_cast<size_type>(_A.rows()); }
 
+	// Is this going to become a "modern" multistage QP interface?
+	Stage& stage(std::size_t i)
+	{
+		return stage_.at(i);
+	}
+
+	Stage const& stage(std::size_t i) const
+	{
+		return stage_.at(i);
+	}
+
+	// ******************************************************
 	//
-	// Matrix and vector access functions.
+	// Multistage QP interface
+	//
+	// ******************************************************
+	MatrixMap const& get_Q(size_type i) const
+	{
+		return stage(i).get_Q();
+	}
+
+	template <typename Matrix>
+	void set_Q(size_type i, Eigen::MatrixBase<Matrix> const& val)
+	{
+		stage(i).set_Q(val);
+	}
+
+	/**
+	 * \brief Get R matrix of stage k
+	 */
+	MatrixMap const& get_R(size_type k) const
+	{
+		return stage(k).get_R();
+	}
+
+	/**
+	 * \brief Set R matrix of a given stage
+	 */
+	template <typename Matrix>
+	void set_R(size_type k, Eigen::MatrixBase<Matrix> const& val)
+	{
+		stage(k).set_R(val);
+	}
+
+	/**
+	 * \brief Get S matrix of stage k
+	 */
+	MatrixMap const& get_S(size_type k) const
+	{
+		return stage(k).get_S();
+	}
+
+	/**
+	 * \brief Set S matrix of stage k
+	 */
+	template <typename Matrix>
+	void set_S(size_type k, Eigen::MatrixBase<Matrix> const& val)
+	{
+		stage(k).set_S(val);
+	}
+
+	/**
+	 * \brief Get q vector of stage i
+	 */
+	VectorMap const& get_q(size_type i) const
+	{
+		return stage(i).get_q();
+	}
+
+	/**
+	 * \brief Set q vector of stage i
+	 */
+	template <typename Matrix>
+	void set_q(size_type i, Eigen::MatrixBase<Matrix> const& val)
+	{
+		stage(i).set_q(val);
+	}
+
+	/**
+	 * \brief Get r vector of stage k
+	 */
+	VectorMap const& get_r(size_type k) const
+	{
+		return stage(k).get_r();
+	}
+
+	/**
+	 * \brief Set r vector of stage k
+	 */
+	template <typename Matrix>
+	void set_r(size_type k, Eigen::MatrixBase<Matrix> const& val)
+	{
+		stage(k).set_r(val);
+	}
+
+	/**
+	 * \brief Get A matrix of stage i
+	 */
+	MatrixMap const& get_A(size_type i) const
+	{
+		return stage(i).get_A();
+	}
+
+	/**
+	 * \brief Set A matrix of stage i
+	 */
+	template <typename Matrix>
+	void set_A(size_type i, Eigen::MatrixBase<Matrix> const& val)
+	{
+		stage(i).set_A(val);
+	}
+
+	/**
+	 * \brief Get B matrix of stage k
+	 */
+	MatrixMap const& get_B(size_type k) const
+	{
+		return stage(k).get_B();
+	}
+
+	/**
+	 * \brief Set B matrix of stage k
+	 */
+	template <typename Matrix>
+	void set_B(size_type k, Eigen::MatrixBase<Matrix> const& val)
+	{
+		stage(k).set_B(val);
+	}
+
+	decltype(auto) get_b(size_type i) const
+	{
+		return stage(i).get_b();
+	}
+
+	template <typename Matrix>
+	void set_b(size_type i, Eigen::MatrixBase<Matrix> const& val)
+	{
+		stage(i).set_b(val);
+	}
+
+	MatrixMap const& get_C(size_type i) const
+	{
+		return stage(i).get_C();
+	}
+
+	template <typename Matrix>
+	void set_C(size_type i, Eigen::MatrixBase<Matrix> const& val)
+	{
+		stage(i).set_C(val);
+	}
+
+	MatrixMap const& get_D(size_type i) const
+	{
+		return stage(i).get_D();
+	}
+
+	template <typename Matrix>
+	void set_D(size_type i, Eigen::MatrixBase<Matrix> const& val)
+	{
+		stage(i).set_D(val);
+	}
+
+	MatrixMap const& get_C_end() const
+	{
+		return stage_.back().get_C();
+	}
+
+	template <typename Matrix>
+	void set_C_end(Eigen::MatrixBase<Matrix> const& val)
+	{
+		stage_.back().set_C(val);
+	}
+
+	VectorMap const& get_d_min(size_type i) const
+	{
+		return stage(i).get_lbd();
+	}
+
+	template <typename Matrix>
+	void set_d_min(size_type i, Eigen::MatrixBase<Matrix> const& val)
+	{
+		stage(i).set_lbd(val);
+	}
+
+	VectorMap const& get_d_end_min() const
+	{
+		return stage_.back().get_lbd();
+	}
+
+	template <typename Matrix>
+	void set_d_end_min(Eigen::MatrixBase<Matrix> const& val)
+	{
+		stage_.back().set_lbd(val);
+	}
+
+	VectorMap const& get_d_max(size_type i) const
+	{
+		return stage(i).get_ubd();
+	}
+
+	template <typename Matrix>
+	void set_d_max(size_type i, Eigen::MatrixBase<Matrix> const& val)
+	{
+		stage(i).set_ubd(val);
+	}
+
+	VectorMap const& get_d_end_max() const
+	{
+		return stage_.back().get_ubd();
+	}
+
+	template <typename Matrix>
+	void set_d_end_max(Eigen::MatrixBase<Matrix> const& val)
+	{
+		stage_.back().set_ubd(val);
+	}
+
+	VectorMap const& get_x_min(size_type i) const
+	{
+		return stage(i).get_lbx();
+	}
+
+	template <typename Matrix>
+	void set_x_min(size_type i, Eigen::MatrixBase<Matrix> const& val)
+	{
+		stage(i).set_lbx(val);
+	}
+
+	VectorMap const& get_x_max(size_type i) const
+	{
+		return stage(i).get_ubx();
+	}
+
+	template <typename Matrix> void set_x_max(size_type i, Eigen::MatrixBase<Matrix> const& val)
+	{
+		stage(i).set_ubx(val);
+	}
+
+	VectorMap const& get_u_min(size_type i) const
+	{
+		return stage(i).get_lbu();
+	}
+
+	template <typename Matrix>
+	void set_u_min(size_type i, Eigen::MatrixBase<Matrix> const& val)
+	{
+		stage(i).set_lbu(val);
+	}
+
+	VectorMap const& get_u_max(size_type i) const
+	{
+		return stage(i).get_ubu();
+	}
+
+	template <typename Matrix>
+	void set_u_max(size_type i, Eigen::MatrixBase<Matrix> const& val)
+	{
+		stage(i).set_ubu(val);
+	}
+
+	//
+	// Full matrix and vector access functions.
 	//
 	Matrix& H() { return _H; }
 	const Matrix& H() const { return _H; }
@@ -89,17 +526,26 @@ public:
 
 private:
 	qpOASESProgram(std::vector<QpSize> const& sz, size_type n_var, size_type n_constr);
+	void InitStages();
 
 	std::vector<QpSize> const size_;
+	std::vector<Stage> stage_;
 
 	Matrix _H;
 	Vector _g;
 
+	// The layout of _lb is [lbx, lbu, ...]
 	Vector _lb;
+
+	// The layout of _ub is [ubx, ubu, ...]
 	Vector _ub;
 
 	Matrix _A;
+
+	// The layout of _lbA is [lbb, lbd, ...]
 	Vector _lbA;
+
+	// The layout of _ubA is [ubb, ubd, ...]
 	Vector _ubA;
 };
 
