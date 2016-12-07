@@ -6,10 +6,9 @@
 #include "Condensing.hpp"
 #include "MultiStageQuadraticProblem.hpp"
 #include "MultiStageQPSolution.hpp"
-#include "Printing.hpp"
+#include "UnsolvedQpException.hpp"
 
 #include <ostream>
-#include <memory>
 
 namespace tmpc {
 
@@ -17,53 +16,26 @@ namespace detail {
 qpOASES::Options qpOASES_DefaultOptions();
 }
 
-class QpOasesSolveException : public std::runtime_error
+class QpOasesSolveException : public UnsolvedQpException
 {
 public:
 	template <typename QP>
-	QpOasesSolveException(qpOASES::returnValue code, qpOASESProgram const& cqp, QP const& qp) :
-		std::runtime_error("CondensingSolver::Solve() failed. qpOASES return code " + std::to_string(code)),
+	QpOasesSolveException(qpOASES::returnValue code, qpOASESProgram const& cqp, QP const& qp)
+	:	UnsolvedQpException("qpOASES", qp),
 		_code(code),
 		_CondensedQP(cqp),
-		qpData_(new QpDataImpl<QP>(qp))
+		msg_(std::string(UnsolvedQpException::what()) + "\nqpOASES return code " + std::to_string(code))
 	{
 	}
 
 	qpOASES::returnValue getCode() const	{ return _code;	}
 	qpOASESProgram const& getCondensedQP() const { return _CondensedQP; }
-
-	void PrintQpAsMatlab(std::ostream& os) const
-	{
-		qpData_->PrintQpAsMatlab(os);
-	}
+	char const * what() const noexcept override { return msg_.c_str(); }
 
 private:
-	class QpData
-	{
-	public:
-		virtual ~QpData() {}
-		virtual void PrintQpAsMatlab(std::ostream& os) const = 0;
-	};
-
-	template <typename QP>
-	class QpDataImpl : public QpData
-	{
-	public:
-		QpDataImpl(QP const& qp) : qp_(qp) {}
-
-		void PrintQpAsMatlab(std::ostream& os) const override
-		{
-			PrintMultistageQpMatlab(os, qp_, "qp");
-		}
-
-	private:
-		/// \brief Original multistage QP that failed.
-		QP const qp_;
-	};
-
 	qpOASES::returnValue const _code;
 	qpOASESProgram const _CondensedQP;
-	std::unique_ptr<QpData> qpData_;
+	std::string const msg_;
 };
 
 /**

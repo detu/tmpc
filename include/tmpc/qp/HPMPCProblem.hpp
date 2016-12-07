@@ -343,10 +343,40 @@ namespace tmpc
 		,	_lg(nt + 1)
 		,	_ug(nt + 1)
 		{
+			InitPointers();
+		}
+
+		HPMPCProblem(HPMPCProblem const& rhs)
+		:	_nt(rhs._nt)
+		,	_stage(rhs._stage)
+		,	_C_end(rhs._C_end)
+		,	_d_end_min(rhs._d_end_min)
+		,	_d_end_max(rhs._d_end_max)
+		,	_A(_nt)
+		,	_B(_nt)
+		,	_b(_nt)
+		,	_Q(_nt + 1)
+		,	_S(_nt + 1)
+		,	_R(_nt + 1)
+		,	_q(_nt + 1)
+		,	_r (_nt + 1)
+		,	_lb(_nt + 1)
+		,	_ub(_nt + 1)
+		,	_C (_nt + 1)
+		,	_D (_nt + 1)
+		,	_lg(_nt + 1)
+		,	_ug(_nt + 1)
+		{
+			InitPointers();
+		}
+
+	private:
+		void InitPointers()
+		{
 			// Filling out pointer arrays for HPMPC
-			for (std::size_t i = 0; i <= nt; ++i)
+			for (std::size_t i = 0; i <= _nt; ++i)
 			{
-				if (i < nt)
+				if (i < _nt)
 				{
 					_A[i] = _stage[i]._A.data();
 					_B[i] = _stage[i]._B.data();
@@ -354,22 +384,19 @@ namespace tmpc
 				}
 
 				_Q [i] = _stage[i]._Q .data();
-				_S [i] = i < nt ? _stage[i]._S .data() : nullptr;
-				_R [i] = i < nt ? _stage[i]._R .data() : nullptr;
+				_S [i] = i < _nt ? _stage[i]._S .data() : nullptr;
+				_R [i] = i < _nt ? _stage[i]._R .data() : nullptr;
 				_q [i] = _stage[i]._q .data();
-				_r [i] = i < nt ? _stage[i]._r .data() : nullptr;
+				_r [i] = i < _nt ? _stage[i]._r .data() : nullptr;
 				_lb[i] = _stage[i]._lb.data();
 				_ub[i] = _stage[i]._ub.data();
-				_C [i] = i < nt ? _stage[i]._C .data() : _C_end.data();
-				_D [i] = i < nt ? _stage[i]._D .data() : nullptr;
-				_lg[i] = i < nt ? _stage[i]._dMin.data() : _d_end_min.data();
-				_ug[i] = i < nt ? _stage[i]._dMax.data() : _d_end_max.data();
+				_C [i] = i < _nt ? _stage[i]._C .data() : _C_end.data();
+				_D [i] = i < _nt ? _stage[i]._D .data() : nullptr;
+				_lg[i] = i < _nt ? _stage[i]._dMin.data() : _d_end_min.data();
+				_ug[i] = i < _nt ? _stage[i]._dMax.data() : _d_end_max.data();
 			}
 		}
 
-		HPMPCProblem(HPMPCProblem const&) = delete;
-
-	private:
 		struct StageData
 		{
 			// Hessian = [R, S; S', Q]

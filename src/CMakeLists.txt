@@ -21,6 +21,7 @@ set (SRC
 	${TMPC_INCLUDE_DIR}/qp/MultiStageQPSolution.hpp
 	
 	${TMPC_INCLUDE_DIR}/qp/diagnostics.hpp
+	${TMPC_INCLUDE_DIR}/qp/UnsolvedQpException.hpp
 )
 
 add_library(tmpc STATIC ${SRC})
