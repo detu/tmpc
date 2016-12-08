@@ -7,6 +7,7 @@
 
 #include <tmpc/qp/MultiStageQuadraticProblem.hpp>
 #include <tmpc/qp/HPMPCProblem.hpp>
+#include <tmpc/qp/qpOASESProgram.hpp>
 #include <tmpc/qp/Printing.hpp>
 
 #include <gtest/gtest.h>
@@ -31,6 +32,46 @@ Matrix random()
 	return m;
 }
 
+template <unsigned NX_, unsigned NU_, unsigned NC_, unsigned NCT_>
+class FixedSizeQpOasesProblem : public tmpc::qpOASESProgram
+{
+public:
+	static auto constexpr NX = NX_;
+	static auto constexpr NU = NU_;
+	static auto constexpr NC = NC_;
+	static auto constexpr NCT = NCT_;
+
+	/*
+	static unsigned constexpr NX = NX_;
+	static unsigned const NU = NU_;
+	static unsigned const NC = NC_;
+	static unsigned const NCT = NCT_;
+	*/
+
+	typedef Eigen::Matrix<double, NX, 1> StateVector;
+	typedef Eigen::Matrix<double, NU, 1> InputVector;
+
+	FixedSizeQpOasesProblem(std::size_t N)
+	:	tmpc::qpOASESProgram(Sizes(N))
+	{
+	}
+
+	static unsigned constexpr nX() { return NX; }
+	static unsigned constexpr nU() { return NU; }
+
+private:
+	std::vector<tmpc::QpSize> Sizes(std::size_t N)
+	{
+		std::vector<tmpc::QpSize> sz;
+		sz.reserve(N + 1);
+
+		std::fill_n(std::back_inserter(sz), N, tmpc::QpSize(NX, NU, 0));
+		sz.emplace_back(tmpc::QpSize::size_type{NX}, 0, 0);
+		//sz.push_back(tmpc::QpSize(NX, 0, 0));
+
+		return sz;
+	}
+};
 
 template <typename QP>
 class MultiStageQuadraticProblemTest : public ::testing::Test
@@ -65,8 +106,9 @@ protected:
 };
 
 typedef ::testing::Types<
-		tmpc::MultiStageQuadraticProblem<2, 1, 0, 0>
-,		tmpc::HPMPCProblem              <2, 1, 0, 0>
+	tmpc::MultiStageQuadraticProblem<2, 1, 0, 0>,
+	tmpc::HPMPCProblem<2, 1, 0, 0>,
+	FixedSizeQpOasesProblem<2, 1, 0, 0>
 	> QPTypes;
 
 TYPED_TEST_CASE(MultiStageQuadraticProblemTest, QPTypes);

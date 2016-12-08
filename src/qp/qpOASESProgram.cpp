@@ -46,6 +46,11 @@ qpOASESProgram::qpOASESProgram(std::vector<QpSize> const& sz, size_type nx, size
 , 	_lbA(Vector::Constant(nc, sNaN))
 , 	_ubA(Vector::Constant(nc, sNaN))
 {
+	if (sz.size() < 1)
+		throw std::invalid_argument("qpOASESProgram(): at least 1 QpSize must be specified");
+
+	nT_ = sz.size() - 1;
+
 	// Init the -I blocks in the A matrix
 
 	// (i, j) = top left corner of the current AB block

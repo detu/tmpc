@@ -123,7 +123,8 @@ public:
 			return Q_;
 		}
 
-		void set_Q(const MatrixMap& q) {
+		template <typename T>
+		void set_Q(const Eigen::MatrixBase<T>& q) {
 			Q_ = q;
 		}
 
@@ -228,6 +229,7 @@ public:
 
 	size_type nx() const { return static_cast<size_type>(_H.rows()); }
 	size_type nc() const { return static_cast<size_type>(_A.rows()); }
+	size_type nT() const { return nT_; }
 
 	// Is this going to become a "modern" multistage QP interface?
 	Stage& stage(std::size_t i)
@@ -529,6 +531,7 @@ private:
 	void InitStages();
 
 	std::vector<QpSize> const size_;
+	size_type nT_;
 	std::vector<Stage> stage_;
 
 	Matrix _H;
