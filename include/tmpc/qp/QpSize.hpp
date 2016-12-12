@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdlib>
+#include <vector>
 
 namespace tmpc {
 
@@ -58,5 +59,9 @@ inline bool operator!=(QpSize const& a, QpSize const& b)
 {
 	return !(a == b);
 }
+
+std::size_t numVariables(std::vector<QpSize> const& sz);
+std::size_t numEqualities(std::vector<QpSize> const& sz);
+std::size_t numInequalities(std::vector<QpSize> const& sz);
 
 }	// namespace tmpc

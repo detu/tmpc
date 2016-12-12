@@ -40,10 +40,12 @@ namespace tmpc
 	typename QP::size_type nConstr(QP const& qp) { return qp.nD() * qp.nT() + qp.nDT(); }
 
 	template <typename QP>
-	Eigen::Matrix<double, n_xu<QP>(), 1> get_xu_min(QP const& qp, std::size_t i)
+	Eigen::VectorXd get_xu_min(QP const& qp, std::size_t i)
 	{
-		Eigen::Matrix<double, n_xu<QP>(), 1> val;
-		val << qp.get_x_min(i), qp.get_u_min(i);
+		auto const x_min = qp.get_x_min(i);
+		auto const u_min = qp.get_u_min(i);
+		Eigen::VectorXd val(x_min.size() + u_min.size());
+		val << x_min, u_min;
 		return val;
 	}
 
@@ -63,10 +65,12 @@ namespace tmpc
 	}
 
 	template <typename QP>
-	Eigen::Matrix<double, n_xu<QP>(), 1> get_xu_max(QP const& qp, std::size_t i)
+	Eigen::VectorXd get_xu_max(QP const& qp, std::size_t i)
 	{
-		Eigen::Matrix<double, n_xu<QP>(), 1> val;
-		val << qp.get_x_max(i), qp.get_u_max(i);
+		auto const x_max = qp.get_x_max(i);
+		auto const u_max = qp.get_u_max(i);
+		Eigen::VectorXd val(x_max.size() + u_max.size());
+		val << x_max, u_max;
 		return val;
 	}
 
@@ -144,10 +148,13 @@ namespace tmpc
 	}
 
 	template <typename QP>
-	Eigen::Matrix<double, n_xu<QP>(), n_xu<QP>()> get_H(QP const& qp, std::size_t i)
+	Eigen::MatrixXd get_H(QP const& qp, std::size_t i)
 	{
-		Eigen::Matrix<double, n_xu<QP>(), n_xu<QP>()> H;
-		H << qp.get_Q(i), qp.get_S(i), qp.get_S(i).transpose(), qp.get_R(i);
+		auto const Q = qp.get_Q(i);
+		auto const R = qp.get_R(i);
+		auto const S = qp.get_S(i);
+		Eigen::MatrixXd H(Q.rows() + R.rows(), Q.cols() + R.cols());
+		H << Q, S, S.transpose(), R;
 		return H;
 	}
 
@@ -160,10 +167,12 @@ namespace tmpc
 	}
 
 	template <typename QP>
-	Eigen::Matrix<double, n_xu<QP>(), 1> get_g(QP const& qp, std::size_t i)
+	Eigen::VectorXd get_g(QP const& qp, std::size_t i)
 	{
-		Eigen::Matrix<double, n_xu<QP>(), 1> g;
-		g << qp.get_q(i), qp.get_r(i);
+		auto const q = qp.get_q(i);
+		auto const r = qp.get_r(i);
+		Eigen::VectorXd g(q.size() + r.size());
+		g << q, r;
 		return g;
 	}
 
@@ -176,10 +185,12 @@ namespace tmpc
 	}
 
 	template <typename QP>
-	Eigen::Matrix<double, n_x<QP>(), n_xu<QP>()> get_AB(QP const& qp, std::size_t i)
+	Eigen::MatrixXd get_AB(QP const& qp, std::size_t i)
 	{
-		Eigen::Matrix<double, n_x<QP>(), n_xu<QP>()> AB;
-		AB << qp.get_A(i), qp.get_B(i);
+		auto const A = qp.get_A(i);
+		auto const B = qp.get_B(i);
+		Eigen::MatrixXd AB(A.rows(), A.cols() + B.cols());
+		AB << A, B;
 		return AB;
 	}
 
@@ -192,12 +203,15 @@ namespace tmpc
 	}
 
 	template <typename QP>
-	Eigen::Matrix<double, n_d<QP>(), n_xu<QP>()> get_CD(QP const& qp, std::size_t i)
+	Eigen::MatrixXd get_CD(QP const& qp, std::size_t i)
 	{
-		Eigen::Matrix<double, n_d<QP>(), n_xu<QP>()> CD;
+		auto const C = qp.get_C(i);
+		auto const D = qp.get_D(i);
 
-		if (qp.nD() > 0)	// workaround for this bug: http://eigen.tuxfamily.org/bz/show_bug.cgi?id=1242
-			CD << qp.get_C(i), qp.get_D(i);
+		Eigen::MatrixXd CD(C.rows(), C.cols() + D.cols());
+
+		if (CD.rows() > 0)	// workaround for this bug: http://eigen.tuxfamily.org/bz/show_bug.cgi?id=1242
+			CD << C, D;
 
 		return CD;
 	}

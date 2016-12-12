@@ -112,7 +112,7 @@ void qpOASESProgram::InitStages()
 	Scalar * plbA = _lbA.data();
 	Scalar * pubA = _ubA.data();
 
-	for (auto sz = size_.begin(); sz != size_.end(); ++sz)
+	for (auto sz = size_.cbegin(); sz != size_.cend(); ++sz)
 	{
 		auto const sz_next = sz + 1;
 		auto const nx_next = sz_next != size_.end() ? sz_next->nx() : 0;
