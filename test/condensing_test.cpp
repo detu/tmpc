@@ -135,3 +135,14 @@ TEST_F(CondensingTest, condensing_test)
 	EXPECT_EQ(print_wrap(condensed.H()), print_wrap(Hc_expected));
 	EXPECT_EQ(print_wrap(condensed.g()), print_wrap(gc_expected));
 }
+
+TEST(QpSizeTest, test_CondensedQpSize)
+{
+	EXPECT_EQ(tmpc::CondensedQpSize({
+		tmpc::QpSize(2, 1, 3),
+		tmpc::QpSize(4, 5, 6),
+		tmpc::QpSize(2, 1, 1)
+		}),
+		tmpc::QpSize(2, 1 + 5 + 1, 3 + 6 + 1));
+}
+

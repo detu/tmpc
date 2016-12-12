@@ -3,6 +3,7 @@
 #include "../qp/diagnostics.hpp"
 #include "Trajectory.hpp"
 #include "../qp/qp.hpp"
+#include "../qp/QpSize.hpp"
 
 #include <stdexcept>
 #include <limits>
@@ -11,6 +12,11 @@
 
 namespace tmpc
 {
+	/**
+	 * \brief Vector of QpSize corresponding to an MPC problem with given sizes.
+	 */
+	std::vector<QpSize> RtiQpSize(std::size_t nt, std::size_t nx, std::size_t nu, std::size_t nc, std::size_t nct);
+
 	/**
 	 * \brief Implements an MPC controller with realtime iteration scheme.
 	 *

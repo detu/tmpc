@@ -1,10 +1,18 @@
 #pragma once
 
+#include <tmpc/qp/QpSize.hpp>
+
+#include <vector>
 #include <sstream>
 #include <stdexcept>
 
 namespace tmpc
 {
+	/**
+	 * Resulting QP size after full condensing.
+	 */
+	QpSize CondensedQpSize(std::vector<QpSize> const& sz);
+
 	/**
 	 * \brief Condense a multistage (sparse) QP to a dense QP.
 	 *

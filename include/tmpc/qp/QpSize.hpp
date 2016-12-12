@@ -49,4 +49,9 @@ private:
 	size_type const nc_;
 };
 
+inline bool operator==(QpSize const& a, QpSize const& b)
+{
+	return a.nx() == b.nx() && a.nu() == b.nu() && a.nc() == b.nc();
 }
+
+}	// namespace tmpc

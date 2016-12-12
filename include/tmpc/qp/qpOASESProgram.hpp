@@ -242,6 +242,11 @@ public:
 		return stage_.at(i);
 	}
 
+	std::vector<QpSize> const& size() const
+	{
+		return size_;
+	}
+
 	// ******************************************************
 	//
 	// Multistage QP interface

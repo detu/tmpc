@@ -6,7 +6,7 @@
 set(TMPC_INCLUDE_DIR ${PROJECT_INCLUDE_DIR}/tmpc)
 
 set (SRC
-    ${TMPC_INCLUDE_DIR}/core/RealtimeIteration.hpp
+    ${TMPC_INCLUDE_DIR}/core/RealtimeIteration.hpp    rti/RealtimeIteration.cpp
     ${TMPC_INCLUDE_DIR}/core/Trajectory.hpp
     ${TMPC_INCLUDE_DIR}/core/gauss_newton.hpp
     ${TMPC_INCLUDE_DIR}/core/matrix.hpp
@@ -17,7 +17,7 @@ set (SRC
 	${TMPC_INCLUDE_DIR}/integrator/rk4.hpp
 
     ${TMPC_INCLUDE_DIR}/qp/QpSize.hpp
-	${TMPC_INCLUDE_DIR}/qp/Condensing.hpp
+	${TMPC_INCLUDE_DIR}/qp/Condensing.hpp    qp/Condensing.cpp
 	${TMPC_INCLUDE_DIR}/qp/MultiStageQPSolution.hpp
 	
 	${TMPC_INCLUDE_DIR}/qp/diagnostics.hpp
