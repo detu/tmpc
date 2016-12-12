@@ -23,6 +23,8 @@ QpSize CondensedQpSize(std::vector<QpSize> const& sz)
 			[] (std::size_t n, QpSize const& s) { return n + s.nu(); }),
 		std::accumulate(sz.begin(), sz.end(), std::size_t{0},
 			[] (std::size_t n, QpSize const& s) { return n + s.nc(); })
+		+ std::accumulate(sz.begin() + 1, sz.end(), std::size_t{0},
+				[] (std::size_t n, QpSize const& s) { return n + s.nx(); })
 		);
 }
 

@@ -54,4 +54,9 @@ inline bool operator==(QpSize const& a, QpSize const& b)
 	return a.nx() == b.nx() && a.nu() == b.nu() && a.nc() == b.nc();
 }
 
+inline bool operator!=(QpSize const& a, QpSize const& b)
+{
+	return !(a == b);
+}
+
 }	// namespace tmpc

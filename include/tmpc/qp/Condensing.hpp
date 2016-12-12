@@ -26,19 +26,10 @@ namespace tmpc
 	template <typename K, typename D, typename MultiStageQP_, typename CondensedQP_>
 	void Condense(MultiStageQP_ const& msqp, CondensedQP_& condensed_qp)
 	{
-		if (nIndep(msqp) != condensed_qp.nx())
+		if (condensed_qp.size().size() != 1 || CondensedQpSize(msqp.size()) != condensed_qp.size().front())
 		{
 			std::stringstream msg;
-			msg << "Condense(): output CondensedQP has " << condensed_qp.nx()
-					<< " variables, but is expected to have " << nIndep(msqp) << ".";
-			throw std::invalid_argument(msg.str());
-		}
-
-		if (nDep(msqp) + nConstr(msqp) != condensed_qp.nc())
-		{
-			std::stringstream msg;
-			msg << "Condense(): output CondensedQP has " << condensed_qp.nc()
-					<< " constraints, but is expected to have " << nDep(msqp) + nConstr(msqp) << ".";
+			msg << "Condense(): output QP has wrong size.";
 			throw std::invalid_argument(msg.str());
 		}
 
