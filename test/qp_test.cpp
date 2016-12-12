@@ -5,6 +5,8 @@
  *      Author: kotlyar
  */
 
+#include "gtest_tools_eigen.hpp"
+
 #include <tmpc/qp/MultiStageQuadraticProblem.hpp>
 #include <tmpc/qp/HPMPCProblem.hpp>
 #include <tmpc/qp/qpOASESProgram.hpp>
@@ -147,20 +149,20 @@ TYPED_TEST(MultiStageQuadraticProblemTest, get_set_interface_works)
 	// Reading the data and checking that they are the same that we wrote
 	for (std::size_t i = 0; i <= this->NT; ++i)
 	{
-		EXPECT_EQ(this->qp.get_Q(i), Q[i]);
-		EXPECT_EQ(this->qp.get_x_min(i), x_min[i]);
-		EXPECT_EQ(this->qp.get_x_max(i), x_max[i]);
+		EXPECT_EQ(print_wrap(this->qp.get_Q(i)), print_wrap(Q[i])) << "at i=" << i;
+		EXPECT_EQ(print_wrap(this->qp.get_x_min(i)), print_wrap(x_min[i]));
+		EXPECT_EQ(print_wrap(this->qp.get_x_max(i)), print_wrap(x_max[i]));
 	}
 
 	for (std::size_t i = 0; i < this->NT; ++i)
 	{
-		EXPECT_EQ(this->qp.get_S(i), S[i]);
-		EXPECT_EQ(this->qp.get_R(i), R[i]);
-		EXPECT_EQ(this->qp.get_A(i), A[i]);
-		EXPECT_EQ(this->qp.get_B(i), B[i]);
-		EXPECT_EQ(this->qp.get_b(i), b[i]);
-		EXPECT_EQ(this->qp.get_u_min(i), u_min[i]);
-		EXPECT_EQ(this->qp.get_u_max(i), u_max[i]);
+		EXPECT_EQ(print_wrap(this->qp.get_S(i)), print_wrap(S[i]));
+		EXPECT_EQ(print_wrap(this->qp.get_R(i)), print_wrap(R[i])) << "at i=" << i;
+		EXPECT_EQ(print_wrap(this->qp.get_A(i)), print_wrap(A[i]));
+		EXPECT_EQ(print_wrap(this->qp.get_B(i)), print_wrap(B[i]));
+		EXPECT_EQ(print_wrap(this->qp.get_b(i)), print_wrap(b[i]));
+		EXPECT_EQ(print_wrap(this->qp.get_u_min(i)), print_wrap(u_min[i]));
+		EXPECT_EQ(print_wrap(this->qp.get_u_max(i)), print_wrap(u_max[i]));
 	}
 }
 

@@ -14,14 +14,22 @@ namespace tmpc {
 
 static auto constexpr sNaN = std::numeric_limits<qpOASESProgram::Scalar>::signaling_NaN();
 
+static std::size_t totalNumVariables(std::vector<QpSize> const& sz)
+{
+	return std::accumulate(sz.begin(), sz.end(), std::size_t{0},
+				[] (std::size_t n, QpSize const& sz) { return n + sz.nx() + sz.nu(); });
+}
+
+static std::size_t totalNumConstraints(std::vector<QpSize> const& sz)
+{
+	return std::accumulate(sz.begin(), sz.end(), std::size_t{0},
+				[] (std::size_t n, QpSize const& sz) { return n + sz.nc(); })
+		+ std::accumulate(sz.begin() + 1, sz.end(), std::size_t{0},
+				[] (std::size_t n, QpSize const& sz) { return n + sz.nx(); });
+}
+
 qpOASESProgram::qpOASESProgram(std::vector<QpSize> const& sz)
-:	qpOASESProgram(
-		sz,
-		std::accumulate(sz.begin(), sz.end(), size_type{0},
-				[] (size_type n, QpSize const& sz) { return n + sz.nx() + sz.nu(); }),
-		std::accumulate(sz.begin(), sz.end(), size_type{0},
-				[] (size_type n, QpSize const& sz) { return n + sz.nc(); })
-	)
+:	qpOASESProgram(sz, totalNumVariables(sz), totalNumConstraints(sz))
 {
 
 }
@@ -106,9 +114,11 @@ void qpOASESProgram::InitStages()
 
 	for (auto sz = size_.begin(); sz != size_.end(); ++sz)
 	{
-		stage_.emplace_back(*sz, (sz + 1)->nx(), stride, pH, pg, plb, pub, pA, plbA, pubA);
+		auto const sz_next = sz + 1;
+		auto const nx_next = sz_next != size_.end() ? sz_next->nx() : 0;
+		stage_.emplace_back(*sz, nx_next, stride, pH, pg, plb, pub, pA, plbA, pubA);
 
-		pH += stride;
+		pH += (nx_next + sz->nc()) * stride + sz->nx() + sz->nu();
 		pg += sz->nx() + sz->nu();
 		plb += sz->nx() + sz->nu();
 		pub += sz->nx() + sz->nu();
