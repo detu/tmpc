@@ -60,8 +60,8 @@ namespace tmpc
 	template<typename QP>
 	void set_xu_min(QP& qp, std::size_t i, double val)
 	{
-		qp.set_x_min(i, QP::StateVector::Constant(val));
-		qp.set_u_min(i, QP::InputVector::Constant(val));
+		qp.set_x_min(i, Eigen::VectorXd::Constant(qp.get_x_min(i).size(), val));
+		qp.set_u_min(i, Eigen::VectorXd::Constant(qp.get_u_min(i).size(), val));
 	}
 
 	template <typename QP>
@@ -85,8 +85,8 @@ namespace tmpc
 	template<typename QP>
 	void set_xu_max(QP& qp, std::size_t i, double val)
 	{
-		qp.set_x_max(i, QP::StateVector::Constant(val));
-		qp.set_u_max(i, QP::InputVector::Constant(val));
+		qp.set_x_max(i, Eigen::VectorXd::Constant(qp.get_x_max(i).size(), val));
+		qp.set_u_max(i, Eigen::VectorXd::Constant(qp.get_u_max(i).size(), val));
 	}
 
 	/**
@@ -104,7 +104,7 @@ namespace tmpc
 	template <typename QP>
 	void set_x_end_min(QP& qp, double val)
 	{
-		qp.set_x_min(qp.nT(), QP::StateVector::Constant(val));
+		qp.set_x_min(qp.nT(), Eigen::VectorXd::Constant(qp.get_x_min(qp.nT()).size(), val));
 	}
 
 	/**
@@ -122,7 +122,7 @@ namespace tmpc
 	template <typename QP>
 	void set_x_end_max(QP& qp, double val)
 	{
-		qp.set_x_max(qp.nT(), QP::StateVector::Constant(val));
+		qp.set_x_max(qp.nT(), Eigen::VectorXd::Constant(qp.get_x_max(qp.nT()).size(), val));
 	}
 
 	template<typename QP>
@@ -140,11 +140,14 @@ namespace tmpc
 	template <typename QP, typename Matrix>
 	void set_H(QP& qp, std::size_t i, Eigen::MatrixBase<Matrix> const& val)
 	{
-		static_assert(Matrix::RowsAtCompileTime == n_xu<QP>() && Matrix::ColsAtCompileTime == n_xu<QP>(),
-			"Matrix of size (NX+NU)x(NX+NU) is expected");
-		qp.set_Q(i, top_left_corner    <n_x<QP>(), n_x<QP>()>(val));
-		qp.set_S(i, top_right_corner   <n_x<QP>(), n_u<QP>()>(val));
-		qp.set_R(i, bottom_right_corner<n_u<QP>(), n_u<QP>()>(val));
+		auto const Q = qp.get_Q(i);
+		auto const R = qp.get_R(i);
+
+		assert(Q.rows() + R.rows() == val.rows() && Q.cols() + R.cols() == val.cols());
+
+		qp.set_Q(i, val.topLeftCorner(Q.rows(), Q.cols()));
+		qp.set_S(i, val.topRightCorner(Q.rows(), R.cols()));
+		qp.set_R(i, val.bottomRightCorner(R.rows(), R.cols()));
 	}
 
 	template <typename QP>
@@ -161,9 +164,13 @@ namespace tmpc
 	template <typename QP, typename Matrix>
 	void set_g(QP& qp, std::size_t i, Eigen::MatrixBase<Matrix>& val)
 	{
-		static_assert(Matrix::RowsAtCompileTime == n_xu<QP>(),	"Column vector of size (NX+NU) is expected");
-		qp.set_q(i, top_rows   <n_x<QP>()>(val));
-		qp.set_r(i, bottom_rows<n_u<QP>()>(val));
+		auto const q = qp.get_q(i);
+		auto const r = qp.get_r(i);
+
+		assert(q.size() + r.size() == val.size());
+
+		qp.set_q(i, val.head(q.size()));
+		qp.set_r(i, val.tail(r.size()));
 	}
 
 	template <typename QP>

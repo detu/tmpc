@@ -57,6 +57,11 @@ public:
 	QpOasesSolver& operator=(QpOasesSolver const&) = delete;
 	QpOasesSolver& operator=(QpOasesSolver&&) = delete;
 
+	std::vector<QpSize> const& size() const
+	{
+		return size_;
+	}
+
 	// qpOASES-specific part
 	//
 

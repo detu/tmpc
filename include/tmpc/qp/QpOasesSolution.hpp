@@ -24,8 +24,8 @@ namespace tmpc
 		typedef Eigen::Map<Eigen::VectorXd> VectorMap;
 
 		QpOasesSolution(std::vector<QpSize> const& sz);
-
 		QpOasesSolution(QpOasesSolution const&) = delete;
+		QpOasesSolution(QpOasesSolution &&) = default;
 
 		VectorMap const& get_x(std::size_t i) const
 		{

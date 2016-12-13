@@ -7,6 +7,8 @@
 
 #include <tmpc/qp/CondensingSolver.hpp>
 #include <tmpc/qp/HPMPCSolver.hpp>
+#include <tmpc/qp/QpOasesSolver.hpp>
+#include <tmpc/core/RealtimeIteration.hpp>	// for RtiQpSize(0
 #include <tmpc/qp/Printing.hpp>
 #include <tmpc/kernel/eigen.hpp>
 #include <tmpc/core/problem_specific.hpp>
@@ -23,17 +25,36 @@ class QPSolverTest : public ::testing::Test
 {
 public:
 	typedef Solver_ Solver;
+	typedef typename Solver::Problem Problem;
+	typedef typename Solver::Solution Solution;
 
 protected:
+
+	QPSolverTest();
+	Problem ConstructProblem();
+	Solution ConstructSolution();
+
 	unsigned const NT = 2;
-
-	QPSolverTest()
-	:	solver_(NT)
-	{
-	}
-
 	Solver solver_;
 };
+
+template <typename Solver_>
+QPSolverTest<Solver_>::QPSolverTest()
+:	solver_(NT)
+{
+}
+
+template <typename Solver_>
+typename QPSolverTest<Solver_>::Problem QPSolverTest<Solver_>::ConstructProblem()
+{
+	return Problem(NT);
+}
+
+template <typename Solver_>
+typename QPSolverTest<Solver_>::Solution QPSolverTest<Solver_>::ConstructSolution()
+{
+	return Solution(NT);
+}
 
 // Define dimensions
 struct Dimensions
@@ -47,6 +68,24 @@ struct Dimensions
 	static unsigned constexpr NCT = 0;
 };
 
+template <>
+QPSolverTest<tmpc::QpOasesSolver>::QPSolverTest()
+:	solver_(tmpc::RtiQpSize(NT, Dimensions::NX, Dimensions::NU, Dimensions::NC, Dimensions::NCT))
+{
+}
+
+template <>
+typename QPSolverTest<tmpc::QpOasesSolver>::Problem QPSolverTest<tmpc::QpOasesSolver>::ConstructProblem()
+{
+	return Problem(solver_.size());
+}
+
+template <>
+typename QPSolverTest<tmpc::QpOasesSolver>::Solution QPSolverTest<tmpc::QpOasesSolver>::ConstructSolution()
+{
+	return Solution(solver_.size());
+}
+
 // Define a kernel
 typedef tmpc::EigenKernel<double> K;
 
@@ -55,6 +94,7 @@ typedef tmpc::ProblemSpecific<tmpc::EigenKernel<double>, Dimensions> PS;
 typedef ::testing::Types<
 		tmpc::CondensingSolver<K, Dimensions>
 ,		tmpc::HPMPCSolver     <K, Dimensions>
+,		tmpc::QpOasesSolver
 	> SolverTypes;
 
 TYPED_TEST_CASE(QPSolverTest, SolverTypes);
@@ -62,10 +102,10 @@ TYPED_TEST_CASE(QPSolverTest, SolverTypes);
 /// \brief Check if QPSolver move constructor works and the solver works after move constructor.
 TYPED_TEST(QPSolverTest, move_constructor_test)
 {
-	typename TestFixture::Solver::Problem qp(this->solver_.nT());
+	auto qp = this->ConstructProblem();
 	tmpc_test::qp_problems::problem_0(qp);
 
-	typename TestFixture::Solver::Solution solution(this->solver_.nT());
+	auto solution = this->ConstructSolution();
 
 	typename TestFixture::Solver solver = std::move(this->solver_);
 	solver.Solve(qp, solution);
@@ -87,10 +127,10 @@ TYPED_TEST(QPSolverTest, move_constructor_test)
 
 TYPED_TEST(QPSolverTest, solve_test_0)
 {
-	typename TestFixture::Solver::Problem qp(this->solver_.nT());
+	auto qp = this->ConstructProblem();
 	tmpc_test::qp_problems::problem_0(qp);
 
-	typename TestFixture::Solver::Solution solution(this->solver_.nT());
+	auto solution = this->ConstructSolution();
 	this->solver_.Solve(qp, solution);
 
 	PS::StateVector x_expected;
@@ -110,10 +150,10 @@ TYPED_TEST(QPSolverTest, solve_test_0)
 
 TYPED_TEST(QPSolverTest, solve_test_1)
 {
-	typename TestFixture::Solver::Problem qp(this->solver_.nT());
+	auto qp = this->ConstructProblem();
 	tmpc_test::qp_problems::problem_1(qp);
 
-	typename TestFixture::Solver::Solution solution(this->solver_.nT());
+	auto solution = this->ConstructSolution();
 	this->solver_.Solve(qp, solution);
 
 	PS::StateVector x_expected;
