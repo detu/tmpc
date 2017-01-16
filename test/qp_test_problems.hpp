@@ -1,5 +1,8 @@
 #pragma once
 
+#include <tmpc/qp/qp.hpp>
+#include <tmpc/qp/QpSize.hpp>
+
 #include <stdexcept>
 
 namespace tmpc_test
@@ -89,6 +92,23 @@ namespace tmpc_test
 
 			qp.set_A(0, A0);	qp.set_B(0, B0);		qp.set_b(0, a0);
 			qp.set_A(1, A1);	qp.set_B(1, B1);		qp.set_b(1, a1);
+		}
+
+		template <typename QP>
+		QP problem_0()
+		{
+			using namespace tmpc;
+
+			unsigned const NX = 2;
+			unsigned const NU = 1;
+			unsigned const NC = 0;
+			unsigned const NCT = 0;
+			unsigned const NT = 2;
+
+			QP qp({QpSize(NX, NU, NC), QpSize(NX, NU, NC), QpSize(NX, 0, NCT)});
+			problem_0(qp);
+
+			return qp;
 		}
 
 		template <typename Problem>

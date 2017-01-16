@@ -75,7 +75,7 @@ qpOASESProgram::qpOASESProgram(std::vector<QpSize> const& sz, size_type nx, size
 		auto const nx_next = (sz + 1)->nx();
 
 		// Assign the -I block
-		_H.block(i, j, nx_next, nx_next) = -Matrix::Identity(nx_next, nx_next);
+		_A.block(i, j, nx_next, nx_next) = -Matrix::Identity(nx_next, nx_next);
 
 		// Move (i, j) to the top left corner of the next AB block.
 		i += nx_next + sz->nc();
@@ -118,7 +118,7 @@ void qpOASESProgram::InitStages()
 		auto const nx_next = sz_next != size_.end() ? sz_next->nx() : 0;
 		stage_.emplace_back(*sz, nx_next, stride, pH, pg, plb, pub, pA, plbA, pubA);
 
-		pH += (nx_next + sz->nc()) * stride + sz->nx() + sz->nu();
+		pH += (sz->nx() + sz->nu()) * stride + sz->nx() + sz->nu();
 		pg += sz->nx() + sz->nu();
 		plb += sz->nx() + sz->nu();
 		pub += sz->nx() + sz->nu();

@@ -14,6 +14,7 @@
 #include <tmpc/core/problem_specific.hpp>
 
 #include "qp_test_problems.hpp"
+#include "gtest_tools_eigen.hpp"
 
 #include <gtest/gtest.h>
 
@@ -114,15 +115,15 @@ TYPED_TEST(QPSolverTest, move_constructor_test)
 	PS::InputVector u_expected;
 
 	x_expected << 1., -1.;	u_expected << -1;
-	EXPECT_TRUE(solution.get_x(0).isApprox(x_expected));
-	EXPECT_TRUE(solution.get_u(0).isApprox(u_expected));
+	EXPECT_PRED2(MatrixApproxEquality(1e-6), solution.get_x(0), x_expected);
+	EXPECT_PRED2(MatrixApproxEquality(1e-6), solution.get_u(0), u_expected);
 
 	x_expected << 0.5, 0.;	u_expected << -1;
-	EXPECT_TRUE(solution.get_x(1).isApprox(x_expected));
-	EXPECT_TRUE(solution.get_u(1).isApprox(u_expected));
+	EXPECT_PRED2(MatrixApproxEquality(1e-6), solution.get_x(1), x_expected);
+	EXPECT_PRED2(MatrixApproxEquality(1e-6), solution.get_u(1), u_expected);
 
 	x_expected << 1., 1;
-	EXPECT_TRUE(solution.get_x(2).isApprox(x_expected));
+	EXPECT_PRED2(MatrixApproxEquality(1e-6), solution.get_x(2), x_expected);
 }
 
 TYPED_TEST(QPSolverTest, solve_test_0)
@@ -137,15 +138,15 @@ TYPED_TEST(QPSolverTest, solve_test_0)
 	PS::InputVector u_expected;
 
 	x_expected << 1., -1.;	u_expected << -1;
-	EXPECT_TRUE(solution.get_x(0).isApprox(x_expected));
-	EXPECT_TRUE(solution.get_u(0).isApprox(u_expected));
+	EXPECT_PRED2(MatrixApproxEquality(1e-6), solution.get_x(0), x_expected);
+	EXPECT_PRED2(MatrixApproxEquality(1e-6), solution.get_u(0), u_expected);
 
 	x_expected << 0.5, 0.;	u_expected << -1;
-	EXPECT_TRUE(solution.get_x(1).isApprox(x_expected));
-	EXPECT_TRUE(solution.get_u(1).isApprox(u_expected));
+	EXPECT_PRED2(MatrixApproxEquality(1e-6), solution.get_x(1), x_expected);
+	EXPECT_PRED2(MatrixApproxEquality(1e-6), solution.get_u(1), u_expected);
 
 	x_expected << 1., 1;
-	EXPECT_TRUE(solution.get_x(2).isApprox(x_expected));
+	EXPECT_PRED2(MatrixApproxEquality(1e-6), solution.get_x(2), x_expected);
 }
 
 TYPED_TEST(QPSolverTest, solve_test_1)
@@ -160,13 +161,13 @@ TYPED_TEST(QPSolverTest, solve_test_1)
 	PS::InputVector u_expected;
 
 	x_expected << 1., 0.;	u_expected << -0.690877362606266;
-	EXPECT_TRUE(solution.get_x(0).isApprox(x_expected, 1e-6));
-	EXPECT_TRUE(solution.get_u(0).isApprox(u_expected, 1e-6));
+	EXPECT_PRED2(MatrixApproxEquality(1e-6), solution.get_x(0), x_expected);
+	EXPECT_PRED2(MatrixApproxEquality(1e-6), solution.get_u(0), u_expected);
 
 	x_expected << 0.654561318696867, -0.690877362606266;	u_expected << 0.215679569867116;
-	EXPECT_TRUE(solution.get_x(1).isApprox(x_expected, 1e-6));
-	EXPECT_TRUE(solution.get_u(1).isApprox(u_expected, 1e-6));
+	EXPECT_PRED2(MatrixApproxEquality(1e-6), solution.get_x(1), x_expected);
+	EXPECT_PRED2(MatrixApproxEquality(1e-6), solution.get_u(1), u_expected);
 
 	x_expected << 0.0715237410241597, -0.475197792739149;
-	EXPECT_TRUE(solution.get_x(2).isApprox(x_expected, 1e-6));
+	EXPECT_PRED2(MatrixApproxEquality(1e-6), solution.get_x(2), x_expected);
 }

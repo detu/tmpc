@@ -5,6 +5,8 @@
 
 #include <iostream>
 
+#include <Eigen/Dense>
+
 template <class Base>
 class EigenPrintWrap : public Base {
     friend void PrintTo(const EigenPrintWrap &m, ::std::ostream *o) {
@@ -85,3 +87,21 @@ MatrixContainerAdaptor<Matrix> as_container(Matrix const& m)
 {
 	return MatrixContainerAdaptor<Matrix>(m);
 }
+
+class MatrixApproxEquality
+{
+public:
+	MatrixApproxEquality(double tolerance)
+	:	tolerance_(tolerance)
+	{
+	}
+
+	template <typename MatrixA, typename MatrixB>
+	bool operator()(Eigen::MatrixBase<MatrixA> const& lhs, Eigen::MatrixBase<MatrixB> const& rhs)
+	{
+		return lhs.isApprox(rhs, 1e-4);
+	}
+
+private:
+	double tolerance_;
+};

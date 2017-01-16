@@ -152,8 +152,7 @@ public:
 
 		template <typename T>
 		void set_S(const Eigen::MatrixBase<T>& s) {
-			S_ = s;
-			ST_ = s.transpose();
+			ST_ = (S_ = s).transpose();
 		}
 
 		const VectorMap& get_ubd() const {

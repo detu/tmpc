@@ -2,6 +2,7 @@
 
 #include <cstdlib>
 #include <vector>
+#include <numeric>
 
 namespace tmpc {
 
@@ -63,5 +64,26 @@ inline bool operator!=(QpSize const& a, QpSize const& b)
 std::size_t numVariables(std::vector<QpSize> const& sz);
 std::size_t numEqualities(std::vector<QpSize> const& sz);
 std::size_t numInequalities(std::vector<QpSize> const& sz);
+
+template <typename InputIt>
+std::size_t numVariables(InputIt sz_begin, InputIt sz_end)
+{
+	return std::accumulate(sz_begin, sz_end, std::size_t{0},
+		[] (std::size_t n, QpSize const& s) { return n + s.nx() + s.nu(); });
+}
+
+template <typename InputIt>
+std::size_t numEqualities(InputIt sz_begin, InputIt sz_end)
+{
+	return sz_begin == sz_end ? 0 : std::accumulate(sz_begin + 1, sz_end, std::size_t{0},
+		[] (std::size_t n, QpSize const& s) { return n + s.nx(); });
+}
+
+template <typename InputIt>
+std::size_t numInequalities(InputIt sz_begin, InputIt sz_end)
+{
+	return std::accumulate(sz_begin, sz_end, std::size_t{0},
+		[] (std::size_t n, QpSize const& s) { return n + s.nx() + s.nu() + s.nc(); });
+}
 
 }	// namespace tmpc
