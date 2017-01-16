@@ -26,7 +26,8 @@ namespace tmpc
 	template <typename K, typename D, typename MultiStageQP_, typename CondensedQP_>
 	void Condense(MultiStageQP_ const& msqp, CondensedQP_& condensed_qp)
 	{
-		if (condensed_qp.size().size() != 1 || CondensedQpSize(msqp.size()) != condensed_qp.size().front())
+		// TODO: condendes_qp should, actually, be a QpStage (?)
+		if (condensed_qp.size() != 1 || CondensedQpSize(msqp.size()) != condensed_qp.front().size())
 		{
 			std::stringstream msg;
 			msg << "Condense(): output QP has wrong size.";

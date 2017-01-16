@@ -53,21 +53,23 @@ TEST(QpOasesProblemTest, H_Problem0_correct)
 	// Test H, g
 	//---------------
 
-	for (std::size_t i = 0; i < sz.size(); ++i)
+	for (auto& stage : p)
 	{
+		QpSize const sz = stage.size();
+
 		{
-			auto tmp = MatrixXd::Random(sz[i].nx(), sz[i].nx()).eval();
-			p.set_Q(i, tmp.transpose() * tmp);
+			auto tmp = MatrixXd::Random(sz.nx(), sz.nx()).eval();
+			stage.set_Q(tmp.transpose() * tmp);
 		}
 
 		{
-			auto tmp = MatrixXd::Random(sz[i].nu(), sz[i].nu()).eval();
-			p.set_R(i, tmp.transpose() * tmp);
+			auto tmp = MatrixXd::Random(sz.nu(), sz.nu()).eval();
+			stage.set_R(tmp.transpose() * tmp);
 		}
 
-		p.set_S(i, MatrixXd::Random(sz[i].nx(), sz[i].nu()));
-		p.set_q(i, VectorXd::Random(sz[i].nx()));
-		p.set_r(i, VectorXd::Random(sz[i].nu()));
+		stage.set_S(MatrixXd::Random(sz.nx(), sz.nu()));
+		stage.set_q(VectorXd::Random(sz.nx()));
+		stage.set_r(VectorXd::Random(sz.nu()));
 	}
 
 	std::cout << "p.H() = " << std::endl << p.H() << std::endl;

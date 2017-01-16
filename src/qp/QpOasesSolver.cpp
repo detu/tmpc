@@ -46,7 +46,7 @@ QpOasesSolver::QpOasesSolver(std::vector<QpSize> const& sz)
 void QpOasesSolver::Solve(Problem const& qp, Solution& solution)
 {
 	// Check argument sizes.
-	if (qp.size() != size_)
+	if (qp.stageSize() != size_)
 		throw std::invalid_argument("QpOasesSolver::Solve(): size of MultistageQP does not match solver sizes, sorry.");
 
 	if (solution.size() != size_)

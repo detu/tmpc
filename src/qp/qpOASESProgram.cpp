@@ -130,7 +130,8 @@ void qpOASESProgram::InitStages()
 
 qpOASESProgram::Stage::Stage(QpSize const& sz, std::size_t nx_next, std::size_t stride,
 		Scalar * H, Scalar * g,	Scalar * lb, Scalar * ub, Scalar * A, Scalar * lbA, Scalar * ubA)
-:	Q_(H, sz.nx(), sz.nx(), Eigen::OuterStride<>(stride))
+:	size_(sz)
+,	Q_(H, sz.nx(), sz.nx(), Eigen::OuterStride<>(stride))
 ,	R_(H + sz.nx() * stride + sz.nx(), sz.nu(), sz.nu(), Eigen::OuterStride<>(stride))
 ,	S_(H + sz.nx(), sz.nx(), sz.nu(), Eigen::OuterStride<>(stride))
 ,	ST_(H + sz.nx() * stride, sz.nu(), sz.nx(), Eigen::OuterStride<>(stride))
