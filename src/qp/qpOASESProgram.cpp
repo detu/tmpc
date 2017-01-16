@@ -118,15 +118,14 @@ void qpOASESProgram::InitStages()
 
 	for (auto sz = size_.cbegin(); sz != size_.cend(); ++sz)
 	{
-		auto const sz_next = sz + 1;
-		auto const nx_next = sz_next != size_.end() ? sz_next->nx() : 0;
+		auto const nx_next = sz + 1 != size_.end() ? (sz + 1)->nx() : 0;
 		stage_.emplace_back(*sz, nx_next, stride, pH, pg, plb, pub, pA, plbA, pubA);
 
 		pH += (sz->nx() + sz->nu()) * stride + sz->nx() + sz->nu();
 		pg += sz->nx() + sz->nu();
 		plb += sz->nx() + sz->nu();
 		pub += sz->nx() + sz->nu();
-		pA += (sz_next->nx() + sz->nc()) * stride + sz->nx() + sz->nu();
+		pA += (nx_next + sz->nc()) * stride + sz->nx() + sz->nu();
 		plbA += nx_next + sz->nc();
 		pubA += nx_next + sz->nc();
 	}
