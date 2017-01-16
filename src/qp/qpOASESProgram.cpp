@@ -59,13 +59,13 @@ qpOASESProgram::qpOASESProgram(std::vector<QpSize> const& sz, size_type nx, size
 
 	nT_ = sz.size() - 1;
 
-	// Init the -I blocks in the A matrix
+	// Init the -I blocks in the A matrix and 0 blocks in lbA and ubA
 
 	// (i, j) = top left corner of the current AB block
 	size_type i = 0;
 	size_type j = 0;
 
-	for (auto sz = size_.begin(); sz + 1 < size_.end(); ++sz)
+	for (auto sz = size_.cbegin(); sz + 1 < size_.cend(); ++sz)
 	{
 		// Move (i, j) one column right from the top left corner of the current AB block,
 		// which is the top left corner of the -I block.
@@ -74,8 +74,12 @@ qpOASESProgram::qpOASESProgram(std::vector<QpSize> const& sz, size_type nx, size
 		// Size of the -I block
 		auto const nx_next = (sz + 1)->nx();
 
-		// Assign the -I block
+		// Assign the -I block in A
 		_A.block(i, j, nx_next, nx_next) = -Matrix::Identity(nx_next, nx_next);
+
+		// Assign the 0 blocks in lbA and ubA
+		_lbA.segment(i, nx_next).setZero();
+		_ubA.segment(i, nx_next).setZero();
 
 		// Move (i, j) to the top left corner of the next AB block.
 		i += nx_next + sz->nc();
@@ -123,8 +127,8 @@ void qpOASESProgram::InitStages()
 		plb += sz->nx() + sz->nu();
 		pub += sz->nx() + sz->nu();
 		pA += (sz_next->nx() + sz->nc()) * stride + sz->nx() + sz->nu();
-		plbA += sz_next->nx() + sz->nc();
-		pubA += sz_next->nx() + sz->nc();
+		plbA += nx_next + sz->nc();
+		pubA += nx_next + sz->nc();
 	}
 }
 
@@ -147,8 +151,8 @@ qpOASESProgram::Stage::Stage(QpSize const& sz, std::size_t nx_next, std::size_t 
 ,	ubb_(ubA, nx_next)
 ,	C_(A + stride * nx_next, sz.nc(), sz.nx(), Eigen::OuterStride<>(stride))
 ,	D_(A + stride * nx_next + sz.nx(), sz.nc(), sz.nu(), Eigen::OuterStride<>(stride))
-,	lbd_(lbA + sz.nx(), sz.nc())
-,	ubd_(ubA + sz.nx(), sz.nc())
+,	lbd_(lbA + nx_next, sz.nc())
+,	ubd_(ubA + nx_next, sz.nc())
 {
 }
 

@@ -24,7 +24,7 @@ TEST(QpOasesProblemTest, test_MatricesCorrect)
 	p.set_R(0, (Eigen::MatrixXd(1, 1) << 3.).finished());
 	p.set_S(0, (Eigen::MatrixXd(2, 1) << 4., 5.).finished());
 
-	EXPECT_PRED2(MatrixApproxEquality(1e-6), p.H(),
+	EXPECT_EQ(p.H(),
 		(Eigen::MatrixXd(3, 3) << 1., 2., 4.,
   							      2., 1., 5.,
 								  4., 5., 3.).finished());
@@ -33,8 +33,7 @@ TEST(QpOasesProblemTest, test_MatricesCorrect)
 	p.set_q(0, (Eigen::MatrixXd(2, 1) << 6., 7.).finished());
 	p.set_r(0, (Eigen::MatrixXd(1, 1) << 8.).finished());
 
-	EXPECT_PRED2(MatrixApproxEquality(1e-6), p.g(),
-			(Eigen::MatrixXd(3, 1) << 6., 7., 8.).finished());
+	EXPECT_EQ(p.g(), (Eigen::MatrixXd(3, 1) << 6., 7., 8.).finished());
 }
 
 TEST(QpOasesProblemTest, test_MatricesCorrect_1)
@@ -44,9 +43,9 @@ TEST(QpOasesProblemTest, test_MatricesCorrect_1)
 	using Eigen::MatrixXd;
 	using Eigen::VectorXd;
 
-	std::array<QpSize, 3> sz = {QpSize(2, 1, 0), QpSize(2, 2, 0), QpSize(3, 1, 0)};
+	std::array<QpSize, 3> sz = {QpSize(2, 1, 2), QpSize(2, 2, 1), QpSize(3, 1, 3)};
 	auto const total_nx = tmpc::numVariables(sz.begin(), sz.end());
-	auto const total_nc = tmpc::numEqualities(sz.begin(), sz.end());
+	auto const total_nc = tmpc::numEqualities(sz.begin(), sz.end()) + tmpc::numInequalities(sz.begin(), sz.end());
 
 	qpOASESProgram p(sz.begin(), sz.end());
 
@@ -81,13 +80,22 @@ TEST(QpOasesProblemTest, test_MatricesCorrect_1)
 			stage->set_A(MatrixXd::Random((stage + 1)->size().nx(), sz.nx()));
 			stage->set_B(MatrixXd::Random((stage + 1)->size().nx(), sz.nu()));
 		}
+
+		stage->set_C(MatrixXd::Random(sz.nc(), sz.nx()));
+		stage->set_D(MatrixXd::Random(sz.nc(), sz.nu()));
+		stage->set_lbd(VectorXd::Random(sz.nc()));
+		stage->set_ubd(VectorXd::Random(sz.nc()));
 	}
 
+	/*
 	std::cout << "p.H() = " << std::endl << p.H() << std::endl;
 	std::cout << "p.g() = " << std::endl << p.g() << std::endl;
 	std::cout << "p.lb() = " << std::endl << p.lb() << std::endl;
 	std::cout << "p.ub() = " << std::endl << p.ub() << std::endl;
 	std::cout << "p.A() = " << std::endl << p.A() << std::endl;
+	std::cout << "p.lbA() = " << std::endl << p.lbA() << std::endl;
+	std::cout << "p.ubA() = " << std::endl << p.ubA() << std::endl;
+	*/
 
 	EXPECT_EQ(print_wrap(p.H()), print_wrap((MatrixXd(total_nx, total_nx) <<
 		p[0].get_Q(),             p[0].get_S(),              MatrixXd::Zero(sz[0].nx(), sz[1].nx() + sz[1].nu()), MatrixXd::Zero(sz[0].nx(), sz[2].nx() + sz[2].nu()),
@@ -111,7 +119,18 @@ TEST(QpOasesProblemTest, test_MatricesCorrect_1)
 	).finished()));
 
 	EXPECT_EQ(print_wrap(p.A()), print_wrap((MatrixXd(total_nc, total_nx) <<
-		p[0].get_A(),                           p[0].get_B(),                           -MatrixXd::Identity(sz[1].nx(), sz[1].nx()), MatrixXd::Zero(sz[1].nx(), sz[1].nu()),  MatrixXd::Zero(sz[1].nx(), sz[2].nx()), MatrixXd::Zero(sz[1].nx(), sz[2].nu()),
-		MatrixXd::Zero(sz[2].nx(), sz[0].nx()), MatrixXd::Zero(sz[2].nx(), sz[0].nu()),  p[1].get_A(),                               p[1].get_B(),                           -MatrixXd::Identity(sz[2].nx(), sz[2].nx()), MatrixXd::Zero(sz[2].nx(), sz[2].nu())
+		p[0].get_A(),                           p[0].get_B(),                           -MatrixXd::Identity(sz[1].nx(), sz[1].nx()), MatrixXd::Zero(sz[1].nx(), sz[1].nu()),  MatrixXd::Zero(sz[1].nx(), sz[2].nx()),     MatrixXd::Zero(sz[1].nx(), sz[2].nu()),
+		p[0].get_C(),                           p[0].get_D(),                            MatrixXd::Zero(sz[0].nc(), sz[1].nx()),     MatrixXd::Zero(sz[0].nc(), sz[1].nu()),  MatrixXd::Zero(sz[0].nc(), sz[2].nx()),     MatrixXd::Zero(sz[0].nc(), sz[2].nu()),
+		MatrixXd::Zero(sz[2].nx(), sz[0].nx()), MatrixXd::Zero(sz[2].nx(), sz[0].nu()),  p[1].get_A(),                               p[1].get_B(),                           -MatrixXd::Identity(sz[2].nx(), sz[2].nx()), MatrixXd::Zero(sz[2].nx(), sz[2].nu()),
+	    MatrixXd::Zero(sz[1].nc(), sz[0].nx()), MatrixXd::Zero(sz[1].nc(), sz[0].nu()),  p[1].get_C(),                               p[1].get_D(),                            MatrixXd::Zero(sz[1].nc(), sz[2].nx()),     MatrixXd::Zero(sz[1].nc(), sz[2].nu()),
+		MatrixXd::Zero(sz[2].nc(), sz[0].nx()), MatrixXd::Zero(sz[2].nc(), sz[0].nu()),  MatrixXd::Zero(sz[2].nc(), sz[1].nx()),     MatrixXd::Zero(sz[2].nc(), sz[1].nu()),  p[2].get_C(),                               p[2].get_D()
+	).finished()));
+
+	EXPECT_EQ(print_wrap(p.lbA()), print_wrap((VectorXd(total_nc) <<
+		VectorXd::Zero(sz[1].nx()), p[0].get_lbd(), VectorXd::Zero(sz[2].nx()), p[1].get_lbd(), p[2].get_lbd()
+	).finished()));
+
+	EXPECT_EQ(print_wrap(p.ubA()), print_wrap((VectorXd(total_nc) <<
+		VectorXd::Zero(sz[1].nx()), p[0].get_ubd(), VectorXd::Zero(sz[2].nx()), p[1].get_ubd(), p[2].get_ubd()
 	).finished()));
 }
