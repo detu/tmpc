@@ -122,9 +122,9 @@ void qpOASESProgram::InitStages()
 		pg += sz->nx() + sz->nu();
 		plb += sz->nx() + sz->nu();
 		pub += sz->nx() + sz->nu();
-		pA += (sz->nx() + sz->nc()) * stride;
-		plbA += (sz + 1)->nx() + sz->nc();
-		pubA += (sz + 1)->nx() + sz->nc();
+		pA += (sz_next->nx() + sz->nc()) * stride + sz->nx() + sz->nu();
+		plbA += sz_next->nx() + sz->nc();
+		pubA += sz_next->nx() + sz->nc();
 	}
 }
 

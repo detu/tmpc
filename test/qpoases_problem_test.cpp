@@ -15,7 +15,7 @@
 
 #include <array>
 
-TEST(QpOasesProblemTest, MatricesCorrect_test)
+TEST(QpOasesProblemTest, test_MatricesCorrect)
 {
 	tmpc::qpOASESProgram p({tmpc::QpSize(2, 1, 0)});
 
@@ -37,7 +37,7 @@ TEST(QpOasesProblemTest, MatricesCorrect_test)
 			(Eigen::MatrixXd(3, 1) << 6., 7., 8.).finished());
 }
 
-TEST(QpOasesProblemTest, H_Problem0_correct)
+TEST(QpOasesProblemTest, test_MatricesCorrect_1)
 {
 	using tmpc::qpOASESProgram;
 	using tmpc::QpSize;
@@ -46,6 +46,7 @@ TEST(QpOasesProblemTest, H_Problem0_correct)
 
 	std::array<QpSize, 3> sz = {QpSize(2, 1, 0), QpSize(2, 2, 0), QpSize(3, 1, 0)};
 	auto const total_nx = tmpc::numVariables(sz.begin(), sz.end());
+	auto const total_nc = tmpc::numEqualities(sz.begin(), sz.end());
 
 	qpOASESProgram p(sz.begin(), sz.end());
 
@@ -53,38 +54,64 @@ TEST(QpOasesProblemTest, H_Problem0_correct)
 	// Test H, g
 	//---------------
 
-	for (auto& stage : p)
+	for (auto stage = p.begin(); stage != p.end(); ++stage)
 	{
-		QpSize const sz = stage.size();
+		QpSize const sz = stage->size();
 
 		{
 			auto tmp = MatrixXd::Random(sz.nx(), sz.nx()).eval();
-			stage.set_Q(tmp.transpose() * tmp);
+			stage->set_Q(tmp.transpose() * tmp);
 		}
 
 		{
 			auto tmp = MatrixXd::Random(sz.nu(), sz.nu()).eval();
-			stage.set_R(tmp.transpose() * tmp);
+			stage->set_R(tmp.transpose() * tmp);
 		}
 
-		stage.set_S(MatrixXd::Random(sz.nx(), sz.nu()));
-		stage.set_q(VectorXd::Random(sz.nx()));
-		stage.set_r(VectorXd::Random(sz.nu()));
+		stage->set_S(MatrixXd::Random(sz.nx(), sz.nu()));
+		stage->set_q(VectorXd::Random(sz.nx()));
+		stage->set_r(VectorXd::Random(sz.nu()));
+		stage->set_lbx(VectorXd::Random(sz.nx()));
+		stage->set_ubx(VectorXd::Random(sz.nx()));
+		stage->set_lbu(VectorXd::Random(sz.nu()));
+		stage->set_ubu(VectorXd::Random(sz.nu()));
+
+		if (stage + 1 != p.end())
+		{
+			stage->set_A(MatrixXd::Random((stage + 1)->size().nx(), sz.nx()));
+			stage->set_B(MatrixXd::Random((stage + 1)->size().nx(), sz.nu()));
+		}
 	}
 
 	std::cout << "p.H() = " << std::endl << p.H() << std::endl;
 	std::cout << "p.g() = " << std::endl << p.g() << std::endl;
+	std::cout << "p.lb() = " << std::endl << p.lb() << std::endl;
+	std::cout << "p.ub() = " << std::endl << p.ub() << std::endl;
+	std::cout << "p.A() = " << std::endl << p.A() << std::endl;
 
 	EXPECT_EQ(print_wrap(p.H()), print_wrap((MatrixXd(total_nx, total_nx) <<
-		p.get_Q(0),             p.get_S(0),                  MatrixXd::Zero(sz[0].nx(), sz[1].nx() + sz[1].nu()), MatrixXd::Zero(sz[0].nx(), sz[2].nx() + sz[2].nu()),
-		p.get_S(0).transpose(), p.get_R(0),                  MatrixXd::Zero(sz[0].nu(), sz[1].nx() + sz[1].nu()), MatrixXd::Zero(sz[0].nu(), sz[2].nx() + sz[2].nu()),
-		MatrixXd::Zero(sz[1].nx(), sz[0].nx() + sz[0].nu()), p.get_Q(1),             p.get_S(1),                  MatrixXd::Zero(sz[1].nx(), sz[2].nx() + sz[2].nu()),
-		MatrixXd::Zero(sz[1].nu(), sz[0].nx() + sz[0].nu()), p.get_S(1).transpose(), p.get_R(1),                  MatrixXd::Zero(sz[1].nu(), sz[2].nx() + sz[2].nu()),
-		MatrixXd::Zero(sz[2].nx(), sz[0].nx() + sz[0].nu()), MatrixXd::Zero(sz[2].nx(), sz[1].nx() + sz[1].nu()), p.get_Q(2),	            p.get_S(2),
-		MatrixXd::Zero(sz[2].nu(), sz[0].nx() + sz[0].nu()), MatrixXd::Zero(sz[2].nu(), sz[1].nx() + sz[1].nu()), p.get_S(2).transpose(),	p.get_R(2)
+		p[0].get_Q(),             p[0].get_S(),              MatrixXd::Zero(sz[0].nx(), sz[1].nx() + sz[1].nu()), MatrixXd::Zero(sz[0].nx(), sz[2].nx() + sz[2].nu()),
+		p[0].get_S().transpose(), p[0].get_R(),              MatrixXd::Zero(sz[0].nu(), sz[1].nx() + sz[1].nu()), MatrixXd::Zero(sz[0].nu(), sz[2].nx() + sz[2].nu()),
+		MatrixXd::Zero(sz[1].nx(), sz[0].nx() + sz[0].nu()), p[1].get_Q(),             p[1].get_S(),              MatrixXd::Zero(sz[1].nx(), sz[2].nx() + sz[2].nu()),
+		MatrixXd::Zero(sz[1].nu(), sz[0].nx() + sz[0].nu()), p[1].get_S().transpose(), p[1].get_R(),              MatrixXd::Zero(sz[1].nu(), sz[2].nx() + sz[2].nu()),
+		MatrixXd::Zero(sz[2].nx(), sz[0].nx() + sz[0].nu()), MatrixXd::Zero(sz[2].nx(), sz[1].nx() + sz[1].nu()), p[2].get_Q(),	            p[2].get_S(),
+		MatrixXd::Zero(sz[2].nu(), sz[0].nx() + sz[0].nu()), MatrixXd::Zero(sz[2].nu(), sz[1].nx() + sz[1].nu()), p[2].get_S().transpose(),	p[2].get_R()
 	).finished()));
 
 	EXPECT_EQ(print_wrap(p.g()), print_wrap((VectorXd(total_nx) <<
 		p.get_q(0), p.get_r(0), p.get_q(1), p.get_r(1), p.get_q(2), p.get_r(2)
+	).finished()));
+
+	EXPECT_EQ(print_wrap(p.lb()), print_wrap((VectorXd(total_nx) <<
+		p[0].get_lbx(), p[0].get_lbu(), p[1].get_lbx(), p[1].get_lbu(), p[2].get_lbx(), p[2].get_lbu()
+	).finished()));
+
+	EXPECT_EQ(print_wrap(p.ub()), print_wrap((VectorXd(total_nx) <<
+		p[0].get_ubx(), p[0].get_ubu(), p[1].get_ubx(), p[1].get_ubu(), p[2].get_ubx(), p[2].get_ubu()
+	).finished()));
+
+	EXPECT_EQ(print_wrap(p.A()), print_wrap((MatrixXd(total_nc, total_nx) <<
+		p[0].get_A(),                           p[0].get_B(),                           -MatrixXd::Identity(sz[1].nx(), sz[1].nx()), MatrixXd::Zero(sz[1].nx(), sz[1].nu()),  MatrixXd::Zero(sz[1].nx(), sz[2].nx()), MatrixXd::Zero(sz[1].nx(), sz[2].nu()),
+		MatrixXd::Zero(sz[2].nx(), sz[0].nx()), MatrixXd::Zero(sz[2].nx(), sz[0].nu()),  p[1].get_A(),                               p[1].get_B(),                           -MatrixXd::Identity(sz[2].nx(), sz[2].nx()), MatrixXd::Zero(sz[2].nx(), sz[2].nu())
 	).finished()));
 }

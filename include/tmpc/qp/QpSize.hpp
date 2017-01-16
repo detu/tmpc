@@ -79,11 +79,25 @@ std::size_t numEqualities(InputIt sz_begin, InputIt sz_end)
 		[] (std::size_t n, QpSize const& s) { return n + s.nx(); });
 }
 
+/**
+ * \brief Total number of rows in all inequalities like lbg[k] <= C[k]*x[k] + D[k]*u[k] <= ubg[k]
+ */
 template <typename InputIt>
 std::size_t numInequalities(InputIt sz_begin, InputIt sz_end)
 {
 	return std::accumulate(sz_begin, sz_end, std::size_t{0},
-		[] (std::size_t n, QpSize const& s) { return n + s.nx() + s.nu() + s.nc(); });
+		[] (std::size_t n, QpSize const& s) { return n + s.nc(); });
+}
+
+/**
+ * \brief Total number of rows in all bound inequalities like lbx[k] <= x[x] <= ubx[k]
+ * and lbu[k] <= u[x] <= ubu[k]
+ */
+template <typename InputIt>
+std::size_t numBounds(InputIt sz_begin, InputIt sz_end)
+{
+	return std::accumulate(sz_begin, sz_end, std::size_t{0},
+		[] (std::size_t n, QpSize const& s) { return n + s.nx() + s.nu(); });
 }
 
 /**

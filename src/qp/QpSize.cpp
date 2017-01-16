@@ -13,20 +13,17 @@ namespace tmpc {
 
 std::size_t numVariables(std::vector<QpSize> const& sz)
 {
-	return std::accumulate(sz.begin(), sz.end(), std::size_t{0},
-		[] (std::size_t n, QpSize const& s) { return n + s.nx() + s.nu(); });
+	return numVariables(sz.begin(), sz.end());
 }
 
 std::size_t numEqualities(std::vector<QpSize> const& sz)
 {
-	return sz.empty() ? 0 : std::accumulate(sz.begin() + 1, sz.end(), std::size_t{0},
-		[] (std::size_t n, QpSize const& s) { return n + s.nx(); });
+	return numEqualities(sz.begin(), sz.end());
 }
 
 std::size_t numInequalities(std::vector<QpSize> const& sz)
 {
-	return std::accumulate(sz.begin(), sz.end(), std::size_t{0},
-		[] (std::size_t n, QpSize const& s) { return n + s.nx() + s.nu() + s.nc(); });
+	return numInequalities(sz.begin(), sz.end());
 }
 
 }	// namespace tmpc
