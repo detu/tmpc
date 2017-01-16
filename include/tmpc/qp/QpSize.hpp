@@ -86,4 +86,45 @@ std::size_t numInequalities(InputIt sz_begin, InputIt sz_end)
 		[] (std::size_t n, QpSize const& s) { return n + s.nx() + s.nu() + s.nc(); });
 }
 
+/**
+ * \brief An iterator through QP stages returning stage's QpSize.
+ */
+template <typename StageIterator>
+class QpSizeIterator
+{
+public:
+	explicit QpSizeIterator(StageIterator const& it)
+	:	it_(it)
+	{
+	}
+
+	decltype(auto) operator*() const
+	{
+		return it_->size();
+	}
+
+	QpSizeIterator& operator++()
+	{
+		++it_;
+		return *this;
+	}
+
+	QpSizeIterator operator++(int)
+	{
+		return QpSizeIterator(it_++);
+	}
+
+private:
+	StageIterator it_;
+};
+
+/**
+ * \brief Helper function to create a QpSizeIterator from an arbitrary iterator type implementing StageIterator concept.
+ */
+template <typename StageIterator>
+QpSizeIterator<StageIterator> qpSizeIterator(StageIterator const& it)
+{
+	return QpSizeIterator<StageIterator>(it);
+}
+
 }	// namespace tmpc

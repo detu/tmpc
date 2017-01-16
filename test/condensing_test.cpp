@@ -129,7 +129,7 @@ protected:
 TEST_F(CondensingTest, condensing_test)
 {
 	// Condense
-	tmpc::qpOASESProgram condensed({tmpc::CondensedQpSize(qp.size())});
+	tmpc::qpOASESProgram condensed({tmpc::condensedQpSize(qp.size())});
 	tmpc::Condense<K, Dimensions>(qp, condensed);
 
 	EXPECT_EQ(print_wrap(condensed.H()), print_wrap(Hc_expected));
@@ -138,7 +138,7 @@ TEST_F(CondensingTest, condensing_test)
 
 TEST(QpSizeTest, test_CondensedQpSize)
 {
-	EXPECT_EQ(tmpc::CondensedQpSize({
+	EXPECT_EQ(tmpc::condensedQpSize({
 		tmpc::QpSize(2, 1, 3),
 		tmpc::QpSize(4, 5, 6),
 		tmpc::QpSize(2, 1, 1)
@@ -146,3 +146,14 @@ TEST(QpSizeTest, test_CondensedQpSize)
 		tmpc::QpSize(2, 1 + 5 + 1, (3 + 6 + 1) + (4 + 2)));
 }
 
+TEST(QpSizeTest, test_CondensedQpSize_iteratorRange)
+{
+	std::array<tmpc::QpSize, 3> sz = {
+		tmpc::QpSize(2, 1, 3),
+		tmpc::QpSize(4, 5, 6),
+		tmpc::QpSize(2, 1, 1)
+		};
+
+	EXPECT_EQ(tmpc::condensedQpSize(sz.begin(), sz.end()),
+		tmpc::QpSize(2, 1 + 5 + 1, (3 + 6 + 1) + (4 + 2)));
+}

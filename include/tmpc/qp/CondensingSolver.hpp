@@ -51,7 +51,7 @@ public:
 
 	CondensingSolver(size_type nt, qpOASES::Options const& options = detail::qpOASES_DefaultOptions())
 	:	_Nt(nt)
-	,	_condensedQP({CondensedQpSize(RtiQpSize(nt, NX, NU, NC, NCT))})
+	,	_condensedQP({condensedQpSize(RtiQpSize(nt, NX, NU, NC, NCT))})
 	,	_condensedSolution(nIndep(nt))
 	,	_problem(nIndep(nt), nDep(nt) + nConstr(nt))
 	{

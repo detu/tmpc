@@ -12,7 +12,7 @@
 
 namespace tmpc {
 
-QpSize CondensedQpSize(std::vector<QpSize> const& sz)
+QpSize condensedQpSize(std::vector<QpSize> const& sz)
 {
 	if (sz.empty())
 		throw std::invalid_argument("CondensedSize(): vector of QpSize must be not empty");
