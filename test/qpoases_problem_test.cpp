@@ -8,7 +8,7 @@
 #include "gtest_tools_eigen.hpp"
 //#include "qp_test_problems.hpp"
 
-#include <tmpc/qp/qpOASESProgram.hpp>
+#include <tmpc/qp/QpOasesProblem.hpp>
 #include <tmpc/qp/Printing.hpp>
 
 #include <gtest/gtest.h>
@@ -17,7 +17,7 @@
 
 TEST(QpOasesProblemTest, test_MatricesCorrect)
 {
-	tmpc::qpOASESProgram p({tmpc::QpSize(2, 1, 0)});
+	tmpc::QpOasesProblem p({tmpc::QpSize(2, 1, 0)});
 
 	// Test H = [Q, S; S', R]
 	p.set_Q(0, (Eigen::MatrixXd(2, 2) << 1., 2., 2., 1).finished());
@@ -38,7 +38,7 @@ TEST(QpOasesProblemTest, test_MatricesCorrect)
 
 TEST(QpOasesProblemTest, test_MatricesCorrect_1)
 {
-	using tmpc::qpOASESProgram;
+	using tmpc::QpOasesProblem;
 	using tmpc::QpSize;
 	using Eigen::MatrixXd;
 	using Eigen::VectorXd;
@@ -47,7 +47,7 @@ TEST(QpOasesProblemTest, test_MatricesCorrect_1)
 	auto const total_nx = tmpc::numVariables(sz.begin(), sz.end());
 	auto const total_nc = tmpc::numEqualities(sz.begin(), sz.end()) + tmpc::numInequalities(sz.begin(), sz.end());
 
-	qpOASESProgram p(sz.begin(), sz.end());
+	QpOasesProblem p(sz.begin(), sz.end());
 
 	//---------------
 	// Test H, g

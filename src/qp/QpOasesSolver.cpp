@@ -23,7 +23,7 @@ qpOASES::Options qpOASES_DefaultOptions()
 }
 }	// namespace detail
 
-QpOasesSolveException::QpOasesSolveException(qpOASES::returnValue code, qpOASESProgram const& qp)
+QpOasesSolveException::QpOasesSolveException(qpOASES::returnValue code, QpOasesProblem const& qp)
 :	UnsolvedQpException("qpOASES", qp),
 	_code(code),
 	qpOasesProblem_(qp),
