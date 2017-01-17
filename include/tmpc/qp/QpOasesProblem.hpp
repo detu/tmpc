@@ -15,7 +15,7 @@ namespace tmpc {
  *
  * Implements concept: QuadraticProgram.
  */
-class qpOASESProgram
+class QpOasesProblem
 {
 	// Matrix storage option for Eigen -- important!
 	// Must be RowMajor, because qpOASES expects input matrices in column-major format.
@@ -209,28 +209,28 @@ public:
 		VectorMap ubd_;
 	};
 
-	qpOASESProgram(size_type nx, size_type nc);
+	QpOasesProblem(size_type nx, size_type nc);
 	/**
 	 * \brief Initialize from QpSize initializer list.
 	 */
-	qpOASESProgram(std::initializer_list<QpSize> sz);
+	QpOasesProblem(std::initializer_list<QpSize> sz);
 
 	/**
 	 * \brief Initialize from a vector of QpSize.
 	 */
-	qpOASESProgram(std::vector<QpSize> const& sz);
+	QpOasesProblem(std::vector<QpSize> const& sz);
 
 	/**
 	 * \brief Initialize from QpSize list defined by iterator range.
 	 */
 	template <typename InputIterator>
-	qpOASESProgram(InputIterator size_begin, InputIterator size_end)
-	:	qpOASESProgram(std::vector<QpSize>(size_begin, size_end))
+	QpOasesProblem(InputIterator size_begin, InputIterator size_end)
+	:	QpOasesProblem(std::vector<QpSize>(size_begin, size_end))
 	{
 	}
 
-	qpOASESProgram(qpOASESProgram const& rhs);
-	qpOASESProgram(qpOASESProgram &&) = default;
+	QpOasesProblem(QpOasesProblem const& rhs);
+	QpOasesProblem(QpOasesProblem &&) = default;
 
 	size_type nx() const { return static_cast<size_type>(_H.rows()); }
 	size_type nc() const { return static_cast<size_type>(_A.rows()); }
@@ -598,7 +598,7 @@ public:
 	double const * ub_data() const noexcept { return _ub.data(); }
 
 private:
-	qpOASESProgram(std::vector<QpSize> const& sz, size_type n_var, size_type n_constr);
+	QpOasesProblem(std::vector<QpSize> const& sz, size_type n_var, size_type n_constr);
 	void InitStages();
 
 	std::vector<QpSize> const size_;
@@ -623,6 +623,6 @@ private:
 	Vector _ubA;
 };
 
-void Print_MATLAB(std::ostream& log_stream, qpOASESProgram const& qp, std::string const& var_name);
+void Print_MATLAB(std::ostream& log_stream, QpOasesProblem const& qp, std::string const& var_name);
 
 }	// namespace tmpc

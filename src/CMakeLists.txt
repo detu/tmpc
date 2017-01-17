@@ -19,8 +19,7 @@ set (SRC
     ${TMPC_INCLUDE_DIR}/qp/QpSize.hpp    qp/QpSize.cpp
 	${TMPC_INCLUDE_DIR}/qp/Condensing.hpp    qp/Condensing.cpp
 	${TMPC_INCLUDE_DIR}/qp/MultiStageQPSolution.hpp
-	${TMPC_INCLUDE_DIR}/qp/QpOasesSolution.hpp
-	
+		
 	${TMPC_INCLUDE_DIR}/qp/diagnostics.hpp
 	${TMPC_INCLUDE_DIR}/qp/UnsolvedQpException.hpp
 )
@@ -66,8 +65,8 @@ if (qpOASES_FOUND)
         PRIVATE qp/CondensingSolver.cpp
         PRIVATE ${TMPC_INCLUDE_DIR}/qp/QpOasesSolver.hpp  
         PRIVATE qp/QpOasesSolver.cpp
-        PRIVATE ${TMPC_INCLUDE_DIR}/qp/qpOASESProgram.hpp    
-        PRIVATE qp/qpOASESProgram.cpp	
+        PRIVATE ${TMPC_INCLUDE_DIR}/qp/QpOasesProblem.hpp    
+        PRIVATE qp/QpOasesProblem.cpp	
         PRIVATE ${TMPC_INCLUDE_DIR}/qp/QpOasesSolution.hpp    
         PRIVATE qp/QpOasesSolution.cpp	
 	)

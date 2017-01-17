@@ -5,14 +5,13 @@
  *      Author: kotlyar
  */
 
-#include <tmpc/qp/qpOASESProgram.hpp>
-
+#include <qp/QpOasesProblem.hpp>
 #include <numeric>
 #include <limits>
 
 namespace tmpc {
 
-static auto constexpr sNaN = std::numeric_limits<qpOASESProgram::Scalar>::signaling_NaN();
+static auto constexpr sNaN = std::numeric_limits<QpOasesProblem::Scalar>::signaling_NaN();
 
 static std::size_t totalNumVariables(std::vector<QpSize> const& sz)
 {
@@ -28,23 +27,23 @@ static std::size_t totalNumConstraints(std::vector<QpSize> const& sz)
 				[] (std::size_t n, QpSize const& sz) { return n + sz.nx(); });
 }
 
-qpOASESProgram::qpOASESProgram(std::vector<QpSize> const& sz)
-:	qpOASESProgram(sz, totalNumVariables(sz), totalNumConstraints(sz))
+QpOasesProblem::QpOasesProblem(std::vector<QpSize> const& sz)
+:	QpOasesProblem(sz, totalNumVariables(sz), totalNumConstraints(sz))
 {
 
 }
 
-qpOASESProgram::qpOASESProgram(std::initializer_list<QpSize> sz)
-:	qpOASESProgram(std::vector<QpSize>(sz))
+QpOasesProblem::QpOasesProblem(std::initializer_list<QpSize> sz)
+:	QpOasesProblem(std::vector<QpSize>(sz))
 {
 }
 
-qpOASESProgram::qpOASESProgram(size_type nx, size_type nc)
-:	qpOASESProgram(std::vector<QpSize>(1, QpSize(nx, 0, nc)), nx, nc)
+QpOasesProblem::QpOasesProblem(size_type nx, size_type nc)
+:	QpOasesProblem(std::vector<QpSize>(1, QpSize(nx, 0, nc)), nx, nc)
 {
 }
 
-qpOASESProgram::qpOASESProgram(std::vector<QpSize> const& sz, size_type nx, size_type nc)
+QpOasesProblem::QpOasesProblem(std::vector<QpSize> const& sz, size_type nx, size_type nc)
 :	size_(sz)
 ,	_H(Matrix::Constant(nx, nx, Scalar{0}))
 ,	_g(Vector::Constant(nx, sNaN))
@@ -89,7 +88,7 @@ qpOASESProgram::qpOASESProgram(std::vector<QpSize> const& sz, size_type nx, size
 	InitStages();
 }
 
-qpOASESProgram::qpOASESProgram(qpOASESProgram const& rhs)
+QpOasesProblem::QpOasesProblem(QpOasesProblem const& rhs)
 :	size_(rhs.size_)
 ,	_H(rhs._H)
 ,	_g(rhs._g)
@@ -102,7 +101,7 @@ qpOASESProgram::qpOASESProgram(qpOASESProgram const& rhs)
 	InitStages();
 }
 
-void qpOASESProgram::InitStages()
+void QpOasesProblem::InitStages()
 {
 	assert(stage_.empty());
 	stage_.reserve(size_.size());
@@ -131,7 +130,7 @@ void qpOASESProgram::InitStages()
 	}
 }
 
-qpOASESProgram::Stage::Stage(QpSize const& sz, std::size_t nx_next, std::size_t stride,
+QpOasesProblem::Stage::Stage(QpSize const& sz, std::size_t nx_next, std::size_t stride,
 		Scalar * H, Scalar * g,	Scalar * lb, Scalar * ub, Scalar * A, Scalar * lbA, Scalar * ubA)
 :	size_(sz)
 ,	Q_(H, sz.nx(), sz.nx(), Eigen::OuterStride<>(stride))
@@ -155,7 +154,7 @@ qpOASESProgram::Stage::Stage(QpSize const& sz, std::size_t nx_next, std::size_t 
 {
 }
 
-void Print_MATLAB(std::ostream& log_stream, qpOASESProgram const& qp, std::string const& var_name)
+void Print_MATLAB(std::ostream& log_stream, QpOasesProblem const& qp, std::string const& var_name)
 {
 	using std::endl;
 

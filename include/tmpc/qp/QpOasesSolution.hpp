@@ -52,71 +52,166 @@ namespace tmpc
 		QpOasesSolution(QpOasesSolution const&) = delete;
 		QpOasesSolution(QpOasesSolution &&) = default;
 
-		VectorMap const& get_x(std::size_t i) const
+		//---------------------------
+		// Access interface
+		//---------------------------
+
+		class Stage
 		{
-			return stage(i).x_;
+		public:
+			Stage(QpSize const& sz, std::size_t nx_plus, double * x, double * lam_x, double * lam);
+
+			VectorMap const& get_x() const
+			{
+				return x_;
+			}
+
+			VectorMap const& get_u() const
+			{
+				return u_;
+			}
+
+			VectorMap const& get_pi() const
+			{
+				return pi_;
+			}
+
+			VectorMap const& get_lam_u() const
+			{
+				return lamU_;
+			}
+
+			VectorMap const& get_lam_x() const
+			{
+				return lamX_;
+			}
+
+			VectorMap const& get_lam_d() const
+			{
+				return lam_;
+			}
+
+		private:
+			VectorMap x_;
+			VectorMap u_;
+			VectorMap lamX_;
+			VectorMap lamU_;
+			VectorMap lam_;
+			VectorMap pi_;
+		};
+
+		Stage const& operator[](std::size_t i) const
+		{
+			return stage_.at(i);
 		}
 
-		template <typename Matrix>
-		void set_x(std::size_t i, Eigen::MatrixBase<Matrix> const& val)
+		Stage& operator[](std::size_t i)
 		{
-			stage(i).x_ = val;
+			return stage_.at(i);
+		}
+
+		typedef std::vector<Stage>::iterator iterator;
+		typedef std::vector<Stage>::const_iterator const_iterator;
+		typedef std::vector<Stage>::reference reference;
+		typedef std::vector<Stage>::const_reference const_reference;
+
+		iterator begin()
+		{
+			return stage_.begin();
+		}
+
+		iterator end()
+		{
+			return stage_.end();
+		}
+
+		const_iterator begin() const
+		{
+			return stage_.begin();
+		}
+
+		const_iterator end() const
+		{
+			return stage_.end();
+		}
+
+		reference front()
+		{
+			return stage_.front();
+		}
+
+		reference back()
+		{
+			return stage_.back();
+		}
+
+		const_reference front() const
+		{
+			return stage_.front();
+		}
+
+		const_reference back() const
+		{
+			return stage_.back();
+		}
+
+		//---------------------------
+		// Obsolete access interface
+		//---------------------------
+
+		VectorMap const& get_x(std::size_t i) const
+		{
+			return stage(i).get_x();
 		}
 
 		VectorMap const& get_u(std::size_t i) const
 		{
-			return stage(i).u_;
-		}
-
-		template <typename Matrix>
-		void set_u(std::size_t i, Eigen::MatrixBase<Matrix> const& val)
-		{
-			stage(i).u_ = val;
+			return stage(i).get_u();
 		}
 
 		VectorMap const& get_pi(std::size_t i) const
 		{
-			return stage(i).pi_;
+			return stage(i).get_pi();
 		}
 
 		decltype(auto) get_lam_u_min(std::size_t i) const
 		{
-			return stage(i).lamU_.array().max(0.).matrix();
+			return stage(i).get_lam_u().array().max(0.).matrix();
 		}
 
 		decltype(auto) get_lam_u_max(std::size_t i) const
 		{
-			return -stage(i).lamU_.array().min(0.).matrix();
+			return -stage(i).get_lam_u().array().min(0.).matrix();
 		}
 
 		decltype(auto) get_lam_x_min(std::size_t i) const
 		{
-			return stage(i).lamX_.array().max(0.).matrix();
+			return stage(i).get_lam_x().array().max(0.).matrix();
 		}
 
 		decltype(auto) get_lam_x_max(std::size_t i) const
 		{
-			return -stage(i).lamX_.array().min(0.).matrix();
+			return -stage(i).get_lam_x().array().min(0.).matrix();
 		}
 
 		decltype(auto) get_lam_d_min(std::size_t i) const
 		{
-			return stage(i).lam_.array().max(0.).matrix();
+			return stage(i).get_lam_d().array().max(0.).matrix();
 		}
 
 		decltype(auto) get_lam_d_max(std::size_t i) const
 		{
-			return -stage(i).lam_.array().min(0.).matrix();
+			return -stage(i).get_lam_d().array().min(0.).matrix();
 		}
 
 		decltype(auto) get_lam_d_end_min() const
 		{
-			return stage_.back().lam_.array().max(0.).matrix();
+			return stage_.back().get_lam_d().array().max(0.).matrix();
 		}
 
 		decltype(auto) get_lam_d_end_max() const
 		{
-			return -stage_.back().lam_.array().min(0.).matrix();
+			return -stage_.back().get_lam_d().array().min(0.).matrix();
 		}
 
 		/// \brief Get number of iterations performed by the QP solver.
@@ -143,18 +238,6 @@ namespace tmpc
 		}
 
 	private:
-		struct Stage
-		{
-			Stage(QpSize const& sz, std::size_t nx_plus, double * x, double * lam_x, double * lam);
-
-			VectorMap x_;
-			VectorMap u_;
-			VectorMap lamX_;
-			VectorMap lamU_;
-			VectorMap lam_;
-			VectorMap pi_;
-		};
-
 		Stage const& stage(std::size_t i) const
 		{
 			return stage_.at(i);

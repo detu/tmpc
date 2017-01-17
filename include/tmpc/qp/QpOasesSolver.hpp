@@ -1,6 +1,6 @@
 #pragma once
 
-#include "qpOASESProgram.hpp"
+#include "QpOasesProblem.hpp"
 #include "QpOasesSolution.hpp"
 #include "UnsolvedQpException.hpp"
 
@@ -13,15 +13,15 @@ namespace tmpc {
 class QpOasesSolveException : public UnsolvedQpException
 {
 public:
-	QpOasesSolveException(qpOASES::returnValue code, qpOASESProgram const& qp);
+	QpOasesSolveException(qpOASES::returnValue code, QpOasesProblem const& qp);
 
 	qpOASES::returnValue getCode() const	{ return _code;	}
-	qpOASESProgram const& getQpOasesQp() const { return qpOasesProblem_; }
+	QpOasesProblem const& getQpOasesQp() const { return qpOasesProblem_; }
 	char const * what() const noexcept override { return msg_.c_str(); }
 
 private:
 	qpOASES::returnValue const _code;
-	qpOASESProgram const qpOasesProblem_;
+	QpOasesProblem const qpOasesProblem_;
 	std::string const msg_;
 };
 
@@ -36,7 +36,7 @@ class QpOasesSolver
 {
 public:
 	// Problem type for CondensingSolver
-	typedef qpOASESProgram Problem;
+	typedef QpOasesProblem Problem;
 
 	// Solution data type
 	typedef QpOasesSolution Solution;

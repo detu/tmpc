@@ -9,8 +9,8 @@
 
 #include <tmpc/qp/MultiStageQuadraticProblem.hpp>
 #include <tmpc/qp/HPMPCProblem.hpp>
-#include <tmpc/qp/qpOASESProgram.hpp>
 #include <tmpc/qp/Printing.hpp>
+#include <tmpc/qp/QpOasesProblem.hpp>
 
 #include <gtest/gtest.h>
 
@@ -35,7 +35,7 @@ Matrix random()
 }
 
 template <unsigned NX_, unsigned NU_, unsigned NC_, unsigned NCT_>
-class FixedSizeQpOasesProblem : public tmpc::qpOASESProgram
+class FixedSizeQpOasesProblem : public tmpc::QpOasesProblem
 {
 public:
 	static auto constexpr NX = NX_;
@@ -54,7 +54,7 @@ public:
 	typedef Eigen::Matrix<double, NU, 1> InputVector;
 
 	FixedSizeQpOasesProblem(std::size_t N)
-	:	tmpc::qpOASESProgram(Sizes(N))
+	:	tmpc::QpOasesProblem(Sizes(N))
 	{
 	}
 

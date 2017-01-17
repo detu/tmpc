@@ -1,6 +1,6 @@
 #include <tmpc/qp/CondensingSolver.hpp>
 #include <tmpc/qp/Condensing.hpp>
-#include <tmpc/qp/qpOASESProgram.hpp>
+#include <tmpc/qp/QpOasesProblem.hpp>
 #include <tmpc/kernel/eigen.hpp>
 #include <tmpc/core/problem_specific.hpp>
 
@@ -129,7 +129,7 @@ protected:
 TEST_F(CondensingTest, condensing_test)
 {
 	// Condense
-	tmpc::qpOASESProgram condensed({tmpc::condensedQpSize(qp.size())});
+	tmpc::QpOasesProblem condensed({tmpc::condensedQpSize(qp.size())});
 	tmpc::Condense<K, Dimensions>(qp, condensed);
 
 	EXPECT_EQ(print_wrap(condensed.H()), print_wrap(Hc_expected));

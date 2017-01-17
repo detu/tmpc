@@ -1,6 +1,6 @@
 #pragma once
 
-#include "qpOASESProgram.hpp"
+#include "QpOasesProblem.hpp"
 #include "QpOasesSolver.hpp"
 
 #include <qpOASES.hpp>
@@ -33,7 +33,7 @@ class CondensingSolver
 	static auto constexpr NCT = D::NCT;
 
 public:
-	typedef qpOASESProgram CondensedQP;
+	typedef QpOasesProblem CondensedQP;
 
 	// Problem type for CondensingSolver
 	// TODO: change MultiStageQuadraticProblem so that it takes D as a template parameter?
