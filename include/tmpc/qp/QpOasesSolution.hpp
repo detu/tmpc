@@ -23,6 +23,31 @@ namespace tmpc
 		typedef std::size_t size_type;
 		typedef Eigen::Map<Eigen::VectorXd> VectorMap;
 
+		template <typename InputIt>
+		QpOasesSolution(InputIt sz_begin, InputIt sz_end)
+		:	primalSolution_(numVariables(sz_begin, sz_end))
+		,	dualSolution_(numVariables(sz_begin, sz_end) + numEqualities(sz_begin, sz_end) + numInequalities(sz_begin, sz_end))
+		,	size_(sz_begin, sz_end)
+		{
+			assert(stage_.empty());
+			stage_.reserve(size_.size());
+
+			double * x = primalSolution_.data();
+			double * lambda_x = dualSolution_.data();
+			double * lambda = dualSolution_.data() + primalSolution_.size();
+
+			for (auto s = sz_begin; s != sz_end; ++s)
+			{
+				auto const s_next = s + 1;
+				auto const nx_next = s_next != sz_end ? s_next->nx() : 0;
+				stage_.emplace_back(*s, nx_next, x, lambda_x, lambda);
+
+				x += s->nx() + s->nu();
+				lambda_x += s->nx() + s->nu();
+				lambda += s->nc() + nx_next;
+			}
+		}
+
 		QpOasesSolution(std::vector<QpSize> const& sz);
 		QpOasesSolution(QpOasesSolution const&) = delete;
 		QpOasesSolution(QpOasesSolution &&) = default;

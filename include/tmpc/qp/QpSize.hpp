@@ -90,31 +90,32 @@ std::size_t numInequalities(InputIt sz_begin, InputIt sz_end)
 }
 
 /**
- * \brief Total number of rows in all bound inequalities like lbx[k] <= x[x] <= ubx[k]
- * and lbu[k] <= u[x] <= ubu[k]
- */
-template <typename InputIt>
-std::size_t numBounds(InputIt sz_begin, InputIt sz_end)
-{
-	return std::accumulate(sz_begin, sz_end, std::size_t{0},
-		[] (std::size_t n, QpSize const& s) { return n + s.nx() + s.nu(); });
-}
-
-/**
  * \brief An iterator through QP stages returning stage's QpSize.
  */
 template <typename StageIterator>
 class QpSizeIterator
 {
 public:
+	// iterator traits
+	using difference_type = typename StageIterator::difference_type;
+	using value_type = QpSize const;
+	using pointer = QpSize const *;
+	using reference = QpSize const &;
+	using iterator_category = typename StageIterator::iterator_category;
+
 	explicit QpSizeIterator(StageIterator const& it)
 	:	it_(it)
 	{
 	}
 
-	decltype(auto) operator*() const
+	reference operator*() const
 	{
 		return it_->size();
+	}
+
+	pointer operator->() const
+	{
+		return &it_->size();
 	}
 
 	QpSizeIterator& operator++()
@@ -126,6 +127,31 @@ public:
 	QpSizeIterator operator++(int)
 	{
 		return QpSizeIterator(it_++);
+	}
+
+	friend bool operator!=(QpSizeIterator const& a, QpSizeIterator const& b)
+	{
+		return a.it_ != b.it_;
+	}
+
+	friend bool operator==(QpSizeIterator const& a, QpSizeIterator const& b)
+	{
+		return a.it_ == b.it_;
+	}
+
+	friend QpSizeIterator operator+(QpSizeIterator const& a, difference_type n)
+	{
+		return QpSizeIterator(a.it_ + n);
+	}
+
+	friend QpSizeIterator operator+(difference_type n, QpSizeIterator const& a)
+	{
+		return QpSizeIterator(n + a.it_);
+	}
+
+	friend difference_type operator-(QpSizeIterator const& a, QpSizeIterator const& b)
+	{
+		return a.it_ - b.it_;
 	}
 
 private:

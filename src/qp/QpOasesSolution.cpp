@@ -10,8 +10,8 @@
 namespace tmpc {
 
 QpOasesSolution::QpOasesSolution(std::vector<QpSize> const& sz)
-:	primalSolution_(numVariables(sz))
-,	dualSolution_(numEqualities(sz) + numInequalities(sz))
+:	primalSolution_(numVariables(sz.begin(), sz.end()))
+,	dualSolution_(numVariables(sz.begin(), sz.end()) + numEqualities(sz.begin(), sz.end()) + numInequalities(sz.begin(), sz.end()))
 ,	size_(sz)
 {
 	assert(stage_.empty());

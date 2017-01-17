@@ -32,14 +32,12 @@ QpOasesSolveException::QpOasesSolveException(qpOASES::returnValue code, qpOASESP
 }
 
 QpOasesSolver::QpOasesSolver(std::vector<QpSize> const& sz,	qpOASES::Options const& options)
-:	size_(sz)
-,	_problem(numVariables(sz), numEqualities(sz) + numInequalities(sz) - numVariables(sz))
+:	QpOasesSolver(sz.begin(), sz.end(), options)
 {
-	_problem.setOptions(options);
 }
 
 QpOasesSolver::QpOasesSolver(std::vector<QpSize> const& sz)
-:	QpOasesSolver(sz, qpOASES_DefaultOptions())
+:	QpOasesSolver(sz.begin(), sz.end(), qpOASES_DefaultOptions())
 {
 }
 

@@ -25,6 +25,10 @@ private:
 	std::string const msg_;
 };
 
+namespace detail {
+qpOASES::Options qpOASES_DefaultOptions();
+}
+
 /**
  * \brief QP solver using qpOASES
  */
@@ -36,6 +40,14 @@ public:
 
 	// Solution data type
 	typedef QpOasesSolution Solution;
+
+	template <typename InputIt>
+	QpOasesSolver(InputIt sz_begin, InputIt sz_end, qpOASES::Options const& options = detail::qpOASES_DefaultOptions())
+	:	size_(sz_begin, sz_end)
+	,	_problem(numVariables(sz_begin, sz_end), numEqualities(sz_begin, sz_end) + numInequalities(sz_begin, sz_end))
+	{
+		_problem.setOptions(options);
+	}
 
 	QpOasesSolver(std::vector<QpSize> const& sz);
 	QpOasesSolver(std::vector<QpSize> const& sz, qpOASES::Options const& options);
