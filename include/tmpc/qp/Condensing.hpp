@@ -157,7 +157,6 @@ namespace tmpc
 	 *
 	 * TODO: should D be deduced from MultiStageQP_ or not?
 	 * */
-	/*
 	template <typename K, typename InIter, typename MultiStageQP_, typename CondensedQP_>
 	void Condense(InIter qp_begin, InIter qp_end, CondensedQP_& condensed_qp)
 	{
@@ -178,80 +177,96 @@ namespace tmpc
 		//auto constexpr nDT = D::NCT;
 		//auto constexpr nC = nX + nD;
 
-		auto const nT = std::distance(qp_begin, qp_end) - 1;
+		auto const nX = condensed_size.nx();
+		auto const N = std::distance(qp_begin, qp_end) - 1;
 		auto const n_indep = condensed_size.nx() + condensed_size.nu();
 
-		typename K::DynamicMatrix M = K::identity(nX, n_indep);
-		typename K::template Vector<D::NX> v = K::template zero<D::NX>();
+		K::DynamicMatrix M_k = K::identity(condensed_size.nx(), condensed_size.nx());
+		K::DynamicVector v = K::zero(nX);
 
-		auto& Hc = condensed_qp.H();
-		auto& gc = condensed_qp.g();
+		K::DynamicMatrix Hc(n_indep, n_indep);
+		K::DynamicVector gc(n_indep);
+		//K::DynamicMatrix Qc(condensed_size.nx(), condensed_size.nx());
+		K::DynamicMatrix A = K::zero(condensed_size.nc(), condensed_size.nx());
+		K::DynamicVector lbA(condensed_size.nc()), ubA(condensed_size.nc());
 
 		K::set_zero(Hc);
 		K::set_zero(gc);
 
-		K::top_rows(qp_begin->nx(), condensed_qp.lb()) = qp_begin->get_x_min();
-		K::top_rows(qp_begin->nx(), condensed_qp.ub()) = qp_begin->get_x_max();
+		K::DynamicVector lbu(condensed_size.nu()), ubu(condensed_size.nu());
 
-		for (unsigned k = 0; k < nT; ++k)
+		condensed_qp.set_lbx(qp_begin->get_x_min());
+		condensed_qp.set_ubx(qp_begin->get_x_max());
+
+		auto stage = qp_begin;
+		std::size_t nn = condensed_size.nx();
+		std::size_t constr_idx = 0;
+
+		for (unsigned k = 0; k < N; ++k, ++stage)
 		{
-			auto M_k = K::left_cols(M, nX + k * nU);
+			auto const& sz = stage->size();
+			//auto M_k = K::left_cols(M, nX + k * nU);
 
 			// Calculate Hessian (H_k) and gradient (g_k) for current time step w.r.t. condensed (independent) variables.
-			auto const H_k = get_H(msqp, k);
-			auto const g_k = get_g(msqp, k);
+			//auto const H_k = get_H(msqp, k);
+			//auto const g_k = get_g(msqp, k);
 
-			const auto Q = K::selfadjoint_view_upper(K::template top_left_corner    <nX, nX>(H_k));
-			const auto S =                           K::template top_right_corner   <nX, nU>(H_k) ;
-			const auto R =                           K::template bottom_right_corner<nU, nU>(H_k) ;
+			const auto Q = K::selfadjoint_view_upper(stage->get_Q());
+			const auto S =                           stage->get_S() ;
+			const auto R =                           stage->get_R() ;
 
-			const auto nn = K::cols(M_k);
+			auto const nU = sz.nu();
+			auto const nD = sz.nc();
+			auto const nC = sz.nx() + sz.nc();
+
 			auto Hc_k = K::top_left_corner(Hc, nn + nU, nn + nU);
 			K::triangular_view_upper(K::top_left_corner(Hc_k, nn, nn)) += K::transpose(M_k) * Q * M_k;
 			K::top_right_corner(Hc_k, nn, nU) += K::transpose(M_k) * S;
-			K::triangular_view_upper(K::template bottom_right_corner<nU, nU>(Hc_k)) += R;
+			K::triangular_view_upper(K::bottom_right_corner(Hc_k, nU, nU)) += R;
 
 			auto gc_k = K::top_rows(gc, nn + nU);
-			K::top_rows(gc_k, nn) += K::transpose(M_k) * (K::template top_rows<nX>(g_k) + Q * v);
-			K::template bottom_rows<nU>(gc_k) += K::template bottom_rows<nU>(g_k) + K::transpose(S) * v;
+			K::top_rows(gc_k, nn) += K::transpose(M_k) * (stage->get_q() + Q * v);
+			K::bottom_rows(gc_k, nU) += stage->get_r() + K::transpose(S) * v;
 
 			// Set lower and upper bound for independent variables at stage k.
-			K::template middle_rows<nU>(condensed_qp.lb(), nX + k * nU) = msqp.get_u_min(k);
-			K::template middle_rows<nU>(condensed_qp.ub(), nX + k * nU) = msqp.get_u_max(k);
+			K::middle_rows(lbu, nn - nX, nU) = stage->get_u_min();
+			K::middle_rows(ubu, nn - nX, nU) = stage->get_u_max();
 
 			// Set path constraints for stage k.
-			auto Aconstr_k   = K::template middle_rows<nC>(condensed_qp.A  (), k * nC);
-			auto lbAconstr_k = K::template middle_rows<nC>(condensed_qp.lbA(), k * nC);
-			auto ubAconstr_k = K::template middle_rows<nC>(condensed_qp.ubA(), k * nC);
-			auto D_k_x = msqp.get_C(k);
-			auto D_k_u = msqp.get_D(k);
+			auto Aconstr_k   = K::middle_rows(A  , constr_idx, nC);
+			auto lbAconstr_k = K::middle_rows(lbA, constr_idx, nC);
+			auto ubAconstr_k = K::middle_rows(ubA, constr_idx, nC);
+			auto D_k_x = stage->get_C();
+			auto D_k_u = stage->get_D();
 			const auto d_ofs = K::eval(D_k_x * v);
 
-			K::template top_rows<nD>(Aconstr_k) = D_k_x * M;
-			K::template block<nD, nU>(Aconstr_k, 0, nn) = D_k_u;
-			K::template top_rows<nD>(lbAconstr_k) = msqp.get_d_min(k) - d_ofs;
-			K::template top_rows<nD>(ubAconstr_k) = msqp.get_d_max(k) - d_ofs;
+			K::top_left_corner(Aconstr_k, nD, nn) = D_k_x * M_k;
+			K::block(Aconstr_k, 0, nn, nD, nU) = D_k_u;
+			K::top_rows(lbAconstr_k, nD) = stage->get_lbd() - d_ofs;
+			K::top_rows(ubAconstr_k, nD) = stage->get_ubd() - d_ofs;
 
 			// Update M and v.
-			const auto A_k = msqp.get_A(k);
-			const auto B_k = msqp.get_B(k);
-			M_k = A_k * M_k;
-			K::template middle_cols<nU>(M, nX + k * nU) = B_k;
-			v = A_k * v + msqp.get_b(k);
+			const auto A_k = stage->get_A();
+			const auto B_k = stage->get_B();
 
-			// Set next state bound constraints.
-			K::template bottom_rows<nX>(Aconstr_k) = M;
-
-			if (k + 1 < nT)
 			{
+				K::DynamicMatrix M_next(A_k.rows(), M_k.cols() + B_k.cols());
+				M_next << A_k * M_k, B_k;
+				M_k.swap(M_next);
+			}
+
+			v = A_k * v + stage->get_b();
+
+			if (k < nT)
+			{
+				// Set next state bound constraints.
+				K::bottom_left_corner(Aconstr_k, sz.nx(), nn) = M_k;
 				K::template bottom_rows<nX>(lbAconstr_k) = msqp.get_x_min(k + 1) - v;
 				K::template bottom_rows<nX>(ubAconstr_k) = msqp.get_x_max(k + 1) - v;
 			}
-			else
-			{
-				K::template bottom_rows<nX>(lbAconstr_k) = msqp.get_x_min(nT) - v;
-				K::template bottom_rows<nX>(ubAconstr_k) = msqp.get_x_max(nT) - v;
-			}
+
+			nn += nU;
+			constr_idx += nC;
 		}
 
 		// Set terminal constraints.
@@ -264,9 +279,10 @@ namespace tmpc
 
 		// Cost of final state.
 		K::triangular_view_upper(Hc) += K::transpose(M) * K::selfadjoint_view_upper(msqp.get_Q(nT)) * M;
-		gc += K::transpose(M) * (msqp.get_q(nT) + msqp.get_Q(nT) * v);
 
-		Hc = K::selfadjoint_view_upper(Hc);
+		condensed_qp.set_g(gc + K::transpose(M) * (msqp.get_q(nT) + msqp.get_Q(nT) * v));
+		condensed_qp.set_H(K::selfadjoint_view_upper(Hc));
+		condensed_qp.set_lbu(lbu);
+		condensed_qp.set_ubu(ubu);
 	}
-	*/
 }
