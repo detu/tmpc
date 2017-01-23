@@ -157,13 +157,13 @@ namespace tmpc
 	 *
 	 * TODO: should D be deduced from MultiStageQP_ or not?
 	 * */
-	template <typename K, typename InIter, typename MultiStageQP_, typename CondensedQP_>
+	template <typename K, typename InIter, typename CondensedQP_>
 	void Condense(InIter qp_begin, InIter qp_end, CondensedQP_& condensed_qp)
 	{
 		if (qp_begin == qp_end)
 			throw std::invalid_argument("Condense(): the input QpStage must not be empty");
 
-		QpSize const cs = CondensedQpSize(tmpc::qpSizeIterator(qp_begin), tmpc::qpSizeIterator(qp_end));
+		QpSize const cs = condensedQpSize(tmpc::qpSizeIterator(qp_begin), tmpc::qpSizeIterator(qp_end));
 
 		typename K::DynamicMatrix Qc(cs.nx(), cs.nx());
 		typename K::DynamicMatrix Rc(cs.nu(), cs.nu());
@@ -241,17 +241,26 @@ namespace tmpc
 			K::segment(ubd, nc, sz.nx() + sz.nc()) << stage->get_ubx() - b, stage->get_ubd() - stage->get_C() * b;
 
 			// Update A
-			A.swap(K::eval(stage->get_A() * A));
+			{
+				typename K::DynamicMatrix A_next = stage->get_A() * A;
+				A.resizeLike(A_next);
+				A.swap(A_next);
+			}
 
 			// Update B
 			{
 				typename K::DynamicMatrix B_next(nx_next, nu + sz.nu());
 				B_next << stage->get_A() * B, stage->get_B();
+				B.resizeLike(B_next);
 				B.swap(B_next);
 			}
 
 			// Update b
-			b.swap(K::eval(stage->get_A() * b + stage->get_b()));
+			{
+				typename K::DynamicMatrix b_next = stage->get_A() * b + stage->get_b();
+				b.resizeLike(b_next);
+				b.swap(b_next);
+			}
 
 			// Update indices
 			nu += sz.nu();
@@ -274,8 +283,8 @@ namespace tmpc
 		condensed_qp.set_B(B);
 		condensed_qp.set_b(b);
 
-		condensed_qp.set_lbx(qp_begin->get_x_min());
-		condensed_qp.set_ubx(qp_begin->get_x_max());
+		condensed_qp.set_lbx(qp_begin->get_lbx());
+		condensed_qp.set_ubx(qp_begin->get_ubx());
 		condensed_qp.set_lbu(lbu);
 		condensed_qp.set_ubu(ubu);
 	}
