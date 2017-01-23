@@ -161,127 +161,121 @@ namespace tmpc
 	void Condense(InIter qp_begin, InIter qp_end, CondensedQP_& condensed_qp)
 	{
 		if (qp_begin == qp_end)
-			throw std::invalid_argument("Condense(): the input QpStage must be not empty");
+			throw std::invalid_argument("Condense(): the input QpStage must not be empty");
 
-		QpSize const condensed_size = CondensedQpSize(tmpc::qpSizeIterator(qp_begin), tmpc::qpSizeIterator(qp_end));
-		if (condensed_size != condensed_qp.size())
+		QpSize const cs = CondensedQpSize(tmpc::qpSizeIterator(qp_begin), tmpc::qpSizeIterator(qp_end));
+
+		typename K::DynamicMatrix Qc(cs.nx(), cs.nx());
+		typename K::DynamicMatrix Rc(cs.nu(), cs.nu());
+		typename K::DynamicMatrix Sc(cs.nx(), cs.nu());
+		typename K::DynamicVector qc(cs.nx());
+		typename K::DynamicVector rc(cs.nu());
+
+		typename K::DynamicMatrix Cc(cs.nc(), cs.nx());
+		typename K::DynamicMatrix Dc(cs.nc(), cs.nu());
+		typename K::DynamicVector lbd(cs.nc());
+		typename K::DynamicVector ubd(cs.nc());
+
+		typename K::DynamicVector lbu(cs.nu());
+		typename K::DynamicVector ubu(cs.nu());
+
+		// Initialization of QP variables
+		auto nu = qp_begin->size().nu();
+		auto nc = qp_begin->size().nc();
+
+		Qc = qp_begin->get_Q();
+		K::top_left_corner(Rc, nu, nu) = qp_begin->get_R();
+		K::left_cols(Sc, nu) = qp_begin->get_S();
+		qc = qp_begin->get_q();
+		K::head(rc, nu) = qp_begin->get_r();
+
+		K::top_rows(Cc, nc) = qp_begin->get_C();
+		K::top_left_corner(Dc, nc, nu) = qp_begin->get_D();
+		K::head(lbd, nc) = qp_begin->get_lbd();
+		K::head(ubd, nc) = qp_begin->get_ubd();
+
+		K::head(lbu, nu) = qp_begin->get_lbu();
+		K::head(ubu, nu) = qp_begin->get_ubu();
+
+		typename K::DynamicMatrix A = qp_begin->get_A();
+		typename K::DynamicMatrix B = qp_begin->get_B();
+		typename K::DynamicVector b = qp_begin->get_b();
+
+		for (auto stage = qp_begin + 1; stage != qp_end; ++stage)
 		{
-			std::stringstream msg;
-			msg << "Condense(): output QP stage has wrong size.";
-			throw std::invalid_argument(msg.str());
+			auto const& sz = stage->size();
+			// TODO: add nx1() to QpSize
+			auto const nx_next = K::rows(stage->get_B());
+
+			// Update Q
+			Qc += K::transpose(A) * stage->get_Q() * A;
+
+			// Update S
+			K::left_cols(Sc, nu) += K::transpose(A) * stage->get_Q() * B;
+			K::middle_cols(Sc, nu, sz.nu()) = K::transpose(A) * stage->get_S();
+
+			// Update R
+			K::top_left_corner(Rc, nu, nu) += K::transpose(B) * stage->get_Q() * B;
+			K::block(Rc, 0, nu, nu, sz.nu()) = K::transpose(B) * stage->get_S();
+			K::block(Rc, nu, 0, sz.nu(), nu) = K::transpose(stage->get_S()) * B;
+			K::block(Rc, nu, nu, sz.nu(), sz.nu()) = stage->get_R();
+
+			// Update q
+			qc += K::transpose(A) * (stage->get_Q() * b + stage->get_q());
+
+			// Update r
+			K::head(rc, nu) += K::transpose(B) * (stage->get_Q() * b + stage->get_q());
+			K::segment(rc, nu, sz.nu()) = K::transpose(stage->get_S()) * b + stage->get_r();
+
+			// Update C
+			K::middle_rows(Cc, nc, sz.nx() + sz.nc()) << A, stage->get_C() * A;
+
+			// Update D
+			K::middle_rows(Dc, nc, sz.nx() + sz.nc()) << B, K::zero(sz.nx(), cs.nu() - nu),
+			                                      stage->get_C() * B, stage->get_D(), K::zero(sz.nc(), cs.nu() - nu - sz.nu());
+
+			// Update lbd
+			K::segment(lbd, nc, sz.nx() + sz.nc()) << stage->get_lbx() - b, stage->get_lbd() - stage->get_C() * b;
+
+			// Update ubd
+			K::segment(ubd, nc, sz.nx() + sz.nc()) << stage->get_ubx() - b, stage->get_ubd() - stage->get_C() * b;
+
+			// Update A
+			A.swap(K::eval(stage->get_A() * A));
+
+			// Update B
+			{
+				typename K::DynamicMatrix B_next(nx_next, nu + sz.nu());
+				B_next << stage->get_A() * B, stage->get_B();
+				B.swap(B_next);
+			}
+
+			// Update b
+			b.swap(K::eval(stage->get_A() * b + stage->get_b()));
+
+			// Update indices
+			nu += sz.nu();
+			nc += sz.nx() + sz.nc();
 		}
 
-		//auto constexpr nX = D::NX;
-		//auto constexpr nU = D::NU;
-		//auto constexpr nD = D::NC;
-		//auto constexpr nDT = D::NCT;
-		//auto constexpr nC = nX + nD;
+		// Fill the condensed stage
+		condensed_qp.set_Q(Qc);
+		condensed_qp.set_R(Rc);
+		condensed_qp.set_S(Sc);
+		condensed_qp.set_q(qc);
+		condensed_qp.set_r(rc);
 
-		auto const nX = condensed_size.nx();
-		auto const N = std::distance(qp_begin, qp_end) - 1;
-		auto const n_indep = condensed_size.nx() + condensed_size.nu();
+		condensed_qp.set_C(Cc);
+		condensed_qp.set_D(Dc);
+		condensed_qp.set_lbd(lbd);
+		condensed_qp.set_ubd(ubd);
 
-		K::DynamicMatrix M_k = K::identity(condensed_size.nx(), condensed_size.nx());
-		K::DynamicVector v = K::zero(nX);
-
-		K::DynamicMatrix Hc(n_indep, n_indep);
-		K::DynamicVector gc(n_indep);
-		//K::DynamicMatrix Qc(condensed_size.nx(), condensed_size.nx());
-		K::DynamicMatrix A = K::zero(condensed_size.nc(), condensed_size.nx());
-		K::DynamicVector lbA(condensed_size.nc()), ubA(condensed_size.nc());
-
-		K::set_zero(Hc);
-		K::set_zero(gc);
-
-		K::DynamicVector lbu(condensed_size.nu()), ubu(condensed_size.nu());
+		condensed_qp.set_A(A);
+		condensed_qp.set_B(B);
+		condensed_qp.set_b(b);
 
 		condensed_qp.set_lbx(qp_begin->get_x_min());
 		condensed_qp.set_ubx(qp_begin->get_x_max());
-
-		auto stage = qp_begin;
-		std::size_t nn = condensed_size.nx();
-		std::size_t constr_idx = 0;
-
-		for (unsigned k = 0; k < N; ++k, ++stage)
-		{
-			auto const& sz = stage->size();
-			//auto M_k = K::left_cols(M, nX + k * nU);
-
-			// Calculate Hessian (H_k) and gradient (g_k) for current time step w.r.t. condensed (independent) variables.
-			//auto const H_k = get_H(msqp, k);
-			//auto const g_k = get_g(msqp, k);
-
-			const auto Q = K::selfadjoint_view_upper(stage->get_Q());
-			const auto S =                           stage->get_S() ;
-			const auto R =                           stage->get_R() ;
-
-			auto const nU = sz.nu();
-			auto const nD = sz.nc();
-			auto const nC = sz.nx() + sz.nc();
-
-			auto Hc_k = K::top_left_corner(Hc, nn + nU, nn + nU);
-			K::triangular_view_upper(K::top_left_corner(Hc_k, nn, nn)) += K::transpose(M_k) * Q * M_k;
-			K::top_right_corner(Hc_k, nn, nU) += K::transpose(M_k) * S;
-			K::triangular_view_upper(K::bottom_right_corner(Hc_k, nU, nU)) += R;
-
-			auto gc_k = K::top_rows(gc, nn + nU);
-			K::top_rows(gc_k, nn) += K::transpose(M_k) * (stage->get_q() + Q * v);
-			K::bottom_rows(gc_k, nU) += stage->get_r() + K::transpose(S) * v;
-
-			// Set lower and upper bound for independent variables at stage k.
-			K::middle_rows(lbu, nn - nX, nU) = stage->get_u_min();
-			K::middle_rows(ubu, nn - nX, nU) = stage->get_u_max();
-
-			// Set path constraints for stage k.
-			auto Aconstr_k   = K::middle_rows(A  , constr_idx, nC);
-			auto lbAconstr_k = K::middle_rows(lbA, constr_idx, nC);
-			auto ubAconstr_k = K::middle_rows(ubA, constr_idx, nC);
-			auto D_k_x = stage->get_C();
-			auto D_k_u = stage->get_D();
-			const auto d_ofs = K::eval(D_k_x * v);
-
-			K::top_left_corner(Aconstr_k, nD, nn) = D_k_x * M_k;
-			K::block(Aconstr_k, 0, nn, nD, nU) = D_k_u;
-			K::top_rows(lbAconstr_k, nD) = stage->get_lbd() - d_ofs;
-			K::top_rows(ubAconstr_k, nD) = stage->get_ubd() - d_ofs;
-
-			// Update M and v.
-			const auto A_k = stage->get_A();
-			const auto B_k = stage->get_B();
-
-			{
-				K::DynamicMatrix M_next(A_k.rows(), M_k.cols() + B_k.cols());
-				M_next << A_k * M_k, B_k;
-				M_k.swap(M_next);
-			}
-
-			v = A_k * v + stage->get_b();
-
-			if (k < nT)
-			{
-				// Set next state bound constraints.
-				K::bottom_left_corner(Aconstr_k, sz.nx(), nn) = M_k;
-				K::template bottom_rows<nX>(lbAconstr_k) = msqp.get_x_min(k + 1) - v;
-				K::template bottom_rows<nX>(ubAconstr_k) = msqp.get_x_max(k + 1) - v;
-			}
-
-			nn += nU;
-			constr_idx += nC;
-		}
-
-		// Set terminal constraints.
-		const auto D_k_term = msqp.get_C_end();
-		const auto d_ofs = K::eval(D_k_term * v);
-
-		K::template bottom_rows<nDT>(condensed_qp.A  ()) = D_k_term * M;
-		K::template bottom_rows<nDT>(condensed_qp.lbA()) = msqp.get_d_end_min() - d_ofs;
-		K::template bottom_rows<nDT>(condensed_qp.ubA()) = msqp.get_d_end_max() - d_ofs;
-
-		// Cost of final state.
-		K::triangular_view_upper(Hc) += K::transpose(M) * K::selfadjoint_view_upper(msqp.get_Q(nT)) * M;
-
-		condensed_qp.set_g(gc + K::transpose(M) * (msqp.get_q(nT) + msqp.get_Q(nT) * v));
-		condensed_qp.set_H(K::selfadjoint_view_upper(Hc));
 		condensed_qp.set_lbu(lbu);
 		condensed_qp.set_ubu(ubu);
 	}
