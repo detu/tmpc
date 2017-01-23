@@ -1,8 +1,8 @@
-#include <tmpc/qp/CondensingSolver.hpp>
 #include <tmpc/qp/Condensing.hpp>
 #include <tmpc/qp/QpOasesProblem.hpp>
 #include <tmpc/kernel/eigen.hpp>
 #include <tmpc/core/problem_specific.hpp>
+#include <tmpc/core/RealtimeIteration.hpp>
 
 #include "qp_test_problems.hpp"
 #include "gtest_tools_eigen.hpp"
@@ -33,17 +33,22 @@ protected:
 	// Define a kernel augmented with problem-specific types
 	struct K : KBase, tmpc::ProblemSpecific<KBase, Dimensions> {};
 
+	static unsigned constexpr NX = Dimensions::NX;
+	static unsigned constexpr NU = Dimensions::NU;
+	static unsigned constexpr NW = Dimensions::NW;
+	static unsigned constexpr NY = Dimensions::NY;
+	static unsigned constexpr NP = Dimensions::NP;
+	static unsigned constexpr NC = Dimensions::NC;
+	static unsigned constexpr NCT = Dimensions::NCT;
 	static auto constexpr NT = 2u;
 	static auto constexpr NZ = K::NX + K::NU;
 
-	typedef tmpc::CondensingSolver<K, Dimensions> Solver;
-	typedef Solver::Problem Problem;
-	typedef Solver::Solution Solution;
+	typedef tmpc::QpOasesProblem Problem;
 
 	CondensingTest()
-	:	qp(NT)
-	,	Hc_expected(nIndep(qp), nIndep(qp))
-	,	gc_expected(nIndep(qp))
+	:	qp(tmpc::RtiQpSize(NT, NX, NU, NC, NCT))
+	,	Hc_expected(NX + NT * NU, NX + NT * NU)
+	,	gc_expected(NX + NT * NU)
 	{
 	}
 
@@ -62,18 +67,18 @@ protected:
 		H0 << 1, 2, 3, 4, 5, 6, 7, 8, 9;
 		H0 = H0.transpose() * H0;	// Make positive definite.
 
-		const Eigen::MatrixXd Q0 = H0.topLeftCorner(qp.nX(), qp.nX());
-		const Eigen::MatrixXd R0 = H0.bottomRightCorner(qp.nU(), qp.nU());
-		const Eigen::MatrixXd S0 = H0.topRightCorner(qp.nX(), qp.nU());
-		const Eigen::MatrixXd S0T = H0.bottomLeftCorner(qp.nU(), qp.nX());
+		const Eigen::MatrixXd Q0 = H0.topLeftCorner(NX, NX);
+		const Eigen::MatrixXd R0 = H0.bottomRightCorner(NU, NU);
+		const Eigen::MatrixXd S0 = H0.topRightCorner(NX, NU);
+		const Eigen::MatrixXd S0T = H0.bottomLeftCorner(NU, NX);
 
 		K::StateStateMatrix A0;
 		A0 << 1, 1, 0, 1;
 
-		K::StateInputMatrix B0(qp.nX(), qp.nU());
+		K::StateInputMatrix B0(NX, NU);
 		B0 << 0.5, 1.0;
 
-		Eigen::VectorXd a0(qp.nX());
+		Eigen::VectorXd a0(NX);
 		a0 << 1, 2;
 
 		// Stage 1
@@ -81,18 +86,18 @@ protected:
 		H1 << 1, 2, 3, 4, 5, 6, 7, 8, 9;
 		H1 = H1.transpose() * H1;	// Make positive definite.
 
-		const Eigen::MatrixXd Q1 = H1.topLeftCorner(qp.nX(), qp.nX());
-		const Eigen::MatrixXd R1 = H1.bottomRightCorner(qp.nU(), qp.nU());
-		const Eigen::MatrixXd S1 = H1.topRightCorner(qp.nX(), qp.nU());
-		const Eigen::MatrixXd S1T = H1.bottomLeftCorner(qp.nU(), qp.nX());
+		const Eigen::MatrixXd Q1 = H1.topLeftCorner(NX, NX);
+		const Eigen::MatrixXd R1 = H1.bottomRightCorner(NU, NU);
+		const Eigen::MatrixXd S1 = H1.topRightCorner(NX, NU);
+		const Eigen::MatrixXd S1T = H1.bottomLeftCorner(NU, NX);
 
-		Eigen::MatrixXd A1(qp.nX(), qp.nX());
+		Eigen::MatrixXd A1(NX, NX);
 		A1 << 1, 1, 0, 1;
 
-		Eigen::MatrixXd B1(qp.nX(), qp.nU());
+		Eigen::MatrixXd B1(NX, NU);
 		B1 << 0.5, 1.0;
 
-		Eigen::VectorXd a1(qp.nX());
+		Eigen::VectorXd a1(NX);
 		a1 << 1, 2;
 
 		// Stage 2
@@ -100,7 +105,7 @@ protected:
 		H2 << 1, 2, 3, 4;
 		H2 = H2.transpose() * H2;	// Make positive definite.
 
-		const Eigen::MatrixXd Q2 = H2.topLeftCorner(qp.nX(), qp.nX());
+		const Eigen::MatrixXd Q2 = H2.topLeftCorner(NX, NX);
 
 		// Setup QP
 		set_H(qp, 0, H0);	qp.set_q(0, K::StateVector::Zero());	qp.set_r(0, K::InputVector::Zero());
@@ -126,11 +131,26 @@ protected:
 	Eigen::VectorXd gc_expected;
 };
 
+unsigned constexpr CondensingTest::NX;
+unsigned constexpr CondensingTest::NU;
+
+/*
 TEST_F(CondensingTest, condensing_test)
 {
 	// Condense
-	tmpc::QpOasesProblem condensed({tmpc::condensedQpSize(qp.size())});
+	tmpc::QpOasesProblem condensed({tmpc::condensedQpSize(tmpc::qpSizeIterator(qp.begin()), tmpc::qpSizeIterator(qp.end()))});
 	tmpc::Condense<K, Dimensions>(qp, condensed);
+
+	EXPECT_EQ(print_wrap(condensed.H()), print_wrap(Hc_expected));
+	EXPECT_EQ(print_wrap(condensed.g()), print_wrap(gc_expected));
+}
+*/
+
+TEST_F(CondensingTest, new_condensing_test)
+{
+	// Condense
+	tmpc::QpOasesProblem condensed({tmpc::condensedQpSize(tmpc::qpSizeIterator(qp.begin()), tmpc::qpSizeIterator(qp.end()))});
+	tmpc::Condense<K>(qp.begin(), qp.end(), condensed.front());
 
 	EXPECT_EQ(print_wrap(condensed.H()), print_wrap(Hc_expected));
 	EXPECT_EQ(print_wrap(condensed.g()), print_wrap(gc_expected));

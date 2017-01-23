@@ -164,6 +164,8 @@ public:
 	// The reasons to have transpose() as a member of Kernel:
 	// 1. No possibility for name conflicts
 	// 2. Additional level of indirection => for example, call statistics can be gathered, etc.
+	// Cons:
+	// 1. Simpler syntax if made a free function.
 	template <typename Matrix>
 	static typename Matrix::ConstTransposeReturnType transpose(Eigen::MatrixBase<Matrix> const& m)
 	{
@@ -194,6 +196,13 @@ public:
 		return m.col(i);
 	}
 
+	/* -----------------------------------
+	 *
+	 * middle_rows()
+	 *
+	 * -----------------------------------
+	 */
+
 	template <std::size_t N, typename Matrix>
 	static decltype(auto) middle_rows(Eigen::MatrixBase<Matrix> const& m, std::size_t first_row)
 	{
@@ -205,6 +214,25 @@ public:
 	{
 		return m.template middleRows<N>(first_row);
 	}
+
+	template <typename Matrix>
+	static decltype(auto) middle_rows(Eigen::MatrixBase<Matrix> const& m, std::size_t first_row, std::size_t N)
+	{
+		return m.middleRows(first_row, N);
+	}
+
+	template <typename Matrix>
+	static decltype(auto) middle_rows(Eigen::MatrixBase<Matrix>& m, std::size_t first_row, std::size_t N)
+	{
+		return m.middleRows(first_row, N);
+	}
+
+	/* -----------------------------------
+	 *
+	 * top_rows()
+	 *
+	 * -----------------------------------
+	 */
 
 	template <unsigned N, typename Matrix>
 	static decltype(auto) top_rows(Eigen::MatrixBase<Matrix>& m)
@@ -230,6 +258,13 @@ public:
 		return m.template topRows(N);
 	}
 
+	/* -----------------------------------
+	 *
+	 * bottom_rows()
+	 *
+	 * -----------------------------------
+	 */
+
 	template<unsigned N, typename Matrix>
 	static decltype(auto) bottom_rows(Eigen::MatrixBase<Matrix>& m)
 	{
@@ -241,6 +276,13 @@ public:
 	{
 		return m.template bottomRows<N>();
 	}
+
+	/* -------------------------
+	 *
+	 * left_cols()
+	 *
+	 * -------------------------
+	 */
 
 	template<unsigned N, typename Matrix>
 	static decltype(auto) left_cols(Eigen::MatrixBase<Matrix>& m)
@@ -266,6 +308,13 @@ public:
 		return m.template leftCols(N);
 	}
 
+	/* -------------------------
+	 *
+	 * right_cols()
+	 *
+	 * -------------------------
+	 */
+
 	template<unsigned N, typename Matrix>
 	static decltype(auto) right_cols(Eigen::MatrixBase<Matrix>& m)
 	{
@@ -278,6 +327,13 @@ public:
 		return m.template rightCols<N>();
 	}
 
+	/* -------------------------
+	 *
+	 * middle_cols()
+	 *
+	 * -------------------------
+	 */
+
 	template<unsigned N, typename Matrix>
 	static decltype(auto) middle_cols(Eigen::MatrixBase<Matrix>& m, size_t j)
 	{
@@ -289,6 +345,25 @@ public:
 	{
 		return m.template middleCols<N>(j);
 	}
+
+	template <typename Matrix>
+	static decltype(auto) middle_cols(Eigen::MatrixBase<Matrix>& m, size_t j, size_t N)
+	{
+		return m.middleCols(j, N);
+	}
+
+	template <typename Matrix>
+	static decltype(auto) middle_cols(Eigen::MatrixBase<Matrix> const& m, size_t j, size_t N)
+	{
+		return m.middleCols(j, N);
+	}
+
+	/* -----------------------------------
+	 *
+	 * top_left_corner()
+	 *
+	 * -----------------------------------
+	 */
 
 	template<unsigned M, unsigned N, typename Matrix>
 	static decltype(auto) top_left_corner(Eigen::MatrixBase<Matrix>& m)
@@ -313,6 +388,13 @@ public:
 	{
 		return m.template topLeftCorner(M, N);
 	}
+
+	/* -----------------------------------
+	 *
+	 * top_right_corner()
+	 *
+	 * -----------------------------------
+	 */
 
 	template<unsigned M, unsigned N, typename Matrix>
 	static decltype(auto) top_right_corner(Eigen::MatrixBase<Matrix> const& m)
@@ -350,6 +432,12 @@ public:
 		return m.template bottomRightCorner<M, N>();
 	}
 
+	//***********************
+	//
+	// block()
+	//
+	//***********************
+
 	template<unsigned M, unsigned N, typename Matrix>
 	static decltype(auto) block(Eigen::MatrixBase<Matrix>& m, size_t i, size_t j)
 	{
@@ -362,6 +450,82 @@ public:
 		return m.template block<M, N>(i, j);
 	}
 
+	template <typename Matrix>
+	static decltype(auto) block(Eigen::MatrixBase<Matrix>& m, size_t i, size_t j, size_t M, size_t N)
+	{
+		return m.block(i, j, M, N);
+	}
+
+	template <typename Matrix>
+	static decltype(auto) block(Eigen::MatrixBase<Matrix> const& m, size_t i, size_t j, size_t M, size_t N)
+	{
+		return m.block(i, j, M, N);
+	}
+
+	//***********************
+	//
+	// segment()
+	//
+	//***********************
+
+	template <unsigned N, typename Matrix>
+	static decltype(auto) segment(Eigen::MatrixBase<Matrix>& m, size_t start)
+	{
+		return m.template segment<N>(start);
+	}
+
+	template <unsigned N, typename Matrix>
+	static decltype(auto) segment(Eigen::MatrixBase<Matrix> const& m, size_t start)
+	{
+		return m.template segment<N>(start);
+	}
+
+	template <typename Matrix>
+	static decltype(auto) segment(Eigen::MatrixBase<Matrix>& m, size_t start, size_t n)
+	{
+		return m.segment(start, n);
+	}
+
+	template <typename Matrix>
+	static decltype(auto) segment(Eigen::MatrixBase<Matrix> const& m, size_t start, size_t n)
+	{
+		return m.segment(start, n);
+	}
+
+	//***********************
+	//
+	// head()
+	//
+	//***********************
+	template <unsigned N, typename Matrix>
+	static decltype(auto) head(Eigen::MatrixBase<Matrix>& m)
+	{
+		return m.template head<N>();
+	}
+
+	template <unsigned N, typename Matrix>
+	static decltype(auto) head(Eigen::MatrixBase<Matrix> const& m)
+	{
+		return m.template head<N>();
+	}
+
+	template <typename Matrix>
+	static decltype(auto) head(Eigen::MatrixBase<Matrix>& m, size_t n)
+	{
+		return m.head(n);
+	}
+
+	template <typename Matrix>
+	static decltype(auto) head(Eigen::MatrixBase<Matrix> const& m, size_t n)
+	{
+		return m.head(n);
+	}
+
+	//*************************
+	//
+	// identity()
+	//
+	//*************************
 	template <typename Matrix>
 	static std::enable_if_t<std::is_base_of<Eigen::MatrixBase<Matrix>, Matrix>::value, typename Matrix::IdentityReturnType> identity()
 	{
