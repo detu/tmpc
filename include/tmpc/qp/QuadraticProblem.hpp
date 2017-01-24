@@ -9,6 +9,7 @@
 #include <blaze/Math.h>
 
 #include <vector>
+#include <initializer_list>
 
 namespace tmpc {
 
@@ -592,6 +593,11 @@ public:
 	const_reference back() const
 	{
 		return stage_.back();
+	}
+
+	QuadraticProblemBlaze(std::initializer_list<QpSize> sz)
+	:	QuadraticProblemBlaze(sz.begin(), sz.end())
+	{
 	}
 
 	template <typename InIter>
