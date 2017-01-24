@@ -37,7 +37,7 @@ public:
 
 	// Problem type for CondensingSolver
 	// TODO: change MultiStageQuadraticProblem so that it takes D as a template parameter?
-	typedef QuadraticProblem<NX, NU, NC, NCT> Problem;
+	typedef QuadraticProblemEigen<NX, NU, NC, NCT> Problem;
 
 	// Solution data type
 	// TODO: change MultiStageQPSolution so that it takes D as a template parameter?
