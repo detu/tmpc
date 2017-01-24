@@ -1,11 +1,11 @@
 #pragma once
 
+#include "QuadraticProblem.hpp"
 #include "QpOasesProblem.hpp"
 #include "QpOasesSolver.hpp"
 
 #include <qpOASES.hpp>
 #include "Condensing.hpp"
-#include "MultiStageQuadraticProblem.hpp"
 #include "MultiStageQPSolution.hpp"
 #include "UnsolvedQpException.hpp"
 
@@ -37,7 +37,7 @@ public:
 
 	// Problem type for CondensingSolver
 	// TODO: change MultiStageQuadraticProblem so that it takes D as a template parameter?
-	typedef MultiStageQuadraticProblem<NX, NU, NC, NCT> Problem;
+	typedef QuadraticProblem<NX, NU, NC, NCT> Problem;
 
 	// Solution data type
 	// TODO: change MultiStageQPSolution so that it takes D as a template parameter?

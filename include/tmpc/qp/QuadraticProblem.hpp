@@ -11,8 +11,11 @@
 
 namespace tmpc {
 
-/* Stores data for a multistage QP problem.
+/** \brief Stores data for a multistage QP problem.
+ *
  * Storage format is not explicitly defined and no access to raw data is provided..
+ *
+ *	TODO: Update problem statement.
  *
  *  The problem is stated as following:
 *
@@ -31,7 +34,7 @@ namespace tmpc {
 *	nU = nZ - nX
 */
 template <unsigned NX_, unsigned NU_, unsigned NC_, unsigned NCT_>
-class MultiStageQuadraticProblem
+class QuadraticProblem
 {
 public:
 	typedef unsigned int size_type;
@@ -218,14 +221,14 @@ public:
 		return size_;
 	}
 
-	MultiStageQuadraticProblem(size_type nt)
+	QuadraticProblem(size_type nt)
 	:	_nt(nt)
 	,	size_(RtiQpSize(nt, NX, NU, NC, NCT))
 	,	_stage(nt + 1)	// only some fields of _stage[nt] are used
 	{}
 
 	// Default copy constructor is ok.
-	MultiStageQuadraticProblem(MultiStageQuadraticProblem const&) = default;
+	QuadraticProblem(QuadraticProblem const&) = default;
 
 private:
 	struct StageData

@@ -7,10 +7,10 @@
 
 #include "gtest_tools_eigen.hpp"
 
-#include <tmpc/qp/MultiStageQuadraticProblem.hpp>
 #include <tmpc/qp/HPMPCProblem.hpp>
 #include <tmpc/qp/Printing.hpp>
 #include <tmpc/qp/QpOasesProblem.hpp>
+#include <tmpc/qp/QuadraticProblem.hpp>
 
 #include <gtest/gtest.h>
 
@@ -108,7 +108,7 @@ protected:
 };
 
 typedef ::testing::Types<
-	tmpc::MultiStageQuadraticProblem<2, 1, 0, 0>,
+	tmpc::QuadraticProblem<2, 1, 0, 0>,
 	tmpc::HPMPCProblem<2, 1, 0, 0>,
 	FixedSizeQpOasesProblem<2, 1, 0, 0>
 	> QPTypes;

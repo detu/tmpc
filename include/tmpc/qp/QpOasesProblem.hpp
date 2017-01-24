@@ -13,12 +13,12 @@ namespace tmpc {
 /**
  * \brief Manages input data for qpOASES solver.
  *
- * Implements concept: QuadraticProgram.
+ * Implements concept: QuadraticProblem.
  */
 class QpOasesProblem
 {
 	// Matrix storage option for Eigen -- important!
-	// Must be RowMajor, because qpOASES expects input matrices in column-major format.
+	// Must be RowMajor, because qpOASES expects input matrices in row-major format.
 	static const int Options = Eigen::RowMajor;
 
 public:
