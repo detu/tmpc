@@ -326,7 +326,7 @@ TEST_F(CondensingTestBlaze, new_condensing_test)
 {
 	// Condense
 	tmpc::QuadraticProblemBlaze<Scalar> condensed({tmpc::condensedQpSize(tmpc::qpSizeIterator(qp.begin()), tmpc::qpSizeIterator(qp.end()))});
-	tmpc::CondenseBlaze<Scalar>(qp.begin(), qp.end(), condensed.front());
+	condensed.front() = tmpc::condenseBlaze<Scalar>(qp.begin(), qp.end());
 
 	EXPECT_EQ(print_wrap(condensed[0].get_Q()), print_wrap(Qc_expected));
 	EXPECT_EQ(print_wrap(condensed[0].get_R()), print_wrap(Rc_expected));

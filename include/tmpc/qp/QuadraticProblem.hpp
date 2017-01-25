@@ -356,6 +356,13 @@ public:
 		Stage(Stage const&) = delete;
 		Stage(Stage &&) = default;
 
+		template <typename Expr>
+		Stage& operator=(Expr const& rhs)
+		{
+			rhs.evalTo(*this);
+			return *this;
+		}
+
 		const Matrix& get_A() const {
 			return A_;
 		}
