@@ -359,7 +359,7 @@ public:
 		template <typename Expr>
 		Stage& operator=(Expr const& rhs)
 		{
-			rhs.evalTo(*this);
+			assign(*this, rhs);
 			return *this;
 		}
 
