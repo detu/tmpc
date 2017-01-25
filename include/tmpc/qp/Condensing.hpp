@@ -361,101 +361,80 @@ namespace tmpc
 		auto nu = first->size().nu();
 		auto nc = first->size().nc();
 
-		Qc = first->get_Q();
-		submatrix(Rc, 0, 0, nu, nu) = first->get_R();
-		//K::left_cols(Sc, nu) = first_->get_S();
-		submatrix(Sc, 0, 0, Sc.rows(), nu) = first->get_S();
-		qc = first->get_q();
-		//K::head(rc, nu) = first_->get_r();
-		subvector(rc, 0, nu) = first->get_r();
+		Qc = first->Q();
+		submatrix(Rc, 0, 0, nu, nu) = first->R();
+		submatrix(Sc, 0, 0, rows(Sc), nu) = first->S();
+		qc = first->q();
+		subvector(rc, 0, nu) = first->r();
 
-		//K::top_rows(Cc, nc) = first_->get_C();
-		submatrix(Cc, 0, 0, nc, Cc.columns()) = first->get_C();
-		//K::top_left_corner(Dc, nc, nu) = first_->get_D();
-		submatrix(Dc, 0, 0, nc, nu) = first->get_D();
-		//K::head(lbd, nc) = first_->get_lbd();
-		subvector(lbd, 0, nc) = first->get_lbd();
-		//K::head(ubd, nc) = first_->get_ubd();
-		subvector(ubd, 0, nc) = first->get_ubd();
+		submatrix(Cc, 0, 0, nc, columns(Cc)) = first->C();
+		submatrix(Dc, 0, 0, nc, nu) = first->D();
+		subvector(lbd, 0, nc) = first->lbd();
+		subvector(ubd, 0, nc) = first->ubd();
 
-		//K::head(lbu, nu) = first_->get_lbu();
-		subvector(lbu, 0, nu) = first->get_lbu();
-		//K::head(ubu, nu) = first_->get_ubu();
-		subvector(ubu, 0, nu) = first->get_ubu();
+		subvector(lbu, 0, nu) = first->lbu();
+		subvector(ubu, 0, nu) = first->ubu();
 
-		blaze::DynamicMatrix<Scalar> A = first->get_A();
-		blaze::DynamicMatrix<Scalar> B = first->get_B();
-		blaze::DynamicVector<Scalar> b = first->get_b();
+		blaze::DynamicMatrix<Scalar> A = first->A();
+		blaze::DynamicMatrix<Scalar> B = first->B();
+		blaze::DynamicVector<Scalar> b = first->b();
 
 		for (auto stage = first + 1; stage != last; ++stage)
 		{
 			auto const& sz = stage->size();
 			// TODO: add nx1() to QpSize
-			auto const nx_next = stage->get_B().rows();
+			auto const nx_next = rows(stage->B());
 
 			// Update Q
-			Qc += trans(A) * stage->get_Q() * A;
+			Qc += trans(A) * stage->Q() * A;
 
 			// Update S
-			//K::left_cols(Sc, nu) += K::trans(A) * stage->get_Q() * B;
-			submatrix(Sc, 0, 0, Sc.rows(), nu) += trans(A) * stage->get_Q() * B;
-			//K::middle_cols(Sc, nu, sz.nu()) = K::trans(A) * stage->get_S();
-			submatrix(Sc, 0, nu, Sc.rows(), sz.nu()) = trans(A) * stage->get_S();
+			submatrix(Sc, 0, 0, rows(Sc), nu) += trans(A) * stage->Q() * B;
+			submatrix(Sc, 0, nu, rows(Sc), sz.nu()) = trans(A) * stage->S();
 
 			// Update R
-			//K::top_left_corner(Rc, nu, nu) += K::trans(B) * stage->get_Q() * B;
-			submatrix(Rc, 0, 0, nu, nu) += trans(B) * stage->get_Q() * B;
-			//K::block(Rc, 0, nu, nu, sz.nu()) = K::trans(B) * stage->get_S();
-			submatrix(Rc, 0, nu, nu, sz.nu()) = trans(B) * stage->get_S();
-			//K::block(Rc, nu, 0, sz.nu(), nu) = K::trans(stage->get_S()) * B;
-			submatrix(Rc, nu, 0, sz.nu(), nu) = trans(stage->get_S()) * B;
-			//K::block(Rc, nu, nu, sz.nu(), sz.nu()) = stage->get_R();
-			submatrix(Rc, nu, nu, sz.nu(), sz.nu()) = stage->get_R();
+			submatrix(Rc, 0, 0, nu, nu) += trans(B) * stage->Q() * B;
+			submatrix(Rc, 0, nu, nu, sz.nu()) = trans(B) * stage->S();
+			submatrix(Rc, nu, 0, sz.nu(), nu) = trans(stage->S()) * B;
+			submatrix(Rc, nu, nu, sz.nu(), sz.nu()) = stage->R();
 
 			// Update q
-			qc += trans(A) * (stage->get_Q() * b + stage->get_q());
+			qc += trans(A) * (stage->Q() * b + stage->q());
 
 			// Update r
-			//K::head(rc, nu) += K::trans(B) * (stage->get_Q() * b + stage->get_q());
-			subvector(rc, 0, nu) += trans(B) * (stage->get_Q() * b + stage->get_q());
-			//K::segment(rc, nu, sz.nu()) = K::trans(stage->get_S()) * b + stage->get_r();
-			subvector(rc, nu, sz.nu()) = trans(stage->get_S()) * b + stage->get_r();
+			subvector(rc, 0, nu) += trans(B) * (stage->Q() * b + stage->q());
+			subvector(rc, nu, sz.nu()) = trans(stage->S()) * b + stage->r();
 
 			// Update C
-			//K::middle_rows(Cc, nc, sz.nx() + sz.nc()) << A, stage->get_C() * A;
-			submatrix(Cc, nc          , 0, sz.nx(), Cc.columns()) = A;
-			submatrix(Cc, nc + sz.nx(), 0, sz.nc(), Cc.columns()) = stage->get_C() * A;
+			submatrix(Cc, nc          , 0, sz.nx(), columns(Cc)) = A;
+			submatrix(Cc, nc + sz.nx(), 0, sz.nc(), columns(Cc)) = stage->C() * A;
 
 			// Update D (which is initialized to 0)
-			//K::middle_rows(Dc, nc, sz.nx() + sz.nc()) << B, K::zero(sz.nx(), cs.nu() - nu),
-			//									  stage->get_C() * B, stage->get_D(), K::zero(sz.nc(), cs.nu() - nu - sz.nu());
 			submatrix(Dc, nc          ,  0, sz.nx(),      nu) = B;
-			submatrix(Dc, nc + sz.nx(),  0, sz.nc(),      nu) = stage->get_C() * B;
-			submatrix(Dc, nc + sz.nx(), nu, sz.nc(), sz.nu()) = stage->get_D();
+			submatrix(Dc, nc + sz.nx(),  0, sz.nc(),      nu) = stage->C() * B;
+			submatrix(Dc, nc + sz.nx(), nu, sz.nc(), sz.nu()) = stage->D();
 
 			// Update lbd
-			//K::segment(lbd, nc, sz.nx() + sz.nc()) << stage->get_lbx() - b, stage->get_lbd() - stage->get_C() * b;
-			subvector(lbd, nc          , sz.nx()) = stage->get_lbx() - b;
-			subvector(lbd, nc + sz.nx(), sz.nc()) = stage->get_lbd() - stage->get_C() * b;
+			subvector(lbd, nc          , sz.nx()) = stage->lbx() - b;
+			subvector(lbd, nc + sz.nx(), sz.nc()) = stage->lbd() - stage->C() * b;
 
 			// Update ubd
-			//K::segment(ubd, nc, sz.nx() + sz.nc()) << stage->get_ubx() - b, stage->get_ubd() - stage->get_C() * b;
-			subvector(ubd, nc          , sz.nx()) = stage->get_ubx() - b;
-			subvector(ubd, nc + sz.nx(), sz.nc()) = stage->get_ubd() - stage->get_C() * b;
+			subvector(ubd, nc          , sz.nx()) = stage->ubx() - b;
+			subvector(ubd, nc + sz.nx(), sz.nc()) = stage->ubd() - stage->C() * b;
 
 			// Update A
-			A = stage->get_A() * A;
+			A = stage->A() * A;
 
 			// Update B
 			{
 				blaze::DynamicMatrix<Scalar> B_next(nx_next, nu + sz.nu());
-				submatrix(B_next, 0,  0, nx_next,      nu) = stage->get_A() * B;
-				submatrix(B_next, 0, nu, nx_next, sz.nu()) = stage->get_B();
+				submatrix(B_next, 0,  0, nx_next,      nu) = stage->A() * B;
+				submatrix(B_next, 0, nu, nx_next, sz.nu()) = stage->B();
 				B = std::move(B_next);
 			}
 
 			// Update b
-			b = stage->get_A() * b + stage->get_b();
+			b = stage->A() * b + stage->b();
 
 			// Update indices
 			nu += sz.nu();
@@ -463,25 +442,25 @@ namespace tmpc
 		}
 
 		// Fill the condensed stage
-		condensed.set_Q(Qc);
-		condensed.set_R(Rc);
-		condensed.set_S(Sc);
-		condensed.set_q(qc);
-		condensed.set_r(rc);
+		condensed.Q() = Qc;
+		condensed.R() = Rc;
+		condensed.S() = Sc;
+		condensed.q() = qc;
+		condensed.r() = rc;
 
-		condensed.set_C(Cc);
-		condensed.set_D(Dc);
-		condensed.set_lbd(lbd);
-		condensed.set_ubd(ubd);
+		condensed.C() = Cc;
+		condensed.D() = Dc;
+		condensed.lbd() = lbd;
+		condensed.ubd() = ubd;
 
-		condensed.set_A(A);
-		condensed.set_B(B);
-		condensed.set_b(b);
+		condensed.A() = A;
+		condensed.B() = B;
+		condensed.b() = b;
 
-		condensed.set_lbx(first->get_lbx());
-		condensed.set_ubx(first->get_ubx());
-		condensed.set_lbu(lbu);
-		condensed.set_ubu(ubu);
+		condensed.lbx() = first->lbx();
+		condensed.ubx() = first->ubx();
+		condensed.lbu() = lbu;
+		condensed.ubu() = ubu;
 	}
 
 	/**
