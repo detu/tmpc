@@ -184,9 +184,10 @@ if __name__ == '__main__':
             for key in keys:
                 np.array(data[key][k]).tofile(file, sep)        
                 file.write('\n')
-            
-    plt.subplot(2, 1, 1)
-    plt.step(cs.vertcat(data['t']), cs.transpose(cs.horzcat(*data['u' ]))      )
-    plt.subplot(2, 1, 2)
-    plt.plot(cs.vertcat(data['t']), cs.transpose(cs.horzcat(*data['x0'])), '.-')
-    plt.show()
+
+    if False:            
+        plt.subplot(2, 1, 1)
+        plt.step(cs.vertcat(data['t']), cs.transpose(cs.horzcat(*data['u' ]))      )
+        plt.subplot(2, 1, 2)
+        plt.plot(cs.vertcat(data['t']), cs.transpose(cs.horzcat(*data['x0'])), '.-')
+        plt.show()

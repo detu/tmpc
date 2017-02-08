@@ -108,6 +108,19 @@ namespace tmpc
 
 		WorkingPoint const& getWorkingPoint() const { return work_.workingPoint_; }
 
+		void setWorkingPoint(WorkingPoint const& wp)
+		{
+			if (wp.nT() != work_.workingPoint_.nT())
+			{
+				throw std::invalid_argument(
+					"RealtimeIteration::setWorkingPoint(): new working point length is different. "
+					"Changing prediction horizon on the fly is not supported (yet?).");
+			}
+
+			work_.workingPoint_ = wp;
+			_prepared = false;
+		}
+
 		// TODO: change LevenbergMarquardt to be an argument of Preparation()?
 		typename K::Scalar getLevenbergMarquardt() const { return work_.levenbergMarquardt_; }
 
