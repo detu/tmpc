@@ -356,154 +356,62 @@ public:
 		Stage(Stage const&) = delete;
 		Stage(Stage &&) = default;
 
-		const Matrix& get_A() const {
-			return A_;
-		}
-
-		template <typename MT, bool SO>
-		void set_A(const blaze::Matrix<MT, SO>& a) {
-			A_ = a;
-		}
-
-		const Matrix& get_B() const {
-			return B_;
-		}
-
-		template <typename MT, bool SO>
-		void set_B(const blaze::Matrix<MT, SO>& b) {
-			B_ = b;
-		}
-
-		Vector const& get_b() const {
-			return b_;
-		}
-
-		template <typename MT, bool SO>
-		void set_b(const blaze::Vector<MT, SO>& b) {
-			b_ = b;
-		}
-
-		const Matrix& get_C() const {
-			return C_;
-		}
-
-		template <typename MT, bool SO>
-		void set_C(const blaze::Matrix<MT, SO>& c) {
-			C_ = c;
-		}
-
-		const Matrix& get_D() const {
-			return D_;
-		}
-
-		template <typename MT, bool SO>
-		void set_D(const blaze::Matrix<MT, SO>& d) {
-			D_ = d;
-		}
-
-		const Vector& get_lbd() const {
-			return lbd_;
-		}
-
-		template <typename MT, bool SO>
-		void set_lbd(const blaze::Vector<MT, SO>& lbd) {
-			lbd_ = lbd;
-		}
-
-		const Vector& get_lbu() const {
-			return lbu_;
-		}
-
-		template <typename MT, bool SO>
-		void set_lbu(const blaze::Vector<MT, SO>& lbu) {
-			lbu_ = lbu;
-		}
-
-		const Vector& get_lbx() const {
-			return lbx_;
-		}
-
-		template <typename MT, bool SO>
-		void set_lbx(const blaze::Vector<MT, SO>& lbx) {
-			lbx_ = lbx;
-		}
-
-		const Matrix& get_Q() const {
-			return Q_;
-		}
-
-		template <typename MT, bool SO>
-		void set_Q(const blaze::Matrix<MT, SO>& q) {
-			Q_ = q;
-		}
-
-		const Matrix& get_R() const {
-			return R_;
-		}
-
-		template <typename MT, bool SO>
-		void set_R(const blaze::Matrix<MT, SO>& r) {
-			R_ = r;
-		}
-
-		const Matrix& get_S() const {
-			return S_;
-		}
-
-		template <typename MT, bool SO>
-		void set_S(const blaze::Matrix<MT, SO>& s) {
-			S_ = s;
-		}
-
-		const Vector& get_q() const {
-			return q_;
-		}
-
-		template <typename MT, bool SO>
-		void set_q(const blaze::Vector<MT, SO>& q) {
-			q_ = q;
-		}
-
-		const Vector& get_r() const {
-			return r_;
-		}
-
-		template <typename MT, bool SO>
-		void set_r(const blaze::Vector<MT, SO>& r) {
-			r_ = r;
-		}
-
-		const Vector& get_ubd() const {
-			return ubd_;
-		}
-
-		template <typename MT, bool SO>
-		void set_ubd(const blaze::Vector<MT, SO>& ubd) {
-			ubd_ = ubd;
-		}
-
-		const Vector& get_ubu() const {
-			return ubu_;
-		}
-
-		template <typename MT, bool SO>
-		void set_ubu(const blaze::Vector<MT, SO>& ubu) {
-			ubu_ = ubu;
-		}
-
-		const Vector& get_ubx() const {
-			return ubx_;
-		}
-
-		template <typename MT, bool SO>
-		void set_ubx(const blaze::Vector<MT, SO>& ubx) {
-			ubx_ = ubx;
-		}
-
-		QpSize const& size() const
+		template <typename Expr>
+		Stage& operator=(Expr const& rhs)
 		{
-			return size_;
+			assign(*this, rhs);
+			return *this;
 		}
+
+		const Matrix& Q() const { return Q_; }
+		Matrix& Q() { return Q_; }
+
+		const Matrix& R() const { return R_; }
+		Matrix& R() { return R_; }
+
+		const Matrix& S() const { return S_; }
+		Matrix& S() { return S_; }
+
+		const Vector& q() const { return q_; }
+		Vector& q() { return q_; }
+
+		const Vector& r() const { return r_; }
+		Vector& r() { return r_; }
+
+		const Matrix& A() const { return A_; }
+		Matrix& A() { return A_; }
+
+		const Matrix& B() const { return B_; }
+		Matrix& B() { return B_; }
+
+		Vector const& b() const { return b_; }
+		Vector& b() { return b_; }
+
+		const Matrix& C() const { return C_; }
+		Matrix& C() { return C_; }
+
+		const Matrix& D() const { return D_; }
+		Matrix& D() { return D_; }
+
+		const Vector& lbx() const {	return lbx_; }
+		Vector& lbx() {	return lbx_; }
+
+		const Vector& ubx() const {	return ubx_; }
+		Vector& ubx() {	return ubx_; }
+
+		const Vector& lbu() const { return lbu_; }
+		Vector& lbu() {	return lbu_; }
+
+		const Vector& ubu() const {	return ubu_; }
+		Vector& ubu() {	return ubu_; }
+
+		const Vector& lbd() const {	return lbd_; }
+		Vector& lbd() {	return lbd_; }
+
+		const Vector& ubd() const {	return ubd_; }
+		Vector& ubd() {	return ubd_; }
+
+		QpSize const& size() const { return size_; }
 
 	private:
 		QpSize size_;

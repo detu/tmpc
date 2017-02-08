@@ -292,23 +292,56 @@ namespace tmpc
 	}
 
 	/**
-	 * \brief Condense a multistage QP to a dense QP.
+	 * \brief Condensing algorithm.
 	 *
-	 * This is a version using Blaze.
+	 * Manages resources needed for the condensing algorithm of a given size.
 	 *
 	 * \tparam <Scalar> Scalar type used for intermediate variables in the condensing algorithm.
-	 * \tparam <InIter> Class defining input iterator to multistage QP stages
-	 * \tparam <CondensedQP_> Class implementing a QpStage concept
-	 *
-	 * TODO: should D be deduced from MultiStageQP_ or not?
-	 * */
-	template <typename Scalar, typename InIter, typename CondensedQP_>
-	void CondenseBlaze(InIter qp_begin, InIter qp_end, CondensedQP_& condensed_qp)
+	 */
+	template <typename Scalar>
+	class Condensing
 	{
-		if (qp_begin == qp_end)
-			throw std::invalid_argument("Condense(): the input QpStage must not be empty");
+	public:
+		template <typename InIter>
+		Condensing(InIter const& sz_first, InIter const& sz_last);
+	};
 
-		QpSize const cs = condensedQpSize(tmpc::qpSizeIterator(qp_begin), tmpc::qpSizeIterator(qp_end));
+	/**
+	 * \brief An expression defining a call to condensing algorithm.
+	 * \tparam <Scalar> Scalar type used for intermediate variables in the condensing algorithm.
+	 * \tparam <InIter> Class defining input iterator to multistage QP stages
+	 */
+	template <typename Scalar, typename InIter>
+	class CondenseExpression
+	{
+	public:
+		CondenseExpression(InIter const& first, InIter const& last)
+		:	first_(first)
+		,	last_(last)
+		{
+			if (first == last)
+				throw std::invalid_argument("CondenseExpression(): the input range must not be empty");
+		}
+
+		InIter const& first() const { return first_; }
+		InIter const& last() const { return last_; }
+
+	private:
+		InIter const first_;
+		InIter const last_;
+	};
+
+	/**
+	 * \brief Performs the actual condensing.
+	 *
+	 * \tparam <CondensedStage> Class implementing a QpStage concept
+	 */
+	template <typename CondensedStage, typename Scalar, typename InIter>
+	void assign(CondensedStage& condensed, CondenseExpression<Scalar, InIter> const& rhs)
+	{
+		auto const& first = rhs.first();
+		auto const& last = rhs.last();
+		QpSize const cs = condensedQpSize(tmpc::qpSizeIterator(first), tmpc::qpSizeIterator(last));
 
 		blaze::DynamicMatrix<Scalar> Qc(cs.nx(), cs.nx());
 		blaze::DynamicMatrix<Scalar> Rc(cs.nu(), cs.nu());
@@ -325,104 +358,83 @@ namespace tmpc
 		blaze::DynamicVector<Scalar> ubu(cs.nu());
 
 		// Initialization of QP variables
-		auto nu = qp_begin->size().nu();
-		auto nc = qp_begin->size().nc();
+		auto nu = first->size().nu();
+		auto nc = first->size().nc();
 
-		Qc = qp_begin->get_Q();
-		submatrix(Rc, 0, 0, nu, nu) = qp_begin->get_R();
-		//K::left_cols(Sc, nu) = qp_begin->get_S();
-		submatrix(Sc, 0, 0, Sc.rows(), nu) = qp_begin->get_S();
-		qc = qp_begin->get_q();
-		//K::head(rc, nu) = qp_begin->get_r();
-		subvector(rc, 0, nu) = qp_begin->get_r();
+		Qc = first->Q();
+		submatrix(Rc, 0, 0, nu, nu) = first->R();
+		submatrix(Sc, 0, 0, rows(Sc), nu) = first->S();
+		qc = first->q();
+		subvector(rc, 0, nu) = first->r();
 
-		//K::top_rows(Cc, nc) = qp_begin->get_C();
-		submatrix(Cc, 0, 0, nc, Cc.columns()) = qp_begin->get_C();
-		//K::top_left_corner(Dc, nc, nu) = qp_begin->get_D();
-		submatrix(Dc, 0, 0, nc, nu) = qp_begin->get_D();
-		//K::head(lbd, nc) = qp_begin->get_lbd();
-		subvector(lbd, 0, nc) = qp_begin->get_lbd();
-		//K::head(ubd, nc) = qp_begin->get_ubd();
-		subvector(ubd, 0, nc) = qp_begin->get_ubd();
+		submatrix(Cc, 0, 0, nc, columns(Cc)) = first->C();
+		submatrix(Dc, 0, 0, nc, nu) = first->D();
+		subvector(lbd, 0, nc) = first->lbd();
+		subvector(ubd, 0, nc) = first->ubd();
 
-		//K::head(lbu, nu) = qp_begin->get_lbu();
-		subvector(lbu, 0, nu) = qp_begin->get_lbu();
-		//K::head(ubu, nu) = qp_begin->get_ubu();
-		subvector(ubu, 0, nu) = qp_begin->get_ubu();
+		subvector(lbu, 0, nu) = first->lbu();
+		subvector(ubu, 0, nu) = first->ubu();
 
-		blaze::DynamicMatrix<Scalar> A = qp_begin->get_A();
-		blaze::DynamicMatrix<Scalar> B = qp_begin->get_B();
-		blaze::DynamicVector<Scalar> b = qp_begin->get_b();
+		blaze::DynamicMatrix<Scalar> A = first->A();
+		blaze::DynamicMatrix<Scalar> B = first->B();
+		blaze::DynamicVector<Scalar> b = first->b();
 
-		for (auto stage = qp_begin + 1; stage != qp_end; ++stage)
+		for (auto stage = first + 1; stage != last; ++stage)
 		{
 			auto const& sz = stage->size();
 			// TODO: add nx1() to QpSize
-			auto const nx_next = stage->get_B().rows();
+			auto const nx_next = rows(stage->B());
 
 			// Update Q
-			Qc += trans(A) * stage->get_Q() * A;
+			Qc += trans(A) * stage->Q() * A;
 
 			// Update S
-			//K::left_cols(Sc, nu) += K::trans(A) * stage->get_Q() * B;
-			submatrix(Sc, 0, 0, Sc.rows(), nu) += trans(A) * stage->get_Q() * B;
-			//K::middle_cols(Sc, nu, sz.nu()) = K::trans(A) * stage->get_S();
-			submatrix(Sc, 0, nu, Sc.rows(), sz.nu()) = trans(A) * stage->get_S();
+			submatrix(Sc, 0, 0, rows(Sc), nu) += trans(A) * stage->Q() * B;
+			submatrix(Sc, 0, nu, rows(Sc), sz.nu()) = trans(A) * stage->S();
 
 			// Update R
-			//K::top_left_corner(Rc, nu, nu) += K::trans(B) * stage->get_Q() * B;
-			submatrix(Rc, 0, 0, nu, nu) += trans(B) * stage->get_Q() * B;
-			//K::block(Rc, 0, nu, nu, sz.nu()) = K::trans(B) * stage->get_S();
-			submatrix(Rc, 0, nu, nu, sz.nu()) = trans(B) * stage->get_S();
-			//K::block(Rc, nu, 0, sz.nu(), nu) = K::trans(stage->get_S()) * B;
-			submatrix(Rc, nu, 0, sz.nu(), nu) = trans(stage->get_S()) * B;
-			//K::block(Rc, nu, nu, sz.nu(), sz.nu()) = stage->get_R();
-			submatrix(Rc, nu, nu, sz.nu(), sz.nu()) = stage->get_R();
+			submatrix(Rc, 0, 0, nu, nu) += trans(B) * stage->Q() * B;
+			submatrix(Rc, 0, nu, nu, sz.nu()) = trans(B) * stage->S();
+			submatrix(Rc, nu, 0, sz.nu(), nu) = trans(stage->S()) * B;
+			submatrix(Rc, nu, nu, sz.nu(), sz.nu()) = stage->R();
 
 			// Update q
-			qc += trans(A) * (stage->get_Q() * b + stage->get_q());
+			qc += trans(A) * (stage->Q() * b + stage->q());
 
 			// Update r
-			//K::head(rc, nu) += K::trans(B) * (stage->get_Q() * b + stage->get_q());
-			subvector(rc, 0, nu) += trans(B) * (stage->get_Q() * b + stage->get_q());
-			//K::segment(rc, nu, sz.nu()) = K::trans(stage->get_S()) * b + stage->get_r();
-			subvector(rc, nu, sz.nu()) = trans(stage->get_S()) * b + stage->get_r();
+			subvector(rc, 0, nu) += trans(B) * (stage->Q() * b + stage->q());
+			subvector(rc, nu, sz.nu()) = trans(stage->S()) * b + stage->r();
 
 			// Update C
-			//K::middle_rows(Cc, nc, sz.nx() + sz.nc()) << A, stage->get_C() * A;
-			submatrix(Cc, nc          , 0, sz.nx(), Cc.columns()) = A;
-			submatrix(Cc, nc + sz.nx(), 0, sz.nc(), Cc.columns()) = stage->get_C() * A;
+			submatrix(Cc, nc          , 0, sz.nx(), columns(Cc)) = A;
+			submatrix(Cc, nc + sz.nx(), 0, sz.nc(), columns(Cc)) = stage->C() * A;
 
 			// Update D (which is initialized to 0)
-			//K::middle_rows(Dc, nc, sz.nx() + sz.nc()) << B, K::zero(sz.nx(), cs.nu() - nu),
-			//									  stage->get_C() * B, stage->get_D(), K::zero(sz.nc(), cs.nu() - nu - sz.nu());
 			submatrix(Dc, nc          ,  0, sz.nx(),      nu) = B;
-			submatrix(Dc, nc + sz.nx(),  0, sz.nc(),      nu) = stage->get_C() * B;
-			submatrix(Dc, nc + sz.nx(), nu, sz.nc(), sz.nu()) = stage->get_D();
+			submatrix(Dc, nc + sz.nx(),  0, sz.nc(),      nu) = stage->C() * B;
+			submatrix(Dc, nc + sz.nx(), nu, sz.nc(), sz.nu()) = stage->D();
 
 			// Update lbd
-			//K::segment(lbd, nc, sz.nx() + sz.nc()) << stage->get_lbx() - b, stage->get_lbd() - stage->get_C() * b;
-			subvector(lbd, nc          , sz.nx()) = stage->get_lbx() - b;
-			subvector(lbd, nc + sz.nx(), sz.nc()) = stage->get_lbd() - stage->get_C() * b;
+			subvector(lbd, nc          , sz.nx()) = stage->lbx() - b;
+			subvector(lbd, nc + sz.nx(), sz.nc()) = stage->lbd() - stage->C() * b;
 
 			// Update ubd
-			//K::segment(ubd, nc, sz.nx() + sz.nc()) << stage->get_ubx() - b, stage->get_ubd() - stage->get_C() * b;
-			subvector(ubd, nc          , sz.nx()) = stage->get_ubx() - b;
-			subvector(ubd, nc + sz.nx(), sz.nc()) = stage->get_ubd() - stage->get_C() * b;
+			subvector(ubd, nc          , sz.nx()) = stage->ubx() - b;
+			subvector(ubd, nc + sz.nx(), sz.nc()) = stage->ubd() - stage->C() * b;
 
 			// Update A
-			A = stage->get_A() * A;
+			A = stage->A() * A;
 
 			// Update B
 			{
 				blaze::DynamicMatrix<Scalar> B_next(nx_next, nu + sz.nu());
-				submatrix(B_next, 0,  0, nx_next,      nu) = stage->get_A() * B;
-				submatrix(B_next, 0, nu, nx_next, sz.nu()) = stage->get_B();
+				submatrix(B_next, 0,  0, nx_next,      nu) = stage->A() * B;
+				submatrix(B_next, 0, nu, nx_next, sz.nu()) = stage->B();
 				B = std::move(B_next);
 			}
 
 			// Update b
-			b = stage->get_A() * b + stage->get_b();
+			b = stage->A() * b + stage->b();
 
 			// Update indices
 			nu += sz.nu();
@@ -430,24 +442,40 @@ namespace tmpc
 		}
 
 		// Fill the condensed stage
-		condensed_qp.set_Q(Qc);
-		condensed_qp.set_R(Rc);
-		condensed_qp.set_S(Sc);
-		condensed_qp.set_q(qc);
-		condensed_qp.set_r(rc);
+		condensed.Q() = Qc;
+		condensed.R() = Rc;
+		condensed.S() = Sc;
+		condensed.q() = qc;
+		condensed.r() = rc;
 
-		condensed_qp.set_C(Cc);
-		condensed_qp.set_D(Dc);
-		condensed_qp.set_lbd(lbd);
-		condensed_qp.set_ubd(ubd);
+		condensed.C() = Cc;
+		condensed.D() = Dc;
+		condensed.lbd() = lbd;
+		condensed.ubd() = ubd;
 
-		condensed_qp.set_A(A);
-		condensed_qp.set_B(B);
-		condensed_qp.set_b(b);
+		condensed.A() = A;
+		condensed.B() = B;
+		condensed.b() = b;
 
-		condensed_qp.set_lbx(qp_begin->get_lbx());
-		condensed_qp.set_ubx(qp_begin->get_ubx());
-		condensed_qp.set_lbu(lbu);
-		condensed_qp.set_ubu(ubu);
+		condensed.lbx() = first->lbx();
+		condensed.ubx() = first->ubx();
+		condensed.lbu() = lbu;
+		condensed.ubu() = ubu;
+	}
+
+	/**
+	 * \brief Lazy expression for condensing of a multistage QP to a dense QP.
+	 *
+	 * This is a version using Blaze.
+	 *
+	 * \tparam <Scalar> Scalar type used for intermediate variables in the condensing algorithm.
+	 * \tparam <InIter> Class defining input iterator to multistage QP stages
+	 *
+	 * TODO: should D be deduced from MultiStageQP_ or not?
+	 * */
+	template <typename Scalar, typename InIter>
+	CondenseExpression<Scalar, InIter> condenseBlaze(InIter first, InIter last)
+	{
+		return CondenseExpression<Scalar, InIter>(first, last);
 	}
 }

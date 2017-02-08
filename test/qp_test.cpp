@@ -331,39 +331,40 @@ TYPED_TEST(QuadraticProblemTestBlaze, get_set_interface_works)
 		auto const nx1 = i + 1 < N ? this->size_[i + 1].nx() : 0;
 		auto& stage = this->qp_[i];
 
-		stage.set_Q(Q[i] = rand_matrix.generate(sz.nx(), sz.nx()));
-		stage.set_R(R[i] = rand_matrix.generate(sz.nu(), sz.nu()));
-		stage.set_S(S[i] = rand_matrix.generate(sz.nx(), sz.nu()));
-		stage.set_q(q[i] = rand_vector.generate(sz.nx()));
-		stage.set_r(r[i] = rand_vector.generate(sz.nx()));
+		stage.Q() = Q[i] = rand_matrix.generate(sz.nx(), sz.nx());
+		stage.R() = R[i] = rand_matrix.generate(sz.nu(), sz.nu());
+		stage.S() = S[i] = rand_matrix.generate(sz.nx(), sz.nu());
+		stage.q() = q[i] = rand_vector.generate(sz.nx());
+		stage.r() = r[i] = rand_vector.generate(sz.nx());
 
-		stage.set_A(A[i] = rand_matrix.generate(nx1, sz.nx()));
-		stage.set_B(B[i] = rand_matrix.generate(nx1, sz.nu()));
-		stage.set_b(b[i] = rand_vector.generate(nx1));
+		stage.A() = A[i] = rand_matrix.generate(nx1, sz.nx());
+		stage.B() = B[i] = rand_matrix.generate(nx1, sz.nu());
+		stage.b() = b[i] = rand_vector.generate(nx1);
 
-		stage.set_lbx(x_min[i] = rand_vector.generate(sz.nx()));
-		stage.set_ubx(x_max[i] = rand_vector.generate(sz.nx()));
-		stage.set_lbu(u_min[i] = rand_vector.generate(sz.nu()));
-		stage.set_ubu(u_max[i] = rand_vector.generate(sz.nu()));	}
+		stage.lbx() = x_min[i] = rand_vector.generate(sz.nx());
+		stage.ubx() = x_max[i] = rand_vector.generate(sz.nx());
+		stage.lbu() = u_min[i] = rand_vector.generate(sz.nu());
+		stage.ubu() = u_max[i] = rand_vector.generate(sz.nu());
+	}
 
 	// Reading the data and checking that they are the same that we wrote
 	for (std::size_t i = 0; i < N; ++i)
 	{
 		auto const& stage = this->qp_[i];
 
-		EXPECT_EQ(print_wrap(stage.get_Q()), print_wrap(Q[i])) << "at i=" << i;
-		EXPECT_EQ(print_wrap(stage.get_R()), print_wrap(R[i])) << "at i=" << i;
-		EXPECT_EQ(print_wrap(stage.get_S()), print_wrap(S[i]));
-		EXPECT_EQ(print_wrap(stage.get_q()), print_wrap(q[i]));
-		EXPECT_EQ(print_wrap(stage.get_r()), print_wrap(r[i]));
+		EXPECT_EQ(print_wrap(stage.Q()), print_wrap(Q[i])) << "at i=" << i;
+		EXPECT_EQ(print_wrap(stage.R()), print_wrap(R[i])) << "at i=" << i;
+		EXPECT_EQ(print_wrap(stage.S()), print_wrap(S[i]));
+		EXPECT_EQ(print_wrap(stage.q()), print_wrap(q[i]));
+		EXPECT_EQ(print_wrap(stage.r()), print_wrap(r[i]));
 
-		EXPECT_EQ(print_wrap(stage.get_A()), print_wrap(A[i]));
-		EXPECT_EQ(print_wrap(stage.get_B()), print_wrap(B[i]));
-		EXPECT_EQ(print_wrap(stage.get_b()), print_wrap(b[i]));
+		EXPECT_EQ(print_wrap(stage.A()), print_wrap(A[i]));
+		EXPECT_EQ(print_wrap(stage.B()), print_wrap(B[i]));
+		EXPECT_EQ(print_wrap(stage.b()), print_wrap(b[i]));
 
-		EXPECT_EQ(print_wrap(stage.get_lbx()), print_wrap(x_min[i]));
-		EXPECT_EQ(print_wrap(stage.get_ubx()), print_wrap(x_max[i]));
-		EXPECT_EQ(print_wrap(stage.get_lbu()), print_wrap(u_min[i]));
-		EXPECT_EQ(print_wrap(stage.get_ubu()), print_wrap(u_max[i]));
+		EXPECT_EQ(print_wrap(stage.lbx()), print_wrap(x_min[i]));
+		EXPECT_EQ(print_wrap(stage.ubx()), print_wrap(x_max[i]));
+		EXPECT_EQ(print_wrap(stage.lbu()), print_wrap(u_min[i]));
+		EXPECT_EQ(print_wrap(stage.ubu()), print_wrap(u_max[i]));
 	}
 }
