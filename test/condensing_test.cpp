@@ -221,13 +221,13 @@ protected:
 
 	void SetUp() override
 	{
-		qp[0].lbx() = StateVector(-1.);	qp[0].ubx() = StateVector(1.);
-		qp[0].lbu() = InputVector(-1.);	qp[0].ubu() = InputVector(1.);
+		qp[0].set_lbx(StateVector(-1.));	qp[0].set_ubx(StateVector(1.));
+		qp[0].set_lbu(InputVector(-1.));	qp[0].set_ubu(InputVector(1.));
 
-		qp[1].lbx() = StateVector(-1.);	qp[1].ubx() = StateVector(1.);
-		qp[1].lbu() = InputVector(-1.);	qp[1].ubu() = InputVector(1.);
+		qp[1].set_lbx(StateVector(-1.));	qp[1].set_ubx(StateVector(1.));
+		qp[1].set_lbu(InputVector(-1.));	qp[1].set_ubu(InputVector(1.));
 
-		qp[2].lbx() = StateVector(-1.);	qp[2].ubx() = StateVector(1.);
+		qp[2].set_lbx(StateVector(-1.));	qp[2].set_ubx(StateVector(1.));
 
 		// Stage 0
 		blaze::StaticMatrix<Scalar, NZ, NZ> H0 {
@@ -290,12 +290,12 @@ protected:
 		const auto Q2 = submatrix(H2, 0, 0, NX, NX);
 
 		// Setup QP
-		qp[0].Q() = (Q0);	qp[0].R() = (R0);	qp[0].S() = (S0);	qp[0].q() = (StateVector(0.));	qp[0].r() = (InputVector(0.));
-		qp[1].Q() = (Q1);	qp[1].R() = (R1);	qp[1].S() = (S1);	qp[1].q() = (StateVector(0.));	qp[1].r() = (InputVector(0.));
-		qp[2].Q() = (Q2);											qp[2].q() = (StateVector(0.));
+		qp[0].set_Q(Q0);	qp[0].set_R(R0);	qp[0].set_S(S0);	qp[0].set_q(StateVector(0.));	qp[0].set_r(InputVector(0.));
+		qp[1].set_Q(Q1);	qp[1].set_R(R1);	qp[1].set_S(S1);	qp[1].set_q(StateVector(0.));	qp[1].set_r(InputVector(0.));
+		qp[2].set_Q(Q2);											qp[2].set_q(StateVector(0.));
 
-		qp[0].A() = (A0);	qp[0].B() = (B0);	qp[0].b() = (a0);
-		qp[1].A() = (A1);	qp[1].B() = (B1);	qp[1].b() = (a1);
+		qp[0].set_A(A0);	qp[0].set_B(B0);	qp[0].set_b(a0);
+		qp[1].set_A(A1);	qp[1].set_B(B1);	qp[1].set_b(a1);
 
 		Qc_expected = trans(A0) * Q1 * A0 + trans(A0) * trans(A1) * Q2 * A1 * A0 + Q0;
 		submatrix(Rc_expected, 0 * NU, 0 * NU, NU, NU) = trans(B0) * Q1 * B0 + trans(B0) * trans(A1) * Q2 * A1 * B0 + R0;
@@ -328,9 +328,9 @@ TEST_F(CondensingTestBlaze, new_condensing_test)
 	tmpc::QuadraticProblemBlaze<Scalar> condensed({tmpc::condensedQpSize(tmpc::qpSizeIterator(qp.begin()), tmpc::qpSizeIterator(qp.end()))});
 	condensed.front() = tmpc::condenseBlaze<Scalar>(qp.begin(), qp.end());
 
-	EXPECT_EQ(print_wrap(condensed[0].Q()), print_wrap(Qc_expected));
-	EXPECT_EQ(print_wrap(condensed[0].R()), print_wrap(Rc_expected));
-	EXPECT_EQ(print_wrap(condensed[0].S()), print_wrap(Sc_expected));
-	EXPECT_EQ(print_wrap(condensed[0].q()), print_wrap(qc_expected));
-	EXPECT_EQ(print_wrap(condensed[0].r()), print_wrap(rc_expected));
+	EXPECT_EQ(print_wrap(condensed[0].get_Q()), print_wrap(Qc_expected));
+	EXPECT_EQ(print_wrap(condensed[0].get_R()), print_wrap(Rc_expected));
+	EXPECT_EQ(print_wrap(condensed[0].get_S()), print_wrap(Sc_expected));
+	EXPECT_EQ(print_wrap(condensed[0].get_q()), print_wrap(qc_expected));
+	EXPECT_EQ(print_wrap(condensed[0].get_r()), print_wrap(rc_expected));
 }
