@@ -10,7 +10,7 @@
 #include <tmpc/qp/QpOasesSolver.hpp>
 #include <tmpc/core/RealtimeIteration.hpp>	// for RtiQpSize(0
 #include <tmpc/qp/Printing.hpp>
-#include <tmpc/kernel/eigen.hpp>
+#include <tmpc/Matrix.hpp>
 #include <tmpc/core/problem_specific.hpp>
 
 #include "qp_test_problems.hpp"

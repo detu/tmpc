@@ -32,18 +32,23 @@ namespace tmpc
 	};
 
 	template <typename ODE, typename StateVector0_, typename InputVector_, typename StateVector1_, typename AMatrix, typename BMatrix>
-	void integrate(RK4 const& integrator, ODE const& ode, double t0, StateVector0_ const& x0, InputVector_ const& u, StateVector1_& x_next, AMatrix& A, BMatrix& B)
+	void integrate(RK4 const& integrator, ODE const& ode, double t0,
+			Vector<StateVector0_, columnVector> const& x0,
+			Vector<InputVector_, columnVector> const& u,
+			Vector<StateVector1_, columnVector>& x_next,
+			AMatrix& A,
+			BMatrix& B)
 	{
-		auto constexpr NX = rows<StateVector0_>();
-		auto constexpr NU = rows<InputVector_ >();
+		size_t constexpr NX = Size<StateVector0_>::value;
+		size_t constexpr NU = Size<InputVector_ >::value;
 
-		static_assert(Rows<StateVector1_>::value == NX && Columns<StateVector1_>::value ==  1, "x_next must be of size NX*1");
+		static_assert(Size<StateVector1_>::value == NX, "x_next must be of size NX");
 		static_assert(Rows<AMatrix      >::value == NX && Columns<AMatrix      >::value == NX, "A must be of size NX*NX"    );
 		static_assert(Rows<BMatrix      >::value == NX && Columns<BMatrix      >::value == NU, "B must be of size NX*NU"    );
 
-		typedef StaticVector<double, NX> StateVector;
-		typedef StaticMatrix<double, NX, NX> StateStateMatrix;
-		typedef StaticMatrix<double, NX, NU> StateInputMatrix;
+		typedef StaticVector<double, NX, columnVector> StateVector;
+		typedef StaticMatrix<double, NX, NX, columnMajor> StateStateMatrix;
+		typedef StaticMatrix<double, NX, NU, columnMajor> StateInputMatrix;
 
 		StateVector k1, k2, k3, k4;
 		StateStateMatrix A1, A2, A3, A4;
@@ -51,10 +56,10 @@ namespace tmpc
 		auto const h = integrator.timeStep();
 
 		// Calculating next state
-		ode(t0,          x0                , u, k1, A1, B1);
-		ode(t0 + h / 2., x0 + k1 * (h / 2.), u, k2, A2, B2);
-		ode(t0 + h / 2., x0 + k2 * (h / 2.), u, k3, A3, B3);
-		ode(t0 + h,      x0 + k3 * h       , u, k4, A4, B4);
+		ode(t0,          ~x0                ,  ~u, k1, A1, B1);
+		ode(t0 + h / 2., ~x0 + ~k1 * (h / 2.), ~u, k2, A2, B2);
+		ode(t0 + h / 2., ~x0 + ~k2 * (h / 2.), ~u, k3, A3, B3);
+		ode(t0 + h,      ~x0 + ~k3 * h       , ~u, k4, A4, B4);
 
 		x_next = x0 + (k1 + 2. * k2 + 2. * k3 + k4) * (h / 6.);
 
@@ -137,9 +142,9 @@ namespace tmpc
 	void integrate(RK4 const& integrator, ODE const& ode, double t0, StateVector0_ const& x0, InputVector_ const& u,
 			StateVector1_& x_next, AMatrix& A, BMatrix& B, QuadVector_& qf, QuadStateMatrix_& qA, QuadInputMatrix_& qB)
 	{
-		auto constexpr NX = rows<StateVector0_>();
-		auto constexpr NU = rows<InputVector_ >();
-		auto constexpr NQ = rows<QuadVector_  >();
+		auto constexpr NX = Rows<StateVector0_>::value;
+		auto constexpr NU = Rows<InputVector_ >::value;
+		auto constexpr NQ = Rows<QuadVector_  >::value;
 
 		static_assert(Rows<StateVector1_   >::value == NX && Columns<StateVector1_   >::value ==  1, "x_next must be of size NX*1");
 		static_assert(Rows<AMatrix         >::value == NX && Columns<AMatrix         >::value == NX, "A must be of size NX*NX"    );
@@ -224,8 +229,8 @@ namespace tmpc
 			StateVector1_& x_next, AMatrix& A, BMatrix& B,
 			double& cf, StateVector2_& cA, InputVector2_& cB, QMatrix& cQ, RMatrix& cR, SMatrix& cS)
 	{
-		auto constexpr NX = rows<StateVector0_>();
-		auto constexpr NU = rows<InputVector_ >();
+		auto constexpr NX = Rows<StateVector0_>::value;
+		auto constexpr NU = Rows<InputVector_ >::value;
 		auto constexpr NR = ODE::NR;
 
 		static_assert(Rows<StateVector1_>::value == NX && Columns<StateVector1_>::value ==  1, "x_next must be of size NX*1");
@@ -320,13 +325,25 @@ namespace tmpc
 	template <typename ODE, typename StateVector0_, typename InputVector_, typename StateVector1_, typename AMatrix, typename BMatrix,
 		typename QuadVector_, typename QuadStateMatrix_, typename QuadInputMatrix_,
 		typename StateVector2_,	typename InputVector2_,	typename QMatrix, typename RMatrix, typename SMatrix>
-	void integrate(RK4 const& integrator, ODE const& ode, double t0, StateVector0_ const& x0, InputVector_ const& u,
-			StateVector1_& x_next, AMatrix& A, BMatrix& B, QuadVector_& qf, QuadStateMatrix_& qA, QuadInputMatrix_& qB,
-			double& cf, StateVector2_& cA, InputVector2_& cB, QMatrix& cQ, RMatrix& cR, SMatrix& cS)
+	void integrate(RK4 const& integrator, ODE const& ode, double t0,
+			Vector<StateVector0_, columnVector> const& x0,
+			Vector<InputVector_, columnVector> const& u,
+			Vector<StateVector1_, columnVector>& x_next,
+			AMatrix& A,
+			BMatrix& B,
+			QuadVector_& qf,
+			QuadStateMatrix_& qA,
+			QuadInputMatrix_& qB,
+			double& cf,
+			Vector<StateVector2_, columnVector>& cA,
+			Vector<InputVector2_, columnVector>& cB,
+			QMatrix& cQ,
+			RMatrix& cR,
+			SMatrix& cS)
 	{
-		auto constexpr NX = rows<StateVector0_>();
-		auto constexpr NU = rows<InputVector_ >();
-		auto constexpr NQ = rows<QuadVector_  >();
+		auto constexpr NX = Rows<StateVector0_>::value;
+		auto constexpr NU = Rows<InputVector_ >::value;
+		auto constexpr NQ = Rows<QuadVector_  >::value;
 		auto constexpr NR = ODE::NR;
 
 		static_assert(Rows<StateVector1_   >::value == NX && Columns<StateVector1_   >::value ==  1, "x_next must be of size NX*1");

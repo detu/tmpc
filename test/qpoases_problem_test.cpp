@@ -5,11 +5,13 @@
  *      Author: kotlyar
  */
 
-#include "gtest_tools_eigen.hpp"
 //#include "qp_test_problems.hpp"
 
 #include <tmpc/qp/QpOasesProblem.hpp>
 #include <tmpc/qp/Printing.hpp>
+#include <tmpc/Matrix.hpp>
+
+#include "gtest_tools_eigen.hpp"
 
 #include <gtest/gtest.h>
 
@@ -19,9 +21,9 @@ using namespace tmpc;
 
 TEST(QpOasesProblemTest, test_MatricesCorrect)
 {
-	tmpc::QpOasesProblem p({QpSize(2, 1, 0)});
+	QpOasesProblem p({QpSize(2, 1, 0)});
 
-	StaticMatrix<double, 3, 2> x;
+	StaticMatrix<double, 3, 2, columnMajor> x;
 
 	// Test H = [Q, S; S', R]
 	p[0].set_Q(DynamicMatrix<double>({{1., 2.}, {2., 1.}}));
@@ -35,8 +37,8 @@ TEST(QpOasesProblemTest, test_MatricesCorrect)
 	}));
 
 	// Test g = [q; r]
-	p.set_q(0, DynamicMatrix<double>({{6.}, {7.}}));
-	p.set_r(0, DynamicMatrix<double>({{8.}}));
+	p[0].set_q(DynamicMatrix<double>({{6.}, {7.}}));
+	p[0].set_r(DynamicMatrix<double>({{8.}}));
 
 	EXPECT_EQ(p.g(), DynamicMatrix<double>({{6.}, {7.}, {8.}}));
 }
@@ -52,39 +54,41 @@ TEST(QpOasesProblemTest, test_MatricesCorrect_1)
 	//---------------
 	// Test H, g
 	//---------------
+	Rand<DynamicMatrix<double>> rand_matrix;
+	Rand<DynamicVector<double>> rand_vector;
 
 	for (auto stage = p.begin(); stage != p.end(); ++stage)
 	{
 		QpSize const sz = stage->size();
 
 		{
-			auto tmp = Rand<DynamicMatrix<double>>(sz.nx(), sz.nx()).generate();
+			auto tmp = rand_matrix.generate(sz.nx(), sz.nx());
 			stage->set_Q(trans(tmp) * tmp);
 		}
 
 		{
-			auto tmp = Rand<DynamicMatrix<double>>(sz.nu(), sz.nu()).generate();
+			auto tmp = rand_matrix.generate(sz.nu(), sz.nu());
 			stage->set_R(trans(tmp) * tmp);
 		}
 
-		stage->set_S(Rand<DynamicMatrix<double>>(sz.nx(), sz.nu()).generate());
-		stage->set_q(Rand<DynamicVector<double>>(sz.nx()).generate());
-		stage->set_r(Rand<DynamicVector<double>>(sz.nu()).generate());
-		stage->set_lbx(Rand<DynamicVector<double>>(sz.nx()).generate());
-		stage->set_ubx(Rand<DynamicVector<double>>(sz.nx()).generate());
-		stage->set_lbu(Rand<DynamicVector<double>>(sz.nu()).generate());
-		stage->set_ubu(Rand<DynamicVector<double>>(sz.nu()).generate());
+		stage->set_S(rand_matrix.generate(sz.nx(), sz.nu()));
+		stage->set_q(rand_vector.generate(sz.nx()));
+		stage->set_r(rand_vector.generate(sz.nu()));
+		stage->set_lbx(rand_vector.generate(sz.nx()));
+		stage->set_ubx(rand_vector.generate(sz.nx()));
+		stage->set_lbu(rand_vector.generate(sz.nu()));
+		stage->set_ubu(rand_vector.generate(sz.nu()));
 
 		if (stage + 1 != p.end())
 		{
-			stage->set_A(Rand<DynamicMatrix<double>>((stage + 1)->size().nx(), sz.nx()).generate());
-			stage->set_B(Rand<DynamicMatrix<double>>((stage + 1)->size().nx(), sz.nu()).generate());
+			stage->set_A(rand_matrix.generate((stage + 1)->size().nx(), sz.nx()));
+			stage->set_B(rand_matrix.generate((stage + 1)->size().nx(), sz.nu()));
 		}
 
-		stage->set_C(Rand<DynamicMatrix<double>>(sz.nc(), sz.nx()).generate());
-		stage->set_D(Rand<DynamicMatrix<double>>(sz.nc(), sz.nu()).generate());
-		stage->set_lbd(Rand<DynamicVector<double>>(sz.nc()).generate());
-		stage->set_ubd(Rand<DynamicVector<double>>(sz.nc()).generate());
+		stage->set_C(rand_matrix.generate(sz.nc(), sz.nx()));
+		stage->set_D(rand_matrix.generate(sz.nc(), sz.nu()));
+		stage->set_lbd(rand_vector.generate(sz.nc()));
+		stage->set_ubd(rand_vector.generate(sz.nc()));
 	}
 
 	/*
@@ -97,64 +101,44 @@ TEST(QpOasesProblemTest, test_MatricesCorrect_1)
 	std::cout << "p.ubA() = " << std::endl << p.ubA() << std::endl;
 	*/
 
-	// How is the progress in implementing concatenation views in Blaze?
-	// https://bitbucket.org/blaze-lib/blaze/issues/44/more-views-concatenation-index-lists
-
-	/*
-	EXPECT_EQ(print_wrap(p.H()), print_wrap((MatrixXd <<
-		p[0].get_Q(),             p[0].get_S(),              MatrixXd::Zero(sz[0].nx(), sz[1].nx() + sz[1].nu()), MatrixXd::Zero(sz[0].nx(), sz[2].nx() + sz[2].nu()),
-		p[0].get_S().transpose(), p[0].get_R(),              MatrixXd::Zero(sz[0].nu(), sz[1].nx() + sz[1].nu()), MatrixXd::Zero(sz[0].nu(), sz[2].nx() + sz[2].nu()),
-		MatrixXd::Zero(sz[1].nx(), sz[0].nx() + sz[0].nu()), p[1].get_Q(),             p[1].get_S(),              MatrixXd::Zero(sz[1].nx(), sz[2].nx() + sz[2].nu()),
-		MatrixXd::Zero(sz[1].nu(), sz[0].nx() + sz[0].nu()), p[1].get_S().transpose(), p[1].get_R(),              MatrixXd::Zero(sz[1].nu(), sz[2].nx() + sz[2].nu()),
-		MatrixXd::Zero(sz[2].nx(), sz[0].nx() + sz[0].nu()), MatrixXd::Zero(sz[2].nx(), sz[1].nx() + sz[1].nu()), p[2].get_Q(),	            p[2].get_S(),
-		MatrixXd::Zero(sz[2].nu(), sz[0].nx() + sz[0].nu()), MatrixXd::Zero(sz[2].nu(), sz[1].nx() + sz[1].nu()), p[2].get_S().transpose(),	p[2].get_R()
-	).finished()));
-	*/
 	DynamicMatrix<double> H_expected(total_nx, total_nx, 0.);
-	submatrix(H_expected,  0, 0, 2, 2) =       p[0].get_Q();	submatrix(H_expected,  0,  2, 2, 1) = p[0].get_S();
-	submatrix(H_expected,  2, 0, 1, 2) = trans(p[0].get_S());	submatrix(H_expected,  2,  2, 1, 1) = p[0].get_R();
-	submatrix(H_expected,  3, 3, 2, 2) =       p[1].get_Q();	submatrix(H_expected,  3,  5, 2, 2) = p[1].get_S();
-	submatrix(H_expected,  5, 3, 2, 2) = trans(p[1].get_S());	submatrix(H_expected,  5,  5, 2, 2) = p[1].get_R();
-	submatrix(H_expected,  7, 7, 3, 3) =       p[2].get_Q();	submatrix(H_expected,  7, 10, 3, 1) = p[2].get_S();
-	submatrix(H_expected, 10, 7, 1, 3) = trans(p[2].get_S());	submatrix(H_expected, 10, 10, 1, 1) = p[2].get_R();
+	DynamicVector<double> g_expected(total_nx);
+	DynamicVector<double> lb_expected(total_nx);
+	DynamicVector<double> ub_expected(total_nx);
+	DynamicMatrix<double> A_expected(total_nc, total_nx, 0.);
+	DynamicVector<double> lbA_expected(total_nc);
+	DynamicVector<double> ubA_expected(total_nc);
+
+	size_t i = 0, j = 0, ia = 0;
+	for (auto stage = p.begin(); stage != p.end(); ++stage)
+	{
+		size_t const nx = stage->size().nx();
+		size_t const nu = stage->size().nu();
+		size_t const nc = stage->size().nc();
+		size_t const nx1 = stage + 1 != p.end() ? stage[1].nx() : 0;
+
+		submatrix(H_expected,  i     , j, nx, nx) =       stage->get_Q();	submatrix(H_expected, i     , j + nx, nx, nu) = stage->get_S();
+		submatrix(H_expected,  i + nx, j, nu, nx) = trans(stage->get_S());	submatrix(H_expected, i + nx, j + nx, nu, nu) = stage->get_R();
+
+		subvector(g_expected, i, nx) = stage->get_q();	subvector(g_expected, i + nx, nu) = stage->get_r();
+		subvector(lb_expected, i, nx) = stage->get_lbx();	subvector(lb_expected, i + nx, nu) = stage->get_lbu();
+		subvector(ub_expected, i, nx) = stage->get_ubx();	subvector(ub_expected, i + nx, nu) = stage->get_ubu();
+
+		submatrix(A, ia      , i, nx1, nx) = stage->get_A();	submatrix(A, ia      , i + nx, nx1, nu) = stage->get_B();	submatrix(A, ia, i + nx + nu, nx1, nx1) = -IdentityMatrix<DynamicMatrix<double>>(nx1, 1.);
+		submatrix(A, ia + nx1, i, nc , nx) = stage->get_C();	submatrix(A, ia + nx1, i + nx, nx , nu) = stage->get_D();
+
+		subvector(lbA_expected, ia, nx1) = 0.;	subvector(lbA_expected, ia + nx1, nc) = stage->get_lbd();
+		subvector(ubA_expected, ia, nx1) = 0.;	subvector(ubA_expected, ia + nx1, nc) = stage->get_ubd();
+
+		i += nx + nu;	j += nx + nu;
+		ia += nx + nc;
+	}
 
 	EXPECT_EQ(print_wrap(p.H()), print_wrap(H_expected));
-
-	/*
-	EXPECT_EQ(print_wrap(p.g()), print_wrap((VectorXd(total_nx) <<
-		p.get_q(0), p.get_r(0), p.get_q(1), p.get_r(1), p.get_q(2), p.get_r(2)
-	).finished()));
-	*/
-	DynamicVector<double> g_expected(total_nx);
-	subvector(g_expected, 0, 2) = p[0].get_q();	subvector(g_expected,  2, 1) = p[0].get_r();
-	subvector(g_expected, 3, 2) = p[1].get_q();	subvector(g_expected,  5, 2) = p[1].get_r();
-	subvector(g_expected, 7, 3) = p[2].get_q();	subvector(g_expected, 10, 1) = p[2].get_r();
-
 	EXPECT_EQ(print_wrap(p.g()), print_wrap(g_expected));
-
-
-	// *** CONTINUE HERE!!! ***
-	EXPECT_EQ(print_wrap(p.lb()), print_wrap((VectorXd(total_nx) <<
-		p[0].get_lbx(), p[0].get_lbu(), p[1].get_lbx(), p[1].get_lbu(), p[2].get_lbx(), p[2].get_lbu()
-	).finished()));
-
-	EXPECT_EQ(print_wrap(p.ub()), print_wrap((VectorXd(total_nx) <<
-		p[0].get_ubx(), p[0].get_ubu(), p[1].get_ubx(), p[1].get_ubu(), p[2].get_ubx(), p[2].get_ubu()
-	).finished()));
-
-	EXPECT_EQ(print_wrap(p.A()), print_wrap((MatrixXd(total_nc, total_nx) <<
-		p[0].get_A(),                           p[0].get_B(),                           -MatrixXd::Identity(sz[1].nx(), sz[1].nx()), MatrixXd::Zero(sz[1].nx(), sz[1].nu()),  MatrixXd::Zero(sz[1].nx(), sz[2].nx()),     MatrixXd::Zero(sz[1].nx(), sz[2].nu()),
-		p[0].get_C(),                           p[0].get_D(),                            MatrixXd::Zero(sz[0].nc(), sz[1].nx()),     MatrixXd::Zero(sz[0].nc(), sz[1].nu()),  MatrixXd::Zero(sz[0].nc(), sz[2].nx()),     MatrixXd::Zero(sz[0].nc(), sz[2].nu()),
-		MatrixXd::Zero(sz[2].nx(), sz[0].nx()), MatrixXd::Zero(sz[2].nx(), sz[0].nu()),  p[1].get_A(),                               p[1].get_B(),                           -MatrixXd::Identity(sz[2].nx(), sz[2].nx()), MatrixXd::Zero(sz[2].nx(), sz[2].nu()),
-	    MatrixXd::Zero(sz[1].nc(), sz[0].nx()), MatrixXd::Zero(sz[1].nc(), sz[0].nu()),  p[1].get_C(),                               p[1].get_D(),                            MatrixXd::Zero(sz[1].nc(), sz[2].nx()),     MatrixXd::Zero(sz[1].nc(), sz[2].nu()),
-		MatrixXd::Zero(sz[2].nc(), sz[0].nx()), MatrixXd::Zero(sz[2].nc(), sz[0].nu()),  MatrixXd::Zero(sz[2].nc(), sz[1].nx()),     MatrixXd::Zero(sz[2].nc(), sz[1].nu()),  p[2].get_C(),                               p[2].get_D()
-	).finished()));
-
-	EXPECT_EQ(print_wrap(p.lbA()), print_wrap((VectorXd(total_nc) <<
-		VectorXd::Zero(sz[1].nx()), p[0].get_lbd(), VectorXd::Zero(sz[2].nx()), p[1].get_lbd(), p[2].get_lbd()
-	).finished()));
-
-	EXPECT_EQ(print_wrap(p.ubA()), print_wrap((VectorXd(total_nc) <<
-		VectorXd::Zero(sz[1].nx()), p[0].get_ubd(), VectorXd::Zero(sz[2].nx()), p[1].get_ubd(), p[2].get_ubd()
-	).finished()));
+	EXPECT_EQ(print_wrap(p.lb()), print_wrap(lb_expected));
+	EXPECT_EQ(print_wrap(p.ub()), print_wrap(ub_expected));
+	EXPECT_EQ(print_wrap(p.A()), print_wrap(A_expected));
+	EXPECT_EQ(print_wrap(p.lbA()), print_wrap(lbA_expected));
+	EXPECT_EQ(print_wrap(p.ubA()), print_wrap(ubA_expected));
 }

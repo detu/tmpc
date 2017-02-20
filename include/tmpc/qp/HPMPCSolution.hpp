@@ -17,136 +17,97 @@ namespace tmpc
 	//
 	// Provides solution interface for the HPMPC solver.
 	//
-	template<unsigned NX_, unsigned NU_, unsigned NC_, unsigned NCT_>
+	template <typename Scalar_>
 	class HPMPCSolution
 	{
 	public:
-		typedef std::size_t size_type;
+		typedef Scalar_ Scalar;
 
-		static size_type const NX = NX_;
-		static size_type const NU = NU_;
-		static size_type const NZ = NX + NU;
-		static size_type const NC = NC_;
-		static size_type const NCT = NCT_;
-
-		typedef StaticVector<double, NX> StateVector;
-		typedef StaticVector<double, NU> InputVector;
-		typedef StaticVector<double, NZ> StateInputVector;
-		typedef StaticVector<double, 2 * NC + 2 * (NX + NU)> LagrangeVector;
-		typedef StaticVector<double, 2 * NCT + 2 * NX> EndLagrangeVector;
-
-		HPMPCSolution(size_type nt)
-		:	_stage(nt)
-		,	_x    (nt + 1)
-		,	_u    (nt    )
-		,	_pi   (nt    )
-		,	_lam  (nt + 1)
-		,	_t    (nt + 1)
+		class Stage
 		{
-			for (std::size_t i = 0; i < nt; ++i)
+		public:
+			Stage(QpSize const& sz, size_t nx1)
+			// Initialize all numeric data to NaN so that if an uninitialized object
+			// by mistake used in calculations is easier to detect.
+			:	_x(sz.nx(), sNaN)
+			,	_u(sz.nu(), sNaN)
+			,	_pi(nx1, sNaN)
+			,	_lam(2 * sz.nc() + 2 * (sz.nx() + sz.nu()), sNaN)
+			,	_t(2 * sz.nc() + 2 * (sz.nx() + sz.nu()), sNaN)
 			{
-				_x[i]   = _stage[i]._x  .data();
-				_u[i]   = _stage[i]._u  .data();
-				_pi[i]  = _stage[i]._pi .data();
-				_lam[i] = _stage[i]._lam.data();
-				_t[i]   = _stage[i]._t  .data();
 			}
 
-			_x  .back() = _xEnd  .data();
-			_lam.back() = _lamEnd.data();
-			_t  .back() = _tEnd  .data();
+			DynamicVector<Scalar> const& get_x() const
+			{
+				return _x;
+			}
+
+			DynamicVector<Scalar> const& get_u() const
+			{
+				return _u;
+			}
+
+			DynamicVector<Scalar> const& get_pi() const
+			{
+				return _pi;
+			}
+
+			DynamicVector<Scalar> const& get_lam() const
+			{
+				return _lam;
+			}
+
+			DynamicVector<Scalar> const& get_t() const
+			{
+				return _t;
+			}
+
+			//------------------------
+			//
+			// HPMPC memory interface
+			//
+			//------------------------
+			double * x_data() { return _x.data(); }
+			double * u_data() { return _u.data(); }
+			double * pi_data() { return _pi.data(); }
+			double * lam_data() { return _lam.data(); }
+			double * t_data() { return _t.data(); }
+
+		private:
+			DynamicVector<Scalar> _x;
+			DynamicVector<Scalar> _u;
+			DynamicVector<Scalar> _pi;
+			DynamicVector<Scalar> _lam;
+			DynamicVector<Scalar> _t;
+		};
+
+		template <typename InputIterator>
+		HPMPCSolution(InputIterator sz_first, InputIterator sz_last)
+		{
+			auto const N = std::distance(sz_first, sz_last);
+
+			_stage.reserve(N);
+			_x.reserve(N);
+			_u.reserve(N);
+			_pi.reserve(N);
+			_lam.reserve(N);
+			_t.reserve(N);
+
+			for (; sz_first != sz_last; ++sz_first)
+			{
+				_stage.emplace_back(*sz_first, sz_first + 1 != sz_last ? sz_first[1].nx() : 0);
+				Stage& st = _stage.back();
+
+				_x.push_back(st.x_data());
+				_u.push_back(st.u_data());
+				_pi.push_back(st.pi_data());
+				_lam.push_back(st.lam_data());
+				_t.push_back(st.t_data());
+			}
 		}
 
 		HPMPCSolution(HPMPCSolution const&) = delete;
-
-		HPMPCSolution(HPMPCSolution&& rhs)
-		:	_stage(std::move(rhs._stage))
-		,	_xEnd(std::move(rhs._xEnd))
-		,	_lamEnd(std::move(rhs._lamEnd))
-		,	_tEnd(std::move(rhs._tEnd))
-		,	_x    (std::move(rhs._x))
-		,	_u    (std::move(rhs._u))
-		,	_pi   (std::move(rhs._pi))
-		,	_lam  (std::move(rhs._lam))
-		,	_t    (std::move(rhs._t))
-		,	_inf_norm_res(std::move(rhs._inf_norm_res))
-		,	numIter_(std::move(rhs.numIter_))
-		{
-			_x  .back() = _xEnd  .data();
-			_lam.back() = _lamEnd.data();
-			_t  .back() = _tEnd  .data();
-		}
-
-		StateVector const& get_x(std::size_t i) const
-		{
-			if (i > nT())
-				throw std::out_of_range("HPMPCSolution<>::get_x(): index is out of range");
-
-			return i < nT() ? _stage[i]._x : _xEnd;
-		}
-
-		template <typename Matrix>
-		void set_x(std::size_t i, Matrix const& val)
-		{
-			if (i > nT())
-				throw std::out_of_range("HPMPCSolution<>::set_x(): index is out of range");
-
-			(i < nT() ? _stage[i]._x : _xEnd) = val;
-		}
-
-		InputVector const& get_u(std::size_t i) const { return stage(i)._u; }
-
-		StateVector const& get_pi(std::size_t i) const { return stage(i)._pi; }
-
-		decltype(auto) get_lam_u_min(std::size_t i) const
-		{
-			return subvector(stage(i)._lam, 0., NU);
-		}
-
-		decltype(auto) get_lam_u_max(std::size_t i) const
-		{
-			return subvector(stage(i)._lam, NU + NX + NC, NU);
-		}
-
-		CustomVector<double, unaligned, unpadded> get_lam_x_min(std::size_t i) const
-		{
-			if (i > nT())
-				throw std::out_of_range("HPMPCSolution::get_lam_x_min(): index is out of range");
-
-			return CustomVector<double, unaligned, unpadded>(_lam[i] + NU, NX);
-		}
-
-		CustomVector<double, unaligned, unpadded> get_lam_x_max(std::size_t i) const
-		{
-			if (i > nT())
-				throw std::out_of_range("HPMPCSolution::get_lam_x_max(): index is out of range");
-
-			return CustomVector<double, unaligned, unpadded>(_lam[i] + NU + NX + NC + NU, NX);
-		}
-
-		Subvector<LagrangeVector> get_lam_d_min(std::size_t i) const
-		{
-			return subvector(stage(i)._lam, NU + NX, NC);
-		}
-
-		Subvector<LagrangeVector> get_lam_d_max(std::size_t i) const
-		{
-			return subvector(stage(i)._lam, NU + NX + NC + NU + NX, NC);
-		}
-
-		Subvector<EndLagrangeVector> get_lam_d_end_min() const
-		{
-			return subvector(_lamEnd, NX, NC);
-		}
-
-		Subvector<EndLagrangeVector> get_lam_d_end_max() const
-		{
-			return subvector(_lamEnd, NX + NCT + NX, NC);
-		}
-
-		size_type const nX() const noexcept { return NX; }
-		size_type const nU() const noexcept { return NU; }
-		size_type const nT() const { return _stage.size(); }
+		HPMPCSolution(HPMPCSolution&& rhs) = default;
 
 		// ************************************************
 		//                 HPMPC interface
@@ -165,38 +126,9 @@ namespace tmpc
 		void setNumIter(unsigned n) { numIter_ = n; }
 
 	private:
-		struct StageData
-		{
-			// Initialize all numeric data to NaN so that if an uninitialized object
-			// by mistake used in calculations is easier to detect.
-			StateVector      _x = sNaN;
-			InputVector      _u = sNaN;
-			StateVector     _pi = sNaN;
-			LagrangeVector _lam = sNaN;
-			LagrangeVector   _t = sNaN;
-		};
+		static Scalar constexpr sNaN = std::numeric_limits<Scalar>::signaling_NaN();
 
-		StageData& stage(size_type i)
-		{
-			assert(i < nT());
-			return _stage[i];
-		}
-
-		StageData const& stage(size_type i) const
-		{
-			assert(i < nT());
-			return _stage[i];
-		}
-
-		static double constexpr sNaN = std::numeric_limits<double>::signaling_NaN();
-
-		std::vector<StageData> _stage;
-
-		// Initialize all numeric data to NaN so that if an uninitialized object
-		// by mistake used in calculations is easier to detect.
-		StateVector       _xEnd   = sNaN;
-		EndLagrangeVector _lamEnd = sNaN;
-		EndLagrangeVector _tEnd   = sNaN;
+		std::vector<Stage> _stage;
 
 		std::vector<double *> _x;
 		std::vector<double *> _u;

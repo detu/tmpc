@@ -52,15 +52,15 @@ namespace tmpc
 	 *
 	 * \tparam <Scalar_> Scalar type
 	 */
-	template <typename Scalar_, typename D>
+	template <typename Scalar_>
 	class HPMPCSolver
 	{
 		typedef Scalar_ Scalar;
 
 	public:
 
-		typedef HPMPCProblem<double> Problem;
-		typedef HPMPCSolution<NX, NU, NC, NCT> Solution;
+		typedef HPMPCProblem<Scalar_> Problem;
+		typedef HPMPCSolution<Scalar_> Solution;
 
 		HPMPCSolver(int max_iter = 100)
 		:	_stat(max_iter)
@@ -86,30 +86,28 @@ namespace tmpc
 
 		void Solve(Problem const& p, Solution& s)
 		{
-			// Make sure we have enough workspace.
-			_workspace.resize(hpmpc_wrapper::d_ip_ocp_hard_tv_work_space_size_bytes(
-					static_cast<int>(p.size()), p.nx_data(), p.nu_data(), p.nb_data(), p.ng_data()));
-
-			// Call HPMPC
-			int num_iter = 0;
-
-			auto const ret = hpmpc_wrapper::c_order_d_ip_ocp_hard_tv(&num_iter, getMaxIter(), _mu0, _muTol, nT(),
-					p.nx_data(), p.nu_data(), p.nb_data(), p.ng_data(), _warmStart ? 1 : 0, p.A_data(), p.B_data(), p.b_data(),
-					p.Q_data(), p.S_data(), p.R_data(), p.q_data(), p.r_data(), lb_.data(), ub_.data(), p.C_data(), p.D_data(),
-					lg_.data(), ug_.data(), s.x_data(), s.u_data(), s.pi_data(), s.lam_data(), s.t_data(), s.inf_norm_res_data(),
-					_workspace.data(), _stat[0].data());
-
-			if (ret != 0)
+			if (p.size() > 1)
 			{
-				throw HpmpcUnsolvedQpException(p, ret);
+				// Make sure we have enough workspace.
+				_workspace.resize(hpmpc_wrapper::d_ip_ocp_hard_tv_work_space_size_bytes(
+						static_cast<int>(p.size()), p.nx_data(), p.nu_data(), p.nb_data(), p.ng_data()));
+
+				// Call HPMPC
+				int num_iter = 0;
+
+				auto const ret = hpmpc_wrapper::c_order_d_ip_ocp_hard_tv(&num_iter, getMaxIter(), _mu0, _muTol, p.size() - 1,
+						p.nx_data(), p.nu_data(), p.nb_data(), p.ng_data(), _warmStart ? 1 : 0, p.A_data(), p.B_data(), p.b_data(),
+						p.Q_data(), p.S_data(), p.R_data(), p.q_data(), p.r_data(), p.lb_data(), p.ub_data(), p.C_data(), p.D_data(),
+						p.lg_data(), p.ug_data(), s.x_data(), s.u_data(), s.pi_data(), s.lam_data(), s.t_data(), s.inf_norm_res_data(),
+						_workspace.data(), _stat[0].data());
+
+				if (ret != 0)
+				{
+					throw HpmpcUnsolvedQpException(p, ret);
+				}
+
+				s.setNumIter(num_iter);
 			}
-
-			s.setNumIter(num_iter);
-
-			// Warmstarting disabled on purpose.
-			// On AMD K8 (hpmpc compiled for SSE3), WITHOUT warmstarting it is significantly
-			// FASTER (9ms vs 14ms per time step) than with warmstarting. I am curious why.
-			_warmStart = false;
 		}
 
 		std::size_t getMaxIter() const noexcept { return _stat.size(); }
@@ -134,6 +132,10 @@ namespace tmpc
 
 		double _mu0 = 0.;
 		double _muTol = 1e-10;
+
+		// Warmstarting disabled on purpose.
+		// On AMD K8 (hpmpc compiled for SSE3), WITHOUT warmstarting it is significantly
+		// FASTER (9ms vs 14ms per time step) than with warmstarting. I am curious why.
 		bool _warmStart = false;
 	};
 }

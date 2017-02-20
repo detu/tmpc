@@ -6,171 +6,105 @@
  */
 
 #include <tmpc/qp/HPMPCProblem.hpp>
+#include <tmpc/Matrix.hpp>
 
 #include <gtest/gtest.h>
 
-unsigned const NX = 2;
-unsigned const NU = 1;
-unsigned const NC = 0;
-unsigned const NCT = 0;
-unsigned const NT = 2;
+#include <vector>
 
-typedef tmpc::HPMPCProblem<NX, NU, NC, NCT> Problem;
-
-// TODO: make it a templated test for all multistage QP interfaces, not only HPMPC
 TEST(HPMPCProblemTest, hpmpc_interface_works)
 {
-	Problem qp(NT);
+	using namespace tmpc;
 
+	unsigned const NT = 3;
+	typedef HPMPCProblem<double> Problem;
+	typedef CustomMatrix<double const, unaligned, unpadded, rowMajor> MatrixMap;
+	typedef CustomVector<double const, unaligned, unpadded, columnVector> VectorMap;
+
+	std::vector<QpSize> sz;
+	sz.reserve(NT);
+
+	for (size_t k = 0; k < NT; ++k)
 	{
-		Problem::StateVector x;
-		Problem::InputVector u;
-
-		x << -1, -2;					u << -10;
-		qp.set_x_min(0, x);				qp.set_u_min(0, u);
-		EXPECT_EQ(qp.get_x_min(0), x);	EXPECT_EQ(qp.get_u_min(0), u);
-		EXPECT_EQ(Eigen::Map<Problem::StateVector const>(qp.lb_data()[0] + NU), x);
-		EXPECT_EQ(Eigen::Map<Problem::InputVector const>(qp.lb_data()[0]     ), u);
-
-		x << -3, -4;					u << -30;
-		qp.set_x_min(1, x);				qp.set_u_min(1, u);
-		EXPECT_EQ(qp.get_x_min(1), x);	EXPECT_EQ(qp.get_u_min(1), u);
-		EXPECT_EQ(Eigen::Map<Problem::StateVector const>(qp.lb_data()[1] + NU), x);
-		EXPECT_EQ(Eigen::Map<Problem::InputVector const>(qp.lb_data()[1]     ), u);
-
-		x << -5, -6;
-		qp.set_x_min(2, x);
-		EXPECT_EQ(qp.get_x_min(2), x);
-		EXPECT_EQ(Eigen::Map<Problem::StateVector const>(qp.lb_data()[2]), x);
-
-		x << 1, 2;						u << 10;
-		qp.set_x_max(0, x);				qp.set_u_max(0, u);
-		EXPECT_EQ(qp.get_x_max(0), x);
-		EXPECT_EQ(Eigen::Map<Problem::StateVector const>(qp.ub_data()[0] + NU), x);
-		EXPECT_EQ(Eigen::Map<Problem::InputVector const>(qp.ub_data()[0]     ), u);
-
-		x << 3, 4;						u << 30;
-		qp.set_x_max(1, x);				qp.set_u_max(1, u);
-		EXPECT_EQ(qp.get_x_max(1), x);
-		EXPECT_EQ(Eigen::Map<Problem::StateVector const>(qp.ub_data()[1] + NU), x);
-		EXPECT_EQ(Eigen::Map<Problem::InputVector const>(qp.ub_data()[1]     ), u);
-
-		x << 5, 6;
-		qp.set_x_max(2, x);
-		EXPECT_EQ(qp.get_x_max(2), x);
-		EXPECT_EQ(Eigen::Map<Problem::StateVector const>(qp.ub_data()[2]), x);
+		Rand<size_t> rand;
+		sz.push_back(QpSize(rand.generate(0, 10), rand.generate(0, 10), rand.generate(0, 10)));
 	}
 
-	set_xu_min(qp, 0, -1.);	set_xu_max(qp, 0, 1.);
-	set_xu_min(qp, 1, -1.);	set_xu_max(qp, 1, 1.);
-	set_x_end_min(qp, -1.);	set_x_end_max(qp, 1.);
+	Problem qp(sz.begin(), sz.end());
 
-	/*
-	std::cout << "******** QP *********" << std::endl;
-	Print_MATLAB(std::cout, qp, "qp");
-	*/
+	Rand<DynamicVector<double>> rand_vector;
+	Rand<DynamicMatrix<double>> rand_matrix;
 
-	EXPECT_EQ(get_xu_min(qp, 0), Problem::StateInputVector::Constant(-1.));
-	EXPECT_EQ(get_xu_max(qp, 0), Problem::StateInputVector::Constant( 1.));
-	EXPECT_EQ(get_xu_min(qp, 1), Problem::StateInputVector::Constant(-1.));
-	EXPECT_EQ(get_xu_max(qp, 1), Problem::StateInputVector::Constant( 1.));
-	EXPECT_EQ(get_x_end_min(qp), Problem::StateVector::Constant(-1.));
-	EXPECT_EQ(get_x_end_max(qp), Problem::StateVector::Constant( 1.));
+	for (size_t k = 0; k < NT; ++k)
+	{
+		auto const NX = sz[k].nx();
+		auto const NU = sz[k].nu();
+		auto const NC = sz[k].nc();
+		auto const NX1 = k + 1 < NT ? sz[k + 1].nx() : 0;
 
-	EXPECT_EQ(Eigen::Map<Problem::StateInputVector const>(qp.lb_data()[0]), Problem::StateInputVector::Constant(-1.));
-	EXPECT_EQ(Eigen::Map<Problem::StateInputVector const>(qp.ub_data()[0]), Problem::StateInputVector::Constant( 1.));
-	EXPECT_EQ(Eigen::Map<Problem::StateInputVector const>(qp.lb_data()[1]), Problem::StateInputVector::Constant(-1.));
-	EXPECT_EQ(Eigen::Map<Problem::StateInputVector const>(qp.ub_data()[1]), Problem::StateInputVector::Constant( 1.));
-	EXPECT_EQ(Eigen::Map<Problem::StateVector const>(qp.lb_data()[2]), Problem::StateVector::Constant(-1.));
-	EXPECT_EQ(Eigen::Map<Problem::StateVector const>(qp.ub_data()[2]), Problem::StateVector::Constant( 1.));
+		DynamicVector<double> lbx = rand_vector.generate(NX);
+		DynamicVector<double> lbu = rand_vector.generate(NU);
+		DynamicVector<double> ubx = rand_vector.generate(NX);
+		DynamicVector<double> ubu = rand_vector.generate(NU);
 
-	// Stage 0
-	Problem::StageHessianMatrix H0;
-	H0 << 1, 2, 3, 4, 5, 6, 7, 8, 9;
-	H0 = H0.transpose() * H0;	// Make positive definite.
+		DynamicMatrix<double> H = rand_matrix.generate(NX + NC, NX + NC);
+		H = trans(H) * H;	// Make positive definite.
 
-	const Eigen::MatrixXd Q0 = H0.topLeftCorner(qp.nX(), qp.nX());
-	const Eigen::MatrixXd R0 = H0.bottomRightCorner(qp.nU(), qp.nU());
-	const Eigen::MatrixXd S0 = H0.topRightCorner(qp.nX(), qp.nU());
-	const Eigen::MatrixXd S0T = H0.bottomLeftCorner(qp.nU(), qp.nX());
+		auto Q = submatrix(H, 0, 0, NX, NX);
+		auto R = submatrix(H, NX, NX, NU, NU);
+		auto S = submatrix(H, 0, NX, NX, NU);
 
-	Eigen::MatrixXd A0(qp.nX(), qp.nX());
-	A0 << 1, 1, 0, 1;
+		DynamicVector<double> q = rand_vector.generate(NX);
+		DynamicVector<double> r = rand_vector.generate(NU);
 
-	Eigen::MatrixXd B0(qp.nX(), qp.nU());
-	B0 << 0.5, 1.0;
+		DynamicMatrix<double> A = rand_matrix.generate(NX1, NX);
+		DynamicMatrix<double> B = rand_matrix.generate(NX1, NX);
+		DynamicVector<double> b = rand_vector.generate(NX1);
 
-	Eigen::VectorXd a0(qp.nX());
-	a0 << 1, 2;
+		DynamicMatrix<double> C = rand_matrix.generate(NC, NX);
+		DynamicMatrix<double> D = rand_matrix.generate(NC, NX);
+		DynamicVector<double> lbd = rand_vector.generate(NC);
+		DynamicVector<double> ubd = rand_vector.generate(NC);
 
-	// Stage 1
-	Problem::StageHessianMatrix H1;
-	H1 << 1, 2, 3, 4, 5, 6, 7, 8, 9;
-	H1 = H1.transpose() * H1;	// Make positive definite.
+		qp[k].set_Q(Q);
+		qp[k].set_R(R);
+		qp[k].set_S(S);
+		qp[k].set_q(q);
+		qp[k].set_r(r);
 
-	const Eigen::MatrixXd Q1 = H1.topLeftCorner(qp.nX(), qp.nX());
-	const Eigen::MatrixXd R1 = H1.bottomRightCorner(qp.nU(), qp.nU());
-	const Eigen::MatrixXd S1 = H1.topRightCorner(qp.nX(), qp.nU());
-	const Eigen::MatrixXd S1T = H1.bottomLeftCorner(qp.nU(), qp.nX());
+		qp[k].set_A(A);
+		qp[k].set_B(B);
+		qp[k].set_b(b);
 
-	Eigen::MatrixXd A1(qp.nX(), qp.nX());
-	A1 << 1, 1, 0, 1;
+		qp[k].set_C(C);
+		qp[k].set_D(D);
+		qp[k].set_lbd(lbd);
+		qp[k].set_ubd(ubd);
 
-	Eigen::MatrixXd B1(qp.nX(), qp.nU());
-	B1 << 0.5, 1.0;
+		qp[k].set_lbx(lbx);
+		qp[k].set_lbu(lbu);
+		qp[k].set_ubx(ubx);
+		qp[k].set_ubu(ubu);
 
-	Eigen::VectorXd a1(qp.nX());
-	a1 << 1, 2;
+		EXPECT_EQ(MatrixMap(qp.Q_data()[k], NX, NX), Q);
+		EXPECT_EQ(MatrixMap(qp.R_data()[k], NU, NU), R);
+		EXPECT_EQ(MatrixMap(qp.S_data()[k], NX, NU), S);
+		EXPECT_EQ(VectorMap(qp.q_data()[k] + NU, NX), q);
+		EXPECT_EQ(VectorMap(qp.r_data()[k] + NU, NX), r);
 
-	// Stage 2
-	Eigen::MatrixXd H2(qp.nX(), qp.nX());
-	H2 << 1, 2, 3, 4;
-	H2 = H2.transpose() * H2;	// Make positive definite.
+		EXPECT_EQ(MatrixMap(qp.A_data()[k], NX1, NX), A);
+		EXPECT_EQ(MatrixMap(qp.B_data()[k], NX1, NU), B);
+		EXPECT_EQ(VectorMap(qp.b_data()[k], NX1), b);
 
-	const Eigen::MatrixXd Q2 = H2.topLeftCorner(qp.nX(), qp.nX());
+		EXPECT_EQ(MatrixMap(qp.C_data()[k], NC, NX), C);
+		EXPECT_EQ(MatrixMap(qp.D_data()[k], NC, NU), D);
+		EXPECT_EQ(VectorMap(qp.lg_data()[k], NC), lbd);
+		EXPECT_EQ(VectorMap(qp.ug_data()[k], NC), ubd);
 
-	// Setup QP
-	set_H(qp, 0, H0);
-	EXPECT_EQ(get_H(qp, 0), H0);
-	EXPECT_EQ(Eigen::Map<Problem::HPMPC_QMatrix const>(qp.Q_data()[0]), Q0);
-	EXPECT_EQ(Eigen::Map<Problem::HPMPC_RMatrix const>(qp.R_data()[0]), R0);
-	EXPECT_EQ(Eigen::Map<Problem::HPMPC_SMatrix const>(qp.S_data()[0]), S0.transpose());
-
-	set_H(qp, 1, H1);
-	EXPECT_EQ(get_H(qp, 1), H1);
-	EXPECT_EQ(Eigen::Map<Problem::HPMPC_QMatrix const>(qp.Q_data()[1]), Q1);
-	EXPECT_EQ(Eigen::Map<Problem::HPMPC_RMatrix const>(qp.R_data()[1]), R1);
-	EXPECT_EQ(Eigen::Map<Problem::HPMPC_SMatrix const>(qp.S_data()[1]), S1.transpose());
-
-	set_Q_end(qp, H2);
-	EXPECT_EQ(get_Q_end(qp), H2);
-	EXPECT_EQ(Eigen::Map<Problem::HPMPC_QMatrix const>(qp.Q_data()[2]), Q2);
-	EXPECT_EQ(qp.R_data()[2], nullptr);
-	EXPECT_EQ(qp.S_data()[2], nullptr);
-
-	EXPECT_NE(qp.q_data()[2], nullptr);
-	EXPECT_EQ(qp.r_data()[2], nullptr);
-
-	Problem::InterStageMatrix C0;
-	C0 << A0, B0;
-	set_AB(qp, 0, C0);
-	EXPECT_EQ(get_AB(qp, std::size_t(0)), C0);
-	EXPECT_EQ(Eigen::Map<Problem::HPMPC_AMatrix const>(qp.A_data()[0]), A0);
-	EXPECT_EQ(Eigen::Map<Problem::HPMPC_BMatrix const>(qp.B_data()[0]), B0);
-
-	qp.set_b(0, a0);
-	EXPECT_EQ(qp.get_b(0), a0);
-	EXPECT_EQ(Eigen::Map<Problem::StateVector const>(qp.b_data()[0]), a0);
-
-	Problem::InterStageMatrix C1;
-	C1 << A1, B1;
-	set_AB(qp, 1, C1);
-	EXPECT_EQ(get_AB(qp, 1), C1);
-	EXPECT_EQ(Eigen::Map<Problem::HPMPC_AMatrix const>(qp.A_data()[1]), A1);
-	EXPECT_EQ(Eigen::Map<Problem::HPMPC_BMatrix const>(qp.B_data()[1]), B1);
-
-	qp.set_b(1, a1);
-	EXPECT_EQ(qp.get_b(1), a1);
-	EXPECT_EQ(Eigen::Map<Problem::StateVector const>(qp.b_data()[1]), a1);
+		EXPECT_EQ(VectorMap(qp.lb_data()[k] + NU, NX), lbx);
+		EXPECT_EQ(VectorMap(qp.lb_data()[k]     , NU), lbu);
+		EXPECT_EQ(VectorMap(qp.ub_data()[k] + NU, NX), ubx);
+		EXPECT_EQ(VectorMap(qp.ub_data()[k]     , NU), ubu);
+	}
 }
 

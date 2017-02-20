@@ -5,6 +5,8 @@
 #include <tmpc/Matrix.hpp>
 #include <tmpc/core/problem_specific.hpp>
 
+#include "gtest_tools_eigen.hpp"
+
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
@@ -196,8 +198,8 @@ protected:
 
 typedef ::testing::Types<
 		// TODO: make Solver a template template parameter of RealtimeIteration?
-		tmpc::RealtimeIteration<K, Dimensions, OCP, tmpc::CondensingSolver<double, Dimensions>>
-,		tmpc::RealtimeIteration<K, Dimensions, OCP, tmpc::HPMPCSolver     <double, Dimensions>>
+		tmpc::RealtimeIteration<double, Dimensions, OCP, tmpc::CondensingSolver<double>>,
+		tmpc::RealtimeIteration<double, Dimensions, OCP, tmpc::HPMPCSolver     <double>>
 	> RTITypes;
 
 TYPED_TEST_CASE(RealtimeIterationTest, RTITypes);

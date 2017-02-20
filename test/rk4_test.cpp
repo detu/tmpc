@@ -8,26 +8,26 @@
 #include <fstream>
 #include "gtest_tools_eigen.hpp"
 
+using namespace tmpc;
+
 template <typename MT, bool SO>
-std::istream& operator>>(std::istream& is, tmpc::Matrix<MT, SO>& m)
+std::istream& operator>>(std::istream& is, Matrix<MT, SO>& m)
 {
-	for (tmpc::size_t i = 0; i < m.rows(); ++i)
-		for (tmpc::size_t j = 0; j < m.cols(); ++j)
-			is >> m(i, j);
+	for (size_t i = 0; i < rows(m); ++i)
+		for (size_t j = 0; j < columns(m); ++j)
+			is >> (~m)(i, j);
 
 	return is;
 }
 
 template <typename VT, bool TF>
-std::istream& operator>>(std::istream& is, tmpc::Vector<VT, TF>& v)
+std::istream& operator>>(std::istream& is, Vector<VT, TF>& v)
 {
-	for (tmpc::size_t i = 0; i < v.size(); ++i)
-		is >> v(i);
+	for (size_t i = 0; i < size(v); ++i)
+		is >> (~v)[i];
 
 	return is;
 }
-
-using namespace tmpc;
 
 class PendulumODEBase
 {
@@ -37,10 +37,10 @@ public:
 	static unsigned const NQ = 2;
 	static unsigned const NR = 2;
 
-	typedef StaticVector<double, NX> StateVector;
-	typedef StaticVector<double, NU> InputVector;
-	typedef StaticVector<double, NQ> QuadVector;
-	typedef StaticVector<double, NR> ResVector;
+	typedef StaticVector<double, NX, columnVector> StateVector;
+	typedef StaticVector<double, NU, columnVector> InputVector;
+	typedef StaticVector<double, NQ, columnVector> QuadVector;
+	typedef StaticVector<double, NR, columnVector> ResVector;
 	typedef StaticMatrix<double, NX, NX, columnMajor> StateStateMatrix;
 	typedef StaticMatrix<double, NX, NU, columnMajor> StateInputMatrix;
 	typedef StaticMatrix<double, NU, NU, columnMajor> InputInputMatrix;
@@ -211,12 +211,12 @@ TEST_F(rk4_test, ode_q_correct)
 		ode_(p.t, p.x0, p.u, xdot, A, B, q, qA, qB);
 
 		MatrixApproxEquality const is_approx(1e-6);
-		EXPECT_PRED2(is_approx, xdot, p.xdot));
-		EXPECT_PRED2(is_approx, A, p.Aode));
-		EXPECT_PRED2(is_approx, B, p.Bode));
-		EXPECT_PRED2(is_approx, q, p.q));
-		EXPECT_PRED2(is_approx, qA, p.qA_ode));
-		EXPECT_PRED2(is_approx, qB, p.qB_ode));
+		EXPECT_PRED2(is_approx, xdot, p.xdot);
+		EXPECT_PRED2(is_approx, A, p.Aode);
+		EXPECT_PRED2(is_approx, B, p.Bode);
+		EXPECT_PRED2(is_approx, q, p.q);
+		EXPECT_PRED2(is_approx, qA, p.qA_ode);
+		EXPECT_PRED2(is_approx, qB, p.qB_ode);
 
 		++count;
 	}
@@ -276,9 +276,11 @@ TEST_F(rk4_test, integrate_correct)
 		EXPECT_EQ(print_wrap(A), print_wrap(p.A));
 		EXPECT_EQ(print_wrap(B), print_wrap(p.B));
 		*/
-		EXPECT_THAT(as_container(xplus), testing::Pointwise(FloatNearPointwise(1e-10), as_container(p.xplus)));
-		EXPECT_THAT(as_container(A), testing::Pointwise(FloatNearPointwise(1e-10), as_container(p.A)));
-		EXPECT_THAT(as_container(B), testing::Pointwise(FloatNearPointwise(1e-10), as_container(p.B)));
+
+		MatrixApproxEquality const is_approx(1e-10);
+		EXPECT_PRED2(is_approx, xplus, p.xplus);
+		EXPECT_PRED2(is_approx, A, p.A);
+		EXPECT_PRED2(is_approx, B, p.B);
 
 		++count;
 	}

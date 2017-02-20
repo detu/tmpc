@@ -21,27 +21,18 @@ qpOASES::Options qpOASES_DefaultOptions();
  * \brief Condensing solver using qpOASES
  *
  * \tparam <Scalar> Scalar type
- * \tparam <D> Class defining problem dimensions
  */
-template <typename Scalar, typename D>
+template <typename Scalar>
 class CondensingSolver
 {
-	static auto constexpr NX = D::NX;
-	static auto constexpr NU = D::NU;
-	static auto constexpr NZ = NX + NU;
-	static auto constexpr NC = D::NC;
-	static auto constexpr NCT = D::NCT;
-
 public:
 	typedef QpOasesProblem CondensedQP;
 
 	// Problem type for CondensingSolver
-	// TODO: change MultiStageQuadraticProblem so that it takes D as a template parameter?
-	typedef QuadraticProblem<double> Problem;
+	typedef QuadraticProblem<Scalar> Problem;
 
 	// Solution data type
-	// TODO: change MultiStageQPSolution so that it takes D as a template parameter?
-	typedef MultiStageQPSolution<NX, NU, NC, NCT> Solution;
+	typedef MultiStageQPSolution<Scalar> Solution;
 
 	// Exception that can be thrown from the Solve() member function.
 	class SolveException;

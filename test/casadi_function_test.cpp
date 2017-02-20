@@ -1,15 +1,17 @@
 #include <tmpc/casadi_interface/GeneratedFunction.hpp>
+#include <tmpc/Matrix.hpp>
 
 #include "casadi_function_test_generated.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-#include <Eigen/Dense>
-
 #include "gtest_tools_eigen.hpp"
 
 #include <tuple>
+#include <stdexcept>
+
+using namespace tmpc;
 
 class CasADiFunctionTest : public ::testing::Test
 {
@@ -67,12 +69,12 @@ TEST_F(CasADiFunctionTest, n_col_out_correct)
 
 TEST_F(CasADiFunctionTest, pointer_argument_call_correct)
 {
-	Eigen::Matrix<double, 3, 2> const A = Eigen::Matrix<double, 3, 2>::Zero();
-	Eigen::Matrix<double, 2, 2> const B = Eigen::Matrix<double, 2, 2>::Zero();
+	StaticMatrix<double, 3, 2> const A {0.};
+	StaticMatrix<double, 2, 2> const B {0.};
 	double const x = 0.;
 
-	Eigen::Matrix<double, 3, 2> X;
-	Eigen::Matrix<double, 1, 2> Y;
+	StaticMatrix<double, 3, 2> X;
+	StaticMatrix<double, 1, 2> Y;
 
 	fun_({A.data(), B.data(), &x}, {X.data(), Y.data()});
 }
@@ -86,12 +88,12 @@ void call(Function const& f, TupleIn&& in, TupleOut&& out)
 
 TEST_F(CasADiFunctionTest, DISABLED_matrix_argument_call_correct)
 {
-	Eigen::Matrix<double, 3, 2> const A = Eigen::Matrix<double, 3, 2>::Zero();
-	Eigen::Matrix<double, 2, 2> const B = Eigen::Matrix<double, 2, 2>::Zero();
-	Eigen::Matrix<double, 1, 1> const x = Eigen::Matrix<double, 1, 1>::Zero();
+	StaticMatrix<double, 3, 2> const A {0.};
+	StaticMatrix<double, 2, 2> const B {0.};
+	StaticMatrix<double, 1, 1> const x {0.};
 
-	Eigen::Matrix<double, 3, 2> X;
-	Eigen::Matrix<double, 1, 2> Y;
+	StaticMatrix<double, 3, 2> X;
+	StaticMatrix<double, 1, 2> Y;
 
 	call(fun_, std::forward_as_tuple(A, B, x), std::forward_as_tuple(X, Y));
 }

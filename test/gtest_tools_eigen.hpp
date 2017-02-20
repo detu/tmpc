@@ -33,8 +33,8 @@ template <typename Matrix>
 class MatrixContainerAdaptor
 {
 public:
-	typedef typename Matrix::Index size_type;
-	typedef typename Matrix::Scalar value_type;
+	typedef size_t size_type;
+	typedef typename Matrix::ElementType value_type;
 	typedef value_type const& const_reference;
 
 	MatrixContainerAdaptor(Matrix const& m) : m_(m) {};
