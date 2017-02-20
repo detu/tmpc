@@ -1,41 +1,13 @@
 #pragma once
 
-#include "qp.hpp"
-#include "../core/matrix.hpp"
+#include <tmpc/Matrix.hpp>
+#include "QpSize.hpp"
 
 #include <vector>
-#include <Eigen/Dense>
+#include <limits>
 
 namespace tmpc
 {
-	// TODO: make these types rely on a Kernel and move them away from tmpc namespace.
-	template< unsigned M, unsigned N >
-	struct HPMPCMatrixType
-	{
-		typedef Eigen::Matrix<double, M, N, Eigen::RowMajor> type;
-	};
-
-	template< unsigned M >
-	struct HPMPCMatrixType<M, 1>
-	{
-		typedef Eigen::Matrix<double, M, 1> type;
-	};
-
-	template< unsigned N >
-	struct HPMPCMatrixType<1, N>
-	{
-		typedef Eigen::Matrix<double, 1, N, Eigen::RowMajor> type;
-	};
-
-	template<>
-	struct HPMPCMatrixType<1, 1>
-	{
-		typedef Eigen::Matrix<double, 1, 1> type;
-	};
-
-	template< unsigned NX, unsigned NU >
-	using HPMPCMatrix = typename HPMPCMatrixType<NX, NU>::type;
-
 	/* \brief Stores data for a multistage QP problem.
 	 * The storage format is what is expected by the c_order_d_ip_ocp_hard_tv() function from HPMPC.
 	 *
@@ -59,249 +31,304 @@ namespace tmpc
 	*
 	*	TODO: parameterize HPMPCProblem by a kernel class.
 	*/
-	template <unsigned NX_, unsigned NU_, unsigned NC_, unsigned NCT_>
+	template <typename Scalar>
 	class HPMPCProblem
 	{
 	public:
-		typedef unsigned int size_type;
 
-		static unsigned const NX = NX_;
-		static unsigned const NU = NU_;
-		static unsigned const NZ = NX + NU;
-		static unsigned const NC = NC_;
-		static unsigned const NCT = NCT_;
-
-		typedef HPMPCMatrix<NX ,  1> StateVector;
-		typedef HPMPCMatrix<NU ,  1> InputVector;
-		typedef HPMPCMatrix<NZ ,  1> StateInputVector;
-		typedef HPMPCMatrix<NZ , NZ> StageHessianMatrix;
-		typedef HPMPCMatrix<NX , NX> EndStageHessianMatrix;
-		typedef HPMPCMatrix<NZ ,  1> StageGradientVector;
-		typedef HPMPCMatrix<NX ,  1> EndStageGradientVector;
-		typedef HPMPCMatrix<NX , NZ> InterStageMatrix;
-		typedef HPMPCMatrix<NC , NZ> StageConstraintMatrix;
-		typedef HPMPCMatrix<NC ,  1> StageConstraintVector;
-		typedef HPMPCMatrix<NCT, NX> EndStageConstraintMatrix;
-		typedef HPMPCMatrix<NCT,  1> EndStageConstraintVector;
-
-		typedef HPMPCMatrix<NU, NU> HPMPC_RMatrix;
-		typedef HPMPCMatrix<NU, NX> HPMPC_SMatrix;
-		typedef HPMPCMatrix<NX, NX> HPMPC_QMatrix;
-		typedef HPMPCMatrix<NX, NX> HPMPC_AMatrix;
-		typedef HPMPCMatrix<NX, NU> HPMPC_BMatrix;
-		typedef HPMPCMatrix<NC, NX> HPMPC_CMatrix;
-		typedef HPMPCMatrix<NC, NU> HPMPC_DMatrix;
-
-		size_type nT() const { return _nt; }
-		static constexpr size_type nX() { return NX; }
-		static constexpr size_type nZ() { return NZ; }
-		static constexpr size_type nU() { return NU; }
-		static constexpr size_type nD() { return NC; }
-		static constexpr size_type nDT() { return NCT; }
-
-		template<class Matrix> void set_Q(std::size_t i, Eigen::MatrixBase<Matrix> const& Q) { stage(i, 1)._Q = Q; }
-		HPMPC_QMatrix const& get_Q(std::size_t i) const { return stage(i, 1)._Q; }
-
-		/**
-		 * \brief Set R matrix of stage k
-		 */
-		template<class Matrix>
-		void set_R(std::size_t k, size_type i, size_type j, Eigen::MatrixBase<Matrix> const& R)
+		class Stage
 		{
-			stage(k)._R.template block<Matrix::RowsAtCompileTime, Matrix::ColsAtCompileTime>(i, j) = R;
-		}
+		public:
+			static auto constexpr storageOrder = rowMajor;
+			typedef DynamicMatrix<Scalar, storageOrder> Matrix;
+			typedef DynamicVector<Scalar, columnVector> Vector;
 
-		/**
-		 * \brief Set block of R matrix of stage k with its top left corner at (i, j)
-		 */
-		template<class Matrix>
-		void set_R(std::size_t k, Eigen::MatrixBase<Matrix> const& R)
+			Stage(QpSize const& sz, size_t nx_next)
+			:	size_(sz)
+			,	Q_(sz.nx(), sz.nx(), sNaN)
+			,	R_(sz.nu(), sz.nu(), sNaN)
+			,	S_(sz.nx(), sz.nu(), sNaN)
+			,	q_(sz.nx(), sNaN)
+			,	r_(sz.nu(), sNaN)
+			,	A_(nx_next, sz.nx(), sNaN)
+			,	B_(nx_next, sz.nu(), sNaN)
+			,	b_(nx_next, sNaN)
+			,	C_(sz.nc(), sz.nx(), sNaN)
+			,	D_(sz.nc(), sz.nu(), sNaN)
+			,	lb_(sz.nu() + sz.nx(), sNaN)
+			,	ub_(sz.nu() + sz.nx(), sNaN)
+			,	lbd_(sz.nc(), sNaN)
+			,	ubd_(sz.nc(), sNaN)
+			{
+			}
+
+			Stage(Stage const&) = delete;
+			Stage(Stage &&) = default;
+
+			template <typename Expr>
+			Stage& operator=(Expr const& rhs)
+			{
+				assign(*this, rhs);
+				return *this;
+			}
+
+			const Matrix& get_A() const {
+				return A_;
+			}
+
+			template <typename T>
+			void set_A(const T& a) {
+				A_ = a;
+			}
+
+			const Matrix& get_B() const {
+				return B_;
+			}
+
+			template <typename T>
+			void set_B(const T& b) {
+				B_ = b;
+			}
+
+			Vector const& get_b() const {
+				return b_;
+			}
+
+			template <typename T>
+			void set_b(const T& b) {
+				b_ = b;
+			}
+
+			const Matrix& get_C() const {
+				return C_;
+			}
+
+			template <typename T>
+			void set_C(const T& c) {
+				C_ = c;
+			}
+
+			const Matrix& get_D() const {
+				return D_;
+			}
+
+			template <typename T>
+			void set_D(const T& d) {
+				D_ = d;
+			}
+
+			const Vector& get_lbd() const {
+				return lbd_;
+			}
+
+			template <typename T>
+			void set_lbd(const T& lbd) {
+				lbd_ = lbd;
+			}
+
+			Subvector<Vector> get_lbu() const {
+				return subvector(lb_, 0, size_.nu());
+			}
+
+			template <typename T>
+			void set_lbu(const T& lbu) {
+				subvector(lb_, 0, size_.nu()) = lbu;
+			}
+
+			Subvector<Vector> get_lbx() const {
+				return subvector(lb_, size_.nu(), size_.nx());
+			}
+
+			template <typename T>
+			void set_lbx(const T& lbx) {
+				subvector(lb_, size_.nu(), size_.nx()) = lbx;
+			}
+
+			const Matrix& get_Q() const {
+				return Q_;
+			}
+
+			template <typename T>
+			void set_Q(const T& q) {
+				Q_ = q;
+			}
+
+			const Matrix& get_R() const {
+				return R_;
+			}
+
+			template <typename T>
+			void set_R(const T& r) {
+				R_ = r;
+			}
+
+			const Matrix& get_S() const {
+				return S_;
+			}
+
+			template <typename T>
+			void set_S(const T& s) {
+				S_ = s;
+			}
+
+			const Vector& get_q() const {
+				return q_;
+			}
+
+			template <typename T>
+			void set_q(const T& q) {
+				q_ = q;
+			}
+
+			const Vector& get_r() const {
+				return r_;
+			}
+
+			template <typename T>
+			void set_r(const T& r) {
+				r_ = r;
+			}
+
+			const Vector& get_ubd() const {
+				return ubd_;
+			}
+
+			template <typename T>
+			void set_ubd(const T& ubd) {
+				ubd_ = ubd;
+			}
+
+			Subvector<Vector> get_ubu() const {
+				return subvector(ub_, 0, size_.nu());
+			}
+
+			template <typename T>
+			void set_ubu(const T& ubu) {
+				subvector(ub_, 0, size_.nu()) = ubu;
+			}
+
+			Subvector<Vector> get_ubx() const {
+				return subvector(ub_, size_.nu(), size_.nx());
+			}
+
+			template <typename T>
+			void set_ubx(const T& ubx) {
+				subvector(ub_, size_.nu(), size_.nx()) = ubx;
+			}
+
+			QpSize const& size() const
+			{
+				return size_;
+			}
+
+			// ******************************************************
+			//                HPMPC raw data interface.
+			//
+			// The prefixes before _data() correspond to the names of
+			// the argument to c_order_d_ip_ocp_hard_tv().
+			// ******************************************************
+			double const * A_data () const { return A_.data(); }
+			double const * B_data () const { return B_.data(); }
+			double const * b_data () const { return b_.data();	}
+			double const * Q_data () const { return Q_.data(); }
+			double const * S_data () const { return S_.data(); }
+			double const * R_data () const { return R_.data(); }
+			double const * q_data () const { return q_.data(); }
+			double const * r_data () const { return r_.data();	}
+			double const * lb_data() const { return lb_.data(); }
+			double const * ub_data() const { return ub_.data(); }
+			double const * C_data () const { return C_.data(); }
+			double const * D_data () const { return D_.data(); }
+			double const * lg_data() const { return lbd_.data(); }
+			double const * ug_data() const { return ubd_.data(); }
+
+		private:
+			QpSize size_;
+
+			// Hessian = [R, S; S', Q]
+			Matrix R_;
+			Matrix S_;
+			Matrix Q_;
+
+			// Gradient = [r; q]
+			Vector r_;
+			Vector q_;
+
+			// Inter-stage equalities x_{k+1} = A x_k + B u_k + c_k
+			Matrix A_;
+			Matrix B_;
+			Vector b_;
+
+			// Inequality constraints d_{min} <= C x_k + D u_k <= d_{max}
+			Matrix C_;
+			Matrix D_;
+			Vector lbd_;
+			Vector ubd_;
+
+			// Bound constraints:
+			// lb <= [u; x] <= ub
+			Vector lb_;
+			Vector ub_;
+		};
+
+		Stage& operator[](std::size_t i)
 		{
-			stage(k)._R = R;
+			return stage_.at(i);
 		}
 
-		/**
-		 * \brief Get R matrix of stage i
-		 */
-		HPMPC_RMatrix const& get_R(std::size_t i) const { return stage(i)._R; }
-
-		/**
-		 * \brief Set S matrix of stage k
-		 */
-		template<class Matrix>
-		void set_S(std::size_t k, Eigen::MatrixBase<Matrix> const& S)
+		Stage const& operator[](std::size_t i) const
 		{
-			// HPMPC "S" size is NUxNX, whereas the MultiStageQuadraticProblem interface assumes NXxNU,
-			// hence the transpose.
-			stage(k)._S = S.transpose();
+			return stage_.at(i);
 		}
 
-		/**
-		 * \brief Set block of S matrix of stage k with its top left corner at (i, j)
-		 */
-		template<class Matrix>
-		void set_S(std::size_t k, size_type i, size_type j, Eigen::MatrixBase<Matrix> const& S)
+		std::size_t size() const
 		{
-			// HPMPC "S" size is NUxNX, whereas the MultiStageQuadraticProblem interface assumes NXxNU,
-			// hence the transpose and swapping of indices and sizes:
-			// (i, j) -> (j, i)
-			// <Matrix::RowsAtCompileTime, Matrix::ColsAtCompileTime> -> <Matrix::ColsAtCompileTime, Matrix::RowsAtCompileTime>
-			stage(k)._S.template block<Matrix::ColsAtCompileTime, Matrix::RowsAtCompileTime>(j, i) = S.transpose();
+			return stage_.size();
 		}
 
-		/**
-		 * \brief Get S matrix of stage k
-		 */
-		decltype(auto) get_S(std::size_t k) const { return stage(k)._S.transpose(); }
+		typedef typename std::vector<Stage>::iterator iterator;
+		typedef typename std::vector<Stage>::const_iterator const_iterator;
+		typedef typename std::vector<Stage>::reference reference;
+		typedef typename std::vector<Stage>::const_reference const_reference;
 
-		template<class Matrix> void set_q(std::size_t i, Eigen::MatrixBase<Matrix> const& q) { stage(i, 1)._q = q; }
-		StateVector const& get_q(std::size_t i) const { return stage(i, 1)._q; }
-
-		/**
-		 * \brief Set r vector of stage k
-		 */
-		template <class Matrix>
-		void set_r(std::size_t k, Eigen::MatrixBase<Matrix> const& r)
+		iterator begin()
 		{
-			stage(k)._r = r;
+			return stage_.begin();
 		}
 
-		/**
-		 * \brief Set a block of r vector of stage k starting from element i
-		 */
-		template <class Matrix>
-		void set_r(std::size_t k, size_type i, Eigen::MatrixBase<Matrix> const& r)
+		iterator end()
 		{
-			stage(k)._r.template middleRows<Matrix::RowsAtCompileTime>(i) = r;
+			return stage_.end();
 		}
 
-		/**
-		 * \brief Get r vector of stage k
-		 */
-		InputVector const& get_r(std::size_t k) const
+		const_iterator begin() const
 		{
-			return stage(k)._r;
+			return stage_.begin();
 		}
 
-		template<class Matrix> void set_A(std::size_t i, Eigen::MatrixBase<Matrix> const& A) { stage(i)._A = A; }
-		HPMPC_AMatrix const& get_A(std::size_t i) const { return stage(i)._A; }
-
-		/**
-		 * \brief Set B matrix of stage k
-		 */
-		template <class Matrix>
-		void set_B(std::size_t k, Eigen::MatrixBase<Matrix> const& B)
+		const_iterator end() const
 		{
-			stage(k)._B = B;
+			return stage_.end();
 		}
 
-		/**
-		 * \brief Set a block of B matrix of stage k with its top left corner at (i, j)
-		 */
-		template <class Matrix>
-		void set_B(std::size_t k, size_type i, size_type j, Eigen::MatrixBase<Matrix> const& B)
+		reference front()
 		{
-			stage(k)._B.template block<Matrix::RowsAtCompileTime, Matrix::ColsAtCompileTime>(i, j) = B;
+			return stage_.front();
 		}
 
-		/**
-		 * \brief Get B matrix of stage k
-		 */
-		HPMPC_BMatrix const& get_B(std::size_t k) const
+		reference back()
 		{
-			return stage(k)._B;
+			return stage_.back();
 		}
 
-		template<class Matrix> void set_b(std::size_t i, Eigen::MatrixBase<Matrix> const& val) { stage(i)._b = val; }
-		StateVector const& get_b(std::size_t i) const { return stage(i)._b; }
-
-		template <typename Matrix> void set_C(std::size_t i, Eigen::MatrixBase<Matrix> const& val) { stage(i)._C = val; }
-		HPMPC_CMatrix const& get_C(std::size_t i) const { return stage(i)._C; }
-
-		template <typename Matrix> void set_D(std::size_t i, Eigen::MatrixBase<Matrix> const& val) { stage(i)._D = val; }
-		HPMPC_DMatrix const& get_D(std::size_t i) const { return stage(i)._D; }
-
-		template <typename Matrix> void set_d_min(std::size_t i, Eigen::MatrixBase<Matrix> const& val) { stage(i)._dMin = val; }
-		StageConstraintVector const& get_d_min(size_type i) const { return stage(i)._dMin; }
-
-		template <typename Matrix> void set_d_max(std::size_t i, Eigen::MatrixBase<Matrix> const& val) { stage(i)._dMax = val; }
-		StageConstraintVector const& get_d_max(size_type i) const { return stage(i)._dMax; }
-
-		template <typename Matrix> void set_C_end(Eigen::MatrixBase<Matrix> const& val) { _C_end = val; }
-		EndStageConstraintMatrix const& get_C_end() const { return _C_end; }
-
-		template <typename Matrix> void set_d_end_min(Eigen::MatrixBase<Matrix> const& val) { _d_end_min = val; }
-		EndStageConstraintVector const& get_d_end_min() const	{ return _d_end_min; }
-
-		template <typename Matrix> void set_d_end_max(Eigen::MatrixBase<Matrix> const& val) { _d_end_max = val; }
-		EndStageConstraintVector const& get_d_end_max() const	{ return _d_end_max; }
-
-		template<class Matrix> void set_x_min(std::size_t i, Eigen::MatrixBase<Matrix> const& val)	{
-			stage(i, 1)._lb.template middleRows<NX>(i < nT() ? NU : 0) = val;
-		}
-
-		decltype(auto) get_x_min(std::size_t i) const {
-			return stage(i, 1)._lb.template middleRows<NX>(i < nT() ? NU : 0);
-		}
-
-		template<class Matrix> void set_x_max(std::size_t i, Eigen::MatrixBase<Matrix> const& val)	{
-			stage(i, 1)._ub.template middleRows<NX>(i < nT() ? NU : 0) = val;
-		}
-
-		decltype(auto) get_x_max(std::size_t i) const {
-			return stage(i, 1)._ub.template middleRows<NX>(i < nT() ? NU : 0);
-		}
-
-		/**
-		 * \brief Set lower input bound for stage k
-		 */
-		template <class Vector>
-		void set_u_min(std::size_t k, Eigen::MatrixBase<Vector> const& val)
+		const_reference front() const
 		{
-			stage(k)._lb.template topRows<NU>() = val;
+			return stage_.front();
 		}
 
-		/**
-		 * \brief Set part of lower input bound for stage k starting from element i
-		 */
-		template <class Vector>
-		void set_u_min(std::size_t k, size_type i, Eigen::MatrixBase<Vector> const& val)
+		const_reference back() const
 		{
-			stage(k)._lb.template topRows<NU>().template middleRows<Vector::RowsAtCompileTime>(i) = val;
-		}
-
-		/**
-		 * \brief Get lower input bound for stage k
-		 */
-		decltype(auto) get_u_min(std::size_t k) const
-		{
-			return stage(k)._lb.template topRows<NU>();
-		}
-
-		/**
-		 * \brief Set upper input bound for stage k
-		 */
-		template <class Vector>
-		void set_u_max(std::size_t k, Eigen::MatrixBase<Vector> const& val)
-		{
-			stage(k)._ub.template topRows<NU>() = val;
-		}
-
-		/**
-		 * \brief Set upper input bound for stage k starting from element i
-		 */
-		template <class Vector>
-		void set_u_max(std::size_t k, size_type i, Eigen::MatrixBase<Vector> const& val)
-		{
-			stage(k)._ub.template topRows<NU>().template middleRows<Vector::RowsAtCompileTime>(i) = val;
-		}
-
-		/**
-		 * \brief Get upper input bound for stage k
-		 */
-		decltype(auto) get_u_max(std::size_t k) const
-		{
-			return stage(k)._ub.template topRows<NU>();
+			return stage_.back();
 		}
 
 		// ******************************************************
@@ -324,48 +351,71 @@ namespace tmpc
 		double const * const * D_data () const { return _D .data(); }
 		double const * const * lg_data() const { return _lg.data(); }	// TODO: beware of x[0] being equality constrained!
 		double const * const * ug_data() const { return _ug.data(); }	// TODO: beware of x[0] being equality constrained!
+		int const * nx_data() const { return _nx.data(); }
+		int const * nu_data() const { return _nu.data(); }
+		int const * nb_data() const { return _nb.data(); }
+		int const * ng_data() const { return _ng.data(); }
 
-		HPMPCProblem(size_type nt)
-		:	_nt(nt)
-		,	_stage(nt + 1)	// not all fields of _stage[nt] are used
-		,	_A (nt)
-		,	_B (nt)
-		,	_b (nt)
-		,	_Q (nt + 1)
-		,	_S (nt + 1)
-		,	_R (nt + 1)
-		,	_q (nt + 1)
-		,	_r (nt + 1)
-		,	_lb(nt + 1)
-		,	_ub(nt + 1)
-		,	_C (nt + 1)
-		,	_D (nt + 1)
-		,	_lg(nt + 1)
-		,	_ug(nt + 1)
+		template <typename InputIterator>
+		HPMPCProblem(InputIterator size_first, InputIterator size_last)
 		{
+			auto const nt = std::distance(size_first, size_last);
+			stage_.reserve(nt);
+
+			_nx.reserve(nt);
+			_nu.reserve(nt);
+			_nb.reserve(nt);
+			_ng.reserve(nt);
+
+			for (auto sz = size_first; sz != size_last; ++sz)
+			{
+				stage_.emplace_back(*sz, sz + 1 != size_last ? sz[1].nx() : 0);
+				auto& st = stage_.back();
+
+				_nx.push_back(sz->nx());
+				_nu.push_back(sz->nu());
+				_nb.push_back(sz->nx() + sz->nu());
+				_ng.push_back(sz->nc());
+			}
+
+			_A .resize(nt);
+			_B .resize(nt);
+			_b .resize(nt);
+			_Q .resize(nt);
+			_S .resize(nt);
+			_R .resize(nt);
+			_q .resize(nt);
+			_r .resize(nt);
+			_lb.resize(nt);
+			_ub.resize(nt);
+			_C .resize(nt);
+			_D .resize(nt);
+			_lg.resize(nt);
+			_ug.resize(nt);
+
 			InitPointers();
 		}
 
 		HPMPCProblem(HPMPCProblem const& rhs)
-		:	_nt(rhs._nt)
-		,	_stage(rhs._stage)
-		,	_C_end(rhs._C_end)
-		,	_d_end_min(rhs._d_end_min)
-		,	_d_end_max(rhs._d_end_max)
-		,	_A(_nt)
-		,	_B(_nt)
-		,	_b(_nt)
-		,	_Q(_nt + 1)
-		,	_S(_nt + 1)
-		,	_R(_nt + 1)
-		,	_q(_nt + 1)
-		,	_r (_nt + 1)
-		,	_lb(_nt + 1)
-		,	_ub(_nt + 1)
-		,	_C (_nt + 1)
-		,	_D (_nt + 1)
-		,	_lg(_nt + 1)
-		,	_ug(_nt + 1)
+		:	stage_(rhs.stage_)
+		,	_A(rhs.size())
+		,	_B(rhs.size())
+		,	_b(rhs.size())
+		,	_Q(rhs.size())
+		,	_S(rhs.size())
+		,	_R(rhs.size())
+		,	_q(rhs.size())
+		,	_r (rhs.size())
+		,	_lb(rhs.size())
+		,	_ub(rhs.size())
+		,	_C (rhs.size())
+		,	_D (rhs.size())
+		,	_lg(rhs.size())
+		,	_ug(rhs.size())
+		,	_nx(rhs._nx)
+		,	_nu(rhs._nu)
+		,	_nb(rhs._nb)
+		,	_ng(rhs._ng)
 		{
 			InitPointers();
 		}
@@ -374,86 +424,33 @@ namespace tmpc
 		void InitPointers()
 		{
 			// Filling out pointer arrays for HPMPC
-			for (std::size_t i = 0; i <= _nt; ++i)
+			for (size_t i = 0; i < size(); ++i)
 			{
-				if (i < _nt)
-				{
-					_A[i] = _stage[i]._A.data();
-					_B[i] = _stage[i]._B.data();
-					_b[i] = _stage[i]._b.data();
-				}
+				_A[i] = stage_[i].A_data();
+				_B[i] = stage_[i].B_data();
+				_b[i] = stage_[i].b_data();
 
-				_Q [i] = _stage[i]._Q .data();
-				_S [i] = i < _nt ? _stage[i]._S .data() : nullptr;
-				_R [i] = i < _nt ? _stage[i]._R .data() : nullptr;
-				_q [i] = _stage[i]._q .data();
-				_r [i] = i < _nt ? _stage[i]._r .data() : nullptr;
-				_lb[i] = _stage[i]._lb.data();
-				_ub[i] = _stage[i]._ub.data();
-				_C [i] = i < _nt ? _stage[i]._C .data() : _C_end.data();
-				_D [i] = i < _nt ? _stage[i]._D .data() : nullptr;
-				_lg[i] = i < _nt ? _stage[i]._dMin.data() : _d_end_min.data();
-				_ug[i] = i < _nt ? _stage[i]._dMax.data() : _d_end_max.data();
+				_Q [i] = stage_[i].Q_data();
+				_S [i] = stage_[i].S_data();
+				_R [i] = stage_[i].R_data();
+				_q [i] = stage_[i].q_data();
+				_r [i] = stage_[i].r_data();
+				_lb[i] = stage_[i].lb_data();
+				_ub[i] = stage_[i].ub_data();
+
+				_C [i] = stage_[i].C_data();
+				_D [i] = stage_[i].D_data();
+				_lg[i] = stage_[i].lg_data();
+				_ug[i] = stage_[i].ug_data();
 			}
-		}
-
-		struct StageData
-		{
-			// Hessian = [R, S; S', Q]
-			HPMPC_RMatrix _R = signaling_nan<HPMPC_RMatrix>();
-			HPMPC_SMatrix _S = signaling_nan<HPMPC_SMatrix>();
-			HPMPC_QMatrix _Q = signaling_nan<HPMPC_QMatrix>();
-
-			// Gradient = [r; q]
-			InputVector _r = signaling_nan<InputVector>();
-			StateVector _q = signaling_nan<StateVector>();
-
-			// Inter-stage equalities x_{k+1} = A x_k + B u_k + c_k
-			HPMPC_AMatrix _A = signaling_nan<HPMPC_AMatrix>();
-			HPMPC_BMatrix _B = signaling_nan<HPMPC_BMatrix>();
-			StateVector   _b = signaling_nan<StateVector  >();
-
-			// Inequality constraints d_{min} <= C x_k + D u_k <= d_{max}
-			HPMPC_CMatrix _C = signaling_nan<HPMPC_CMatrix>();
-			HPMPC_DMatrix _D = signaling_nan<HPMPC_DMatrix>();
-			StageConstraintVector _dMin = signaling_nan<StageConstraintVector>();
-			StageConstraintVector _dMax = signaling_nan<StageConstraintVector>();
-
-			// Bound constraints:
-			// lb <= [u; x] <= ub
-			StateInputVector _lb = signaling_nan<StateInputVector>();
-			StateInputVector _ub = signaling_nan<StateInputVector>();
-		};
-
-		StageData& stage(size_type i, std::size_t delta = 0)
-		{
-			assert(i < nT() + delta && i < _stage.size());
-			return _stage[i];
-		}
-
-		StageData const& stage(size_type i, std::size_t delta = 0) const
-		{
-			assert(i < nT() + delta && i < _stage.size());
-			return _stage[i];
 		}
 
 		// Private data members.
 		//
-
-		// Number of control intervals.
-		std::size_t _nt;
+		static double constexpr sNaN = std::numeric_limits<double>::signaling_NaN();
 
 		// Stores stage data
-		std::vector<StageData> _stage;
-
-		// 1 matrix of size NCT x NX.
-		EndStageConstraintMatrix _C_end     = signaling_nan<EndStageConstraintMatrix>();
-
-		// 1 vector of size NCT
-		EndStageConstraintVector _d_end_min = signaling_nan<EndStageConstraintVector>();
-
-		// 1 vector of size NCT
-		EndStageConstraintVector _d_end_max = signaling_nan<EndStageConstraintVector>();
+		std::vector<Stage> stage_;
 
 		// "A" data array for HPMPC
 		std::vector<double const *> _A;
@@ -496,5 +493,17 @@ namespace tmpc
 
 		// "ug" data array for HPMPC
 		std::vector<double const *> _ug;
+
+		// Array of NX sizes
+		std::vector<int> _nx;
+
+		// Array of NU sizes
+		std::vector<int> _nu;
+
+		// Array of NB (bound constraints) sizes
+		std::vector<int> _nb;
+
+		// Array of NG (path constraints) sizes
+		std::vector<int> _ng;
 	};
 }

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <tmpc/Matrix.hpp>
+
 namespace tmpc {
 
 /**
@@ -17,7 +19,7 @@ namespace tmpc {
  *
  *   Hint: can be conviniently used as a mixin-type.
  */
-template <typename K, typename D>
+template <typename Scalar, typename D>
 class ProblemSpecific
 {
 public:
@@ -29,33 +31,33 @@ public:
 	static auto constexpr NC = D::NC;
 	static auto constexpr NCT = D::NCT;
 
-	typedef typename K::template Vector<NP> ParameterVector;
-	typedef typename K::template Vector<NU> InputVector;
-	typedef typename K::template Vector<NW> DisturbanceVector;
-	typedef typename K::template Vector<NX> StateVector;
-	typedef typename K::template Vector<NY> OutputVector;
-	typedef typename K::template Vector<NC> ConstraintVector;
-	typedef typename K::template Vector<NCT> TerminalConstraintVector;
+	typedef StaticVector<Scalar, NP> ParameterVector;
+	typedef StaticVector<Scalar, NU> InputVector;
+	typedef StaticVector<Scalar, NW> DisturbanceVector;
+	typedef StaticVector<Scalar, NX> StateVector;
+	typedef StaticVector<Scalar, NY> OutputVector;
+	typedef StaticVector<Scalar, NC> ConstraintVector;
+	typedef StaticVector<Scalar, NCT> TerminalConstraintVector;
 
-	typedef typename K::template Matrix<NX, NX> StateStateMatrix;
-	typedef typename K::template Matrix<NX, NU> StateInputMatrix;
-	typedef typename K::template Matrix<NX, NW> StateDisturbanceMatrix;
+	typedef StaticMatrix<Scalar, NX, NX> StateStateMatrix;
+	typedef StaticMatrix<Scalar, NX, NU> StateInputMatrix;
+	typedef StaticMatrix<Scalar, NX, NW> StateDisturbanceMatrix;
 
-	typedef typename K::template Matrix<NU, NU> InputInputMatrix;
+	typedef StaticMatrix<Scalar, NU, NU> InputInputMatrix;
 
-	typedef typename K::template Matrix<NW, NW> DisturbanceDisturbanceMatrix;
+	typedef StaticMatrix<Scalar, NW, NW> DisturbanceDisturbanceMatrix;
 
-	typedef typename K::template Matrix<NC, NU> ConstraintInputMatrix;
-	typedef typename K::template Matrix<NC, NX> ConstraintStateMatrix;
-	typedef typename K::template Matrix<NC, NC> ConstraintConstraintMatrix;
+	typedef StaticMatrix<Scalar, NC, NU> ConstraintInputMatrix;
+	typedef StaticMatrix<Scalar, NC, NX> ConstraintStateMatrix;
+	typedef StaticMatrix<Scalar, NC, NC> ConstraintConstraintMatrix;
 
-	typedef typename K::template Matrix<NCT, NU> TerminalConstraintInputMatrix;
-	typedef typename K::template Matrix<NCT, NX> TerminalConstraintStateMatrix;
+	typedef StaticMatrix<Scalar, NCT, NU> TerminalConstraintInputMatrix;
+	typedef StaticMatrix<Scalar, NCT, NX> TerminalConstraintStateMatrix;
 
-	typedef typename K::template Matrix<NY, NX> OutputStateMatrix;
-	typedef typename K::template Matrix<NY, NU> OutputInputMatrix;
-	typedef typename K::template Matrix<NY, NW> OutputDisturbanceMatrix;
-	typedef typename K::template Matrix<NY, NY> OutputOutputMatrix;
+	typedef StaticMatrix<Scalar, NY, NX> OutputStateMatrix;
+	typedef StaticMatrix<Scalar, NY, NU> OutputInputMatrix;
+	typedef StaticMatrix<Scalar, NY, NW> OutputDisturbanceMatrix;
+	typedef StaticMatrix<Scalar, NY, NY> OutputOutputMatrix;
 };
 
 }	// namespace tmpc

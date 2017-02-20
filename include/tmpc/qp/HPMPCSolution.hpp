@@ -7,12 +7,10 @@
 
 #pragma once
 
-#include "qp.hpp"
-#include "../core/matrix.hpp"
-
-#include <Eigen/Dense>
+#include <tmpc/Matrix.hpp>
 
 #include <vector>
+#include <limits>
 
 namespace tmpc
 {
@@ -31,11 +29,11 @@ namespace tmpc
 		static size_type const NC = NC_;
 		static size_type const NCT = NCT_;
 
-		typedef Eigen::Matrix<double, NX, 1> StateVector;
-		typedef Eigen::Matrix<double, NU, 1> InputVector;
-		typedef Eigen::Matrix<double, NZ, 1> StateInputVector;
-		typedef Eigen::Matrix<double, 2 * NC + 2 * (NX + NU), 1> LagrangeVector;
-		typedef Eigen::Matrix<double, 2 * NCT + 2 * NX, 1> EndLagrangeVector;
+		typedef StaticVector<double, NX> StateVector;
+		typedef StaticVector<double, NU> InputVector;
+		typedef StaticVector<double, NZ> StateInputVector;
+		typedef StaticVector<double, 2 * NC + 2 * (NX + NU)> LagrangeVector;
+		typedef StaticVector<double, 2 * NCT + 2 * NX> EndLagrangeVector;
 
 		HPMPCSolution(size_type nt)
 		:	_stage(nt)
@@ -88,7 +86,7 @@ namespace tmpc
 		}
 
 		template <typename Matrix>
-		void set_x(std::size_t i, Eigen::MatrixBase<Matrix> const& val)
+		void set_x(std::size_t i, Matrix const& val)
 		{
 			if (i > nT())
 				throw std::out_of_range("HPMPCSolution<>::set_x(): index is out of range");
@@ -100,30 +98,51 @@ namespace tmpc
 
 		StateVector const& get_pi(std::size_t i) const { return stage(i)._pi; }
 
-		decltype(auto) get_lam_u_min(std::size_t i) const { return middle_rows<NU>(stage(i)._lam, 0); }
-		decltype(auto) get_lam_u_max(std::size_t i) const { return middle_rows<NU>(stage(i)._lam, NU + NX + NC); }
+		decltype(auto) get_lam_u_min(std::size_t i) const
+		{
+			return subvector(stage(i)._lam, 0., NU);
+		}
 
-		Eigen::Map<StateVector> get_lam_x_min(std::size_t i) const
+		decltype(auto) get_lam_u_max(std::size_t i) const
+		{
+			return subvector(stage(i)._lam, NU + NX + NC, NU);
+		}
+
+		CustomVector<double, unaligned, unpadded> get_lam_x_min(std::size_t i) const
 		{
 			if (i > nT())
 				throw std::out_of_range("HPMPCSolution::get_lam_x_min(): index is out of range");
 
-			return Eigen::Map<StateVector>(_lam[i] + NU);
+			return CustomVector<double, unaligned, unpadded>(_lam[i] + NU, NX);
 		}
 
-		Eigen::Map<StateVector> get_lam_x_max(std::size_t i) const
+		CustomVector<double, unaligned, unpadded> get_lam_x_max(std::size_t i) const
 		{
 			if (i > nT())
 				throw std::out_of_range("HPMPCSolution::get_lam_x_max(): index is out of range");
 
-			return Eigen::Map<StateVector>(_lam[i] + NU + NX + NC + NU);
+			return CustomVector<double, unaligned, unpadded>(_lam[i] + NU + NX + NC + NU, NX);
 		}
 
-		decltype(auto) get_lam_d_min(std::size_t i) const { return middle_rows<NC>(stage(i)._lam, NU + NX); }
-		decltype(auto) get_lam_d_max(std::size_t i) const { return middle_rows<NC>(stage(i)._lam, NU + NX + NC + NU + NX); }
+		Subvector<LagrangeVector> get_lam_d_min(std::size_t i) const
+		{
+			return subvector(stage(i)._lam, NU + NX, NC);
+		}
 
-		decltype(auto) get_lam_d_end_min() const { return middle_rows<NC>(_lamEnd, NX); }
-		decltype(auto) get_lam_d_end_max() const { return middle_rows<NC>(_lamEnd, NX + NCT + NX); }
+		Subvector<LagrangeVector> get_lam_d_max(std::size_t i) const
+		{
+			return subvector(stage(i)._lam, NU + NX + NC + NU + NX, NC);
+		}
+
+		Subvector<EndLagrangeVector> get_lam_d_end_min() const
+		{
+			return subvector(_lamEnd, NX, NC);
+		}
+
+		Subvector<EndLagrangeVector> get_lam_d_end_max() const
+		{
+			return subvector(_lamEnd, NX + NCT + NX, NC);
+		}
 
 		size_type const nX() const noexcept { return NX; }
 		size_type const nU() const noexcept { return NU; }
@@ -150,11 +169,11 @@ namespace tmpc
 		{
 			// Initialize all numeric data to NaN so that if an uninitialized object
 			// by mistake used in calculations is easier to detect.
-			StateVector      _x = signaling_nan<StateVector   >();
-			InputVector      _u = signaling_nan<InputVector   >();
-			StateVector     _pi = signaling_nan<StateVector   >();
-			LagrangeVector _lam = signaling_nan<LagrangeVector>();
-			LagrangeVector   _t = signaling_nan<LagrangeVector>();
+			StateVector      _x = sNaN;
+			InputVector      _u = sNaN;
+			StateVector     _pi = sNaN;
+			LagrangeVector _lam = sNaN;
+			LagrangeVector   _t = sNaN;
 		};
 
 		StageData& stage(size_type i)
@@ -169,20 +188,22 @@ namespace tmpc
 			return _stage[i];
 		}
 
+		static double constexpr sNaN = std::numeric_limits<double>::signaling_NaN();
+
 		std::vector<StageData> _stage;
 
 		// Initialize all numeric data to NaN so that if an uninitialized object
 		// by mistake used in calculations is easier to detect.
-		StateVector       _xEnd   = signaling_nan<StateVector      >();
-		EndLagrangeVector _lamEnd = signaling_nan<EndLagrangeVector>();
-		EndLagrangeVector _tEnd   = signaling_nan<EndLagrangeVector>();
+		StateVector       _xEnd   = sNaN;
+		EndLagrangeVector _lamEnd = sNaN;
+		EndLagrangeVector _tEnd   = sNaN;
 
 		std::vector<double *> _x;
 		std::vector<double *> _u;
 		std::vector<double *> _pi;
 		std::vector<double *> _lam;
 		std::vector<double *> _t;
-		Eigen::Matrix<double, 4, 1> _inf_norm_res = signaling_nan<Eigen::Matrix<double, 4, 1>>();
+		StaticVector<double, 4> _inf_norm_res {sNaN};
 
 		/// \brief Number of iterations performed by the QP solver.
 		unsigned numIter_ = 0;

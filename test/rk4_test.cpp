@@ -5,20 +5,29 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-#include <Eigen/Dense>
-
 #include <fstream>
 #include "gtest_tools_eigen.hpp"
 
-template<typename Matrix>
-std::istream& operator>>(std::istream& is, Eigen::MatrixBase<Matrix>& m)
+template <typename MT, bool SO>
+std::istream& operator>>(std::istream& is, tmpc::Matrix<MT, SO>& m)
 {
-	for (typename Matrix::Index i = 0; i < m.rows(); ++i)
-		for (typename Matrix::Index j = 0; j < m.cols(); ++j)
+	for (tmpc::size_t i = 0; i < m.rows(); ++i)
+		for (tmpc::size_t j = 0; j < m.cols(); ++j)
 			is >> m(i, j);
 
 	return is;
 }
+
+template <typename VT, bool TF>
+std::istream& operator>>(std::istream& is, tmpc::Vector<VT, TF>& v)
+{
+	for (tmpc::size_t i = 0; i < v.size(); ++i)
+		is >> v(i);
+
+	return is;
+}
+
+using namespace tmpc;
 
 class PendulumODEBase
 {
@@ -28,17 +37,17 @@ public:
 	static unsigned const NQ = 2;
 	static unsigned const NR = 2;
 
-	typedef Eigen::Matrix<double, NX, 1> StateVector;
-	typedef Eigen::Matrix<double, NU, 1> InputVector;
-	typedef Eigen::Matrix<double, NQ, 1> QuadVector;
-	typedef Eigen::Matrix<double, NR, 1> ResVector;
-	typedef Eigen::Matrix<double, NX, NX, Eigen::ColMajor> StateStateMatrix;
-	typedef Eigen::Matrix<double, NX, NU, Eigen::ColMajor> StateInputMatrix;
-	typedef Eigen::Matrix<double, NU, NU, Eigen::ColMajor> InputInputMatrix;
-	typedef Eigen::Matrix<double, NQ, NX, Eigen::ColMajor> QuadStateMatrix;
-	typedef Eigen::Matrix<double, NQ, NU, Eigen::ColMajor> QuadInputMatrix;
-	typedef Eigen::Matrix<double, NR, NX, Eigen::ColMajor> ResStateMatrix;
-	typedef Eigen::Matrix<double, NR, NU, Eigen::ColMajor> ResInputMatrix;
+	typedef StaticVector<double, NX> StateVector;
+	typedef StaticVector<double, NU> InputVector;
+	typedef StaticVector<double, NQ> QuadVector;
+	typedef StaticVector<double, NR> ResVector;
+	typedef StaticMatrix<double, NX, NX, columnMajor> StateStateMatrix;
+	typedef StaticMatrix<double, NX, NU, columnMajor> StateInputMatrix;
+	typedef StaticMatrix<double, NU, NU, columnMajor> InputInputMatrix;
+	typedef StaticMatrix<double, NQ, NX, columnMajor> QuadStateMatrix;
+	typedef StaticMatrix<double, NQ, NU, columnMajor> QuadInputMatrix;
+	typedef StaticMatrix<double, NR, NX, columnMajor> ResStateMatrix;
+	typedef StaticMatrix<double, NR, NU, columnMajor> ResInputMatrix;
 
 protected:
 	CASADI_GENERATED_FUNCTION_CLASS(pendulum_ode, 3, 9) const _ode;
@@ -109,7 +118,7 @@ class rk4_test : public ::testing::Test
 {
 protected:
 	typedef PendulumODEBase ODE;
-	typedef tmpc::RK4 Integrator;
+	typedef RK4 Integrator;
 
 	PendulumODE ode_;
 	PendulumODE_r ode_r_;
@@ -175,9 +184,10 @@ TEST_F(rk4_test, ode_correct)
 		ODE::StateInputMatrix B;
 		ode_(p.t, p.x0, p.u, xdot, A, B);
 
-		EXPECT_TRUE(xdot.isApprox(p.xdot));
-		EXPECT_TRUE(A.isApprox(p.Aode));
-		EXPECT_TRUE(B.isApprox(p.Bode));
+		MatrixApproxEquality const is_approx(1e-6);
+		EXPECT_PRED2(is_approx, xdot, p.xdot);
+		EXPECT_PRED2(is_approx, A, p.Aode);
+		EXPECT_PRED2(is_approx, B, p.Bode);
 
 		++count;
 	}
@@ -200,12 +210,13 @@ TEST_F(rk4_test, ode_q_correct)
 		ODE::QuadInputMatrix qB;
 		ode_(p.t, p.x0, p.u, xdot, A, B, q, qA, qB);
 
-		EXPECT_TRUE(xdot.isApprox(p.xdot));
-		EXPECT_TRUE(A.isApprox(p.Aode));
-		EXPECT_TRUE(B.isApprox(p.Bode));
-		EXPECT_TRUE(q.isApprox(p.q));
-		EXPECT_TRUE(qA.isApprox(p.qA_ode));
-		EXPECT_TRUE(qB.isApprox(p.qB_ode));
+		MatrixApproxEquality const is_approx(1e-6);
+		EXPECT_PRED2(is_approx, xdot, p.xdot));
+		EXPECT_PRED2(is_approx, A, p.Aode));
+		EXPECT_PRED2(is_approx, B, p.Bode));
+		EXPECT_PRED2(is_approx, q, p.q));
+		EXPECT_PRED2(is_approx, qA, p.qA_ode));
+		EXPECT_PRED2(is_approx, qB, p.qB_ode));
 
 		++count;
 	}
@@ -231,15 +242,16 @@ TEST_F(rk4_test, ode_qr_correct)
 		ODE::ResInputMatrix rB;
 		ode_(p.t, p.x0, p.u, xdot, A, B, q, qA, qB, r, rA, rB);
 
-		EXPECT_TRUE(xdot.isApprox(p.xdot));
-		EXPECT_TRUE(A.isApprox(p.Aode));
-		EXPECT_TRUE(B.isApprox(p.Bode));
-		EXPECT_TRUE(q.isApprox(p.q));
-		EXPECT_TRUE(qA.isApprox(p.qA_ode));
-		EXPECT_TRUE(qB.isApprox(p.qB_ode));
-		EXPECT_TRUE(r.isApprox(p.r));
-		EXPECT_TRUE(rA.isApprox(p.rA_ode));
-		EXPECT_TRUE(rB.isApprox(p.rB_ode));
+		MatrixApproxEquality const is_approx(1e-6);
+		EXPECT_PRED2(is_approx, xdot, p.xdot);
+		EXPECT_PRED2(is_approx, A, p.Aode);
+		EXPECT_PRED2(is_approx, B, p.Bode);
+		EXPECT_PRED2(is_approx, q, p.q);
+		EXPECT_PRED2(is_approx, qA, p.qA_ode);
+		EXPECT_PRED2(is_approx, qB, p.qB_ode);
+		EXPECT_PRED2(is_approx, r, p.r);
+		EXPECT_PRED2(is_approx, rA, p.rA_ode);
+		EXPECT_PRED2(is_approx, rB, p.rB_ode);
 
 		++count;
 	}

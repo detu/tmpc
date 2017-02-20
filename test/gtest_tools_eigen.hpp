@@ -5,11 +5,11 @@
 
 #include <iostream>
 
-#include <Eigen/Dense>
+#include <tmpc/Matrix.hpp>
 
 template <class Base>
-class EigenPrintWrap : public Base {
-    friend void PrintTo(const EigenPrintWrap &m, ::std::ostream *o) {
+class MatrixPrintWrap : public Base {
+    friend void PrintTo(const MatrixPrintWrap &m, ::std::ostream *o) {
         *o << "\n" << m;
     }
 };
@@ -20,8 +20,8 @@ class EigenPrintWrap : public Base {
  * Taken from this post: http://stackoverflow.com/questions/25146997/teach-google-test-how-to-print-eigen-matrix
  */
 template <class Base>
-const EigenPrintWrap<Base> &print_wrap(const Base &base) {
-    return static_cast<const EigenPrintWrap<Base> &>(base);
+const MatrixPrintWrap<Base> &print_wrap(const Base &base) {
+    return static_cast<const MatrixPrintWrap<Base> &>(base);
 }
 
 MATCHER_P(FloatNearPointwise, tol, "Out of range") {
@@ -97,9 +97,9 @@ public:
 	}
 
 	template <typename MatrixA, typename MatrixB>
-	bool operator()(Eigen::MatrixBase<MatrixA> const& lhs, Eigen::MatrixBase<MatrixB> const& rhs)
+	bool operator()(MatrixA const& lhs, MatrixB const& rhs)
 	{
-		return lhs.isApprox(rhs, 1e-4);
+		return max(abs(lhs - rhs)) <= tolerance_;
 	}
 
 private:

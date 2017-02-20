@@ -6,19 +6,17 @@
 
 #pragma once
 
-#include "qp.hpp"
-#include "../core/matrix.hpp"
-
-#include <Eigen/Dense>
+#include <tmpc/Matrix.hpp>
 
 #include <vector>
+#include <limits>
 
 namespace tmpc
 {
 	//
 	// Provides a generic solution interface for multistage QP solvers.
 	//
-	template<unsigned NX_, unsigned NU_, unsigned NC_, unsigned NCT_>
+	template <unsigned NX_, unsigned NU_, unsigned NC_, unsigned NCT_>
 	class MultiStageQPSolution
 	{
 	public:
@@ -30,13 +28,13 @@ namespace tmpc
 		static size_type const NC = NC_;
 		static size_type const NCT = NCT_;
 
-		typedef Eigen::Matrix<double, NX, 1> StateVector;
-		typedef Eigen::Matrix<double, NU, 1> InputVector;
-		typedef Eigen::Matrix<double, NZ, 1> StateInputVector;
-		typedef Eigen::Matrix<double, NC, 1> StageConstraintVector;
-		typedef Eigen::Matrix<double, NC, 1> EndStageConstraintVector;
-		typedef Eigen::Matrix<double, 2 * NC + 2 * (NX + NU), 1> LagrangeVector;
-		typedef Eigen::Matrix<double, 2 * NCT + 2 * NX, 1> EndLagrangeVector;
+		typedef StaticVector<double, NX> StateVector;
+		typedef StaticVector<double, NU> InputVector;
+		typedef StaticVector<double, NZ> StateInputVector;
+		typedef StaticVector<double, NC> StageConstraintVector;
+		typedef StaticVector<double, NC> EndStageConstraintVector;
+		typedef StaticVector<double, 2 * NC + 2 * (NX + NU)> LagrangeVector;
+		typedef StaticVector<double, 2 * NCT + 2 * NX> EndLagrangeVector;
 
 		MultiStageQPSolution(size_type nt)
 		:	_stage(nt)
@@ -55,7 +53,7 @@ namespace tmpc
 		}
 
 		template <typename Matrix>
-		void set_x(std::size_t i, Eigen::MatrixBase<Matrix> const& val)
+		void set_x(std::size_t i, Matrix const& val)
 		{
 			if (i > nT())
 				throw std::out_of_range("MultiStageQPSolution<>::set_x(): index is out of range");
@@ -64,7 +62,7 @@ namespace tmpc
 		}
 
 		template <typename Matrix>
-		void set_u(std::size_t i, Eigen::MatrixBase<Matrix> const& val)
+		void set_u(std::size_t i, Matrix const& val)
 		{
 			stage(i)._u = val;
 		}
@@ -77,16 +75,16 @@ namespace tmpc
 
 		StateVector const& get_pi(std::size_t i) const { return stage(i)._pi; }
 
-		decltype(auto) get_lam_u_min(std::size_t i) const { return signaling_nan<InputVector>(); }
-		decltype(auto) get_lam_u_max(std::size_t i) const { return signaling_nan<InputVector>(); }
-		decltype(auto) get_lam_x_min(std::size_t i) const {	return signaling_nan<StateVector>(); }
-		decltype(auto) get_lam_x_max(std::size_t i) const {	return signaling_nan<StateVector>(); }
+		decltype(auto) get_lam_u_min(std::size_t i) const { return InputVector(sNaN); }
+		decltype(auto) get_lam_u_max(std::size_t i) const { return InputVector(sNaN); }
+		decltype(auto) get_lam_x_min(std::size_t i) const {	return StateVector(sNaN); }
+		decltype(auto) get_lam_x_max(std::size_t i) const {	return StateVector(sNaN); }
 
-		decltype(auto) get_lam_d_min(std::size_t i) const { return signaling_nan<StageConstraintVector>(); }
-		decltype(auto) get_lam_d_max(std::size_t i) const { return signaling_nan<StageConstraintVector>(); }
+		decltype(auto) get_lam_d_min(std::size_t i) const { return StageConstraintVector(sNaN); }
+		decltype(auto) get_lam_d_max(std::size_t i) const { return StageConstraintVector(sNaN); }
 
-		decltype(auto) get_lam_d_end_min() const { return signaling_nan<EndStageConstraintVector>(); }
-		decltype(auto) get_lam_d_end_max() const { return signaling_nan<EndStageConstraintVector>(); }
+		decltype(auto) get_lam_d_end_min() const { return EndStageConstraintVector(sNaN); }
+		decltype(auto) get_lam_d_end_max() const { return EndStageConstraintVector(sNaN); }
 
 		/// \brief Get number of iterations performed by the QP solver.
 		unsigned getNumIter() const { return numIter_; }
@@ -95,19 +93,21 @@ namespace tmpc
 		void setNumIter(unsigned n) { numIter_ = n; }
 
 	private:
+		static constexpr double sNaN = std::numeric_limits<double>::signaling_NaN();
+
 		struct StageData
 		{
-			StateVector    _x   = signaling_nan<StateVector   >();
-			InputVector    _u   = signaling_nan<InputVector   >();
-			StateVector    _pi  = signaling_nan<StateVector   >();
-			LagrangeVector _lam = signaling_nan<LagrangeVector>();
-			LagrangeVector _t   = signaling_nan<LagrangeVector>();
+			StateVector    _x   { sNaN };
+			InputVector    _u   { sNaN };
+			StateVector    _pi  { sNaN };
+			LagrangeVector _lam { sNaN };
+			LagrangeVector _t   { sNaN };
 		};
 
 		std::vector<StageData> _stage;
-		StateVector       _xEnd   = signaling_nan<StateVector      >();
-		EndLagrangeVector _lamEnd = signaling_nan<EndLagrangeVector>();
-		EndLagrangeVector _tEnd   = signaling_nan<EndLagrangeVector>();
+		StateVector       _xEnd   { sNaN };
+		EndLagrangeVector _lamEnd { sNaN };
+		EndLagrangeVector _tEnd   { sNaN };
 
 		StageData& stage(size_type i)
 		{

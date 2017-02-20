@@ -2,7 +2,6 @@
 
 #include "../qp/diagnostics.hpp"
 #include "Trajectory.hpp"
-#include "../qp/qp.hpp"
 #include "../qp/QpSize.hpp"
 
 #include <stdexcept>
@@ -20,10 +19,10 @@ namespace tmpc
 	/**
 	 * \brief Implements an MPC controller with realtime iteration scheme.
 	 *
-	 * \tparam <K> Class implementing the Kernel concept
+	 * \tparam <Scalar> Scalar type
 	 * \tparam <D> Class defining problem dimensions
 	 */
-	template <typename K, typename D, typename OCP, typename QPSolver_>
+	template <typename Scalar, typename D, typename OCP, typename QPSolver_>
 	class RealtimeIteration
 	{
 		static auto constexpr NX = D::NX;
@@ -64,7 +63,7 @@ namespace tmpc
 				throw std::logic_error("RealtimeIteration::Feedback(): RTI is not prepared.");
 
 			/** embed current initial value */
-			auto const w0 = K::eval(x0 - work_.workingPoint_.get_x(0));
+			auto const w0 = eval(x0 - work_.workingPoint_.get_x(0));
 			work_.qp_.set_x_min(0, w0);
 			work_.qp_.set_x_max(0, w0);
 
@@ -122,9 +121,9 @@ namespace tmpc
 		}
 
 		// TODO: change LevenbergMarquardt to be an argument of Preparation()?
-		typename K::Scalar getLevenbergMarquardt() const { return work_.levenbergMarquardt_; }
+		Scalar getLevenbergMarquardt() const { return work_.levenbergMarquardt_; }
 
-		void setLevenbergMarquardt(typename K::Scalar val)
+		void setLevenbergMarquardt(Scalar val)
 		{
 			if (_prepared)
 				throw std::logic_error("RealtimeIteration::setLevenbergMarquardt(): RTI must not be prepared when setting LevenbergMarquardt.");
@@ -214,22 +213,22 @@ namespace tmpc
 
 			template <typename Matrix>
 			void set_Q(Matrix const &Q)	{
-				work_.qp_.set_Q(i_, Q + work_.levenbergMarquardt_ * identity<Matrix>());	// Adding Levenberg-Marquardt term to make H positive-definite.
+				work_.qp_.set_Q(i_, Q + DiagonalMatrix<StaticMatrix<double, NX, NX>>(work_.levenbergMarquardt_));	// Adding Levenberg-Marquardt term to make H positive-definite.
 			}
 
 			template <typename Matrix>
 			void set_R(Matrix const &R) {
-				work_.qp_.set_R(i_, R + work_.levenbergMarquardt_ * identity<Matrix>());	// Adding Levenberg-Marquardt term to make H positive-definite.
+				work_.qp_.set_R(i_, R + DiagonalMatrix<StaticMatrix<double, NU, NU>>(work_.levenbergMarquardt_));	// Adding Levenberg-Marquardt term to make H positive-definite.
 			}
 
 			template <typename Matrix>
-			void set_R(typename K::size_t i, typename K::size_t j, Matrix const &R)
+			void set_R(size_t i, size_t j, Matrix const &R)
 			{
-				auto constexpr M = K::template rows<Matrix>();
-				auto constexpr N = K::template cols<Matrix>();
+				auto constexpr M = Rows<Matrix>::value;
+				auto constexpr N = Columns<Matrix>::value;
 
-				auto const I = K::template identity<D::NU, D::NU>();
-				work_.qp_.set_R(i_, i, j, R + work_.levenbergMarquardt_ * K::template block<M, N>(I, i, j));
+				auto const I = DiagonalMatrix<StaticMatrix<double, D::NU, D::NU>>(1.);
+				work_.qp_.set_R(i_, i, j, R + work_.levenbergMarquardt_ * submatrix(I, i, j, M, N));
 										   // ^ Adding Levenberg-Marquardt term to make H positive-definite.
 			}
 
@@ -237,7 +236,7 @@ namespace tmpc
 			void set_S(Matrix const &S) { work_.qp_.set_S(i_, S); }
 
 			template <typename Matrix>
-			void set_S(typename K::size_t i, typename K::size_t j, Matrix const &S)
+			void set_S(size_t i, size_t j, Matrix const &S)
 			{
 				work_.qp_.set_S(i_, i, j, S);
 			}
@@ -249,7 +248,7 @@ namespace tmpc
 			void set_r(Vector const &r) { work_.qp_.set_r(i_, r); }
 
 			template <typename Vector>
-			void set_r(typename K::size_t i, Vector const &r)
+			void set_r(size_t i, Vector const &r)
 			{
 				work_.qp_.set_r(i_, i, r);
 			}
@@ -261,7 +260,7 @@ namespace tmpc
 			void set_B(Matrix const &B) { work_.qp_.set_B(i_, B); }
 
 			template <typename Matrix>
-			void set_B(typename K::size_t i, typename K::size_t j, Matrix const &B)
+			void set_B(size_t i, size_t j, Matrix const &B)
 			{
 				work_.qp_.set_B(i_, i, j, B);
 			}
@@ -299,7 +298,7 @@ namespace tmpc
 			}
 
 			template <typename Vector>
-			void set_u_min(typename K::size_t i, Vector const& u_min)
+			void set_u_min(size_t i, Vector const& u_min)
 			{
 				work_.lowerBound_.set_u(i_, i, u_min);
 			}
@@ -311,7 +310,7 @@ namespace tmpc
 			}
 
 			template <typename Vector>
-			void set_u_max(typename K::size_t i, Vector const& u_max)
+			void set_u_max(size_t i, Vector const& u_max)
 			{
 				work_.upperBound_.set_u(i_, i, u_max);
 			}
@@ -363,7 +362,7 @@ namespace tmpc
 			// TODO: Isn't it more flexible and clear to add Lev-Mar in the OCP?
 			template <typename Matrix>
 			void set_Q(Matrix const &Q)	{
-				work_.qp_.set_Q(get_index(), Q + work_.levenbergMarquardt_ * identity<Matrix>());	// Adding Levenberg-Marquardt term to make H positive-definite.
+				work_.qp_.set_Q(get_index(), Q + DiagonalMatrix<StaticMatrix<double, NX, NX>>(work_.levenbergMarquardt_));	// Adding Levenberg-Marquardt term to make H positive-definite.
 			}
 
 			decltype(auto) get_Q() const
@@ -406,41 +405,41 @@ namespace tmpc
 		 */
 		void SetQpNaN()
 		{
-			auto constexpr nan = std::numeric_limits<typename K::Scalar>::signaling_NaN();
+			auto constexpr nan = std::numeric_limits<Scalar>::signaling_NaN();
 			auto& qp = work_.qp_;
 
 			for (unsigned i = 0; i < nT(); ++i)
 			{
-				qp.set_Q(i, K::template constant<D::NX, D::NX>(nan));
-				qp.set_R(i, K::template constant<D::NU, D::NU>(nan));
-				qp.set_S(i, K::template constant<D::NX, D::NU>(nan));
-				qp.set_q(i, K::template constant<D::NX>(nan));
-				qp.set_r(i, K::template constant<D::NU>(nan));
+				qp.set_Q(i, nan);
+				qp.set_R(i, nan);
+				qp.set_S(i, nan);
+				qp.set_q(i, nan);
+				qp.set_r(i, nan);
 
-				qp.set_A(i, K::template constant<D::NX, D::NX>(nan));
-				qp.set_B(i, K::template constant<D::NX, D::NU>(nan));
+				qp.set_A(i, nan);
+				qp.set_B(i, nan);
 
-				qp.set_x_min(i, K::template constant<D::NX>(nan));
-				qp.set_x_max(i, K::template constant<D::NX>(nan));
-				qp.set_u_min(i, K::template constant<D::NU>(nan));
-				qp.set_u_max(i, K::template constant<D::NU>(nan));
+				qp.set_x_min(i, nan);
+				qp.set_x_max(i, nan);
+				qp.set_u_min(i, nan);
+				qp.set_u_max(i, nan);
 
-				qp.set_C(i, K::template constant<D::NC, D::NX>(nan));
-				qp.set_D(i, K::template constant<D::NC, D::NU>(nan));
+				qp.set_C(i, nan);
+				qp.set_D(i, nan);
 
-				qp.set_d_min(i, K::template constant<D::NC>(nan));
-				qp.set_d_max(i, K::template constant<D::NC>(nan));
+				qp.set_d_min(i, nan);
+				qp.set_d_max(i, nan);
 			}
 
-			set_Q_end(qp, K::template constant<D::NX, D::NX>(nan));
-			set_q_end(qp, K::template constant<D::NX>(nan));
+			set_Q_end(qp, nan);
+			set_q_end(qp, nan);
 
-			set_x_end_min(qp, K::template constant<D::NX>(nan));
-			set_x_end_max(qp, K::template constant<D::NX>(nan));
+			set_x_end_min(qp, nan);
+			set_x_end_max(qp, nan);
 
-			qp.set_C_end(K::template constant<D::NCT, D::NX>(nan));
-			qp.set_d_end_min(K::template constant<D::NCT>(nan));
-			qp.set_d_end_max(K::template constant<D::NCT>(nan));
+			qp.set_C_end(nan);
+			qp.set_d_end_min(nan);
+			qp.set_d_end_max(nan);
 		}
 
 		// Uses ocp_ to initialize _QP based on current working point workingPoint_.
@@ -474,7 +473,7 @@ namespace tmpc
 			// Error catching: check if we have any unexpected NaNs of infs in QP after update.
 
 			std::vector<std::string> messages;
-			qp::diagnose<K>(work_.qp_, std::back_inserter(messages));
+			qp::diagnose(work_.qp_, std::back_inserter(messages));
 
 			if (!messages.empty())
 			{
@@ -490,7 +489,7 @@ namespace tmpc
 		/// \brief Internal work data structure.
 		struct Work
 		{
-			typename K::Scalar levenbergMarquardt_ = 0.;
+			Scalar levenbergMarquardt_ = 0.;
 
 			/// \brief The working point (linearization point).
 			WorkingPoint workingPoint_;
@@ -507,11 +506,11 @@ namespace tmpc
 			Work(WorkingPoint const& working_point)
 			:	workingPoint_(working_point)
 			,	lowerBound_(working_point.nT(),
-					K::template constant<D::NX>(-inf_),
-					K::template constant<D::NU>(-inf_))
+					StaticVector<Scalar, D::NX>(-inf_),
+					StaticVector<Scalar, D::NU>(-inf_))
 			,	upperBound_(working_point.nT(),
-					K::template constant<D::NX>( inf_),
-					K::template constant<D::NU>( inf_))
+					StaticVector<Scalar, D::NX>( inf_),
+					StaticVector<Scalar, D::NU>( inf_))
 			,	qp_(working_point.nT())
 			{
 			}
@@ -526,6 +525,6 @@ namespace tmpc
 		// Preparation() sets this flag to true, Feedback() resets it to false.
 		bool _prepared;
 
-		static auto constexpr inf_ = std::numeric_limits<typename K::Scalar>::infinity();
+		static auto constexpr inf_ = std::numeric_limits<Scalar>::infinity();
 	};
 }

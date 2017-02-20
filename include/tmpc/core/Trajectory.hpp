@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Eigen/Dense>
+#include <tmpc/Matrix.hpp>
 
 #include <stdexcept>
 #include <vector>
@@ -11,10 +11,10 @@ namespace tmpc
 	class Trajectory
 	{
 	public:
-		typedef Eigen::Matrix<double, NX, 1> StateVector;
-		typedef Eigen::Matrix<double, NU, 1> InputVector;
-		typedef Eigen::Matrix<double, NW, 1> DisturbanceVector;
-		typedef Eigen::Matrix<double, NY, 1> MeasurementVector;
+		typedef StaticVector<double, NX> StateVector;
+		typedef StaticVector<double, NU> InputVector;
+		typedef StaticVector<double, NW> DisturbanceVector;
+		typedef StaticVector<double, NY> MeasurementVector;
 
 		/**
 		 * \brief Default constructor.
@@ -36,7 +36,7 @@ namespace tmpc
 		: x_(n + 1, x), u_(n, u), w_(n, w), y_(n, y) {}
 
 		StateVector const& get_x(std::size_t i) const { return x_.at(i); }
-		template <typename Matrix> void set_x(std::size_t i, Eigen::MatrixBase<Matrix> const& val) { x_.at(i) = val; }
+		template <typename Matrix> void set_x(std::size_t i, Matrix const& val) { x_.at(i) = val; }
 
 		/**
 		 * \brief Get input value at stage k
@@ -50,7 +50,7 @@ namespace tmpc
 		 * \brief Set input value at stage k
 		 */
 		template <typename Vector>
-		void set_u(std::size_t k, Eigen::MatrixBase<Vector> const& val)
+		void set_u(std::size_t k, Vector const& val)
 		{
 			u_.at(k) = val;
 		}
@@ -59,16 +59,16 @@ namespace tmpc
 		 * \brief Set part of input value at stage k starting from element i
 		 */
 		template <typename Vector>
-		void set_u(std::size_t k, unsigned i, Eigen::MatrixBase<Vector> const& val)
+		void set_u(std::size_t k, unsigned i, Vector const& val)
 		{
-			u_.at(k).template middleRows<Vector::RowsAtCompileTime>(i) = val;
+			subvector(u_.at(k), i, val.size()) = val;
 		}
 
 		DisturbanceVector const& get_w(std::size_t i) const { return w_.at(i); }
-		template <typename Matrix> void set_w(std::size_t i, Eigen::MatrixBase<Matrix> const& val) { w_.at(i) = val; }
+		template <typename Matrix> void set_w(std::size_t i, Matrix const& val) { w_.at(i) = val; }
 
 		MeasurementVector const& get_y(std::size_t i) const { return y_.at(i); }
-		template <typename Matrix> void set_y(std::size_t i, Eigen::MatrixBase<Matrix> const& val) { y_.at(i) = val; }
+		template <typename Matrix> void set_y(std::size_t i, Matrix const& val) { y_.at(i) = val; }
 
 		std::size_t nT() const { return u_.size(); }
 

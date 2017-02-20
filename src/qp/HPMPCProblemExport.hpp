@@ -1,12 +1,10 @@
 #pragma once
 
-#include "qp/qp.hpp"
-
 #include <ostream>
 #include <string>
 #include <type_traits>
-
-#include <Eigen/Dense>
+#include <algorithm>
+#include <iterator>
 
 namespace hpmpc_problem_export
 {
@@ -121,7 +119,7 @@ namespace hpmpc_problem_export
 		void print(std::string const& name, T const * val, std::size_t n)
 		{
 			_os << assignment(name);
-			print(Eigen::Map<Eigen::Matrix<T, Eigen::Dynamic, 1> const>(val, n));
+			std::copy_n(val, n, std::ostream_iterator<T>(_os, ", "));
 			_os << eol();
 		}
 
@@ -129,7 +127,7 @@ namespace hpmpc_problem_export
 		void print(std::string const& name, std::size_t i, T const * val, std::size_t n)
 		{
 			_os << assignment(name, i);
-			print(Eigen::Map<Eigen::Matrix<T, Eigen::Dynamic, 1> const>(val, n));
+			std::copy_n(val, n, std::ostream_iterator<T>(_os, ", "));
 			_os << eol();
 		}
 
@@ -137,13 +135,16 @@ namespace hpmpc_problem_export
 		void print(std::string const& name, std::size_t i, T const * val, std::size_t m, std::size_t n)
 		{
 			_os << assignment(name, i);
-			print(Eigen::Map<Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> const>(val, m, n));
-			_os << eol();
+			for (std::size_t i = 0; i < m; ++i)
+			{
+				std::copy_n(val + i * n, n, std::ostream_iterator<T>(_os, ", "));
+				_os << eol();
+			}
 		}
 
 	private:
 		template <typename Matrix>
-		void print(Eigen::MatrixBase<Matrix> const& m)
+		void print(Matrix const& m)
 		{
 			if (m.rows() > 0 && m.cols() > 0)
 			{

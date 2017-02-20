@@ -50,57 +50,21 @@ namespace tmpc
 	/**
 	 * \brief Multistage QP solver using qpOASES
 	 *
-	 * \tparam <K> Class implementing the Kernel concept
-	 * \tparam <D> Class defining problem dimensions
+	 * \tparam <Scalar_> Scalar type
 	 */
-	template <typename K, typename D>
+	template <typename Scalar_, typename D>
 	class HPMPCSolver
 	{
-		static auto constexpr NX = D::NX;
-		static auto constexpr NU = D::NU;
-		static auto constexpr NZ = D::NX + D::NU;
-		static auto constexpr NC = D::NC;
-		static auto constexpr NCT = D::NCT;
-
-		typedef typename K::Scalar Scalar;
+		typedef Scalar_ Scalar;
 
 	public:
 
-		typedef HPMPCProblem<NX, NU, NC, NCT> Problem;
+		typedef HPMPCProblem<double> Problem;
 		typedef HPMPCSolution<NX, NU, NC, NCT> Solution;
 
-		HPMPCSolver(std::size_t nt, int max_iter = 100)
-		:	_nx(nt + 1, NX)
-		,	_nu(nt + 1, NU)
-		,	_nb(nt + 1, NU + NX)
-		,	_ng(nt + 1, NC)
-		,	_stat(max_iter)
-		,	stageBounds_(nt)
-		,	lb_(nt + 1)
-		,	ub_(nt + 1)
-		,	lg_(nt + 1)
-		,	ug_(nt + 1)
+		HPMPCSolver(int max_iter = 100)
+		:	_stat(max_iter)
 		{
-			_nu.back() = 0;
-			_nb.back() = NX;
-			_ng.back() = NCT;
-
-			for (std::size_t i = 0; i < nt; ++i)
-			{
-				lb_[i] = stageBounds_[i].lb.data();
-				ub_[i] = stageBounds_[i].ub.data();
-				lg_[i] = stageBounds_[i].lg.data();
-				ug_[i] = stageBounds_[i].ug.data();
-			}
-
-			lb_.back() = terminalStageBounds_.lb.data();
-			ub_.back() = terminalStageBounds_.ub.data();
-			lg_.back() = terminalStageBounds_.lg.data();
-			ug_.back() = terminalStageBounds_.ug.data();
-
-			// Allocate workspace
-			_workspace.resize(hpmpc_wrapper::d_ip_ocp_hard_tv_work_space_size_bytes(
-					static_cast<int>(nt), _nx.data(), _nu.data(), _nb.data(), _ng.data()));
 		}
 
 		/**
@@ -115,57 +79,22 @@ namespace tmpc
 		 *
 		 * Move-construction is ok.
 		 */
-		HPMPCSolver(HPMPCSolver&& rhs)
-		:	_nx(std::move(rhs._nx))
-		,	_nu(std::move(rhs._nu))
-		,	_nb(std::move(rhs._nb))
-		,	_ng(std::move(rhs._ng))
-		,	_workspace(std::move(rhs._workspace))
-		,	_stat(std::move(rhs._stat))
-		,	_mu0(rhs._mu0)
-		,	_muTol(rhs._muTol)
-		,	_warmStart(rhs._warmStart)
-		,	infinity_(rhs.infinity_)
-		,	stageBounds_(std::move(rhs.stageBounds_))
-		,	terminalStageBounds_(rhs.terminalStageBounds_)
-		,	lb_(std::move(rhs.lb_))
-		,	ub_(std::move(rhs.ub_))
-		,	lg_(std::move(rhs.lg_))
-		,	ug_(std::move(rhs.ug_))
-		{
-			lb_.back() = terminalStageBounds_.lb.data();
-			ub_.back() = terminalStageBounds_.ub.data();
-			lg_.back() = terminalStageBounds_.lg.data();
-			ug_.back() = terminalStageBounds_.ug.data();
-		}
+		HPMPCSolver(HPMPCSolver&& rhs) = default;
 
 		HPMPCSolver& operator= (HPMPCSolver const&) = delete;
 		HPMPCSolver& operator= (HPMPCSolver &&) = delete;
 
 		void Solve(Problem const& p, Solution& s)
 		{
-			if (p.nT() != nT())
-				throw std::invalid_argument("HPMPCSolver::Solve(): problem has different number of stages than solver.");
-
-			// Copy problem bounds and replace infinities.
-			for (std::size_t i = 0; i < nT(); ++i)
-			{
-				CopyReplaceInfinity(p.lb_data()[i], stageBounds_[i].lb);
-				CopyReplaceInfinity(p.ub_data()[i], stageBounds_[i].ub);
-				CopyReplaceInfinity(p.lg_data()[i], stageBounds_[i].lg);
-				CopyReplaceInfinity(p.ug_data()[i], stageBounds_[i].ug);
-			}
-
-			CopyReplaceInfinity(p.lb_data()[nT()], terminalStageBounds_.lb);
-			CopyReplaceInfinity(p.ub_data()[nT()], terminalStageBounds_.ub);
-			CopyReplaceInfinity(p.lg_data()[nT()], terminalStageBounds_.lg);
-			CopyReplaceInfinity(p.ug_data()[nT()], terminalStageBounds_.ug);
+			// Make sure we have enough workspace.
+			_workspace.resize(hpmpc_wrapper::d_ip_ocp_hard_tv_work_space_size_bytes(
+					static_cast<int>(p.size()), p.nx_data(), p.nu_data(), p.nb_data(), p.ng_data()));
 
 			// Call HPMPC
 			int num_iter = 0;
 
 			auto const ret = hpmpc_wrapper::c_order_d_ip_ocp_hard_tv(&num_iter, getMaxIter(), _mu0, _muTol, nT(),
-					_nx.data(), _nu.data(), _nb.data(), _ng.data(), _warmStart ? 1 : 0, p.A_data(), p.B_data(), p.b_data(),
+					p.nx_data(), p.nu_data(), p.nb_data(), p.ng_data(), _warmStart ? 1 : 0, p.A_data(), p.B_data(), p.b_data(),
 					p.Q_data(), p.S_data(), p.R_data(), p.q_data(), p.r_data(), lb_.data(), ub_.data(), p.C_data(), p.D_data(),
 					lg_.data(), ug_.data(), s.x_data(), s.u_data(), s.pi_data(), s.lam_data(), s.t_data(), s.inf_norm_res_data(),
 					_workspace.data(), _stat[0].data());
@@ -183,7 +112,6 @@ namespace tmpc
 			_warmStart = false;
 		}
 
-		std::size_t nT() const noexcept { return _nx.size() - 1; }
 		std::size_t getMaxIter() const noexcept { return _stat.size(); }
 
 		double getMuTol() const noexcept { return _muTol; }
@@ -196,60 +124,7 @@ namespace tmpc
 			_muTol = val;
 		}
 
-		/**
-		 * \brief Get value which is used to replace infinities in problem bounds to make HPMPC happy.
-		 */
-		Scalar getInfinity() const
-		{
-			return infinity_;
-		}
-
-		/**
-		 * \brief Set value which is used to replace infinities in problem bounds to make HPMPC happy.
-		 *
-		 * Normal infinity will not, so don't forget to change it to something else if you are going to use infinite bounds!
-		 */
-		void setInfinity(Scalar val)
-		{
-			if (!(val > 0.))
-				throw std::invalid_argument("HPMPCSolver::setInvinity(): infinity must be greater than 0.");
-
-			infinity_ = val;
-		}
-
 	private:
-		template <std::size_t NB, std::size_t NG>
-		struct Bounds
-		{
-			std::array<Scalar, NB> lb;
-			std::array<Scalar, NB> ub;
-			std::array<Scalar, NG> lg;
-			std::array<Scalar, NG> ug;
-		};
-
-		typedef Bounds<NX + NU, NC> StageBounds;
-		typedef Bounds<NX, NCT> TerminalStageBounds;
-
-		template <std::size_t N>
-		void CopyReplaceInfinity(Scalar const * src, std::array<Scalar, N>& dst)
-		{
-			auto const inf = infinity_;
-			std::transform(src, src + N, dst.begin(),
-					[inf] (Scalar x) { return std::isinf(x) ? (x < 0. ? -inf : inf) : x; });
-		}
-
-		// Array of NX sizes
-		std::vector<int> _nx;
-
-		// Array of NU sizes
-		std::vector<int> _nu;
-
-		// Array of NB (bound constraints) sizes
-		std::vector<int> _nb;
-
-		// Array of NG (path constraints) sizes
-		std::vector<int> _ng;
-
 		// Workspace for HPMPC functions
 		std::vector<char> _workspace;
 
@@ -260,26 +135,5 @@ namespace tmpc
 		double _mu0 = 0.;
 		double _muTol = 1e-10;
 		bool _warmStart = false;
-
-		// Value which is used to replace infinities in problem bounds to make HPMPC happy
-		Scalar infinity_ = std::numeric_limits<Scalar>::infinity();
-
-		// Bounds with infinities replaced to be passed to HPMPC
-		std::vector<StageBounds> stageBounds_;
-
-		// Terminal stage bounds with infinities replaced to be passed to HPMPC
-		TerminalStageBounds terminalStageBounds_;
-
-		// Lower state bound pointers passed to HPMPC
-		std::vector<Scalar const *> lb_;
-
-		// Upper state bound pointers passed to HPMPC
-		std::vector<Scalar const *> ub_;
-
-		// Lower constraint bound pointers passed to HPMPC
-		std::vector<Scalar const *> lg_;
-
-		// Upper constraint bound pointers passed to HPMPC
-		std::vector<Scalar const *> ug_;
 	};
 }

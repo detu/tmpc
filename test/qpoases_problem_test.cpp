@@ -15,37 +15,37 @@
 
 #include <array>
 
+using namespace tmpc;
+
 TEST(QpOasesProblemTest, test_MatricesCorrect)
 {
-	tmpc::QpOasesProblem p({tmpc::QpSize(2, 1, 0)});
+	tmpc::QpOasesProblem p({QpSize(2, 1, 0)});
+
+	StaticMatrix<double, 3, 2> x;
 
 	// Test H = [Q, S; S', R]
-	p.set_Q(0, (Eigen::MatrixXd(2, 2) << 1., 2., 2., 1).finished());
-	p.set_R(0, (Eigen::MatrixXd(1, 1) << 3.).finished());
-	p.set_S(0, (Eigen::MatrixXd(2, 1) << 4., 5.).finished());
+	p[0].set_Q(DynamicMatrix<double>({{1., 2.}, {2., 1.}}));
+	p[0].set_R(DynamicMatrix<double>({{3}}));
+	p[0].set_S(DynamicMatrix<double>({{4.}, {5.}}));
 
-	EXPECT_EQ(p.H(),
-		(Eigen::MatrixXd(3, 3) << 1., 2., 4.,
-  							      2., 1., 5.,
-								  4., 5., 3.).finished());
+	EXPECT_EQ(p.H(), DynamicMatrix<double>({
+		{1., 2., 4.},
+		{2., 1., 5.},
+		{4., 5., 3.}
+	}));
 
 	// Test g = [q; r]
-	p.set_q(0, (Eigen::MatrixXd(2, 1) << 6., 7.).finished());
-	p.set_r(0, (Eigen::MatrixXd(1, 1) << 8.).finished());
+	p.set_q(0, DynamicMatrix<double>({{6.}, {7.}}));
+	p.set_r(0, DynamicMatrix<double>({{8.}}));
 
-	EXPECT_EQ(p.g(), (Eigen::MatrixXd(3, 1) << 6., 7., 8.).finished());
+	EXPECT_EQ(p.g(), DynamicMatrix<double>({{6.}, {7.}, {8.}}));
 }
 
 TEST(QpOasesProblemTest, test_MatricesCorrect_1)
 {
-	using tmpc::QpOasesProblem;
-	using tmpc::QpSize;
-	using Eigen::MatrixXd;
-	using Eigen::VectorXd;
-
 	std::array<QpSize, 3> sz = {QpSize(2, 1, 2), QpSize(2, 2, 1), QpSize(3, 1, 3)};
-	auto const total_nx = tmpc::numVariables(sz.begin(), sz.end());
-	auto const total_nc = tmpc::numEqualities(sz.begin(), sz.end()) + tmpc::numInequalities(sz.begin(), sz.end());
+	auto const total_nx = numVariables(sz.begin(), sz.end());
+	auto const total_nc = numEqualities(sz.begin(), sz.end()) + numInequalities(sz.begin(), sz.end());
 
 	QpOasesProblem p(sz.begin(), sz.end());
 
@@ -58,33 +58,33 @@ TEST(QpOasesProblemTest, test_MatricesCorrect_1)
 		QpSize const sz = stage->size();
 
 		{
-			auto tmp = MatrixXd::Random(sz.nx(), sz.nx()).eval();
-			stage->set_Q(tmp.transpose() * tmp);
+			auto tmp = Rand<DynamicMatrix<double>>(sz.nx(), sz.nx()).generate();
+			stage->set_Q(trans(tmp) * tmp);
 		}
 
 		{
-			auto tmp = MatrixXd::Random(sz.nu(), sz.nu()).eval();
-			stage->set_R(tmp.transpose() * tmp);
+			auto tmp = Rand<DynamicMatrix<double>>(sz.nu(), sz.nu()).generate();
+			stage->set_R(trans(tmp) * tmp);
 		}
 
-		stage->set_S(MatrixXd::Random(sz.nx(), sz.nu()));
-		stage->set_q(VectorXd::Random(sz.nx()));
-		stage->set_r(VectorXd::Random(sz.nu()));
-		stage->set_lbx(VectorXd::Random(sz.nx()));
-		stage->set_ubx(VectorXd::Random(sz.nx()));
-		stage->set_lbu(VectorXd::Random(sz.nu()));
-		stage->set_ubu(VectorXd::Random(sz.nu()));
+		stage->set_S(Rand<DynamicMatrix<double>>(sz.nx(), sz.nu()).generate());
+		stage->set_q(Rand<DynamicVector<double>>(sz.nx()).generate());
+		stage->set_r(Rand<DynamicVector<double>>(sz.nu()).generate());
+		stage->set_lbx(Rand<DynamicVector<double>>(sz.nx()).generate());
+		stage->set_ubx(Rand<DynamicVector<double>>(sz.nx()).generate());
+		stage->set_lbu(Rand<DynamicVector<double>>(sz.nu()).generate());
+		stage->set_ubu(Rand<DynamicVector<double>>(sz.nu()).generate());
 
 		if (stage + 1 != p.end())
 		{
-			stage->set_A(MatrixXd::Random((stage + 1)->size().nx(), sz.nx()));
-			stage->set_B(MatrixXd::Random((stage + 1)->size().nx(), sz.nu()));
+			stage->set_A(Rand<DynamicMatrix<double>>((stage + 1)->size().nx(), sz.nx()).generate());
+			stage->set_B(Rand<DynamicMatrix<double>>((stage + 1)->size().nx(), sz.nu()).generate());
 		}
 
-		stage->set_C(MatrixXd::Random(sz.nc(), sz.nx()));
-		stage->set_D(MatrixXd::Random(sz.nc(), sz.nu()));
-		stage->set_lbd(VectorXd::Random(sz.nc()));
-		stage->set_ubd(VectorXd::Random(sz.nc()));
+		stage->set_C(Rand<DynamicMatrix<double>>(sz.nc(), sz.nx()).generate());
+		stage->set_D(Rand<DynamicMatrix<double>>(sz.nc(), sz.nu()).generate());
+		stage->set_lbd(Rand<DynamicVector<double>>(sz.nc()).generate());
+		stage->set_ubd(Rand<DynamicVector<double>>(sz.nc()).generate());
 	}
 
 	/*
@@ -97,7 +97,11 @@ TEST(QpOasesProblemTest, test_MatricesCorrect_1)
 	std::cout << "p.ubA() = " << std::endl << p.ubA() << std::endl;
 	*/
 
-	EXPECT_EQ(print_wrap(p.H()), print_wrap((MatrixXd(total_nx, total_nx) <<
+	// How is the progress in implementing concatenation views in Blaze?
+	// https://bitbucket.org/blaze-lib/blaze/issues/44/more-views-concatenation-index-lists
+
+	/*
+	EXPECT_EQ(print_wrap(p.H()), print_wrap((MatrixXd <<
 		p[0].get_Q(),             p[0].get_S(),              MatrixXd::Zero(sz[0].nx(), sz[1].nx() + sz[1].nu()), MatrixXd::Zero(sz[0].nx(), sz[2].nx() + sz[2].nu()),
 		p[0].get_S().transpose(), p[0].get_R(),              MatrixXd::Zero(sz[0].nu(), sz[1].nx() + sz[1].nu()), MatrixXd::Zero(sz[0].nu(), sz[2].nx() + sz[2].nu()),
 		MatrixXd::Zero(sz[1].nx(), sz[0].nx() + sz[0].nu()), p[1].get_Q(),             p[1].get_S(),              MatrixXd::Zero(sz[1].nx(), sz[2].nx() + sz[2].nu()),
@@ -105,11 +109,31 @@ TEST(QpOasesProblemTest, test_MatricesCorrect_1)
 		MatrixXd::Zero(sz[2].nx(), sz[0].nx() + sz[0].nu()), MatrixXd::Zero(sz[2].nx(), sz[1].nx() + sz[1].nu()), p[2].get_Q(),	            p[2].get_S(),
 		MatrixXd::Zero(sz[2].nu(), sz[0].nx() + sz[0].nu()), MatrixXd::Zero(sz[2].nu(), sz[1].nx() + sz[1].nu()), p[2].get_S().transpose(),	p[2].get_R()
 	).finished()));
+	*/
+	DynamicMatrix<double> H_expected(total_nx, total_nx, 0.);
+	submatrix(H_expected,  0, 0, 2, 2) =       p[0].get_Q();	submatrix(H_expected,  0,  2, 2, 1) = p[0].get_S();
+	submatrix(H_expected,  2, 0, 1, 2) = trans(p[0].get_S());	submatrix(H_expected,  2,  2, 1, 1) = p[0].get_R();
+	submatrix(H_expected,  3, 3, 2, 2) =       p[1].get_Q();	submatrix(H_expected,  3,  5, 2, 2) = p[1].get_S();
+	submatrix(H_expected,  5, 3, 2, 2) = trans(p[1].get_S());	submatrix(H_expected,  5,  5, 2, 2) = p[1].get_R();
+	submatrix(H_expected,  7, 7, 3, 3) =       p[2].get_Q();	submatrix(H_expected,  7, 10, 3, 1) = p[2].get_S();
+	submatrix(H_expected, 10, 7, 1, 3) = trans(p[2].get_S());	submatrix(H_expected, 10, 10, 1, 1) = p[2].get_R();
 
+	EXPECT_EQ(print_wrap(p.H()), print_wrap(H_expected));
+
+	/*
 	EXPECT_EQ(print_wrap(p.g()), print_wrap((VectorXd(total_nx) <<
 		p.get_q(0), p.get_r(0), p.get_q(1), p.get_r(1), p.get_q(2), p.get_r(2)
 	).finished()));
+	*/
+	DynamicVector<double> g_expected(total_nx);
+	subvector(g_expected, 0, 2) = p[0].get_q();	subvector(g_expected,  2, 1) = p[0].get_r();
+	subvector(g_expected, 3, 2) = p[1].get_q();	subvector(g_expected,  5, 2) = p[1].get_r();
+	subvector(g_expected, 7, 3) = p[2].get_q();	subvector(g_expected, 10, 1) = p[2].get_r();
 
+	EXPECT_EQ(print_wrap(p.g()), print_wrap(g_expected));
+
+
+	// *** CONTINUE HERE!!! ***
 	EXPECT_EQ(print_wrap(p.lb()), print_wrap((VectorXd(total_nx) <<
 		p[0].get_lbx(), p[0].get_lbu(), p[1].get_lbx(), p[1].get_lbu(), p[2].get_lbx(), p[2].get_lbu()
 	).finished()));

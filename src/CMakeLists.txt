@@ -6,10 +6,10 @@
 set(TMPC_INCLUDE_DIR ${PROJECT_INCLUDE_DIR}/tmpc)
 
 set (SRC
+    ${TMPC_INCLUDE_DIR}/Matrix.hpp
     ${TMPC_INCLUDE_DIR}/core/RealtimeIteration.hpp    rti/RealtimeIteration.cpp
     ${TMPC_INCLUDE_DIR}/core/Trajectory.hpp
     ${TMPC_INCLUDE_DIR}/core/gauss_newton.hpp
-    ${TMPC_INCLUDE_DIR}/core/matrix.hpp
     ${TMPC_INCLUDE_DIR}/core/problem_specific.hpp
 
 	${TMPC_INCLUDE_DIR}/casadi_interface/GeneratedFunction.hpp
@@ -42,12 +42,6 @@ target_include_directories(tmpc
     PRIVATE ${TMPC_INCLUDE_DIR}
     PUBLIC ${PROJECT_INCLUDE_DIR}
 )
-
-if (EIGEN3_FOUND)
-    target_sources(tmpc
-        PUBLIC ${TMPC_INCLUDE_DIR}/kernel/eigen.hpp
-    )
-endif()
 
 #
 # Add qpDUNES interface

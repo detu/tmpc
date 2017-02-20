@@ -1,7 +1,5 @@
 #pragma once
 
-#include "qp.hpp"
-
 #include <ostream>
 
 namespace tmpc
@@ -46,6 +44,8 @@ namespace tmpc
 	template <typename QP>
 	inline void PrintMultistageQpMatlab(std::ostream& os, QP const& qp_, const std::string& var_name)
 	{
+		throw std::logic_error("PrintMultistageQpMatlab() not implemented");
+		/*
 		using std::endl;
 
 		QP const& qp = static_cast<QP const&>(qp_);
@@ -75,6 +75,7 @@ namespace tmpc
 
 		os << var_name << ".zMin{" << qp.nT() + 1 << "} = " << AsMatlab(get_x_end_min(qp)) << ";" << endl;
 		os << var_name << ".zMax{" << qp.nT() + 1 << "} = " << AsMatlab(get_x_end_max(qp)) << ";" << endl;
+		*/
 	}
 
 	/**

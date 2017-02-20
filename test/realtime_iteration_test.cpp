@@ -2,15 +2,15 @@
 #include <tmpc/qp/CondensingSolver.hpp>
 #include <tmpc/qp/HPMPCSolver.hpp>
 #include <tmpc/integrator/rk4.hpp>
-#include <tmpc/kernel/eigen.hpp>
+#include <tmpc/Matrix.hpp>
 #include <tmpc/core/problem_specific.hpp>
-
-#include <Eigen/Dense>
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
 #include <type_traits>
+
+using namespace tmpc;
 
 struct Dimensions
 {
@@ -23,10 +23,7 @@ struct Dimensions
 	static unsigned const NCT = 0;
 };
 
-// Define a kernel
-typedef tmpc::EigenKernel<double> K;
-
-typedef tmpc::ProblemSpecific<K, Dimensions> PS;
+typedef tmpc::ProblemSpecific<double, Dimensions> PS;
 
 // An empty class for ODE, since we provide the discrete-time dynamics ourselves.
 struct ODE
@@ -42,24 +39,24 @@ public:
 	static unsigned const NC  = 0;
 	static unsigned const NCT = 0;
 
-	typedef K::Vector<NX> StateVector;
-	typedef K::Vector<NU> InputVector;
+	typedef StaticVector<double, NX> StateVector;
+	typedef StaticVector<double, NU> InputVector;
 
 	SampleOCP(std::size_t nt)
 	:	nt_(nt)
 	{
-		A << 1.,  1.,
-			 0.,  1.;
+		A = {{1.,  1.},
+			 {0.,  1.}};
 
-		B << 0.5,
-			 1. ;
+		B = {{0.5},
+			 {1. }};
 
-		_x_min << -1., -1.;
-		_x_max <<  1.,  1.;
-		_u_min << -1.;
-		_u_max <<  1.;
-		_x_terminal_min << -1., -1.;
-		_x_terminal_max <<  1.,  1.;
+		_x_min = {-1., -1.};
+		_x_max = { 1.,  1.};
+		_u_min = {-1.};
+		_u_max = { 1.};
+		_x_terminal_min = {-1., -1.};
+		_x_terminal_max = { 1.,  1.};
 	}
 
 	// TODO: Move this property to RealtimeIteration?
@@ -77,22 +74,23 @@ public:
 	template <typename Stage>
 	void InitStage(Stage& stage) const
 	{
-		K::Matrix<NX, NX> Q;
-		Q << 66,  78,
-			 78,  93;
+		StaticMatrix<double, NX, NX> Q {
+			{66,  78},
+			{78,  93}
+		};
 
-		K::Matrix<NU, NU> R;
-		R << 126;
+		StaticMatrix<double, NU, NU> R {
+			{126}
+		};
 
-		K::Matrix<NX, NU> S;
-		S << 90,
-			108;
+		StaticMatrix<double, NX, NU> S {
+			{90},
+			{108}
+		};
 
-		K::Vector<NX> q;
-		q << 0., 0.;
+		StaticVector<double, NX> q {0., 0.};
 
-		K::Vector<NU> r;
-		r << 0.;
+		StaticVector<double, NU> r {0.};
 
 		stage.set_Q(Q);
 		stage.set_R(R);
@@ -119,12 +117,12 @@ public:
 	template <typename Stage>
 	void InitTerminalStage(Stage& stage) const
 	{
-		K::Matrix<NX, NX> H;
-		H << 10, 14,
-			 14, 20;
+		StaticMatrix<double, NX, NX> H {
+			{10, 14},
+			{14, 20}
+		};
 
-		K::Vector<NX> g;
-		g << 0, 0;
+		StaticVector<double, NX> g {0, 0};
 
 		stage.set_Q(H);
 		stage.set_q(g);
@@ -159,8 +157,8 @@ private:
 	InputVector _u_min;
 	InputVector _u_max;
 
-	K::Matrix<NX, NX> A;
-	K::Matrix<NX, NU> B;
+	StaticMatrix<double, NX, NX> A;
+	StaticMatrix<double, NX, NU> B;
 };
 
 typedef SampleOCP OCP;
@@ -172,7 +170,7 @@ public:
 	RealtimeIterationTest(unsigned Nt = 2)
 	:	_ocp(Nt)
 	,	_qpSolver(Nt)
-	,	_rti(_ocp, _qpSolver, WorkingPoint(Nt, OCP::StateVector::Zero(), OCP::InputVector::Zero()))
+	,	_rti(_ocp, _qpSolver, WorkingPoint(Nt, OCP::StateVector(0.), OCP::InputVector(0.)))
 	{
 	}
 
@@ -198,8 +196,8 @@ protected:
 
 typedef ::testing::Types<
 		// TODO: make Solver a template template parameter of RealtimeIteration?
-		tmpc::RealtimeIteration<K, Dimensions, OCP, tmpc::CondensingSolver<K, Dimensions>>
-,		tmpc::RealtimeIteration<K, Dimensions, OCP, tmpc::HPMPCSolver     <K, Dimensions>>
+		tmpc::RealtimeIteration<K, Dimensions, OCP, tmpc::CondensingSolver<double, Dimensions>>
+,		tmpc::RealtimeIteration<K, Dimensions, OCP, tmpc::HPMPCSolver     <double, Dimensions>>
 	> RTITypes;
 
 TYPED_TEST_CASE(RealtimeIterationTest, RTITypes);
@@ -213,13 +211,12 @@ TYPED_TEST(RealtimeIterationTest, DISABLED_GivesCorrectU0)
 	{
 		this->Preparation();
 
-		x << 1, 0;
+		x = {1, 0};
 		u = this->Feedback(x);
 
-		PS::InputVector u_expected;
-		u_expected << -0.690877362606266;
+		PS::InputVector u_expected {-0.690877362606266};
 
-		EXPECT_TRUE(u.isApprox(u_expected, 1e-6));
+		EXPECT_PRED2(MatrixApproxEquality(1e-6), u, u_expected);
 	}
 
 	// Step 1
@@ -229,25 +226,25 @@ TYPED_TEST(RealtimeIterationTest, DISABLED_GivesCorrectU0)
 		{
 			PS::StateVector x;
 			PS::InputVector u;
+			MatrixApproxEquality is_approx(1e-6);
 
-			x << 0.654561318696867,	 -0.690877362606266;	u << 0.215679569867116;
-			EXPECT_TRUE(this->_rti.getWorkingPoint().get_x(0).isApprox(x, 1e-6));
-			EXPECT_TRUE(this->_rti.getWorkingPoint().get_u(0).isApprox(u, 1e-6));
+			x = {0.654561318696867,	 -0.690877362606266};	u = {0.215679569867116};
+			EXPECT_PRED2(is_approx, this->_rti.getWorkingPoint().get_x(0), x);
+			EXPECT_PRED2(is_approx, this->_rti.getWorkingPoint().get_u(0), u);
 
-			x << 0.0715237410241597, -0.475197792739149;	u << 0.215679569867116;
-			EXPECT_TRUE(this->_rti.getWorkingPoint().get_x(1).isApprox(x, 1e-6));
-			EXPECT_TRUE(this->_rti.getWorkingPoint().get_u(1).isApprox(u, 1e-6));
+			x = {0.0715237410241597, -0.475197792739149};	u = {0.215679569867116};
+			EXPECT_PRED2(is_approx, this->_rti.getWorkingPoint().get_x(1), x);
+			EXPECT_PRED2(is_approx, this->_rti.getWorkingPoint().get_u(1), u);
 
-			x << 0.0715237410241597, -0.475197792739149;
-			EXPECT_TRUE(this->_rti.getWorkingPoint().get_x(2).isApprox(x, 1e-6));
+			x = {0.0715237410241597, -0.475197792739149};
+			EXPECT_PRED2(is_approx, this->_rti.getWorkingPoint().get_x(2), x);
 		}
 
-		x << 0.654561318696867,	-0.690877362606266;
+		x = {0.654561318696867,	-0.690877362606266};
 		u = this->Feedback(x);
 
-		PS::InputVector u_expected;
-		u_expected << 0.218183;
-		EXPECT_TRUE(u.isApprox(u_expected, 1e-5));
+		PS::InputVector u_expected { 0.218183 };
+		EXPECT_PRED2(MatrixApproxEquality(1e-5), u, u_expected);
 	}
 }
 

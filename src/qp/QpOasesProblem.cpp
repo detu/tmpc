@@ -9,6 +9,8 @@
 #include <numeric>
 #include <limits>
 
+//#include <blaze/math/DiagonalMatrix.h>
+
 namespace tmpc {
 
 static auto constexpr sNaN = std::numeric_limits<QpOasesProblem::Scalar>::signaling_NaN();
@@ -45,13 +47,13 @@ QpOasesProblem::QpOasesProblem(size_type nx, size_type nc)
 
 QpOasesProblem::QpOasesProblem(std::vector<QpSize> const& sz, size_type nx, size_type nc)
 :	size_(sz)
-,	_H(Matrix::Constant(nx, nx, Scalar{0}))
-,	_g(Vector::Constant(nx, sNaN))
-, 	_lb(Vector::Constant(nx, sNaN))
-, 	_ub(Vector::Constant(nx, sNaN))
-, 	_A(Matrix::Constant(nc, nx, Scalar{0}))
-, 	_lbA(Vector::Constant(nc, sNaN))
-, 	_ubA(Vector::Constant(nc, sNaN))
+,	_H(nx, nx, Scalar{0})
+,	_g(nx, sNaN)
+, 	_lb(nx, sNaN)
+, 	_ub(nx, sNaN)
+, 	_A(nc, nx, Scalar{0})
+, 	_lbA(nc, sNaN)
+, 	_ubA(nc, sNaN)
 {
 	if (sz.size() < 1)
 		throw std::invalid_argument("qpOASESProgram(): at least 1 QpSize must be specified");
@@ -74,11 +76,11 @@ QpOasesProblem::QpOasesProblem(std::vector<QpSize> const& sz, size_type nx, size
 		auto const nx_next = (sz + 1)->nx();
 
 		// Assign the -I block in A
-		_A.block(i, j, nx_next, nx_next) = -Matrix::Identity(nx_next, nx_next);
+		submatrix(_A, i, j, nx_next, nx_next) = -DiagonalMatrix<Matrix>(nx_next, 1.);
 
 		// Assign the 0 blocks in lbA and ubA
-		_lbA.segment(i, nx_next).setZero();
-		_ubA.segment(i, nx_next).setZero();
+		subvector(_lbA, i, nx_next) = 0.;
+		subvector(_ubA, i, nx_next) = 0.;
 
 		// Move (i, j) to the top left corner of the next AB block.
 		i += nx_next + sz->nc();
@@ -106,51 +108,64 @@ void QpOasesProblem::InitStages()
 	assert(stage_.empty());
 	stage_.reserve(size_.size());
 
-	std::size_t const stride = nx();
-	Scalar * pH = _H.data();
-	Scalar * pg = _g.data();
-	Scalar * plb = _lb.data();
-	Scalar * pub = _ub.data();
-	Scalar * pA = _A.data();
-	Scalar * plbA = _lbA.data();
-	Scalar * pubA = _ubA.data();
+	std::size_t n = 0;
+	std::size_t na = 0;
 
 	for (auto sz = size_.cbegin(); sz != size_.cend(); ++sz)
 	{
 		auto const nx_next = sz + 1 != size_.end() ? (sz + 1)->nx() : 0;
-		stage_.emplace_back(*sz, nx_next, stride, pH, pg, plb, pub, pA, plbA, pubA);
 
-		pH += (sz->nx() + sz->nu()) * stride + sz->nx() + sz->nu();
-		pg += sz->nx() + sz->nu();
-		plb += sz->nx() + sz->nu();
-		pub += sz->nx() + sz->nu();
-		pA += (nx_next + sz->nc()) * stride + sz->nx() + sz->nu();
-		plbA += nx_next + sz->nc();
-		pubA += nx_next + sz->nc();
+		auto const Q  = submatrix(_H, n           , n           , sz->nx(), sz->nx());
+		auto const S  = submatrix(_H, n           , n + sz->nx(), sz->nx(), sz->nu());
+		auto const ST = submatrix(_H, n + sz->nx(), n           , sz->nu(), sz->nx());
+		auto const R  = submatrix(_H, n + sz->nx(), n + sz->nx(), sz->nu(), sz->nu());
+
+		auto const q   = subvector(_g , n           , sz->nx());
+		auto const r   = subvector(_g , n + sz->nx(), sz->nu());
+		auto const lbx = subvector(_lb, n           , sz->nx());
+		auto const ubx = subvector(_ub, n           , sz->nx());
+		auto const lbu = subvector(_lb, n + sz->nx(), sz->nu());
+		auto const ubu = subvector(_ub, n + sz->nx(), sz->nu());
+
+		auto const A = submatrix(_A, na          , n           , nx_next , sz->nx());
+		auto const B = submatrix(_A, na          , n + sz->nx(), nx_next , sz->nu());
+		auto const C = submatrix(_A, na + nx_next, n           , sz->nc(), sz->nx());
+		auto const D = submatrix(_A, na + nx_next, n + sz->nx(), sz->nc(), sz->nx());
+
+		auto const lbb = subvector(_lbA, na, nx_next);
+		auto const ubb = subvector(_ubA, na, nx_next);
+		auto const lbd = subvector(_lbA, na + nx_next, sz->nc());
+		auto const ubd = subvector(_ubA, na + nx_next, sz->nc());
+
+		stage_.emplace_back(*sz, Q, R, S, ST, q, r, lbx, ubx, lbu, ubu, A, B, lbb, ubb, C, D, lbd, ubd);
+
+		n += sz->nx() + sz->nu();
+		na += nx_next + sz->nc();
 	}
 }
 
-QpOasesProblem::Stage::Stage(QpSize const& sz, std::size_t nx_next, std::size_t stride,
-		Scalar * H, Scalar * g,	Scalar * lb, Scalar * ub, Scalar * A, Scalar * lbA, Scalar * ubA)
+QpOasesProblem::Stage::Stage(QpSize const& sz, SubM const& Q, SubM const& R, SubM const& S, SubM const& ST, SubV const& q, SubV const& r,
+		SubV const& lbx, SubV const& ubx, SubV const& lbu, SubV const& ubu, SubM const& A, SubM const& B, SubV const& lbb, SubV const& ubb,
+		SubM const& C, SubM const& D, SubV const& lbd, SubV const& ubd)
 :	size_(sz)
-,	Q_(H, sz.nx(), sz.nx(), Eigen::OuterStride<>(stride))
-,	R_(H + sz.nx() * stride + sz.nx(), sz.nu(), sz.nu(), Eigen::OuterStride<>(stride))
-,	S_(H + sz.nx(), sz.nx(), sz.nu(), Eigen::OuterStride<>(stride))
-,	ST_(H + sz.nx() * stride, sz.nu(), sz.nx(), Eigen::OuterStride<>(stride))
-,	q_(g, sz.nx())
-,	r_(g + sz.nx(), sz.nu())
-,	lbx_(lb, sz.nx())
-,	ubx_(ub, sz.nx())
-,	lbu_(lb + sz.nx(), sz.nu())
-,	ubu_(ub + sz.nx(), sz.nu())
-,	A_(A, nx_next, sz.nx(), Eigen::OuterStride<>(stride))
-,	B_(A + sz.nx(), nx_next, sz.nu(), Eigen::OuterStride<>(stride))
-,	lbb_(lbA, nx_next)
-,	ubb_(ubA, nx_next)
-,	C_(A + stride * nx_next, sz.nc(), sz.nx(), Eigen::OuterStride<>(stride))
-,	D_(A + stride * nx_next + sz.nx(), sz.nc(), sz.nu(), Eigen::OuterStride<>(stride))
-,	lbd_(lbA + nx_next, sz.nc())
-,	ubd_(ubA + nx_next, sz.nc())
+,	Q_(Q)
+,	R_(R)
+,	S_(S)
+,	ST_(ST)
+,	q_(q)
+,	r_(r)
+,	lbx_(lbx)
+,	ubx_(ubx)
+,	lbu_(lbu)
+,	ubu_(ubu)
+,	A_(A)
+,	B_(B)
+,	lbb_(lbb)
+,	ubb_(ubb)
+,	C_(C)
+,	D_(D)
+,	lbd_(lbd)
+,	ubd_(ubd)
 {
 }
 

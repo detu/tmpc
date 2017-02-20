@@ -8,7 +8,7 @@
 
 #include "QpSize.hpp"
 
-#include <Eigen/Dense>
+#include <tmpc/Matrix.hpp>
 
 #include <vector>
 
@@ -21,7 +21,7 @@ namespace tmpc
 	{
 	public:
 		typedef std::size_t size_type;
-		typedef Eigen::Map<Eigen::VectorXd> VectorMap;
+		typedef CustomVector<double, unaligned, unpadded> VectorMap;
 
 		template <typename InputIt>
 		QpOasesSolution(InputIt sz_begin, InputIt sz_end)
@@ -172,46 +172,47 @@ namespace tmpc
 		VectorMap const& get_pi(std::size_t i) const
 		{
 			return stage(i).get_pi();
+
 		}
 
 		decltype(auto) get_lam_u_min(std::size_t i) const
 		{
-			return stage(i).get_lam_u().array().max(0.).matrix();
+			return forEach(stage(i).get_lam_u(), [] (double d) { return max(d, 0.); });
 		}
 
 		decltype(auto) get_lam_u_max(std::size_t i) const
 		{
-			return -stage(i).get_lam_u().array().min(0.).matrix();
+			return -forEach(stage(i).get_lam_u(), [] (double d) { return min(d, 0.); });
 		}
 
 		decltype(auto) get_lam_x_min(std::size_t i) const
 		{
-			return stage(i).get_lam_x().array().max(0.).matrix();
+			return forEach(stage(i).get_lam_x(), [] (double d) { return max(d, 0.); });
 		}
 
 		decltype(auto) get_lam_x_max(std::size_t i) const
 		{
-			return -stage(i).get_lam_x().array().min(0.).matrix();
+			return -forEach(stage(i).get_lam_x(), [] (double d) { return max(d, 0.); });
 		}
 
 		decltype(auto) get_lam_d_min(std::size_t i) const
 		{
-			return stage(i).get_lam_d().array().max(0.).matrix();
+			return forEach(stage(i).get_lam_d(), [] (double d) { return max(d, 0.); });
 		}
 
 		decltype(auto) get_lam_d_max(std::size_t i) const
 		{
-			return -stage(i).get_lam_d().array().min(0.).matrix();
+			return -forEach(stage(i).get_lam_d(), [] (double d) { return max(d, 0.); });
 		}
 
 		decltype(auto) get_lam_d_end_min() const
 		{
-			return stage_.back().get_lam_d().array().max(0.).matrix();
+			return forEach(stage_.back().get_lam_d(), [] (double d) { return max(d, 0.); });
 		}
 
 		decltype(auto) get_lam_d_end_max() const
 		{
-			return -stage_.back().get_lam_d().array().min(0.).matrix();
+			return -forEach(stage_.back().get_lam_d(), [] (double d) { return max(d, 0.); });
 		}
 
 		/// \brief Get number of iterations performed by the QP solver.
@@ -248,8 +249,8 @@ namespace tmpc
 			return stage_.at(i);
 		}
 
-		Eigen::VectorXd primalSolution_;
-		Eigen::VectorXd dualSolution_;
+		DynamicVector<double> primalSolution_;
+		DynamicVector<double> dualSolution_;
 
 		std::vector<QpSize> size_;
 		std::vector<Stage> stage_;

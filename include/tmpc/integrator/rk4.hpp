@@ -7,9 +7,7 @@
 
 #pragma once
 
-#include <Eigen/Dense>
-
-#include "../core/matrix.hpp"
+#include <tmpc/Matrix.hpp>
 
 namespace tmpc
 {
@@ -39,13 +37,13 @@ namespace tmpc
 		auto constexpr NX = rows<StateVector0_>();
 		auto constexpr NU = rows<InputVector_ >();
 
-		static_assert(rows<StateVector1_>() == NX && cols<StateVector1_>() ==  1, "x_next must be of size NX*1");
-		static_assert(rows<AMatrix      >() == NX && cols<AMatrix      >() == NX, "A must be of size NX*NX"    );
-		static_assert(rows<BMatrix      >() == NX && cols<BMatrix      >() == NU, "B must be of size NX*NU"    );
+		static_assert(Rows<StateVector1_>::value == NX && Columns<StateVector1_>::value ==  1, "x_next must be of size NX*1");
+		static_assert(Rows<AMatrix      >::value == NX && Columns<AMatrix      >::value == NX, "A must be of size NX*NX"    );
+		static_assert(Rows<BMatrix      >::value == NX && Columns<BMatrix      >::value == NU, "B must be of size NX*NU"    );
 
-		typedef Eigen::Matrix<double, NX,  1> StateVector;
-		typedef Eigen::Matrix<double, NX, NX> StateStateMatrix;
-		typedef Eigen::Matrix<double, NX, NU> StateInputMatrix;
+		typedef StaticVector<double, NX> StateVector;
+		typedef StaticMatrix<double, NX, NX> StateStateMatrix;
+		typedef StaticMatrix<double, NX, NU> StateInputMatrix;
 
 		StateVector k1, k2, k3, k4;
 		StateStateMatrix A1, A2, A3, A4;
@@ -66,8 +64,8 @@ namespace tmpc
 		auto const  A3_bar = eval(A3 + (h / 2.) * A3 * A2_bar);	auto const  B3_bar = eval(B3 + (h / 2.) * A3 * B2_bar);
 		auto const  A4_bar =      A4 +  h       * A4 * A3_bar ;	auto const  B4_bar =      B4 +  h       * A4 * B3_bar ;
 
-		A = identity<StateStateMatrix>() + (h / 6.) * (A1_bar + 2. * A2_bar + 2. * A3_bar + A4_bar);
-		B = 					           (h / 6.) * (B1_bar + 2. * B2_bar + 2. * B3_bar + B4_bar);
+		A = DiagonalMatrix<StateStateMatrix>(1.) + (h / 6.) * (A1_bar + 2. * A2_bar + 2. * A3_bar + A4_bar);
+		B = 					                   (h / 6.) * (B1_bar + 2. * B2_bar + 2. * B3_bar + B4_bar);
 	}
 
 	template <typename ODE,
@@ -77,7 +75,7 @@ namespace tmpc
 	void integrate(RK4 const& integrator, ODE const& ode, double t0, InitialStateVector const& x0, InputVector const& u,
 		InitialStateSensitivityVector const& seed_x0, InputSensitivityVector const& seed_u, FinalStateVector& xf, FinalStateSensitivityVector& sens_xf)
 	{
-		Eigen::Matrix<double, rows<InitialStateVector>(),  1> k1, k2, k3, k4, sens_k1, sens_k2, sens_k3, sens_k4;
+		StaticVector<double, Rows<InitialStateVector>::value> k1, k2, k3, k4, sens_k1, sens_k2, sens_k3, sens_k4;
 		auto const h = integrator.timeStep();
 
 		// Calculating next state
@@ -143,24 +141,24 @@ namespace tmpc
 		auto constexpr NU = rows<InputVector_ >();
 		auto constexpr NQ = rows<QuadVector_  >();
 
-		static_assert(rows<StateVector1_   >() == NX && cols<StateVector1_   >() ==  1, "x_next must be of size NX*1");
-		static_assert(rows<AMatrix         >() == NX && cols<AMatrix         >() == NX, "A must be of size NX*NX"    );
-		static_assert(rows<BMatrix         >() == NX && cols<BMatrix         >() == NU, "B must be of size NX*NU"    );
-		static_assert(rows<QuadVector_     >() == NQ && cols<QuadVector_     >() ==  1, "qf must be of size NQ*1"    );
-		static_assert(rows<QuadStateMatrix_>() == NQ && cols<QuadStateMatrix_>() == NX, "qA must be of size NQ*NX"   );
-		static_assert(rows<QuadInputMatrix_>() == NQ && cols<QuadInputMatrix_>() == NU, "qB must be of size NQ*NU"   );
+		static_assert(Rows<StateVector1_   >::value == NX && Columns<StateVector1_   >::value ==  1, "x_next must be of size NX*1");
+		static_assert(Rows<AMatrix         >::value == NX && Columns<AMatrix         >::value == NX, "A must be of size NX*NX"    );
+		static_assert(Rows<BMatrix         >::value == NX && Columns<BMatrix         >::value == NU, "B must be of size NX*NU"    );
+		static_assert(Rows<QuadVector_     >::value == NQ && Columns<QuadVector_     >::value ==  1, "qf must be of size NQ*1"    );
+		static_assert(Rows<QuadStateMatrix_>::value == NQ && Columns<QuadStateMatrix_>::value == NX, "qA must be of size NQ*NX"   );
+		static_assert(Rows<QuadInputMatrix_>::value == NQ && Columns<QuadInputMatrix_>::value == NU, "qB must be of size NQ*NU"   );
 
-		typedef Eigen::Matrix<double, NX,  1> StateVector;
-		typedef Eigen::Matrix<double, NX, NX> StateStateMatrix;
-		typedef Eigen::Matrix<double, NX, NU> StateInputMatrix;
+		typedef StaticVector<double, NX> StateVector;
+		typedef StaticMatrix<double, NX, NX> StateStateMatrix;
+		typedef StaticMatrix<double, NX, NU> StateInputMatrix;
 
 		StateVector k1, k2, k3, k4;
 		StateStateMatrix A1, A2, A3, A4;
 		StateInputMatrix B1, B2, B3, B4;
 
-		Eigen::Matrix<double, NQ,  1> dq1, dq2, dq3, dq4;
-		Eigen::Matrix<double, NQ, NX> qA1, qA2, qA3, qA4;
-		Eigen::Matrix<double, NQ, NU> qB1, qB2, qB3, qB4;
+		StaticVector<double, NQ> dq1, dq2, dq3, dq4;
+		StaticMatrix<double, NQ, NX> qA1, qA2, qA3, qA4;
+		StaticMatrix<double, NQ, NU> qB1, qB2, qB3, qB4;
 		auto const h = integrator.timeStep();
 
 		// Calculating next state and quadrature
@@ -178,8 +176,8 @@ namespace tmpc
 		auto const  A3_bar = eval(A3 + (h / 2.) * A3 * A2_bar);	auto const  B3_bar = eval(B3 + (h / 2.) * A3 * B2_bar);
 		auto const  A4_bar =      A4 +  h       * A4 * A3_bar ;	auto const  B4_bar =      B4 +  h       * A4 * B3_bar ;
 
-		A = identity<StateStateMatrix>() + (h / 6.) * (A1_bar + 2. * A2_bar + 2. * A3_bar + A4_bar);
-		B = 					           (h / 6.) * (B1_bar + 2. * B2_bar + 2. * B3_bar + B4_bar);
+		A = DiagonalMatrix<StateStateMatrix>(1.) + (h / 6.) * (A1_bar + 2. * A2_bar + 2. * A3_bar + A4_bar);
+		B = 					                   (h / 6.) * (B1_bar + 2. * B2_bar + 2. * B3_bar + B4_bar);
 
 		auto const& qA1_bar =      qA1;							    auto const& qB1_bar =      qB1;
 		auto const  qA2_bar = eval(qA2 + (h / 2.) * qA2 * A1_bar);	auto const  qB2_bar = eval(qB2 + (h / 2.) * qA2 * B1_bar);
@@ -230,26 +228,26 @@ namespace tmpc
 		auto constexpr NU = rows<InputVector_ >();
 		auto constexpr NR = ODE::NR;
 
-		static_assert(rows<StateVector1_>() == NX && cols<StateVector1_>() ==  1, "x_next must be of size NX*1");
-		static_assert(rows<AMatrix      >() == NX && cols<AMatrix      >() == NX, "A must be of size NX*NX"    );
-		static_assert(rows<BMatrix      >() == NX && cols<BMatrix      >() == NU, "B must be of size NX*NU"    );
-		static_assert(rows<StateVector2_>() == NX && cols<StateVector2_>() ==  1, "cA must be of size NX*1"    );
-		static_assert(rows<InputVector2_>() == NU && cols<StateVector2_>() ==  1, "cB must be of size NU*1"    );
-		static_assert(rows<QMatrix      >() == NX && cols<QMatrix      >() == NX, "cQ must be of size NX*NX"   );
-		static_assert(rows<RMatrix      >() == NU && cols<RMatrix      >() == NU, "cR must be of size NX*NX"   );
-		static_assert(rows<SMatrix      >() == NX && cols<SMatrix      >() == NU, "cS must be of size NX*NU"   );
+		static_assert(Rows<StateVector1_>::value == NX && Columns<StateVector1_>::value ==  1, "x_next must be of size NX*1");
+		static_assert(Rows<AMatrix      >::value == NX && Columns<AMatrix      >::value == NX, "A must be of size NX*NX"    );
+		static_assert(Rows<BMatrix      >::value == NX && Columns<BMatrix      >::value == NU, "B must be of size NX*NU"    );
+		static_assert(Rows<StateVector2_>::value == NX && Columns<StateVector2_>::value ==  1, "cA must be of size NX*1"    );
+		static_assert(Rows<InputVector2_>::value == NU && Columns<StateVector2_>::value ==  1, "cB must be of size NU*1"    );
+		static_assert(Rows<QMatrix      >::value == NX && Columns<QMatrix      >::value == NX, "cQ must be of size NX*NX"   );
+		static_assert(Rows<RMatrix      >::value == NU && Columns<RMatrix      >::value == NU, "cR must be of size NX*NX"   );
+		static_assert(Rows<SMatrix      >::value == NX && Columns<SMatrix   >::value == NU, "cS must be of size NX*NU"   );
 
-		typedef Eigen::Matrix<double, NX,  1> StateVector;
-		typedef Eigen::Matrix<double, NX, NX> StateStateMatrix;
-		typedef Eigen::Matrix<double, NX, NU> StateInputMatrix;
+		typedef StaticVector<double, NX> StateVector;
+		typedef StaticMatrix<double, NX, NX> StateStateMatrix;
+		typedef StaticMatrix<double, NX, NU> StateInputMatrix;
 
 		StateVector k1, k2, k3, k4;
 		StateStateMatrix A1, A2, A3, A4;
 		StateInputMatrix B1, B2, B3, B4;
 
-		Eigen::Matrix<double, NR,  1>  r1,  r2,  r3,  r4;
-		Eigen::Matrix<double, NR, NX> rA1, rA2, rA3, rA4;
-		Eigen::Matrix<double, NR, NU> rB1, rB2, rB3, rB4;
+		StaticVector<double, NR>  r1,  r2,  r3,  r4;
+		StaticMatrix<double, NR, NX> rA1, rA2, rA3, rA4;
+		StaticMatrix<double, NR, NU> rB1, rB2, rB3, rB4;
 		auto const h = integrator.timeStep();
 
 		// Calculating next state, quadrature and cost
@@ -267,8 +265,8 @@ namespace tmpc
 		auto const  A3_bar = eval(A3 + (h / 2.) * A3 * A2_bar);	auto const  B3_bar = eval(B3 + (h / 2.) * A3 * B2_bar);
 		auto const  A4_bar =      A4 +  h       * A4 * A3_bar ;	auto const  B4_bar =      B4 +  h       * A4 * B3_bar ;
 
-		A = identity<StateStateMatrix>() + (h / 6.) * (A1_bar + 2. * A2_bar + 2. * A3_bar + A4_bar);
-		B = 					           (h / 6.) * (B1_bar + 2. * B2_bar + 2. * B3_bar + B4_bar);
+		A = DiagonalMatrix<StateStateMatrix>(1.) + (h / 6.) * (A1_bar + 2. * A2_bar + 2. * A3_bar + A4_bar);
+		B = 					                   (h / 6.) * (B1_bar + 2. * B2_bar + 2. * B3_bar + B4_bar);
 
 		auto const& rA1_bar =      rA1;							    auto const& rB1_bar =      rB1;
 		auto const  rA2_bar = eval(rA2 + (h / 2.) * rA2 * A1_bar);	auto const  rB2_bar = eval(rB2 + (h / 2.) * rA2 * B1_bar);
@@ -331,32 +329,32 @@ namespace tmpc
 		auto constexpr NQ = rows<QuadVector_  >();
 		auto constexpr NR = ODE::NR;
 
-		static_assert(rows<StateVector1_   >() == NX && cols<StateVector1_   >() ==  1, "x_next must be of size NX*1");
-		static_assert(rows<AMatrix         >() == NX && cols<AMatrix         >() == NX, "A must be of size NX*NX"    );
-		static_assert(rows<BMatrix         >() == NX && cols<BMatrix         >() == NU, "B must be of size NX*NU"    );
-		static_assert(rows<QuadVector_     >() == NQ && cols<QuadVector_     >() ==  1, "qf must be of size NQ*1"    );
-		static_assert(rows<QuadStateMatrix_>() == NQ && cols<QuadStateMatrix_>() == NX, "qA must be of size NQ*NX"   );
-		static_assert(rows<QuadInputMatrix_>() == NQ && cols<QuadInputMatrix_>() == NU, "qB must be of size NQ*NU"   );
-		static_assert(rows<StateVector2_   >() == NX && cols<StateVector2_   >() ==  1, "cA must be of size NX*1"    );
-		static_assert(rows<InputVector2_   >() == NU && cols<StateVector2_   >() ==  1, "cB must be of size NU*1"    );
-		static_assert(rows<QMatrix         >() == NX && cols<QMatrix         >() == NX, "cQ must be of size NX*NX"   );
-		static_assert(rows<RMatrix         >() == NU && cols<RMatrix         >() == NU, "cR must be of size NX*NX"   );
-		static_assert(rows<SMatrix         >() == NX && cols<SMatrix         >() == NU, "cS must be of size NX*NU"   );
+		static_assert(Rows<StateVector1_   >::value == NX && Columns<StateVector1_   >::value ==  1, "x_next must be of size NX*1");
+		static_assert(Rows<AMatrix         >::value == NX && Columns<AMatrix         >::value == NX, "A must be of size NX*NX"    );
+		static_assert(Rows<BMatrix         >::value == NX && Columns<BMatrix         >::value == NU, "B must be of size NX*NU"    );
+		static_assert(Rows<QuadVector_     >::value == NQ && Columns<QuadVector_     >::value ==  1, "qf must be of size NQ*1"    );
+		static_assert(Rows<QuadStateMatrix_>::value == NQ && Columns<QuadStateMatrix_>::value == NX, "qA must be of size NQ*NX"   );
+		static_assert(Rows<QuadInputMatrix_>::value == NQ && Columns<QuadInputMatrix_>::value == NU, "qB must be of size NQ*NU"   );
+		static_assert(Rows<StateVector2_   >::value == NX && Columns<StateVector2_   >::value ==  1, "cA must be of size NX*1"    );
+		static_assert(Rows<InputVector2_   >::value == NU && Columns<StateVector2_   >::value ==  1, "cB must be of size NU*1"    );
+		static_assert(Rows<QMatrix         >::value == NX && Columns<QMatrix         >::value == NX, "cQ must be of size NX*NX"   );
+		static_assert(Rows<RMatrix         >::value == NU && Columns<RMatrix         >::value == NU, "cR must be of size NX*NX"   );
+		static_assert(Rows<SMatrix         >::value == NX && Columns<SMatrix         >::value == NU, "cS must be of size NX*NU"   );
 
-		typedef Eigen::Matrix<double, NX,  1> StateVector;
-		typedef Eigen::Matrix<double, NX, NX> StateStateMatrix;
-		typedef Eigen::Matrix<double, NX, NU> StateInputMatrix;
+		typedef StaticVector<double, NX> StateVector;
+		typedef StaticMatrix<double, NX, NX> StateStateMatrix;
+		typedef StaticMatrix<double, NX, NU> StateInputMatrix;
 
 		StateVector k1, k2, k3, k4;
 		StateStateMatrix A1, A2, A3, A4;
 		StateInputMatrix B1, B2, B3, B4;
 
-		Eigen::Matrix<double, NQ,  1> dq1, dq2, dq3, dq4;
-		Eigen::Matrix<double, NQ, NX> qA1, qA2, qA3, qA4;
-		Eigen::Matrix<double, NQ, NU> qB1, qB2, qB3, qB4;
-		Eigen::Matrix<double, NR,  1>  r1,  r2,  r3,  r4;
-		Eigen::Matrix<double, NR, NX> rA1, rA2, rA3, rA4;
-		Eigen::Matrix<double, NR, NU> rB1, rB2, rB3, rB4;
+		StaticVector<double, NQ> dq1, dq2, dq3, dq4;
+		StaticMatrix<double, NQ, NX> qA1, qA2, qA3, qA4;
+		StaticMatrix<double, NQ, NU> qB1, qB2, qB3, qB4;
+		StaticVector<double, NR>  r1,  r2,  r3,  r4;
+		StaticMatrix<double, NR, NX> rA1, rA2, rA3, rA4;
+		StaticMatrix<double, NR, NU> rB1, rB2, rB3, rB4;
 		auto const h = integrator.timeStep();
 
 		// Calculating next state, quadrature and cost
@@ -375,8 +373,8 @@ namespace tmpc
 		auto const  A3_bar = eval(A3 + (h / 2.) * A3 * A2_bar);	auto const  B3_bar = eval(B3 + (h / 2.) * A3 * B2_bar);
 		auto const  A4_bar =      A4 +  h       * A4 * A3_bar ;	auto const  B4_bar =      B4 +  h       * A4 * B3_bar ;
 
-		A = identity<StateStateMatrix>() + (h / 6.) * (A1_bar + 2. * A2_bar + 2. * A3_bar + A4_bar);
-		B = 					           (h / 6.) * (B1_bar + 2. * B2_bar + 2. * B3_bar + B4_bar);
+		A = DiagonalMatrix<StateStateMatrix>(1.) + (h / 6.) * (A1_bar + 2. * A2_bar + 2. * A3_bar + A4_bar);
+		B = 					                   (h / 6.) * (B1_bar + 2. * B2_bar + 2. * B3_bar + B4_bar);
 
 		auto const& qA1_bar =      qA1;							    auto const& qB1_bar =      qB1;
 		auto const  qA2_bar = eval(qA2 + (h / 2.) * qA2 * A1_bar);	auto const  qB2_bar = eval(qB2 + (h / 2.) * qA2 * B1_bar);

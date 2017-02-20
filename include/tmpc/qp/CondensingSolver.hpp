@@ -20,10 +20,10 @@ qpOASES::Options qpOASES_DefaultOptions();
 /**
  * \brief Condensing solver using qpOASES
  *
- * \tparam <K> Class implementing the Kernel concept
+ * \tparam <Scalar> Scalar type
  * \tparam <D> Class defining problem dimensions
  */
-template <typename K, typename D>
+template <typename Scalar, typename D>
 class CondensingSolver
 {
 	static auto constexpr NX = D::NX;
@@ -37,7 +37,7 @@ public:
 
 	// Problem type for CondensingSolver
 	// TODO: change MultiStageQuadraticProblem so that it takes D as a template parameter?
-	typedef QuadraticProblemEigen<NX, NU, NC, NCT> Problem;
+	typedef QuadraticProblem<double> Problem;
 
 	// Solution data type
 	// TODO: change MultiStageQPSolution so that it takes D as a template parameter?
@@ -46,8 +46,8 @@ public:
 	// Exception that can be thrown from the Solve() member function.
 	class SolveException;
 
-	typedef typename K::size_t size_type;
-	typedef typename K::DynamicVector Vector;
+	typedef std::size_t size_type;
+	typedef DynamicVector<Scalar> Vector;
 
 	CondensingSolver(size_type nt, qpOASES::Options const& options = detail::qpOASES_DefaultOptions())
 	:	_Nt(nt)
@@ -128,14 +128,14 @@ public:
 	void Solve(Problem const& msqp, Solution& solution)
 	{
 		// Check argument sizes.
-		if (msqp.nT() != nT())
+		if (msqp.size() != nT())
 			throw std::invalid_argument("CondensingSolver::Solve(): size of MultistageQP does not match solver sizes, sorry.");
 
 		if (solution.nT() != nT())
 			throw std::invalid_argument("CondensingSolver::Solve(): size of solution Point does not match solver sizes, sorry.");
 
 		// Make a condensed problem.
-		Condense<K, D>(msqp, _condensedQP);
+		_condensedQP.front() = condense<double>(msqp.begin(), msqp.end());
 
 		/* Solve the condensed QP. */
 		int nWSR = static_cast<int>(_maxWorkingSetRecalculations);
@@ -156,11 +156,12 @@ public:
 		//problem.getDualSolution(yOpt);
 
 		// Calculate the solution of the multi-stage QP.
-		solution.set_x(0, K::template top_rows<NX>(_condensedSolution));
+		// TODO: add function recoverSolution() to Condensing.hpp
+		solution.set_x(0, subvector(_condensedSolution, 0, NX));
 		for (size_type i = 0; i < nT(); ++i)
 		{
-			solution.set_u(i, K::template middle_rows<NU>(_condensedSolution, NX + i * NU));
-			solution.set_x(i + 1, msqp.get_A(i) * solution.get_x(i) + msqp.get_B(i) * solution.get_u(i) + msqp.get_b(i));
+			solution.set_u(i, subvector(_condensedSolution, NX + i * NU, NU));
+			solution.set_x(i + 1, msqp[i].get_A() * solution.get_x(i) + msqp[i].get_B() * solution.get_u(i) + msqp[i].get_b());
 		}
 	}
 };
