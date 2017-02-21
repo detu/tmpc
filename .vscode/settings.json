@@ -1,4 +1,5 @@
 {
-    "files.associations": {} //,
-    //"cmake.buildDirectory": "/home/mkatliar/workspace/tmpc"
+    "files.associations": {},
+    "cmake.parallelJobs": 1,
+    "cmake.configureSettings": {"CMAKE_CXX_COMPILER" : "clang"}
 }

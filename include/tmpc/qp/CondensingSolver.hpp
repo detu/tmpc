@@ -13,25 +13,30 @@
 
 namespace tmpc {
 
-namespace detail {
-qpOASES::Options qpOASES_DefaultOptions();
-}
-
 /**
  * \brief Condensing solver using qpOASES
  *
  * \tparam <Scalar> Scalar type
  */
-template <typename Scalar>
+template <typename Scalar_>
 class CondensingSolver
 {
 public:
-	typedef QpOasesProblem CondensedQP;
+	typedef double Scalar;
+
+	// Nested solver
+	typedef QpOasesSolver Solver;
+
+	// Problem type for nested solver
+	typedef typename Solver::Problem CondensedQP;
+
+	// Solution type for nested solver
+	typedef typename Solver::Solution CondensedSolution;
 
 	// Problem type for CondensingSolver
 	typedef QuadraticProblem<Scalar> Problem;
 
-	// Solution data type
+	// Solution type for CondensingSolver
 	typedef MultiStageQPSolution<Scalar> Solution;
 
 	// Exception that can be thrown from the Solve() member function.
@@ -40,13 +45,13 @@ public:
 	typedef std::size_t size_type;
 	typedef DynamicVector<Scalar> Vector;
 
-	CondensingSolver(size_type nt, qpOASES::Options const& options = detail::qpOASES_DefaultOptions())
-	:	_Nt(nt)
-	,	_condensedQP({condensedQpSize(RtiQpSize(nt, NX, NU, NC, NCT))})
-	,	_condensedSolution(nIndep(nt))
-	,	_problem(nIndep(nt), nDep(nt) + nConstr(nt))
+	template <typename InputIterator>
+	CondensingSolver(InputIterator sz_first, InputIterator sz_last)
+	:	condensedSize_(condensedQpSize(sz_first, sz_last))
+	,	_condensedQP({condensedSize_})
+	,	_condensedSolution(condensedSize_.nx() + condensedSize_.nu())
+	,	nestedSolver_({condensedSize_})
 	{
-		_problem.setOptions(options);
 	}
 
 	/**
@@ -66,93 +71,48 @@ public:
 	CondensingSolver& operator=(CondensingSolver const&) = delete;
 	CondensingSolver& operator=(CondensingSolver&&) = delete;
 
-	size_type nT() const { return _Nt; }
-	size_type constexpr nX() { return NX; }
-	size_type constexpr nZ() { return NZ; }
-	size_type constexpr nU() { return NU; }
-	size_type constexpr nD() { return NC; }
-	size_type constexpr nDT() {	return NCT;	}
-	size_type nIndep() const { return nIndep(nT()); }
-	static size_type nIndep(size_type nt) { return NX + NU * nt; }
-	size_type nDep() const { return nDep(nT()); }
-	static size_type nDep(size_type nt) { return NX * nt; }
-	size_type nVar() const { return nVar(nT()); }
-	static size_type nVar(size_type nt) { return NZ * nt + NX; }
-	static size_type nConstr(size_type nt) { return NC * nt + NCT; }
-
-	const Vector& getCondensedSolution() const { return _condensedSolution;	}
+	const CondensedSolution& getCondensedSolution() const { return _condensedSolution;	}
 
 	const CondensedQP& getCondensedQP() const noexcept { return _condensedQP; }
-	bool getHotStart() const noexcept { return _hotStart; }
-
-	// qpOASES-specific part
-	//
-
-	// Get maximum number of working set recalculations for qpOASES
-	unsigned const getMaxWorkingSetRecalculations() const noexcept { return _maxWorkingSetRecalculations; }
-
-	// Set maximum number of working set recalculations for qpOASES
-	void setMaxWorkingSetRecalculations(unsigned val) noexcept { _maxWorkingSetRecalculations = val; }
 
 private:
-	// Number of time steps
-	size_type _Nt;
+	// Size of the condensed problem
+	QpSize condensedSize_;
 
-	// Number of constraints per stage = nX() + nD().
-	size_type nC() const { return nX() + nD(); }
-
-	// Input data for qpOASES
+	// Input data for nested solver
 	CondensedQP _condensedQP;
 
-	// Output data from qpOASES
-	Vector _condensedSolution;
+	// Output data from nested solver
+	CondensedSolution _condensedSolution;
 
-	bool _hotStart = false;
-
-	// TODO: wrap _problem into a pimpl to
-	// a) Reduce dependencies
-	// b) Avoid deep-copy of qpOASES::SQProblem object of move-construction of CondensingSolver.
-	qpOASES::SQProblem _problem;
-	unsigned _maxWorkingSetRecalculations = 1000;
+	// Nested solver
+	QpOasesSolver nestedSolver_;
 
 public:
 	void Solve(Problem const& msqp, Solution& solution)
 	{
-		// Check argument sizes.
-		if (msqp.size() != nT())
-			throw std::invalid_argument("CondensingSolver::Solve(): size of MultistageQP does not match solver sizes, sorry.");
-
-		if (solution.nT() != nT())
-			throw std::invalid_argument("CondensingSolver::Solve(): size of solution Point does not match solver sizes, sorry.");
-
 		// Make a condensed problem.
 		_condensedQP.front() = condense<double>(msqp.begin(), msqp.end());
 
 		/* Solve the condensed QP. */
-		int nWSR = static_cast<int>(_maxWorkingSetRecalculations);
-		const auto res = _hotStart ?
-			_problem.hotstart(_condensedQP.H_data(), _condensedQP.g_data(), _condensedQP.A_data(),
-					_condensedQP.lb_data(), _condensedQP.ub_data(), _condensedQP.lbA_data(), _condensedQP.ubA_data(), nWSR) :
-			_problem.init    (_condensedQP.H_data(), _condensedQP.g_data(), _condensedQP.A_data(),
-					_condensedQP.lb_data(), _condensedQP.ub_data(), _condensedQP.lbA_data(), _condensedQP.ubA_data(), nWSR);
-
-		if (res != qpOASES::SUCCESSFUL_RETURN)
-			throw QpOasesSolveException(res, _condensedQP);
-
-		solution.setNumIter(nWSR);
-		_hotStart = true;
-
-		/* Get solution of the condensed QP. */
-		_problem.getPrimalSolution(_condensedSolution.data());
-		//problem.getDualSolution(yOpt);
+		nestedSolver_.Solve(_condensedQP, _condensedSolution);
 
 		// Calculate the solution of the multi-stage QP.
 		// TODO: add function recoverSolution() to Condensing.hpp
-		solution.set_x(0, subvector(_condensedSolution, 0, NX));
-		for (size_type i = 0; i < nT(); ++i)
+		auto const& condensed_solution = _condensedSolution.front();
+		size_t iu = 0;
+		for (size_t i = 0; i < msqp.size(); ++i)
 		{
-			solution.set_u(i, subvector(_condensedSolution, NX + i * NU, NU));
-			solution.set_x(i + 1, msqp[i].get_A() * solution.get_x(i) + msqp[i].get_B() * solution.get_u(i) + msqp[i].get_b());
+			size_t const nu = solution[i].size().nu();
+			solution[i].set_u(subvector(condensed_solution.get_u(), iu, nu));
+
+			if (i == 0)
+				solution[i].set_x(condensed_solution.get_x());
+			else
+				solution[i].set_x(msqp[i - 1].get_A() * solution[i - 1].get_x() 
+					+ msqp[i - 1].get_B() * solution[i - 1].get_u() + msqp[i - 1].get_b());
+
+			iu += nu;
 		}
 	}
 };

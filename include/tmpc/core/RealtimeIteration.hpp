@@ -40,7 +40,7 @@ namespace tmpc
 
 		RealtimeIteration(OCP const& ocp, QPSolver& solver, WorkingPoint const& working_point)
 		:	_ocp(ocp)
-		,	solution_(working_point.nT())
+		,	solution_(sizeBegin(working_point), sizeEnd(working_point))
 		,	solver_(solver)
 		,	work_(working_point)
 		,	_prepared(false)

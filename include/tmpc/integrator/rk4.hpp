@@ -33,9 +33,9 @@ namespace tmpc
 
 	template <typename ODE, typename StateVector0_, typename InputVector_, typename StateVector1_, typename AMatrix, typename BMatrix>
 	void integrate(RK4 const& integrator, ODE const& ode, double t0,
-			Vector<StateVector0_, columnVector> const& x0,
-			Vector<InputVector_, columnVector> const& u,
-			Vector<StateVector1_, columnVector>& x_next,
+			StateVector0_ const& x0,
+			InputVector_ const& u,
+			StateVector1_& x_next,
 			AMatrix& A,
 			BMatrix& B)
 	{
@@ -56,10 +56,10 @@ namespace tmpc
 		auto const h = integrator.timeStep();
 
 		// Calculating next state
-		ode(t0,          ~x0                ,  ~u, k1, A1, B1);
-		ode(t0 + h / 2., ~x0 + ~k1 * (h / 2.), ~u, k2, A2, B2);
-		ode(t0 + h / 2., ~x0 + ~k2 * (h / 2.), ~u, k3, A3, B3);
-		ode(t0 + h,      ~x0 + ~k3 * h       , ~u, k4, A4, B4);
+		ode(t0,          x0                , u, k1, A1, B1);
+		ode(t0 + h / 2., x0 + k1 * (h / 2.), u, k2, A2, B2);
+		ode(t0 + h / 2., x0 + k2 * (h / 2.), u, k3, A3, B3);
+		ode(t0 + h,      x0 + k3 * h       , u, k4, A4, B4);
 
 		x_next = x0 + (k1 + 2. * k2 + 2. * k3 + k4) * (h / 6.);
 
@@ -326,17 +326,17 @@ namespace tmpc
 		typename QuadVector_, typename QuadStateMatrix_, typename QuadInputMatrix_,
 		typename StateVector2_,	typename InputVector2_,	typename QMatrix, typename RMatrix, typename SMatrix>
 	void integrate(RK4 const& integrator, ODE const& ode, double t0,
-			Vector<StateVector0_, columnVector> const& x0,
-			Vector<InputVector_, columnVector> const& u,
-			Vector<StateVector1_, columnVector>& x_next,
+			StateVector0_ const& x0,
+			InputVector_ const& u,
+			StateVector1_& x_next,
 			AMatrix& A,
 			BMatrix& B,
 			QuadVector_& qf,
 			QuadStateMatrix_& qA,
 			QuadInputMatrix_& qB,
 			double& cf,
-			Vector<StateVector2_, columnVector>& cA,
-			Vector<InputVector2_, columnVector>& cB,
+			StateVector2_& cA,
+			InputVector2_& cB,
 			QMatrix& cQ,
 			RMatrix& cR,
 			SMatrix& cS)

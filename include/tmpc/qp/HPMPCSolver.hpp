@@ -68,6 +68,17 @@ namespace tmpc
 		}
 
 		/**
+		 * \brief Takes QP problem size to preallocate workspace.
+		 */
+		template <typename InputIterator>
+		HPMPCSolver(InputIterator sz_first, InputIterator sz_last, int max_iter = 100)
+		:	_stat(max_iter)
+		{
+			// TODO: calculate workspace size and call
+			// workspace_.reserve();
+		}
+
+		/**
 		 * \brief Copy constructor
 		 *
 		 * Copying is not allowed.

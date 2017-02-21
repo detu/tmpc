@@ -162,9 +162,27 @@ private:
  * \brief Helper function to create a QpSizeIterator from an arbitrary iterator type implementing StageIterator concept.
  */
 template <typename StageIterator>
-QpSizeIterator<StageIterator> qpSizeIterator(StageIterator const& it)
+inline QpSizeIterator<StageIterator> qpSizeIterator(StageIterator const& it)
 {
 	return QpSizeIterator<StageIterator>(it);
+}
+
+/**
+ * \brief Helper function to create a QpSizeIterator.
+ */
+template <typename Collection>
+inline QpSizeIterator<typename Collection::iterator> sizeBegin(Collection const& c)
+{
+	return QpSizeIterator<typename Collection::iterator>(c.begin());
+}
+
+/**
+ * \brief Helper function to create a QpSizeIterator.
+ */
+template <typename Collection>
+inline QpSizeIterator<typename Collection::iterator> sizeEnd(Collection const& c)
+{
+	return QpSizeIterator<typename Collection::iterator>(c.end());
 }
 
 }	// namespace tmpc

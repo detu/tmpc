@@ -171,7 +171,8 @@ class RealtimeIterationTest : public ::testing::Test
 public:
 	RealtimeIterationTest(unsigned Nt = 2)
 	:	_ocp(Nt)
-	,	_qpSolver(Nt)
+	,	qpSize_(RtiQpSize(Nt, SampleOCP::NX, SampleOCP::NU, SampleOCP::NC, SampleOCP::NCT))
+	,	_qpSolver(qpSize_.begin(), qpSize_.end())
 	,	_rti(_ocp, _qpSolver, WorkingPoint(Nt, OCP::StateVector(0.), OCP::InputVector(0.)))
 	{
 	}
@@ -182,6 +183,7 @@ protected:
 	typedef typename RealtimeIteration::QPSolver QPSolver;
 
 	OCP _ocp;
+	std::vector<QpSize> qpSize_;
 	QPSolver _qpSolver;
 	RealtimeIteration _rti;
 

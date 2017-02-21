@@ -7,81 +7,90 @@
 #pragma once
 
 #include <tmpc/Matrix.hpp>
+#include <tmpc/detail/NonResizableCollection.hpp>
 
 #include <vector>
 #include <limits>
 
 namespace tmpc
 {
-	//
-	// Provides a generic solution interface for multistage QP solvers.
-	//
-	template <typename Scalar>
-	class MultiStageQPSolution
+	template <typename Scalar_>
+	class SingleStageQPSolution
 	{
 	public:
 		typedef Scalar_ Scalar;
 
-		class Stage
+		SingleStageQPSolution(QpSize const& sz, size_t nx1)
+		// Initialize all numeric data to NaN so that if an uninitialized object
+		// by mistake used in calculations is easier to detect.
+		:	size_(sz)
+		,	_x(sz.nx(), sNaN)
+		,	_u(sz.nu(), sNaN)
+		,	_lam(2 * sz.nc() + 2 * (sz.nx() + sz.nu()), sNaN)
 		{
-		public:
-			Stage(QpSize const& sz, size_t nx1)
-			// Initialize all numeric data to NaN so that if an uninitialized object
-			// by mistake used in calculations is easier to detect.
-			:	_x(sz.nx(), sNaN)
-			,	_u(sz.nu(), sNaN)
-			,	_lam(2 * sz.nc() + 2 * (sz.nx() + sz.nu()), sNaN)
-			{
-			}
+		}
 
-			DynamicVector<Scalar> const& get_x() const
-			{
-				return _x;
-			}
+		DynamicVector<Scalar> const& get_x() const
+		{
+			return _x;
+		}
 
-			DynamicVector<Scalar> const& get_u() const
-			{
-				return _u;
-			}
+		template <typename T>
+		void set_x(T const& val)
+		{
+			_x = val;
+		}
 
-			DynamicVector<Scalar> const& get_lam() const
-			{
-				return _lam;
-			}
+		DynamicVector<Scalar> const& get_u() const
+		{
+			return _u;
+		}
 
-		private:
-			DynamicVector<Scalar> _x;
-			DynamicVector<Scalar> _u;
-			DynamicVector<Scalar> _lam;
-		};
+		template <typename T>
+		void set_u(T const& val)
+		{
+			_u = val;
+		}
+
+		DynamicVector<Scalar> const& get_lam() const
+		{
+			return _lam;
+		}
+
+		QpSize const& size() const
+		{
+			return size_;
+		}
+
+	private:
+		QpSize size_;
+		DynamicVector<Scalar> _x;
+		DynamicVector<Scalar> _u;
+		DynamicVector<Scalar> _lam;
+
+		static Scalar constexpr sNaN = std::numeric_limits<Scalar>::signaling_NaN();
+	};
+	
+	//
+	// Provides a generic solution interface for multistage QP solvers.
+	//
+	template <typename Scalar_>
+	class MultiStageQPSolution : public detail::NonResizableCollection<SingleStageQPSolution<Scalar_>>
+	{
+	public:
+		typedef Scalar_ Scalar;
 
 		template <typename InputIterator>
 		MultiStageQPSolution(InputIterator sz_first, InputIterator sz_last)
 		{
 			auto const N = std::distance(sz_first, sz_last);
-
-			_stage.reserve(N);
-			_x.reserve(N);
-			_u.reserve(N);
-			_lam.reserve(N);
+			this->elements().reserve(N);
 
 			for (; sz_first != sz_last; ++sz_first)
-			{
-				_stage.emplace_back(*sz_first, sz_first + 1 != sz_last ? sz_first[1].nx() : 0);
-				Stage& st = _stage.back();
-
-				_x.push_back(st.x_data());
-				_u.push_back(st.u_data());
-				_lam.push_back(st.lam_data());
-			}
+				this->elements().emplace_back(*sz_first, sz_first + 1 != sz_last ? sz_first[1].nx() : 0);
 		}
 
 		MultiStageQPSolution(MultiStageQPSolution const&) = delete;
 		MultiStageQPSolution(MultiStageQPSolution&& rhs) = default;
-
-	private:
-		static Scalar constexpr sNaN = std::numeric_limits<Scalar>::signaling_NaN();
-
-		std::vector<Stage> _stage;
 	};
 }
