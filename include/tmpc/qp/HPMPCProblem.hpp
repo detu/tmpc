@@ -1,6 +1,7 @@
 #pragma once
 
 #include <tmpc/Matrix.hpp>
+#include <tmpc/detail/MultiStage.hpp>
 #include "QpSize.hpp"
 
 #include <vector>
@@ -32,7 +33,7 @@ namespace tmpc
 	*	TODO: parameterize HPMPCProblem by a kernel class.
 	*/
 	template <typename Scalar>
-	class HPMPCProblem
+	class HPMPCProblem : public MultiStage<HPMPCProblem<Scalar>>
 	{
 	public:
 
