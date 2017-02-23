@@ -57,7 +57,7 @@ protected:
 typedef ::testing::Types<
 	QuadraticProblem<double>,
 	HPMPCProblem<double>,
-	QpOasesProblem<double>
+	QpOasesProblem //<double>
 	> QPTypes;
 
 TYPED_TEST_CASE(QuadraticProblemTest, QPTypes);

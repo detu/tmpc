@@ -65,10 +65,10 @@ protected:
 
 	typedef double Scalar;
 	typedef QuadraticProblem<Scalar> Problem;
-	typedef blaze::StaticVector<Scalar, NX> StateVector;
-	typedef blaze::StaticVector<Scalar, NU> InputVector;
-	typedef blaze::StaticMatrix<Scalar, NX, NX> StateStateMatrix;
-	typedef blaze::StaticMatrix<Scalar, NX, NU> StateInputMatrix;
+	typedef StaticVector<Scalar, NX> StateVector;
+	typedef StaticVector<Scalar, NU> InputVector;
+	typedef StaticMatrix<Scalar, NX, NX> StateStateMatrix;
+	typedef StaticMatrix<Scalar, NX, NU> StateInputMatrix;
 
 	CondensingTestBlaze()
 	:	size_(tmpc::RtiQpSize(NT, NX, NU, NC, NCT))
@@ -87,7 +87,7 @@ protected:
 		qp[2].set_lbx(StateVector(-1.));	qp[2].set_ubx(StateVector(1.));
 
 		// Stage 0
-		blaze::StaticMatrix<Scalar, NZ, NZ> H0 {
+		StaticMatrix<Scalar, NZ, NZ> H0 {
 			{1, 2, 3},
 			{4, 5, 6},
 			{7, 8, 9}
@@ -113,7 +113,7 @@ protected:
 		StateVector a0 {1, 2};
 
 		// Stage 1
-		blaze::StaticMatrix<Scalar, NZ, NZ> H1 {
+		StaticMatrix<Scalar, NZ, NZ> H1 {
 			{1, 2, 3},
 			{4, 5, 6},
 			{7, 8, 9}
@@ -169,11 +169,11 @@ protected:
 
 	std::vector<tmpc::QpSize> size_;
 	Problem qp;
-	blaze::StaticMatrix<Scalar, NX, NX> Qc_expected;
-	blaze::StaticMatrix<Scalar, NT * NU, NT * NU> Rc_expected;
-	blaze::StaticMatrix<Scalar, NX, NT * NU> Sc_expected;
-	blaze::StaticVector<Scalar, NX> qc_expected;
-	blaze::StaticVector<Scalar, NT * NU> rc_expected;
+	StaticMatrix<Scalar, NX, NX> Qc_expected;
+	StaticMatrix<Scalar, NT * NU, NT * NU> Rc_expected;
+	StaticMatrix<Scalar, NX, NT * NU> Sc_expected;
+	StaticVector<Scalar, NX> qc_expected;
+	StaticVector<Scalar, NT * NU> rc_expected;
 };
 
 unsigned constexpr CondensingTestBlaze::NX;

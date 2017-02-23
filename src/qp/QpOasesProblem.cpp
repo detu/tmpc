@@ -76,7 +76,7 @@ QpOasesProblem::QpOasesProblem(std::vector<QpSize> const& sz, size_type nx, size
 		auto const nx_next = (sz + 1)->nx();
 
 		// Assign the -I block in A
-		submatrix(_A, i, j, nx_next, nx_next) = -DiagonalMatrix<Matrix>(nx_next, 1.);
+		submatrix(_A, i, j, nx_next, nx_next) = -IdentityMatrix<Matrix>(nx_next);
 
 		// Assign the 0 blocks in lbA and ubA
 		subvector(_lbA, i, nx_next) = 0.;

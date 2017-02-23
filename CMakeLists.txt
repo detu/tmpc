@@ -4,6 +4,15 @@ project (tmpc)
 SET(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/CMakeModules;${CMAKE_MODULE_PATH})
 set(PROJECT_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/include)
 
+find_package(Eigen3 3.2.10)
+
+if (EIGEN3_FOUND)
+    message(STATUS "Eigen3 Found in ${EIGEN3_INCLUDE_DIR}")
+    include_directories(${EIGEN3_INCLUDE_DIR})
+else()
+    message(STATUS "Eigen3 NOT FOUND")
+endif()
+
 include(ExternalProject)
 option(BUILD_QPDUNES "Build qpDUNES along with TMPC." ON)
 

@@ -177,42 +177,42 @@ namespace tmpc
 
 		decltype(auto) get_lam_u_min(std::size_t i) const
 		{
-			return forEach(stage(i).get_lam_u(), [] (double d) { return max(d, 0.); });
+			return forEach(stage(i).get_lam_u(), [] (double d) { return std::max(d, 0.); });
 		}
 
 		decltype(auto) get_lam_u_max(std::size_t i) const
 		{
-			return -forEach(stage(i).get_lam_u(), [] (double d) { return min(d, 0.); });
+			return -forEach(stage(i).get_lam_u(), [] (double d) { return std::min(d, 0.); });
 		}
 
 		decltype(auto) get_lam_x_min(std::size_t i) const
 		{
-			return forEach(stage(i).get_lam_x(), [] (double d) { return max(d, 0.); });
+			return forEach(stage(i).get_lam_x(), [] (double d) { return std::max(d, 0.); });
 		}
 
 		decltype(auto) get_lam_x_max(std::size_t i) const
 		{
-			return -forEach(stage(i).get_lam_x(), [] (double d) { return max(d, 0.); });
+			return -forEach(stage(i).get_lam_x(), [] (double d) { return std::max(d, 0.); });
 		}
 
 		decltype(auto) get_lam_d_min(std::size_t i) const
 		{
-			return forEach(stage(i).get_lam_d(), [] (double d) { return max(d, 0.); });
+			return forEach(stage(i).get_lam_d(), [] (double d) { return std::max(d, 0.); });
 		}
 
 		decltype(auto) get_lam_d_max(std::size_t i) const
 		{
-			return -forEach(stage(i).get_lam_d(), [] (double d) { return max(d, 0.); });
+			return -forEach(stage(i).get_lam_d(), [] (double d) { return std::max(d, 0.); });
 		}
 
 		decltype(auto) get_lam_d_end_min() const
 		{
-			return forEach(stage_.back().get_lam_d(), [] (double d) { return max(d, 0.); });
+			return forEach(stage_.back().get_lam_d(), [] (double d) { return std::max(d, 0.); });
 		}
 
 		decltype(auto) get_lam_d_end_max() const
 		{
-			return -forEach(stage_.back().get_lam_d(), [] (double d) { return max(d, 0.); });
+			return -forEach(stage_.back().get_lam_d(), [] (double d) { return std::max(d, 0.); });
 		}
 
 		/// \brief Get number of iterations performed by the QP solver.

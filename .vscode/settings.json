@@ -1,5 +1,10 @@
 {
-    "files.associations": {},
-    "cmake.parallelJobs": 1,
-    "cmake.configureSettings": {"CMAKE_CXX_COMPILER" : "clang"}
+    "files.associations": {
+        "Dense": "cpp",
+        "Array": "cpp",
+        "Core": "cpp",
+        "initializer_list": "cpp"
+    },
+    "cmake.parallelJobs": 0//,
+    //"cmake.configureSettings": {"CMAKE_CXX_COMPILER" : "clang++"}
 }

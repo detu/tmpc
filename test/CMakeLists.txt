@@ -58,11 +58,11 @@ add_custom_command(
 add_executable(tmpc_test
     condensing_test.cpp
     #rk4_test.cpp
-    realtime_iteration_test.cpp
+    #realtime_iteration_test.cpp
     #mhe_test.cpp
-    qp_test.cpp
-    qpoases_problem_test.cpp
-    qp_solver_test.cpp
+    #qp_test.cpp
+    #qpoases_problem_test.cpp
+    #qp_solver_test.cpp
     casadi_function_test.cpp
     gtest_tools_eigen.hpp
 
@@ -84,9 +84,9 @@ target_compile_definitions(tmpc_test
 add_dependencies(tmpc_test googletest)
 
 if (HPMPC_FOUND)
-    target_sources(tmpc_test
-        PRIVATE hpmpc_test.cpp
-    )
+    #target_sources(tmpc_test
+    #    PRIVATE hpmpc_test.cpp
+    #)
 endif()
 
 target_include_directories(tmpc_test

@@ -111,7 +111,7 @@ namespace tmpc
 		subvector(rc, 0, nu) = first->get_r();
 
 		//K::top_rows(Cc, nc) = first_->get_C();
-		submatrix(Cc, 0, 0, nc, Cc.columns()) = first->get_C();
+		submatrix(Cc, 0, 0, nc, columns(Cc)) = first->get_C();
 		//K::top_left_corner(Dc, nc, nu) = first_->get_D();
 		submatrix(Dc, 0, 0, nc, nu) = first->get_D();
 		//K::head(lbd, nc) = first_->get_lbd();
@@ -164,8 +164,8 @@ namespace tmpc
 
 			// Update C
 			//K::middle_rows(Cc, nc, sz.nx() + sz.nc()) << A, stage->get_C() * A;
-			submatrix(Cc, nc          , 0, sz.nx(), Cc.columns()) = A;
-			submatrix(Cc, nc + sz.nx(), 0, sz.nc(), Cc.columns()) = stage->get_C() * A;
+			submatrix(Cc, nc          , 0, sz.nx(), columns(Cc)) = A;
+			submatrix(Cc, nc + sz.nx(), 0, sz.nc(), columns(Cc)) = stage->get_C() * A;
 
 			// Update D (which is initialized to 0)
 			//K::middle_rows(Dc, nc, sz.nx() + sz.nc()) << B, K::zero(sz.nx(), cs.nu() - nu),
