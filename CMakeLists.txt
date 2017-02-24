@@ -1,6 +1,12 @@
 cmake_minimum_required (VERSION 2.8)
 project (tmpc)
 
+# Enable modern C++
+set(CMAKE_CXX_STANDARD 14)
+
+# Don't use compiler's C++ extensions
+set(CMAKE_CXX_EXTENSIONS False)
+
 SET(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/CMakeModules;${CMAKE_MODULE_PATH})
 set(PROJECT_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/include)
 

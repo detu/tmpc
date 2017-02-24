@@ -64,7 +64,6 @@ add_executable(tmpc_test
     #qpoases_problem_test.cpp
     #qp_solver_test.cpp
     casadi_function_test.cpp
-    TestMatrix.cpp
     gtest_tools_eigen.hpp
 
     ${CMAKE_CURRENT_BINARY_DIR}/pendulum_ode_generated.h
@@ -73,16 +72,11 @@ add_executable(tmpc_test
     ${CMAKE_CURRENT_BINARY_DIR}/casadi_function_test_generated.c
 )
 
-# Enable modern C++ for tmpc tests.
-set_property(TARGET tmpc_test PROPERTY CXX_STANDARD 14)
-
-# Don't use compiler's C++ extensions
-set_property(TARGET tmpc_test PROPERTY CXX_EXTENSIONS False)
+add_dependencies(tmpc_test googletest)
 
 target_compile_definitions(tmpc_test
     PRIVATE TEST_DATA_PATH="${TEST_DATA_PATH}")
 
-add_dependencies(tmpc_test googletest)
 
 if (HPMPC_FOUND)
     #target_sources(tmpc_test
@@ -100,7 +94,23 @@ target_link_libraries(tmpc_test
     gtest_main
     gmock
     ${CMAKE_THREAD_LIBS_INIT}    # Needed for gtest
-    )
+)
 
+add_executable(matrix_test
+    TestMatrix.cpp
+)
+
+target_include_directories(matrix_test
+    PRIVATE "${CMAKE_SOURCE_DIR}/include"
+)
+
+add_dependencies(matrix_test googletest)
+
+target_link_libraries(matrix_test
+    gtest
+    gtest_main
+    gmock
+    ${CMAKE_THREAD_LIBS_INIT}    # Needed for gtest
+)
 #enable_testing()
 #add_test(AllTests tmpc_test)

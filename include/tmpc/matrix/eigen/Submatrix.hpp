@@ -25,13 +25,8 @@ struct Submatrix
 {
     typedef SubmatrixBase<MT, AF> Base;
 
-    Submatrix(EigenBase<MT>&& rhs)
-    :   Base(rhs)
-    {        
-    }
-
-    Submatrix(EigenBase<MT> const& rhs)
-    :   Base(rhs)
+    Submatrix(typename Base::OurEigenBase const& rhs)
+    :   Base(rhs.nestedExpression(), rhs.startRow(), rhs.startCol(), rhs.rows(), rhs.cols())
     {        
     }
 

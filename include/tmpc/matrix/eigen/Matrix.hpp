@@ -26,35 +26,44 @@ namespace tmpc
             return static_cast<MT const&>(*this);
         }
 
-        typedef EigenBase<MT> Base;
-        typedef typename Base::Scalar ElementType;
+        typedef EigenBase<MT> OurEigenBase;
+        typedef typename OurEigenBase::Scalar ElementType;
 
     protected:
-        Matrix(Base&& rhs)
-        :   Base(rhs)
+        Matrix()
+        {            
+        }
+
+        Matrix(OurEigenBase&& rhs)
+        :   OurEigenBase(rhs)
+        {            
+        }
+
+        Matrix(OurEigenBase const& rhs)
+        :   OurEigenBase(rhs)
         {            
         }
         
         Matrix(size_t M, size_t N)
-        :   Base(M, N)
+        :   OurEigenBase(M, N)
         {        
         }
 
         Matrix(size_t M, size_t N, ElementType const& val)
-        :   Base(M, N)
+        :   OurEigenBase(M, N)
         {
             this->setConstant(val);
         }
 
         Matrix(initializer_list<initializer_list<ElementType>> list)
-        :   Base(list.size(), determineColumns(list))
+        :   OurEigenBase(list.size(), determineColumns(list))
         {
             assign(*this, list);
         }
 
         template <typename T>
         Matrix(Eigen::MatrixBase<T> const& rhs)
-        :   Base(rhs)
+        :   OurEigenBase(rhs)
         {        
         }
     };

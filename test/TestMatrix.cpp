@@ -23,7 +23,7 @@ std::istream& operator>>(std::istream& is, Vector<VT, TF>& v)
 	return is;
 }
 
-TEST(TestMatrix, InputStaticMatrixTest)
+TEST(TestMatrix, testInputStaticMatrix)
 {
     typedef StaticMatrix<double, 2, 3> M;
     M m;
@@ -34,7 +34,7 @@ TEST(TestMatrix, InputStaticMatrixTest)
     EXPECT_EQ(m, (M {{1., 2., 3.}, {4., 5., 6.}}));
 }
 
-TEST(TestMatrix, InputStaticVectorTest)
+TEST(TestMatrix, testInputStaticVector)
 {
     typedef StaticVector<double, 3> V;
     V v;
@@ -47,16 +47,26 @@ TEST(TestMatrix, InputStaticVectorTest)
 
 #ifndef USE_BLAZE
 
-TEST(TestMatrix, IsVectorTest)
+TEST(TestMatrix, testIsVector)
 {
     static_assert(IsVector<StaticVector<double, 2>>::value, 
         "IsVector<StaticVector>::value must be true!");
 }
 
-TEST(TestMatrix, SizeTest)
+TEST(TestMatrix, testSize)
 {
     static_assert(Size<StaticVector<double, 2, false>>::value == 2, 
         "Size<StaticVector<double, 2>>::value must be equal to 2!");
+}
+
+TEST(TestMatrix, testDynamicSubmatrixConstructorFromEigenBlock)
+{
+    using EigenMatrix = Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
+
+    DynamicMatrix<double> m(20, 30);
+    Eigen::Block<EigenMatrix, Eigen::Dynamic, Eigen::Dynamic> b(m, 2, 3, 4, 5);
+
+    Submatrix<DynamicMatrix<double>> sm(b);
 }
 
 #endif
