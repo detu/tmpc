@@ -9,9 +9,9 @@
 namespace tmpc {
 
 template <typename VT, bool TF>
-using DenseVector = typename std::enable_if<
+using DenseVector = typename std::enable_if_t<
     VT::IsRowMatrix == (TF == rowVector) && IsVector<VT>::value,
     Eigen::DenseBase<MT>
->::type;
+>;
 
 }

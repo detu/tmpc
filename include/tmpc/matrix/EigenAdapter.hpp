@@ -23,3 +23,5 @@
 
 #include "eigen/ForEach.hpp"
 #include "eigen/Trans.hpp"
+#include "eigen/Eval.hpp"
+#include "eigen/Norm.hpp"

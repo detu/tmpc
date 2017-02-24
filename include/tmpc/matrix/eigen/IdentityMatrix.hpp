@@ -14,10 +14,24 @@ namespace tmpc
     struct IdentityMatrix<DynamicMatrix<Type, SO>>
     :   DynamicMatrix<Type, SO>::IdentityReturnType
     {
-        typedef typename DynamicMatrix<Type, SO>::IdentityReturnType Base;
+        typedef DynamicMatrix<Type, SO> MatrixType;
+        typedef typename MatrixType::IdentityReturnType Base;
 
         IdentityMatrix(size_t n)
-        :   Base(DynamicMatrix<Type, SO>::Identity(n, n))
+        :   Base(MatrixType::Identity(n, n))
+        {            
+        }
+    };
+
+    template <typename Type, size_t N, bool SO>
+    struct IdentityMatrix<StaticMatrix<Type, N, N, SO>>
+    :   StaticMatrix<Type, N, N, SO>::IdentityReturnType
+    {
+        typedef StaticMatrix<Type, N, N, SO> MatrixType;
+        typedef typename MatrixType::IdentityReturnType Base;
+
+        IdentityMatrix()
+        :   Base(MatrixType::Identity())
         {            
         }
     };

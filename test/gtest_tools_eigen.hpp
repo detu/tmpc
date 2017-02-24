@@ -4,6 +4,7 @@
 #include <gmock/gmock.h>
 
 #include <iostream>
+#include <cmath>
 
 #include <tmpc/Matrix.hpp>
 
@@ -99,7 +100,7 @@ public:
 	template <typename MatrixA, typename MatrixB>
 	bool operator()(MatrixA const& lhs, MatrixB const& rhs)
 	{
-		return max(abs(lhs - rhs)) <= tolerance_;
+		return std::max(std::abs(lhs - rhs)) <= tolerance_;
 	}
 
 private:

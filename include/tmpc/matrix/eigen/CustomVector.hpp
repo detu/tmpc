@@ -8,11 +8,16 @@
 
 namespace tmpc {
 
+template <typename Type, bool AF, bool PF, bool TF>
+using CustomVectorBase =
+    Eigen::Map<Eigen::Matrix<Type, TF == columnVector ? Eigen::Dynamic : 1, TF == rowVector ? Eigen::Dynamic : 1>>;
+
 template <typename Type, bool AF, bool PF, bool TF = defaultTransposeFlag>
 struct CustomVector
-:   Eigen::Map<Eigen::Matrix<Type, TF == columnVector ? Eigen::Dynamic : 1, TF == rowVector ? Eigen::Dynamic : 1>>
+:   CustomVectorBase<Type, AF, PF, TF>
 {
-    typedef Eigen::Map<Eigen::Matrix<Type, TF == columnVector ? Eigen::Dynamic : 1, TF == rowVector ? Eigen::Dynamic : 1>> Base;
+    typedef CustomVectorBase<Type, AF, PF, TF> Base;
+    typedef Type ElementType;
 
     CustomVector(Type * data, size_t n)
     :   Base(data, n)

@@ -69,8 +69,8 @@ namespace tmpc
 		auto const  A3_bar = eval(A3 + (h / 2.) * A3 * A2_bar);	auto const  B3_bar = eval(B3 + (h / 2.) * A3 * B2_bar);
 		auto const  A4_bar =      A4 +  h       * A4 * A3_bar ;	auto const  B4_bar =      B4 +  h       * A4 * B3_bar ;
 
-		A = DiagonalMatrix<StateStateMatrix>(1.) + (h / 6.) * (A1_bar + 2. * A2_bar + 2. * A3_bar + A4_bar);
-		B = 					                   (h / 6.) * (B1_bar + 2. * B2_bar + 2. * B3_bar + B4_bar);
+		A = IdentityMatrix<StateStateMatrix>() + (h / 6.) * (A1_bar + 2. * A2_bar + 2. * A3_bar + A4_bar);
+		B = 					                 (h / 6.) * (B1_bar + 2. * B2_bar + 2. * B3_bar + B4_bar);
 	}
 
 	template <typename ODE,
@@ -162,8 +162,8 @@ namespace tmpc
 		StateInputMatrix B1, B2, B3, B4;
 
 		StaticVector<double, NQ> dq1, dq2, dq3, dq4;
-		StaticMatrix<double, NQ, NX> qA1, qA2, qA3, qA4;
-		StaticMatrix<double, NQ, NU> qB1, qB2, qB3, qB4;
+		StaticMatrix<double, NQ, NX, columnMajor> qA1, qA2, qA3, qA4;
+		StaticMatrix<double, NQ, NU, columnMajor> qB1, qB2, qB3, qB4;
 		auto const h = integrator.timeStep();
 
 		// Calculating next state and quadrature
@@ -181,8 +181,8 @@ namespace tmpc
 		auto const  A3_bar = eval(A3 + (h / 2.) * A3 * A2_bar);	auto const  B3_bar = eval(B3 + (h / 2.) * A3 * B2_bar);
 		auto const  A4_bar =      A4 +  h       * A4 * A3_bar ;	auto const  B4_bar =      B4 +  h       * A4 * B3_bar ;
 
-		A = DiagonalMatrix<StateStateMatrix>(1.) + (h / 6.) * (A1_bar + 2. * A2_bar + 2. * A3_bar + A4_bar);
-		B = 					                   (h / 6.) * (B1_bar + 2. * B2_bar + 2. * B3_bar + B4_bar);
+		A = IdentityMatrix<StateStateMatrix>() + (h / 6.) * (A1_bar + 2. * A2_bar + 2. * A3_bar + A4_bar);
+		B = 					                 (h / 6.) * (B1_bar + 2. * B2_bar + 2. * B3_bar + B4_bar);
 
 		auto const& qA1_bar =      qA1;							    auto const& qB1_bar =      qB1;
 		auto const  qA2_bar = eval(qA2 + (h / 2.) * qA2 * A1_bar);	auto const  qB2_bar = eval(qB2 + (h / 2.) * qA2 * B1_bar);
@@ -261,8 +261,8 @@ namespace tmpc
 		ode(t0 + h / 2., x0 + k2 * (h / 2.), u, k3, A3, B3, r3, rA3, rB3);
 		ode(t0 + h,      x0 + k3 * h       , u, k4, A4, B4, r4, rA4, rB4);
 
-		x_next =  x0 + (             k1  + 2. *               k2 + 2. *               k3 +               k4) * (h / 6.);
-		cf     = 0.5 * (squared_norm(r1) + 2. * squared_norm(r2) + 2. * squared_norm(r3) + squared_norm(r4)) * (h / 6.);
+		x_next =  x0 + (            k1  + 2. *              k2 + 2. *              k3 +              k4) * (h / 6.);
+		cf     = 0.5 * (squaredNorm(r1) + 2. * squaredNorm(r2) + 2. * squaredNorm(r3) + squaredNorm(r4)) * (h / 6.);
 
 		// Calculating sensitivities
 		auto const& A1_bar =      A1;							auto const& B1_bar =      B1;
@@ -270,21 +270,21 @@ namespace tmpc
 		auto const  A3_bar = eval(A3 + (h / 2.) * A3 * A2_bar);	auto const  B3_bar = eval(B3 + (h / 2.) * A3 * B2_bar);
 		auto const  A4_bar =      A4 +  h       * A4 * A3_bar ;	auto const  B4_bar =      B4 +  h       * A4 * B3_bar ;
 
-		A = DiagonalMatrix<StateStateMatrix>(1.) + (h / 6.) * (A1_bar + 2. * A2_bar + 2. * A3_bar + A4_bar);
-		B = 					                   (h / 6.) * (B1_bar + 2. * B2_bar + 2. * B3_bar + B4_bar);
+		A = IdentityMatrix<StateStateMatrix>() + (h / 6.) * (A1_bar + 2. * A2_bar + 2. * A3_bar + A4_bar);
+		B = 					                 (h / 6.) * (B1_bar + 2. * B2_bar + 2. * B3_bar + B4_bar);
 
 		auto const& rA1_bar =      rA1;							    auto const& rB1_bar =      rB1;
 		auto const  rA2_bar = eval(rA2 + (h / 2.) * rA2 * A1_bar);	auto const  rB2_bar = eval(rB2 + (h / 2.) * rA2 * B1_bar);
 		auto const  rA3_bar = eval(rA3 + (h / 2.) * rA3 * A2_bar);	auto const  rB3_bar = eval(rB3 + (h / 2.) * rA3 * B2_bar);
 		auto const  rA4_bar = eval(rA4 +  h       * rA4 * A3_bar);	auto const  rB4_bar = eval(rB4 +  h       * rA4 * B3_bar);
 
-		cA = (h / 6.) * (transpose(r1) * rA1_bar + 2. * transpose(r2) * rA2_bar + 2. * transpose(r3) * rA3_bar + transpose(r4) * rA4_bar);
-		cB = (h / 6.) * (transpose(r1) * rB1_bar + 2. * transpose(r2) * rB2_bar + 2. * transpose(r3) * rB3_bar + transpose(r4) * rB4_bar);
+		cA = (h / 6.) * (trans(r1) * rA1_bar + 2. * trans(r2) * rA2_bar + 2. * trans(r3) * rA3_bar + trans(r4) * rA4_bar);
+		cB = (h / 6.) * (trans(r1) * rB1_bar + 2. * trans(r2) * rB2_bar + 2. * trans(r3) * rB3_bar + trans(r4) * rB4_bar);
 
 		// Gauss-Newton approximation of the Hessian.
-		cQ = (h / 6.) * (transpose(rA1_bar) * rA1_bar + 2. * transpose(rA2_bar) * rA2_bar + 2. * transpose(rA3_bar) * rA3_bar + transpose(rA4_bar) * rA4_bar);
-		cR = (h / 6.) * (transpose(rB1_bar) * rB1_bar + 2. * transpose(rB2_bar) * rB2_bar + 2. * transpose(rB3_bar) * rB3_bar + transpose(rB4_bar) * rB4_bar);
-		cS = (h / 6.) * (transpose(rA1_bar) * rB1_bar + 2. * transpose(rA2_bar) * rB2_bar + 2. * transpose(rA3_bar) * rB3_bar + transpose(rA4_bar) * rB4_bar);
+		cQ = (h / 6.) * (trans(rA1_bar) * rA1_bar + 2. * trans(rA2_bar) * rA2_bar + 2. * trans(rA3_bar) * rA3_bar + trans(rA4_bar) * rA4_bar);
+		cR = (h / 6.) * (trans(rB1_bar) * rB1_bar + 2. * trans(rB2_bar) * rB2_bar + 2. * trans(rB3_bar) * rB3_bar + trans(rB4_bar) * rB4_bar);
+		cS = (h / 6.) * (trans(rA1_bar) * rB1_bar + 2. * trans(rA2_bar) * rB2_bar + 2. * trans(rA3_bar) * rB3_bar + trans(rA4_bar) * rB4_bar);
 	}
 
 	/**
@@ -382,7 +382,7 @@ namespace tmpc
 
 		x_next =  x0 + (             k1  + 2. *               k2 + 2. *               k3 +               k4) * (h / 6.);
 		qf     =       (             dq1 + 2. *              dq2 + 2. *              dq3 +              dq4) * (h / 6.);
-		cf     = 0.5 * (squared_norm(r1) + 2. * squared_norm(r2) + 2. * squared_norm(r3) + squared_norm(r4)) * (h / 6.);
+		cf     = 0.5 * (squaredNorm(r1) + 2. * squaredNorm(r2) + 2. * squaredNorm(r3) + squaredNorm(r4)) * (h / 6.);
 
 		// Calculating sensitivities
 		auto const& A1_bar =      A1;							auto const& B1_bar =      B1;
@@ -390,8 +390,8 @@ namespace tmpc
 		auto const  A3_bar = eval(A3 + (h / 2.) * A3 * A2_bar);	auto const  B3_bar = eval(B3 + (h / 2.) * A3 * B2_bar);
 		auto const  A4_bar =      A4 +  h       * A4 * A3_bar ;	auto const  B4_bar =      B4 +  h       * A4 * B3_bar ;
 
-		A = DiagonalMatrix<StateStateMatrix>(1.) + (h / 6.) * (A1_bar + 2. * A2_bar + 2. * A3_bar + A4_bar);
-		B = 					                   (h / 6.) * (B1_bar + 2. * B2_bar + 2. * B3_bar + B4_bar);
+		A = IdentityMatrix<StateStateMatrix>() + (h / 6.) * (A1_bar + 2. * A2_bar + 2. * A3_bar + A4_bar);
+		B = 					                 (h / 6.) * (B1_bar + 2. * B2_bar + 2. * B3_bar + B4_bar);
 
 		auto const& qA1_bar =      qA1;							    auto const& qB1_bar =      qB1;
 		auto const  qA2_bar = eval(qA2 + (h / 2.) * qA2 * A1_bar);	auto const  qB2_bar = eval(qB2 + (h / 2.) * qA2 * B1_bar);
@@ -406,13 +406,13 @@ namespace tmpc
 		auto const  rA3_bar = eval(rA3 + (h / 2.) * rA3 * A2_bar);	auto const  rB3_bar = eval(rB3 + (h / 2.) * rA3 * B2_bar);
 		auto const  rA4_bar = eval(rA4 +  h       * rA4 * A3_bar);	auto const  rB4_bar = eval(rB4 +  h       * rA4 * B3_bar);
 
-		cA = (h / 6.) * (transpose(r1) * rA1_bar + 2. * transpose(r2) * rA2_bar + 2. * transpose(r3) * rA3_bar + transpose(r4) * rA4_bar);
-		cB = (h / 6.) * (transpose(r1) * rB1_bar + 2. * transpose(r2) * rB2_bar + 2. * transpose(r3) * rB3_bar + transpose(r4) * rB4_bar);
+		cA = (h / 6.) * (trans(r1) * rA1_bar + 2. * trans(r2) * rA2_bar + 2. * trans(r3) * rA3_bar + trans(r4) * rA4_bar);
+		cB = (h / 6.) * (trans(r1) * rB1_bar + 2. * trans(r2) * rB2_bar + 2. * trans(r3) * rB3_bar + trans(r4) * rB4_bar);
 
 		// Gauss-Newton approximation of the Hessian.
-		cQ = (h / 6.) * (transpose(rA1_bar) * rA1_bar + 2. * transpose(rA2_bar) * rA2_bar + 2. * transpose(rA3_bar) * rA3_bar + transpose(rA4_bar) * rA4_bar);
-		cR = (h / 6.) * (transpose(rB1_bar) * rB1_bar + 2. * transpose(rB2_bar) * rB2_bar + 2. * transpose(rB3_bar) * rB3_bar + transpose(rB4_bar) * rB4_bar);
-		cS = (h / 6.) * (transpose(rA1_bar) * rB1_bar + 2. * transpose(rA2_bar) * rB2_bar + 2. * transpose(rA3_bar) * rB3_bar + transpose(rA4_bar) * rB4_bar);
+		cQ = (h / 6.) * (trans(rA1_bar) * rA1_bar + 2. * trans(rA2_bar) * rA2_bar + 2. * trans(rA3_bar) * rA3_bar + trans(rA4_bar) * rA4_bar);
+		cR = (h / 6.) * (trans(rB1_bar) * rB1_bar + 2. * trans(rB2_bar) * rB2_bar + 2. * trans(rB3_bar) * rB3_bar + trans(rB4_bar) * rB4_bar);
+		cS = (h / 6.) * (trans(rA1_bar) * rB1_bar + 2. * trans(rA2_bar) * rB2_bar + 2. * trans(rA3_bar) * rB3_bar + trans(rA4_bar) * rB4_bar);
 	}
 
 	/*

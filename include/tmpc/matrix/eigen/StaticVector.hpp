@@ -10,10 +10,14 @@
 namespace tmpc {
 
     template <typename Type, size_t N, bool TF = defaultTransposeFlag>
+    using StaticVectorBase = Eigen::Matrix<Type, TF == columnVector ? N : 1, TF == rowVector ? N : 1>;
+
+    template <typename Type, size_t N, bool TF = defaultTransposeFlag>
     struct StaticVector
-    :   Eigen::Matrix<Type, TF == columnVector ? N : 1, TF == rowVector ? N : 1>
+    :   StaticVectorBase<Type, N, TF>
     {
-        typedef Eigen::Matrix<Type, TF == columnVector ? N : 1, TF == rowVector ? N : 1> Base;
+        typedef StaticVectorBase<Type, N, TF> Base;
+        typedef Type ElementType;
 
         StaticVector()
         {        

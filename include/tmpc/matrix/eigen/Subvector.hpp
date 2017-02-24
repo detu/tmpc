@@ -15,31 +15,29 @@ namespace tmpc {
  * Subvectors
  *
  -------------------------------------------------------*/
+template <typename VT>
+using UnalignedSubvectorBase = Eigen::Block<
+        typename EigenType<VT>::type, 
+        VT::RowsAtCompileTime == 1 ? 1 : Eigen::Dynamic, 
+        VT::ColsAtCompileTime == 1 ? 1 : Eigen::Dynamic
+    >;
+
 template <typename VT, bool AF = unaligned, typename Enable = void>
 struct Subvector;
 
 template <typename VT>
 struct Subvector<VT, unaligned, std::enable_if_t<IsVector<VT>::value>> 
-:   Eigen::Block<
-        typename EigenType<VT>::type, 
-        VT::RowsAtCompileTime == 1 ? 1 : Eigen::Dynamic, 
-        VT::ColsAtCompileTime == 1 ? 1 : Eigen::Dynamic
-    >
+:   UnalignedSubvectorBase<VT>
 {
-    typedef Eigen::Block<
-        typename EigenType<VT>::type, 
-        VT::RowsAtCompileTime == 1 ? 1 : Eigen::Dynamic, 
-        VT::ColsAtCompileTime == 1 ? 1 : Eigen::Dynamic
-    > Base;
-
-    typedef typename Base::Scalar Scalar;
+    typedef UnalignedSubvectorBase<VT> Base;
+    typedef typename Base::Scalar ElementType;
 
     Subvector(Base&& rhs)
     :   Base(rhs)
     {        
     }
 
-    Subvector& operator=(Scalar const& rhs)
+    Subvector& operator=(ElementType const& rhs)
     {
         this->setConstant(rhs);
         return *this;

@@ -64,6 +64,7 @@ add_executable(tmpc_test
     #qpoases_problem_test.cpp
     #qp_solver_test.cpp
     casadi_function_test.cpp
+    TestMatrix.cpp
     gtest_tools_eigen.hpp
 
     ${CMAKE_CURRENT_BINARY_DIR}/pendulum_ode_generated.h

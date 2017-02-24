@@ -9,12 +9,16 @@
 
 namespace tmpc 
 {
+    template <typename Type, size_t M, size_t N, bool SO>
+    using StaticMatrixBase =
+        Eigen::Matrix<Type, M, N, StaticMatrixStorageOrder<M, N, SO>::value>;
 
     template <typename Type, size_t M, size_t N, bool SO = defaultStorageOrder>
     struct StaticMatrix
-    :   Eigen::Matrix<Type, M, N, StaticMatrixStorageOrder<M, N, SO>::value>
+    :   StaticMatrixBase<Type, M, N, SO>
     {
-        typedef Eigen::Matrix<Type, M, N, StaticMatrixStorageOrder<M, N, SO>::value> Base;
+        typedef StaticMatrixBase<Type, M, N, SO> Base;
+        typedef Type ElementType;
 
         StaticMatrix()
         {            
@@ -37,4 +41,9 @@ namespace tmpc
         }
     };
 
+    template <typename Type, size_t M, size_t N, bool SO>
+    struct EigenType<StaticMatrix<Type, M, N, SO>>
+    {
+        typedef typename StaticMatrix<Type, M, N, SO>::Base type;
+    };
 }

@@ -9,11 +9,16 @@
 
 namespace tmpc {
 
+template <typename Type, bool SO>
+using DynamicMatrixBase =
+    Eigen::Matrix<Type, Eigen::Dynamic, Eigen::Dynamic, SO == rowMajor ? Eigen::RowMajor : Eigen::ColMajor>;
+
 template <typename Type, bool SO = defaultStorageOrder>
 struct DynamicMatrix
-:   Eigen::Matrix<Type, Eigen::Dynamic, Eigen::Dynamic, SO == rowMajor ? Eigen::RowMajor : Eigen::ColMajor>
+:   DynamicMatrixBase<Type, SO>
 {
-    typedef Eigen::Matrix<Type, Eigen::Dynamic, Eigen::Dynamic, SO == rowMajor ? Eigen::RowMajor : Eigen::ColMajor> Base;
+    typedef DynamicMatrixBase<Type, SO> Base;
+    typedef Type ElementType;
 
     DynamicMatrix(size_t M, size_t N)
     :   Base(M, N)

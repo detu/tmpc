@@ -12,8 +12,7 @@ namespace tmpc
     struct Size;
 
     template <typename T>
-    struct Size<
-        Eigen::DenseBase<T>, 
+    struct Size<T, 
         std::enable_if_t<IsVector<T>::value>
     >
     {

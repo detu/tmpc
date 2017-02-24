@@ -1,4 +1,5 @@
 #include "StorageOrder.hpp"
+#include "EigenType.hpp"
 
 #include <Eigen/Dense>
 
@@ -7,7 +8,10 @@
 namespace tmpc {
 
 template <typename MT, bool SO>
-using Matrix = typename std::enable_if<MT::IsRowMatrix == (SO == rowMajor), Eigen::MatrixBase<MT>>::type;
+using Matrix = std::enable_if_t<
+    MT::IsRowMajor == (SO == rowMajor), 
+    Eigen::MatrixBase<typename EigenType<MT>::type>
+>;
 
 template <typename MT>
 size_t rows(Eigen::MatrixBase<MT> const& m)
