@@ -23,7 +23,6 @@ namespace tmpc
     template <typename T>
     struct IsVector
     {
-        static bool constexpr value = std::is_base_of<Eigen::DenseBase<typename T::Base>, T>::value
-            && (T::RowsAtCompileTime == 1 || T::ColsAtCompileTime == 1);
+        static bool constexpr value = T::RowsAtCompileTime == 1 || T::ColsAtCompileTime == 1;
     };
 }

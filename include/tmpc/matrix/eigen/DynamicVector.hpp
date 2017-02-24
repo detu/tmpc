@@ -2,6 +2,7 @@
 
 #include "TransposeFlag.hpp"
 #include "EigenType.hpp"
+#include "Vector.hpp"
 
 #include <Eigen/Dense>
 
@@ -12,10 +13,10 @@ namespace tmpc
     using DynamicVectorBase =
         Eigen::Matrix<Type, TF == columnVector ? Eigen::Dynamic : 1, TF == rowVector ? Eigen::Dynamic : 1>;
 
-
     template <typename Type, bool TF = defaultTransposeFlag>
     struct DynamicVector
     :   DynamicVectorBase<Type, TF>
+    ,   Vector<DynamicVector<Type, TF>, TF>
     {
         typedef DynamicVectorBase<Type, TF> Base;
         typedef Type ElementType;

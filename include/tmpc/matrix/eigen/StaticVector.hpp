@@ -15,6 +15,7 @@ namespace tmpc {
     template <typename Type, size_t N, bool TF = defaultTransposeFlag>
     struct StaticVector
     :   StaticVectorBase<Type, N, TF>
+    ,   Vector<StaticVector<Type, N, TF>, TF>
     {
         typedef StaticVectorBase<Type, N, TF> Base;
         typedef Type ElementType;

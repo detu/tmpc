@@ -2,6 +2,7 @@
 
 #include "AlignmentFlag.hpp"
 #include "EigenType.hpp"
+#include "Matrix.hpp"
 
 #include <Eigen/Dense>
 
@@ -12,12 +13,33 @@ namespace tmpc {
  * Submatrices
  *
  -------------------------------------------------------*/
+template <typename MT, bool AF>
+struct Submatrix;
+
+template <typename MT, bool AF>
+using SubmatrixBase = Matrix<Submatrix<MT, AF>, MT::IsRowMajor ? rowMajor : columnMajor>;
 
 template <typename MT, bool AF = unaligned>
-using Submatrix = Eigen::Block<typename EigenType<MT>::type, Eigen::Dynamic, Eigen::Dynamic>;
+struct Submatrix
+:   SubmatrixBase<MT, AF>
+{
+    typedef SubmatrixBase<MT, AF> Base;
+
+    Submatrix(EigenBase<MT>&& rhs)
+    :   Base(rhs)
+    {        
+    }
+
+    Submatrix(EigenBase<MT> const& rhs)
+    :   Base(rhs)
+    {        
+    }
+
+    Submatrix(Submatrix const& rhs) = default;
+};
 
 template <typename MT>
-decltype(auto) submatrix(MT& matrix, size_t row, size_t column, size_t m, size_t n)
+decltype(auto) submatrix(Eigen::MatrixBase<MT>& matrix, size_t row, size_t column, size_t m, size_t n)
 {
     return matrix.block(row, column, m, n);
 }
