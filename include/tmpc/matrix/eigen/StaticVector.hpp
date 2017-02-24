@@ -5,7 +5,7 @@
 #include "VectorAssign.hpp"
 #include "EigenType.hpp"
 
-#include <Eigen/Dense>
+#include "Eigen.hpp"
 
 namespace tmpc {
 

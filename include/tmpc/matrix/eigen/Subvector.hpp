@@ -4,7 +4,7 @@
 #include "IsVector.hpp"
 #include "EigenType.hpp"
 
-#include <Eigen/Dense>
+#include "Eigen.hpp"
 
 #include <type_traits>
 

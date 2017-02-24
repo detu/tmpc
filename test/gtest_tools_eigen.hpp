@@ -100,7 +100,7 @@ public:
 	template <typename MatrixA, typename MatrixB>
 	bool operator()(MatrixA const& lhs, MatrixB const& rhs)
 	{
-		return std::max(std::abs(lhs - rhs)) <= tolerance_;
+		return l1Norm(lhs - rhs) <= tolerance_;
 	}
 
 private:

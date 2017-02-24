@@ -3,7 +3,7 @@
 #include "Types.hpp"
 #include "IsVector.hpp"
 
-#include <Eigen/Dense>
+#include "Eigen.hpp"
 
 #include <type_traits>
 

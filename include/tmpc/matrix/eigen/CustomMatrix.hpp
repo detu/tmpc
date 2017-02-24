@@ -4,7 +4,7 @@
 #include "PaddingFlag.hpp"
 #include "StorageOrder.hpp"
 
-#include <Eigen/Dense>
+#include "Eigen.hpp"
 
 namespace tmpc {
 

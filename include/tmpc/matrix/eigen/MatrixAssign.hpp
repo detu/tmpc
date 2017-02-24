@@ -2,7 +2,7 @@
 
 #include "InitializerList.hpp"
 
-#include <Eigen/Dense>
+#include "Eigen.hpp"
 
 namespace tmpc
 {

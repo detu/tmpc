@@ -5,7 +5,7 @@
 #include "Matrix.hpp"
 #include "EigenBase.hpp"
 
-#include <Eigen/Dense>
+#include "Eigen.hpp"
 
 namespace tmpc {
 

@@ -6,7 +6,7 @@
 
 #include <type_traits>
 
-#include <Eigen/Dense>
+#include "Eigen.hpp"
 
 namespace tmpc 
 {

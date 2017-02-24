@@ -6,7 +6,7 @@
 #include "MatrixAssign.hpp"
 #include "Matrix.hpp"
 
-#include <Eigen/Dense>
+#include "Eigen.hpp"
 
 namespace tmpc 
 {

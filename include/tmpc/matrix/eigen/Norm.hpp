@@ -1,18 +1,30 @@
 #pragma once
 
-#include <Eigen/Dense>
+#include "Eigen.hpp"
 
-namespace tmpc
+namespace Eigen
 {
     template <typename T>
-    decltype(auto) norm(Eigen::MatrixBase<T> const& m)
+    decltype(auto) norm(MatrixBase<T> const& m)
     {
         return m.norm();
     }
 
     template <typename T>
-    decltype(auto) squaredNorm(Eigen::MatrixBase<T> const& m)
+    decltype(auto) squaredNorm(MatrixBase<T> const& m)
     {
         return m.squaredNorm();
+    }
+
+    template <unsigned P, typename MT>
+    decltype(auto) lpNorm(MatrixBase<MT> const& m)
+    {
+        return m.template lpNorm<P>();
+    }
+
+    template <typename MT>
+    decltype(auto) l1Norm(MatrixBase<MT> const& m)
+    {
+        return m.template lpNorm<1>();
     }
 }

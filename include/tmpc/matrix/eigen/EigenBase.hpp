@@ -2,7 +2,7 @@
 
 #include "Forward.hpp"
 
-#include <Eigen/Dense>
+#include "Eigen.hpp"
 
 namespace tmpc
 {

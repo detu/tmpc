@@ -2,9 +2,60 @@
 
 #include <gtest/gtest.h>
 
+namespace A
+{
+    template <typename T>
+    struct AA
+    {
+
+    };
+
+    template <typename T>
+    struct BB
+    :   AA<BB<T>>
+    {        
+    };
+
+    using namespace Eigen;
+}
+
+namespace A
+{
+    template <typename T>
+    void f(AA<T> const&)
+    {
+        std::cout << "OK!" << std::endl;
+    }
+}
+
+namespace Eigen
+{
+    template <typename T>
+    void g(MatrixBase<T> const&)
+    {
+        std::cout << "OK!" << std::endl;
+    }
+
+    template <typename T>
+    void lpNorm(MatrixBase<T> const&, unsigned P)
+    {
+        std::cout << "OK!" << std::endl;
+    }
+}
+
+TEST(TestMatrix, testLpNorm)
+{
+    A::BB<int> a;
+    f(a);
+
+    Eigen::MatrixXd m;
+    g(m);
+
+    lpNorm(m, 1);
+}
+
 using namespace tmpc;
 
-/*
 template <typename MT, bool SO>
 std::istream& operator>>(std::istream& is, Matrix<MT, SO>& m)
 {
@@ -45,7 +96,6 @@ TEST(TestMatrix, testInputStaticVector)
 
     EXPECT_EQ(v, (V {1., 2., 3.}));
 }
-*/
 
 #ifndef USE_BLAZE
 

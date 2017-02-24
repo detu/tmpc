@@ -4,7 +4,7 @@
 #include "EigenType.hpp"
 #include "Vector.hpp"
 
-#include <Eigen/Dense>
+#include "Eigen.hpp"
 
 namespace tmpc 
 {

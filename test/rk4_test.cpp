@@ -396,7 +396,7 @@ TEST_F(rk4_test, integrate_no_sens_correct)
 	while (test_data_ >> p)
 	{
 		auto const xplus = integrate(integrator_, ode_, p.t, p.x0, p.u);
-		EXPECT_THAT(as_container(xplus), testing::Pointwise(FloatNearPointwise(1e-5), as_container(p.xplus)));
+		EXPECT_PRED2(MatrixApproxEquality(1e-5), xplus, p.xplus);
 
 		++count;
 	}

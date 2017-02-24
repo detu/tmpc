@@ -153,13 +153,13 @@ namespace tmpc
 		static_assert(Rows<QuadStateMatrix_>::value == NQ && Columns<QuadStateMatrix_>::value == NX, "qA must be of size NQ*NX"   );
 		static_assert(Rows<QuadInputMatrix_>::value == NQ && Columns<QuadInputMatrix_>::value == NU, "qB must be of size NQ*NU"   );
 
-		typedef StaticVector<double, NX> StateVector;
-		typedef StaticMatrix<double, NX, NX> StateStateMatrix;
-		typedef StaticMatrix<double, NX, NU> StateInputMatrix;
+		typedef typename ODE::StateVector OdeOutStateVector;
+		typedef typename ODE::StateStateMatrix OdeOutStateStateMatrix;
+		typedef typename ODE::StateInputMatrix OdeOutStateInputMatrix;
 
-		StateVector k1, k2, k3, k4;
-		StateStateMatrix A1, A2, A3, A4;
-		StateInputMatrix B1, B2, B3, B4;
+		OdeOutStateVector k1, k2, k3, k4;
+		OdeOutStateStateMatrix A1, A2, A3, A4;
+		OdeOutStateInputMatrix B1, B2, B3, B4;
 
 		StaticVector<double, NQ> dq1, dq2, dq3, dq4;
 		StaticMatrix<double, NQ, NX, columnMajor> qA1, qA2, qA3, qA4;

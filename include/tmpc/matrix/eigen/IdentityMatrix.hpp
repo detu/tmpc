@@ -3,7 +3,7 @@
 #include "StaticMatrix.hpp"
 #include "DynamicMatrix.hpp"
 
-#include <Eigen/Dense>
+#include "Eigen.hpp"
 
 namespace tmpc
 {
