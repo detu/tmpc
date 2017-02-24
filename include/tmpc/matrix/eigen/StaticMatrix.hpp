@@ -4,6 +4,7 @@
 #include "StorageOrder.hpp"
 #include "MatrixAssign.hpp"
 #include "Matrix.hpp"
+#include "EigenBase.hpp"
 
 #include <Eigen/Dense>
 
@@ -12,26 +13,28 @@ namespace tmpc
     template <typename Type, size_t M, size_t N, bool SO = defaultStorageOrder>
     struct StaticMatrix
     :   Matrix<StaticMatrix<Type, M, N, SO>, SO>
+    ,   EigenBase<StaticMatrix<Type, M, N, SO>>
     {
-        typedef Matrix<StaticMatrix<Type, M, N, SO>, SO> Base;
+        using OurEigenBase = EigenBase<StaticMatrix<Type, M, N, SO>>;
+        typedef Type ElementType;
 
         StaticMatrix()
         {            
         }
 
         StaticMatrix(Type const& rhs)
-        :   Base(rhs)
         {            
+            this->setConstant(rhs);
         }
 
         StaticMatrix(initializer_list<initializer_list<Type>> list)
-        :   Base(list)
         {
+            assign(*this, list);
         }
 
         template <typename T>
         StaticMatrix(Eigen::MatrixBase<T> const& rhs)
-        :   Base(rhs)
+        :   OurEigenBase(rhs)
         {        
         }
     };

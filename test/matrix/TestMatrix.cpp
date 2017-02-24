@@ -4,6 +4,7 @@
 
 using namespace tmpc;
 
+/*
 template <typename MT, bool SO>
 std::istream& operator>>(std::istream& is, Matrix<MT, SO>& m)
 {
@@ -44,6 +45,7 @@ TEST(TestMatrix, testInputStaticVector)
 
     EXPECT_EQ(v, (V {1., 2., 3.}));
 }
+*/
 
 #ifndef USE_BLAZE
 
@@ -59,14 +61,22 @@ TEST(TestMatrix, testSize)
         "Size<StaticVector<double, 2>>::value must be equal to 2!");
 }
 
-TEST(TestMatrix, testDynamicSubmatrixConstructorFromEigenBlock)
+TEST(TestMatrix, testColumns)
 {
-    using EigenMatrix = Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
+    DynamicMatrix<double> m(10, 20);
+    EXPECT_EQ(columns(m), 20);
+}
 
-    DynamicMatrix<double> m(20, 30);
-    Eigen::Block<EigenMatrix, Eigen::Dynamic, Eigen::Dynamic> b(m, 2, 3, 4, 5);
+TEST(TestMatrix, testRows)
+{
+    DynamicMatrix<double> m(10, 20);
+    EXPECT_EQ(rows(m), 10);
+}
 
-    Submatrix<DynamicMatrix<double>> sm(b);
+TEST(TestMatrix, testIsDerivedFromMatrixTag)
+{
+    static_assert(std::is_base_of<MatrixTag, DynamicMatrix<double>>::value, 
+        "DynamicMatrix must be derived from MatrixTag");
 }
 
 #endif

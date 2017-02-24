@@ -96,21 +96,7 @@ target_link_libraries(tmpc_test
     ${CMAKE_THREAD_LIBS_INIT}    # Needed for gtest
 )
 
-add_executable(matrix_test
-    TestMatrix.cpp
-)
+add_subdirectory(matrix)
 
-target_include_directories(matrix_test
-    PRIVATE "${CMAKE_SOURCE_DIR}/include"
-)
-
-add_dependencies(matrix_test googletest)
-
-target_link_libraries(matrix_test
-    gtest
-    gtest_main
-    gmock
-    ${CMAKE_THREAD_LIBS_INIT}    # Needed for gtest
-)
 #enable_testing()
 #add_test(AllTests tmpc_test)

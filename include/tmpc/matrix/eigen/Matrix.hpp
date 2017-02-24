@@ -5,16 +5,14 @@
 #include "InitializerList.hpp"
 #include "MatrixAssign.hpp"
 #include "EigenBase.hpp"
-
-#include <Eigen/Dense>
-
-#include <type_traits>
+#include "IsEigenMatrix.hpp"
 
 namespace tmpc 
 {
+    struct MatrixTag {};
 
     template <typename MT, bool SO>
-    struct Matrix : EigenBase<MT>
+    struct Matrix : MatrixTag
     {
         MT& operator~()
         {
@@ -25,58 +23,29 @@ namespace tmpc
         {
             return static_cast<MT const&>(*this);
         }
-
-        typedef EigenBase<MT> OurEigenBase;
-        typedef typename OurEigenBase::Scalar ElementType;
-
-    protected:
-        Matrix()
-        {            
-        }
-
-        Matrix(OurEigenBase&& rhs)
-        :   OurEigenBase(rhs)
-        {            
-        }
-
-        Matrix(OurEigenBase const& rhs)
-        :   OurEigenBase(rhs)
-        {            
-        }
-        
-        Matrix(size_t M, size_t N)
-        :   OurEigenBase(M, N)
-        {        
-        }
-
-        Matrix(size_t M, size_t N, ElementType const& val)
-        :   OurEigenBase(M, N)
-        {
-            this->setConstant(val);
-        }
-
-        Matrix(initializer_list<initializer_list<ElementType>> list)
-        :   OurEigenBase(list.size(), determineColumns(list))
-        {
-            assign(*this, list);
-        }
-
-        template <typename T>
-        Matrix(Eigen::MatrixBase<T> const& rhs)
-        :   OurEigenBase(rhs)
-        {        
-        }
     };
 
     template <typename MT>
-    size_t rows(Eigen::MatrixBase<MT> const& m)
+    std::enable_if_t<IsEigenMatrix<MT>::value, size_t> rows(MT const& m)
     {
         return m.rows();
     }
 
+    template <typename MT, bool SO>
+    size_t rows(Matrix<MT, SO> const& m)
+    {
+        return (~m).rows();
+    }
+
     template <typename MT>
-    size_t columns(Eigen::MatrixBase<MT> const& m)
+    std::enable_if_t<IsEigenMatrix<MT>::value, size_t> columns(MT const& m)
     {
         return m.cols();
+    }
+
+    template <typename MT, bool SO>
+    size_t columns(Matrix<MT, SO> const& m)
+    {
+        return (~m).cols();
     }
 }

@@ -3,6 +3,7 @@
 #include "AlignmentFlag.hpp"
 #include "EigenType.hpp"
 #include "Matrix.hpp"
+#include "EigenBase.hpp"
 
 #include <Eigen/Dense>
 
@@ -22,11 +23,18 @@ using SubmatrixBase = Matrix<Submatrix<MT, AF>, MT::IsRowMajor ? rowMajor : colu
 template <typename MT, bool AF = unaligned>
 struct Submatrix
 :   SubmatrixBase<MT, AF>
+,   EigenBase<Submatrix<MT, AF>>
 {
-    typedef SubmatrixBase<MT, AF> Base;
+    using Base = SubmatrixBase<MT, AF>;
+    using OurEigenBase = EigenBase<Submatrix<MT, AF>>;
 
-    Submatrix(typename Base::OurEigenBase const& rhs)
-    :   Base(rhs.nestedExpression(), rhs.startRow(), rhs.startCol(), rhs.rows(), rhs.cols())
+    Submatrix(OurEigenBase&& rhs)
+    :   OurEigenBase(std::move(rhs))
+    {        
+    }
+
+    Submatrix(OurEigenBase const& rhs)
+    :   OurEigenBase(rhs)
     {        
     }
 

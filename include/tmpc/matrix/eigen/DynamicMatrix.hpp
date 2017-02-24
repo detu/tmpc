@@ -13,27 +13,32 @@ namespace tmpc
     template <typename Type, bool SO = defaultStorageOrder>
     struct DynamicMatrix
     :   Matrix<DynamicMatrix<Type, SO>, SO>
+	,	EigenBase<DynamicMatrix<Type, SO>>
     {
-        typedef Matrix<DynamicMatrix<Type, SO>, SO> Base;
+        using Base = Matrix<DynamicMatrix<Type, SO>, SO>;
+		using OurEigenBase = EigenBase<DynamicMatrix<Type, SO>>;
+    	using ElementType = Type;
 
         DynamicMatrix(size_t M, size_t N)
-        :   Base(M, N)
+        :   OurEigenBase(M, N)
         {        
         }
 
-        DynamicMatrix(size_t M, size_t N, Type const& val)
-        :   Base(M, N, val)
-        {
-        }
+	    DynamicMatrix(size_t M, size_t N, Type const& val)
+	    :   OurEigenBase(M, N)
+	    {
+	        this->setConstant(val);
+	    }
 
-        DynamicMatrix(initializer_list<initializer_list<Type>> list)
-        :   Base(list)
-        {
-        }
+	    DynamicMatrix(initializer_list<initializer_list<Type>> list)
+	    :   OurEigenBase(list.size(), determineColumns(list))
+	    {
+	        assign(*this, list);
+	    }
 
         template <typename T>
         DynamicMatrix(Eigen::MatrixBase<T> const& rhs)
-        :   Base(rhs)
+        :   OurEigenBase(rhs)
         {        
         }
     };
