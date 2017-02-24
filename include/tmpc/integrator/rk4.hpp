@@ -153,13 +153,13 @@ namespace tmpc
 		static_assert(Rows<QuadStateMatrix_>::value == NQ && Columns<QuadStateMatrix_>::value == NX, "qA must be of size NQ*NX"   );
 		static_assert(Rows<QuadInputMatrix_>::value == NQ && Columns<QuadInputMatrix_>::value == NU, "qB must be of size NQ*NU"   );
 
-		typedef typename ODE::StateVector OdeOutStateVector;
-		typedef typename ODE::StateStateMatrix OdeOutStateStateMatrix;
-		typedef typename ODE::StateInputMatrix OdeOutStateInputMatrix;
+		typedef StaticVector<double, NX> StateVector;
+		typedef StaticMatrix<double, NX, NX, columnMajor> StateStateMatrix;
+		typedef StaticMatrix<double, NX, NU, columnMajor> StateInputMatrix;
 
-		OdeOutStateVector k1, k2, k3, k4;
-		OdeOutStateStateMatrix A1, A2, A3, A4;
-		OdeOutStateInputMatrix B1, B2, B3, B4;
+		StateVector k1, k2, k3, k4;
+		StateStateMatrix A1, A2, A3, A4;
+		StateInputMatrix B1, B2, B3, B4;
 
 		StaticVector<double, NQ> dq1, dq2, dq3, dq4;
 		StaticMatrix<double, NQ, NX, columnMajor> qA1, qA2, qA3, qA4;
@@ -243,16 +243,16 @@ namespace tmpc
 		static_assert(Rows<SMatrix      >::value == NX && Columns<SMatrix   >::value == NU, "cS must be of size NX*NU"   );
 
 		typedef StaticVector<double, NX> StateVector;
-		typedef StaticMatrix<double, NX, NX> StateStateMatrix;
-		typedef StaticMatrix<double, NX, NU> StateInputMatrix;
+		typedef StaticMatrix<double, NX, NX, columnMajor> StateStateMatrix;
+		typedef StaticMatrix<double, NX, NU, columnMajor> StateInputMatrix;
 
 		StateVector k1, k2, k3, k4;
 		StateStateMatrix A1, A2, A3, A4;
 		StateInputMatrix B1, B2, B3, B4;
 
 		StaticVector<double, NR>  r1,  r2,  r3,  r4;
-		StaticMatrix<double, NR, NX> rA1, rA2, rA3, rA4;
-		StaticMatrix<double, NR, NU> rB1, rB2, rB3, rB4;
+		StaticMatrix<double, NR, NX, columnMajor> rA1, rA2, rA3, rA4;
+		StaticMatrix<double, NR, NU, columnMajor> rB1, rB2, rB3, rB4;
 		auto const h = integrator.timeStep();
 
 		// Calculating next state, quadrature and cost
@@ -359,19 +359,19 @@ namespace tmpc
 		static_assert(Rows<SMatrix         >::value == NX && Columns<SMatrix         >::value == NU, "cS must be of size NX*NU"   );
 
 		typedef StaticVector<double, NX> StateVector;
-		typedef StaticMatrix<double, NX, NX> StateStateMatrix;
-		typedef StaticMatrix<double, NX, NU> StateInputMatrix;
+		typedef StaticMatrix<double, NX, NX, columnMajor> StateStateMatrix;
+		typedef StaticMatrix<double, NX, NU, columnMajor> StateInputMatrix;
 
 		StateVector k1, k2, k3, k4;
 		StateStateMatrix A1, A2, A3, A4;
 		StateInputMatrix B1, B2, B3, B4;
 
 		StaticVector<double, NQ> dq1, dq2, dq3, dq4;
-		StaticMatrix<double, NQ, NX> qA1, qA2, qA3, qA4;
-		StaticMatrix<double, NQ, NU> qB1, qB2, qB3, qB4;
+		StaticMatrix<double, NQ, NX, columnMajor> qA1, qA2, qA3, qA4;
+		StaticMatrix<double, NQ, NU, columnMajor> qB1, qB2, qB3, qB4;
 		StaticVector<double, NR>  r1,  r2,  r3,  r4;
-		StaticMatrix<double, NR, NX> rA1, rA2, rA3, rA4;
-		StaticMatrix<double, NR, NU> rB1, rB2, rB3, rB4;
+		StaticMatrix<double, NR, NX, columnMajor> rA1, rA2, rA3, rA4;
+		StaticMatrix<double, NR, NU, columnMajor> rB1, rB2, rB3, rB4;
 		auto const h = integrator.timeStep();
 
 		// Calculating next state, quadrature and cost
