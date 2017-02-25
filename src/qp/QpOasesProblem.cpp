@@ -130,7 +130,7 @@ void QpOasesProblem::InitStages()
 		auto const A = submatrix(_A, na          , n           , nx_next , sz->nx());
 		auto const B = submatrix(_A, na          , n + sz->nx(), nx_next , sz->nu());
 		auto const C = submatrix(_A, na + nx_next, n           , sz->nc(), sz->nx());
-		auto const D = submatrix(_A, na + nx_next, n + sz->nx(), sz->nc(), sz->nx());
+		auto const D = submatrix(_A, na + nx_next, n + sz->nx(), sz->nc(), sz->nu());
 
 		auto const lbb = subvector(_lbA, na, nx_next);
 		auto const ubb = subvector(_ubA, na, nx_next);

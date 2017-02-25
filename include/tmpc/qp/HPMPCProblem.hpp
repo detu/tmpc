@@ -46,20 +46,20 @@ namespace tmpc
 
 			Stage(QpSize const& sz, size_t nx_next)
 			:	size_(sz)
-			,	Q_(sz.nx(), sz.nx(), sNaN)
-			,	R_(sz.nu(), sz.nu(), sNaN)
-			,	S_(sz.nx(), sz.nu(), sNaN)
-			,	q_(sz.nx(), sNaN)
-			,	r_(sz.nu(), sNaN)
-			,	A_(nx_next, sz.nx(), sNaN)
-			,	B_(nx_next, sz.nu(), sNaN)
-			,	b_(nx_next, sNaN)
-			,	C_(sz.nc(), sz.nx(), sNaN)
-			,	D_(sz.nc(), sz.nu(), sNaN)
-			,	lb_(sz.nu() + sz.nx(), sNaN)
-			,	ub_(sz.nu() + sz.nx(), sNaN)
-			,	lbd_(sz.nc(), sNaN)
-			,	ubd_(sz.nc(), sNaN)
+			,	Q_(sz.nx(), sz.nx(), sNaN())
+			,	R_(sz.nu(), sz.nu(), sNaN())
+			,	S_(sz.nx(), sz.nu(), sNaN())
+			,	q_(sz.nx(), sNaN())
+			,	r_(sz.nu(), sNaN())
+			,	A_(nx_next, sz.nx(), sNaN())
+			,	B_(nx_next, sz.nu(), sNaN())
+			,	b_(nx_next, sNaN())
+			,	C_(sz.nc(), sz.nx(), sNaN())
+			,	D_(sz.nc(), sz.nu(), sNaN())
+			,	lb_(sz.nu() + sz.nx(), sNaN())
+			,	ub_(sz.nu() + sz.nx(), sNaN())
+			,	lbd_(sz.nc(), sNaN())
+			,	ubd_(sz.nc(), sNaN())
 			{
 			}
 
@@ -448,7 +448,10 @@ namespace tmpc
 
 		// Private data members.
 		//
-		static double constexpr sNaN = std::numeric_limits<double>::signaling_NaN();
+		static Scalar constexpr sNaN()
+		{
+			return std::numeric_limits<Scalar>::signaling_NaN();
+		}
 
 		// Stores stage data
 		std::vector<Stage> stage_;

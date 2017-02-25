@@ -90,13 +90,13 @@ endif()
 # Add HPMPC interface
 #
 if (HPMPC_FOUND)
-    target_sources(tmpc
-        PRIVATE ${TMPC_INCLUDE_DIR}/qp/HPMPCSolver.hpp
-        PRIVATE qp/HPMPCSolver.cpp
-        PRIVATE ${TMPC_INCLUDE_DIR}/qp/HPMPCProblem.hpp
-        PRIVATE ${TMPC_INCLUDE_DIR}/qp/HPMPCSolution.hpp
-        PRIVATE qp/HPMPCProblemExport.hpp
-        PRIVATE qp/HPMPCProblemExport.cpp
+    target_sources(tmpc PRIVATE 
+        ${TMPC_INCLUDE_DIR}/qp/HPMPCSolver.hpp
+        qp/HPMPCSolver.cpp
+        ${TMPC_INCLUDE_DIR}/qp/HPMPCProblem.hpp
+        ${TMPC_INCLUDE_DIR}/qp/HPMPCSolution.hpp
+        qp/HPMPCProblemExport.hpp
+        qp/HPMPCProblemExport.cpp
     )
 
     target_include_directories(tmpc

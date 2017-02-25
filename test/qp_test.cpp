@@ -93,7 +93,7 @@ TYPED_TEST(QuadraticProblemTest, get_set_interface_works)
 		stage.set_R(R[i] = rand_matrix.generate(sz.nu(), sz.nu()));
 		stage.set_S(S[i] = rand_matrix.generate(sz.nx(), sz.nu()));
 		stage.set_q(q[i] = rand_vector.generate(sz.nx()));
-		stage.set_r(r[i] = rand_vector.generate(sz.nx()));
+		stage.set_r(r[i] = rand_vector.generate(sz.nu()));
 
 		stage.set_A(A[i] = rand_matrix.generate(nx1, sz.nx()));
 		stage.set_B(B[i] = rand_matrix.generate(nx1, sz.nu()));
