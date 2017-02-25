@@ -1,15 +1,26 @@
 #pragma once 
 
 #include "StorageOrder.hpp"
-#include "EigenType.hpp"
+//#include "EigenType.hpp"
 #include "InitializerList.hpp"
 #include "MatrixAssign.hpp"
 #include "Matrix.hpp"
+#include "Rand.hpp"
 
 #include "Eigen.hpp"
 
 namespace tmpc 
 {
+    template <typename Type, bool SO>
+    struct DynamicMatrix;
+
+    template <typename Type, bool SO>
+    struct EigenBaseSelector<DynamicMatrix<Type, SO>>
+    {
+        using type = Eigen::Matrix<Type, Eigen::Dynamic, Eigen::Dynamic, 
+            SO == rowMajor ? Eigen::RowMajor : Eigen::ColMajor>;
+    };
+
     template <typename Type, bool SO = defaultStorageOrder>
     struct DynamicMatrix
     :   Matrix<DynamicMatrix<Type, SO>, SO>
@@ -18,6 +29,10 @@ namespace tmpc
         using Base = Matrix<DynamicMatrix<Type, SO>, SO>;
 		using OurEigenBase = EigenBase<DynamicMatrix<Type, SO>>;
     	using ElementType = Type;
+
+        DynamicMatrix()
+        {
+        }
 
         DynamicMatrix(size_t M, size_t N)
         :   OurEigenBase(M, N)
@@ -43,10 +58,13 @@ namespace tmpc
         }
     };
 
-    template <typename Type, bool SO>
-    struct EigenType<DynamicMatrix<Type, SO>>
+    template <typename MT, bool SO>
+    struct Rand<DynamicMatrix<MT, SO>>
     {
-        typedef typename DynamicMatrix<Type, SO>::Base type;
+        decltype(auto) generate(size_t M, size_t N)
+        {
+            return DynamicMatrix<MT, SO>::Random(M, N);
+        }
     };
 
 }

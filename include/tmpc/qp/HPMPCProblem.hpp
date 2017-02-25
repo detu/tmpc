@@ -31,10 +31,11 @@ namespace tmpc
 	*
 	*	TODO: parameterize HPMPCProblem by a kernel class.
 	*/
-	template <typename Scalar>
+	template <typename Scalar_>
 	class HPMPCProblem
 	{
 	public:
+		using Scalar = Scalar_;
 
 		class Stage
 		{
@@ -126,7 +127,7 @@ namespace tmpc
 				lbd_ = lbd;
 			}
 
-			Subvector<Vector> get_lbu() const {
+			Subvector<Vector const> get_lbu() const {
 				return subvector(lb_, 0, size_.nu());
 			}
 
@@ -135,7 +136,7 @@ namespace tmpc
 				subvector(lb_, 0, size_.nu()) = lbu;
 			}
 
-			Subvector<Vector> get_lbx() const {
+			Subvector<Vector const> get_lbx() const {
 				return subvector(lb_, size_.nu(), size_.nx());
 			}
 
@@ -198,7 +199,7 @@ namespace tmpc
 				ubd_ = ubd;
 			}
 
-			Subvector<Vector> get_ubu() const {
+			Subvector<Vector const> get_ubu() const {
 				return subvector(ub_, 0, size_.nu());
 			}
 
@@ -207,7 +208,7 @@ namespace tmpc
 				subvector(ub_, 0, size_.nu()) = ubu;
 			}
 
-			Subvector<Vector> get_ubx() const {
+			Subvector<Vector const> get_ubx() const {
 				return subvector(ub_, size_.nu(), size_.nx());
 			}
 

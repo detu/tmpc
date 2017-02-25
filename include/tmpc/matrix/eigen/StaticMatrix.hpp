@@ -10,6 +10,20 @@
 
 namespace tmpc 
 {
+    template <typename Type, size_t M, size_t N, bool SO>
+    struct StaticMatrix;
+
+    template <typename Type, size_t M, size_t N, bool SO>
+    struct EigenBaseSelector<StaticMatrix<Type, M, N, SO>>
+    {
+        static bool constexpr storageOrder = 
+            (M > 1 && N == 1) 
+            ? Eigen::ColMajor 
+            : (SO == rowMajor ? Eigen::RowMajor : Eigen::ColMajor);
+
+        using type = Eigen::Matrix<Type, M, N, storageOrder>;
+    };
+
     template <typename Type, size_t M, size_t N, bool SO = defaultStorageOrder>
     struct StaticMatrix
     :   Matrix<StaticMatrix<Type, M, N, SO>, SO>
@@ -39,9 +53,11 @@ namespace tmpc
         }
     };
 
+    /*
     template <typename Type, size_t M, size_t N, bool SO>
     struct EigenType<StaticMatrix<Type, M, N, SO>>
     {
         typedef typename StaticMatrix<Type, M, N, SO>::Base type;
     };
+    */
 }

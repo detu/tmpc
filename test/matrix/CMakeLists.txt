@@ -1,6 +1,7 @@
 add_executable(test_matrix
-    TestMatrix.cpp
-    TestDynamicSubmatrix.cpp
+    MatrixTest.cpp
+    DynamicSubmatrixTest.cpp
+    DynamicSubvectorTest.cpp
 )
 
 target_include_directories(test_matrix

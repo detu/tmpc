@@ -3,58 +3,85 @@
 #include "AlignmentFlag.hpp"
 #include "IsVector.hpp"
 #include "EigenType.hpp"
-
-#include "Eigen.hpp"
+#include "IsRowVector.hpp"
+#include "EigenBase.hpp"
 
 #include <type_traits>
 
-namespace tmpc {
-
-/*------------------------------------------------------
- *
- * Subvectors
- *
- -------------------------------------------------------*/
-template <typename VT>
-using UnalignedSubvectorBase = Eigen::Block<
-        typename EigenType<VT>::type, 
-        VT::RowsAtCompileTime == 1 ? 1 : Eigen::Dynamic, 
-        VT::ColsAtCompileTime == 1 ? 1 : Eigen::Dynamic
-    >;
-
-template <typename VT, bool AF = unaligned, typename Enable = void>
-struct Subvector;
-
-template <typename VT>
-struct Subvector<VT, unaligned, std::enable_if_t<IsVector<VT>::value>> 
-:   UnalignedSubvectorBase<VT>
+namespace tmpc 
 {
-    typedef UnalignedSubvectorBase<VT> Base;
-    typedef typename Base::Scalar ElementType;
+    template <typename VT, bool AF, bool TF>
+    struct Subvector;
 
-    Subvector(Base&& rhs)
-    :   Base(rhs)
-    {        
-    }
-
-    Subvector& operator=(ElementType const& rhs)
+    template <typename VT, bool AF, bool TF>
+    struct EigenBaseSelector<Subvector<VT, AF, TF>>
     {
-        this->setConstant(rhs);
-        return *this;
-    }
+        using type = Eigen::VectorBlock<
+            EigenBase<VT>, 
+            Eigen::Dynamic
+        >;
+    };
 
-    template <typename T>
-    Subvector& operator=(Eigen::MatrixBase<T> const& rhs)
+    /*------------------------------------------------------
+    *
+    * Subvectors
+    *
+    -------------------------------------------------------*/
+    template <
+        typename VT, 
+        bool AF = unaligned,
+        bool TF = IsRowVector<VT>::value
+    >
+    struct Subvector
+    :   Vector<Subvector<VT, AF, TF>, TF>
+    ,   EigenBase<Subvector<VT, AF, TF>>
     {
-        Base::operator=(rhs);
-        return *this;
+        typedef EigenBase<Subvector<VT, AF, TF>> OurEigenBase;
+        typedef typename OurEigenBase::Scalar ElementType;
+
+        Subvector(OurEigenBase&& rhs)
+        :   OurEigenBase(std::move(rhs))
+        {        
+        }
+
+        Subvector(Subvector<OurEigenBase>&& rhs)
+        :   OurEigenBase(std::move(rhs))
+        {        
+        }
+
+        Subvector(OurEigenBase const& rhs)
+        :   OurEigenBase(rhs)
+        {        
+        }
+
+        Subvector(Subvector<OurEigenBase> const& rhs)
+        :   OurEigenBase(rhs)
+        {        
+        }
+
+        Subvector& operator=(ElementType const& rhs)
+        {
+            this->setConstant(rhs);
+            return *this;
+        }
+
+        template <typename T>
+        Subvector& operator=(Eigen::MatrixBase<T> const& rhs)
+        {
+            OurEigenBase::operator=(rhs);
+            return *this;
+        }
+    };
+
+    template <typename VT>
+    Subvector<VT, unaligned> subvector(Eigen::MatrixBase<VT>& v, size_t index, size_t size)
+    {
+        return v.segment(index, size);
     }
-};
 
-template <typename VT>
-Subvector<VT, unaligned> subvector(VT& vector, size_t index, size_t size)
-{
-    return vector.segment(index, size);
-}
-
+    template <typename VT>
+    Subvector<VT const, unaligned> subvector(Eigen::MatrixBase<VT> const& v, size_t index, size_t size)
+    {
+        return v.segment(index, size);
+    }
 }

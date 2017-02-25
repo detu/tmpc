@@ -1,6 +1,7 @@
 #pragma once
 
-#include "Forward.hpp"
+//#include "Forward.hpp"
+#include "IsEigenMatrix.hpp"
 
 #include "Eigen.hpp"
 
@@ -12,27 +13,15 @@ namespace tmpc
     template <typename T>
     using EigenBase = typename EigenBaseSelector<T>::type;
 
-    template <typename Type, size_t M, size_t N, bool SO>
-    struct EigenBaseSelector<StaticMatrix<Type, M, N, SO>>
+    template <typename T>
+    struct EigenBaseSelector //<T, std::enable_if_t<IsEigenMatrix<T>::value>>
     {
-        static bool constexpr storageOrder = 
-            (M > 1 && N == 1) 
-            ? Eigen::ColMajor 
-            : (SO == rowMajor ? Eigen::RowMajor : Eigen::ColMajor);
-
-        using type = Eigen::Matrix<Type, M, N, storageOrder>;
+        using type = T;
     };
 
-    template <typename Type, bool SO>
-    struct EigenBaseSelector<DynamicMatrix<Type, SO>>
+    template <typename T>
+    struct EigenBaseSelector<T const>
     {
-        using type = Eigen::Matrix<Type, Eigen::Dynamic, Eigen::Dynamic, 
-            SO == rowMajor ? Eigen::RowMajor : Eigen::ColMajor>;
-    };
-
-    template <typename MT, bool AF>
-    struct EigenBaseSelector<Submatrix<MT, AF>>
-    {
-        using type = Eigen::Block<EigenBase<MT>, Eigen::Dynamic, Eigen::Dynamic>;
+        using type = EigenBase<T> const;
     };
 }
