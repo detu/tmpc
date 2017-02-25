@@ -101,38 +101,41 @@ TEST(QpOasesProblemTest, test_MatricesCorrect_1)
 	std::cout << "p.ubA() = " << std::endl << p.ubA() << std::endl;
 	*/
 
+	auto constexpr nan = std::numeric_limits<double>::signaling_NaN();
 	DynamicMatrix<double> H_expected(total_nx, total_nx, 0.);
-	DynamicVector<double> g_expected(total_nx);
-	DynamicVector<double> lb_expected(total_nx);
-	DynamicVector<double> ub_expected(total_nx);
+	DynamicVector<double> g_expected(total_nx, nan);
+	DynamicVector<double> lb_expected(total_nx, nan);
+	DynamicVector<double> ub_expected(total_nx, nan);
 	DynamicMatrix<double> A_expected(total_nc, total_nx, 0.);
-	DynamicVector<double> lbA_expected(total_nc);
-	DynamicVector<double> ubA_expected(total_nc);
+	DynamicVector<double> lbA_expected(total_nc, nan);
+	DynamicVector<double> ubA_expected(total_nc, nan);
 
-	size_t i = 0, j = 0, ia = 0;
+	size_t i = 0, ia = 0;
 	for (auto stage = p.begin(); stage != p.end(); ++stage)
 	{
 		size_t const nx = stage->size().nx();
 		size_t const nu = stage->size().nu();
 		size_t const nc = stage->size().nc();
-		size_t const nx1 = stage + 1 != p.end() ? stage[1].nx() : 0;
+		size_t const nx1 = stage + 1 != p.end() ? stage[1].size().nx() : 0;
 
-		submatrix(H_expected,  i     , j, nx, nx) =       stage->get_Q();	submatrix(H_expected, i     , j + nx, nx, nu) = stage->get_S();
-		submatrix(H_expected,  i + nx, j, nu, nx) = trans(stage->get_S());	submatrix(H_expected, i + nx, j + nx, nu, nu) = stage->get_R();
+		submatrix(H_expected,  i     , i, nx, nx) =       stage->get_Q();	submatrix(H_expected, i     , i + nx, nx, nu) = stage->get_S();
+		submatrix(H_expected,  i + nx, i, nu, nx) = trans(stage->get_S());	submatrix(H_expected, i + nx, i + nx, nu, nu) = stage->get_R();
 
 		subvector(g_expected, i, nx) = stage->get_q();	subvector(g_expected, i + nx, nu) = stage->get_r();
 		subvector(lb_expected, i, nx) = stage->get_lbx();	subvector(lb_expected, i + nx, nu) = stage->get_lbu();
 		subvector(ub_expected, i, nx) = stage->get_ubx();	subvector(ub_expected, i + nx, nu) = stage->get_ubu();
 
-		submatrix(A, ia      , i, nx1, nx) = stage->get_A();	submatrix(A, ia      , i + nx, nx1, nu) = stage->get_B();	submatrix(A, ia, i + nx + nu, nx1, nx1) = -IdentityMatrix<DynamicMatrix<double>>(nx1, 1.);
-		submatrix(A, ia + nx1, i, nc , nx) = stage->get_C();	submatrix(A, ia + nx1, i + nx, nx , nu) = stage->get_D();
+		submatrix(A_expected, ia      , i, nx1, nx) = stage->get_A();	submatrix(A_expected, ia      , i + nx, nx1, nu) = stage->get_B();	submatrix(A_expected, ia, i + nx + nu, nx1, nx1) = -IdentityMatrix<DynamicMatrix<double>>(nx1);
+		submatrix(A_expected, ia + nx1, i, nc , nx) = stage->get_C();	submatrix(A_expected, ia + nx1, i + nx, nc , nu) = stage->get_D();
 
 		subvector(lbA_expected, ia, nx1) = 0.;	subvector(lbA_expected, ia + nx1, nc) = stage->get_lbd();
 		subvector(ubA_expected, ia, nx1) = 0.;	subvector(ubA_expected, ia + nx1, nc) = stage->get_ubd();
 
-		i += nx + nu;	j += nx + nu;
-		ia += nx + nc;
+		i += nx + nu;
+		ia += nx1 + nc;
 	}
+
+	ASSERT_EQ(ia, rows(A_expected));
 
 	EXPECT_EQ(print_wrap(p.H()), print_wrap(H_expected));
 	EXPECT_EQ(print_wrap(p.g()), print_wrap(g_expected));
