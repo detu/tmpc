@@ -24,9 +24,9 @@ namespace tmpc
 		// Initialize all numeric data to NaN so that if an uninitialized object
 		// by mistake used in calculations is easier to detect.
 		:	size_(sz)
-		,	_x(sz.nx(), sNaN)
-		,	_u(sz.nu(), sNaN)
-		,	_lam(2 * sz.nc() + 2 * (sz.nx() + sz.nu()), sNaN)
+		,	_x(sz.nx(), sNaN())
+		,	_u(sz.nu(), sNaN())
+		,	_lam(2 * sz.nc() + 2 * (sz.nx() + sz.nu()), sNaN())
 		{
 		}
 
@@ -68,7 +68,10 @@ namespace tmpc
 		DynamicVector<Scalar> _u;
 		DynamicVector<Scalar> _lam;
 
-		static Scalar constexpr sNaN = std::numeric_limits<Scalar>::signaling_NaN();
+		static Scalar constexpr sNaN()
+	 	{
+			return std::numeric_limits<Scalar>::signaling_NaN();
+		}
 	};
 	
 	//

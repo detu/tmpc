@@ -34,12 +34,12 @@ namespace tmpc
         {
         }
 
-        DynamicMatrix(size_t M, size_t N)
+        explicit DynamicMatrix(size_t M, size_t N)
         :   OurEigenBase(M, N)
         {        
         }
 
-	    DynamicMatrix(size_t M, size_t N, Type const& val)
+	    explicit DynamicMatrix(size_t M, size_t N, Type const& val)
 	    :   OurEigenBase(M, N)
 	    {
 	        this->setConstant(val);
@@ -55,6 +55,12 @@ namespace tmpc
         DynamicMatrix(Eigen::MatrixBase<T> const& rhs)
         :   OurEigenBase(rhs)
         {        
+        }
+
+        DynamicMatrix& operator=(ElementType const& rhs)
+        {
+            this->setConstant(rhs);
+            return *this;
         }
     };
 

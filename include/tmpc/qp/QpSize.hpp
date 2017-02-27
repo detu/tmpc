@@ -129,6 +129,11 @@ public:
 		return QpSizeIterator(it_++);
 	}
 
+	reference operator[](difference_type n) const
+	{
+		return it_[n].size();
+	}
+
 	friend bool operator!=(QpSizeIterator const& a, QpSizeIterator const& b)
 	{
 		return a.it_ != b.it_;
@@ -171,18 +176,18 @@ inline QpSizeIterator<StageIterator> qpSizeIterator(StageIterator const& it)
  * \brief Helper function to create a QpSizeIterator.
  */
 template <typename Collection>
-inline QpSizeIterator<typename Collection::iterator> sizeBegin(Collection const& c)
+inline QpSizeIterator<typename Collection::const_iterator> sizeBegin(Collection const& c)
 {
-	return QpSizeIterator<typename Collection::iterator>(c.begin());
+	return QpSizeIterator<typename Collection::const_iterator>(c.begin());
 }
 
 /**
  * \brief Helper function to create a QpSizeIterator.
  */
 template <typename Collection>
-inline QpSizeIterator<typename Collection::iterator> sizeEnd(Collection const& c)
+inline QpSizeIterator<typename Collection::const_iterator> sizeEnd(Collection const& c)
 {
-	return QpSizeIterator<typename Collection::iterator>(c.end());
+	return QpSizeIterator<typename Collection::const_iterator>(c.end());
 }
 
 }	// namespace tmpc

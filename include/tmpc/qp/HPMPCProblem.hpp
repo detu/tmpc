@@ -63,7 +63,7 @@ namespace tmpc
 			{
 			}
 
-			Stage(Stage const&) = delete;
+			Stage(Stage const&) = default; //delete;
 			Stage(Stage &&) = default;
 
 			template <typename Expr>
@@ -79,7 +79,7 @@ namespace tmpc
 
 			template <typename T>
 			void set_A(const T& a) {
-				A_ = a;
+				full(A_) = a;
 			}
 
 			const Matrix& get_B() const {
@@ -88,7 +88,7 @@ namespace tmpc
 
 			template <typename T>
 			void set_B(const T& b) {
-				B_ = b;
+				full(B_) = b;
 			}
 
 			Vector const& get_b() const {
@@ -97,7 +97,7 @@ namespace tmpc
 
 			template <typename T>
 			void set_b(const T& b) {
-				b_ = b;
+				full(b_) = b;
 			}
 
 			const Matrix& get_C() const {
@@ -106,7 +106,7 @@ namespace tmpc
 
 			template <typename T>
 			void set_C(const T& c) {
-				C_ = c;
+				full(C_) = c;
 			}
 
 			const Matrix& get_D() const {
@@ -115,7 +115,7 @@ namespace tmpc
 
 			template <typename T>
 			void set_D(const T& d) {
-				D_ = d;
+				full(D_) = d;
 			}
 
 			const Vector& get_lbd() const {
@@ -124,7 +124,7 @@ namespace tmpc
 
 			template <typename T>
 			void set_lbd(const T& lbd) {
-				lbd_ = lbd;
+				full(lbd_) = lbd;
 			}
 
 			Subvector<Vector const> get_lbu() const {
@@ -151,7 +151,7 @@ namespace tmpc
 
 			template <typename T>
 			void set_Q(const T& q) {
-				Q_ = q;
+				full(Q_) = q;
 			}
 
 			const Matrix& get_R() const {
@@ -160,7 +160,7 @@ namespace tmpc
 
 			template <typename T>
 			void set_R(const T& r) {
-				R_ = r;
+				full(R_) = r;
 			}
 
 			const Matrix& get_S() const {
@@ -169,7 +169,7 @@ namespace tmpc
 
 			template <typename T>
 			void set_S(const T& s) {
-				S_ = s;
+				full(S_) = s;
 			}
 
 			const Vector& get_q() const {
@@ -178,7 +178,7 @@ namespace tmpc
 
 			template <typename T>
 			void set_q(const T& q) {
-				q_ = q;
+				full(q_) = q;
 			}
 
 			const Vector& get_r() const {
@@ -187,7 +187,7 @@ namespace tmpc
 
 			template <typename T>
 			void set_r(const T& r) {
-				r_ = r;
+				full(r_) = r;
 			}
 
 			const Vector& get_ubd() const {
@@ -196,7 +196,7 @@ namespace tmpc
 
 			template <typename T>
 			void set_ubd(const T& ubd) {
-				ubd_ = ubd;
+				full(ubd_) = ubd;
 			}
 
 			Subvector<Vector const> get_ubu() const {
@@ -420,6 +420,8 @@ namespace tmpc
 		{
 			InitPointers();
 		}
+
+		HPMPCProblem(HPMPCProblem && rhs) = default;
 
 	private:
 		void InitPointers()

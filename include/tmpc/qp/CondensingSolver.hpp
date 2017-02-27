@@ -22,7 +22,7 @@ template <typename Scalar_>
 class CondensingSolver
 {
 public:
-	typedef double Scalar;
+	typedef Scalar_ Scalar;
 
 	// Nested solver
 	typedef QpOasesSolver Solver;
@@ -49,7 +49,7 @@ public:
 	CondensingSolver(InputIterator sz_first, InputIterator sz_last)
 	:	condensedSize_(condensedQpSize(sz_first, sz_last))
 	,	_condensedQP({condensedSize_})
-	,	_condensedSolution(condensedSize_.nx() + condensedSize_.nu())
+	,	_condensedSolution({condensedSize_})
 	,	nestedSolver_({condensedSize_})
 	{
 	}
@@ -92,7 +92,7 @@ public:
 	void Solve(Problem const& msqp, Solution& solution)
 	{
 		// Make a condensed problem.
-		_condensedQP.front() = condense<double>(msqp.begin(), msqp.end());
+		_condensedQP.front() = condense<Scalar>(msqp.begin(), msqp.end());
 
 		/* Solve the condensed QP. */
 		nestedSolver_.Solve(_condensedQP, _condensedSolution);

@@ -35,6 +35,9 @@ qpOASES::Options qpOASES_DefaultOptions();
 class QpOasesSolver
 {
 public:
+	// Scalar data type.
+	using Scalar = double;
+
 	// Problem type for CondensingSolver
 	typedef QpOasesProblem Problem;
 

@@ -2,7 +2,7 @@
 
 #include "TransposeFlag.hpp"
 #include "IsVector.hpp"
-#include "EigenType.hpp"
+#include "IsEigenMatrix.hpp"
 
 #include <type_traits>
 
@@ -25,8 +25,8 @@ namespace tmpc
         }
     };
 
-    template <typename T>
-    inline std::enable_if_t<IsVector<T>::value, size_t> size(Eigen::MatrixBase<T> const& v)
+    template <typename VT>
+    std::enable_if_t<IsEigenMatrix<VT>::value, size_t> size(VT const& v)
     {
         return v.size();
     }

@@ -65,7 +65,7 @@ public:
 		{
 		}
 
-		Stage(Stage const&) = delete;
+		Stage(Stage const&) = default; //delete;
 		Stage(Stage &&) = default;
 
 		template <typename Expr>
@@ -81,7 +81,7 @@ public:
 
 		template <typename T>
 		void set_A(const T& a) {
-			A_ = a;
+			full(A_) = a;
 		}
 
 		const Matrix& get_B() const {
@@ -90,7 +90,7 @@ public:
 
 		template <typename T>
 		void set_B(const T& b) {
-			B_ = b;
+			full(B_) = b;
 		}
 
 		Vector const& get_b() const {
@@ -99,7 +99,7 @@ public:
 
 		template <typename T>
 		void set_b(const T& b) {
-			b_ = b;
+			full(b_) = b;
 		}
 
 		const Matrix& get_C() const {
@@ -108,7 +108,7 @@ public:
 
 		template <typename T>
 		void set_C(const T& c) {
-			C_ = c;
+			full(C_) = c;
 		}
 
 		const Matrix& get_D() const {
@@ -117,7 +117,7 @@ public:
 
 		template <typename T>
 		void set_D(const T& d) {
-			D_ = d;
+			full(D_) = d;
 		}
 
 		const Vector& get_lbd() const {
@@ -126,7 +126,7 @@ public:
 
 		template <typename T>
 		void set_lbd(const T& lbd) {
-			lbd_ = lbd;
+			full(lbd_) = lbd;
 		}
 
 		const Vector& get_lbu() const {
@@ -135,7 +135,7 @@ public:
 
 		template <typename T>
 		void set_lbu(const T& lbu) {
-			lbu_ = lbu;
+			full(lbu_) = lbu;
 		}
 
 		const Vector& get_lbx() const {
@@ -144,7 +144,7 @@ public:
 
 		template <typename T>
 		void set_lbx(const T& lbx) {
-			lbx_ = lbx;
+			full(lbx_) = lbx;
 		}
 
 		const Matrix& get_Q() const {
@@ -153,7 +153,7 @@ public:
 
 		template <typename T>
 		void set_Q(const T& q) {
-			Q_ = q;
+			full(Q_) = q;
 		}
 
 		const Matrix& get_R() const {
@@ -162,7 +162,7 @@ public:
 
 		template <typename T>
 		void set_R(const T& r) {
-			R_ = r;
+			full(R_) = r;
 		}
 
 		const Matrix& get_S() const {
@@ -171,7 +171,7 @@ public:
 
 		template <typename T>
 		void set_S(const T& s) {
-			S_ = s;
+			full(S_) = s;
 		}
 
 		const Vector& get_q() const {
@@ -180,7 +180,7 @@ public:
 
 		template <typename T>
 		void set_q(const T& q) {
-			q_ = q;
+			full(q_) = q;
 		}
 
 		const Vector& get_r() const {
@@ -189,7 +189,7 @@ public:
 
 		template <typename T>
 		void set_r(const T& r) {
-			r_ = r;
+			full(r_) = r;
 		}
 
 		const Vector& get_ubd() const {
@@ -198,7 +198,7 @@ public:
 
 		template <typename T>
 		void set_ubd(const T& ubd) {
-			ubd_ = ubd;
+			full(ubd_) = ubd;
 		}
 
 		const Vector& get_ubu() const {
@@ -207,7 +207,7 @@ public:
 
 		template <typename T>
 		void set_ubu(const T& ubu) {
-			ubu_ = ubu;
+			full(ubu_) = ubu;
 		}
 
 		const Vector& get_ubx() const {
@@ -216,7 +216,7 @@ public:
 
 		template <typename T>
 		void set_ubx(const T& ubx) {
-			ubx_ = ubx;
+			full(ubx_) = ubx;
 		}
 
 		QpSize const& size() const

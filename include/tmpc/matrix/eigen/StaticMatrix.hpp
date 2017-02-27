@@ -51,6 +51,12 @@ namespace tmpc
         :   OurEigenBase(rhs)
         {        
         }
+
+        StaticMatrix& operator=(ElementType const& rhs)
+        {
+            this->setConstant(rhs);
+            return *this;
+        }
     };
 
     /*

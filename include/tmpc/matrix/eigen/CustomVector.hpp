@@ -23,6 +23,12 @@ struct CustomVector
     :   Base(data, n)
     {        
     }
+
+    CustomVector& operator=(ElementType const& rhs)
+    {
+        this->setConstant(rhs);
+        return *this;
+    }
 };
 
 }

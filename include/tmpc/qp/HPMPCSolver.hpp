@@ -55,10 +55,8 @@ namespace tmpc
 	template <typename Scalar_>
 	class HPMPCSolver
 	{
-		typedef Scalar_ Scalar;
-
 	public:
-
+		typedef Scalar_ Scalar;
 		typedef HPMPCProblem<Scalar_> Problem;
 		typedef HPMPCSolution<Scalar_> Solution;
 
@@ -132,7 +130,7 @@ namespace tmpc
 
 			_muTol = val;
 		}
-
+		
 	private:
 		// Workspace for HPMPC functions
 		std::vector<char> _workspace;

@@ -38,6 +38,13 @@ public:
 		Stage(Stage const&) = delete;
 		Stage(Stage &&) = default;
 
+		template <typename Expr>
+		Stage& operator=(Expr const& rhs)
+		{
+			assign(*this, rhs);
+			return *this;
+		}
+
 		const SubM& get_A() const {
 			return A_;
 		}

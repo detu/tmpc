@@ -29,7 +29,7 @@ namespace tmpc
         {        
         }
 
-        StaticVector(initializer_list<Type> list)
+        explicit StaticVector(initializer_list<Type> list)
         {
             assign(*this, list);
         }
@@ -40,9 +40,22 @@ namespace tmpc
         {        
         }
 
-        StaticVector(ElementType const& rhs)
+        explicit StaticVector(ElementType const& rhs)
         {        
             this->setConstant(rhs);
+        }
+
+        StaticVector& operator=(ElementType const& rhs)
+        {
+            this->setConstant(rhs);
+            return *this;
+        }
+
+        template <typename T>
+        StaticVector& operator=(Eigen::MatrixBase<T> const& rhs)
+        {
+            Base::operator=(rhs);
+            return *this;
         }
     };
 

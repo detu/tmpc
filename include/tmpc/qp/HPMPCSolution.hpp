@@ -29,11 +29,11 @@ namespace tmpc
 			Stage(QpSize const& sz, size_t nx1)
 			// Initialize all numeric data to NaN so that if an uninitialized object
 			// by mistake used in calculations is easier to detect.
-			:	_x(sz.nx(), sNaN)
-			,	_u(sz.nu(), sNaN)
-			,	_pi(nx1, sNaN)
-			,	_lam(2 * sz.nc() + 2 * (sz.nx() + sz.nu()), sNaN)
-			,	_t(2 * sz.nc() + 2 * (sz.nx() + sz.nu()), sNaN)
+			:	_x(sz.nx(), sNaN())
+			,	_u(sz.nu(), sNaN())
+			,	_pi(nx1, sNaN())
+			,	_lam(2 * sz.nc() + 2 * (sz.nx() + sz.nu()), sNaN())
+			,	_t(2 * sz.nc() + 2 * (sz.nx() + sz.nu()), sNaN())
 			{
 			}
 
@@ -83,10 +83,11 @@ namespace tmpc
 
 		template <typename InputIterator>
 		HPMPCSolution(InputIterator sz_first, InputIterator sz_last)
+		:	_inf_norm_res(sNaN())
 		{
 			auto const N = std::distance(sz_first, sz_last);
 
-			_stage.reserve(N);
+			stage_.reserve(N);
 			_x.reserve(N);
 			_u.reserve(N);
 			_pi.reserve(N);
@@ -95,8 +96,8 @@ namespace tmpc
 
 			for (; sz_first != sz_last; ++sz_first)
 			{
-				_stage.emplace_back(*sz_first, sz_first + 1 != sz_last ? sz_first[1].nx() : 0);
-				Stage& st = _stage.back();
+				stage_.emplace_back(*sz_first, sz_first + 1 != sz_last ? sz_first[1].nx() : 0);
+				Stage& st = stage_.back();
 
 				_x.push_back(st.x_data());
 				_u.push_back(st.u_data());
@@ -125,17 +126,83 @@ namespace tmpc
 		/// \brief Set number of iterations performed by the QP solver (called by the solver).
 		void setNumIter(unsigned n) { numIter_ = n; }
 
-	private:
-		static Scalar constexpr sNaN = std::numeric_limits<Scalar>::signaling_NaN();
+		// ------------------------------------------
+		//       Stage sequence interface
+		// ------------------------------------------
+		Stage& operator[](std::size_t i)
+		{
+			return stage_.at(i);
+		}
 
-		std::vector<Stage> _stage;
+		Stage const& operator[](std::size_t i) const
+		{
+			return stage_.at(i);
+		}
+
+		std::size_t size() const
+		{
+			return stage_.size();
+		}
+
+		typedef typename std::vector<Stage>::iterator iterator;
+		typedef typename std::vector<Stage>::const_iterator const_iterator;
+		typedef typename std::vector<Stage>::reference reference;
+		typedef typename std::vector<Stage>::const_reference const_reference;
+
+		iterator begin()
+		{
+			return stage_.begin();
+		}
+
+		iterator end()
+		{
+			return stage_.end();
+		}
+
+		const_iterator begin() const
+		{
+			return stage_.begin();
+		}
+
+		const_iterator end() const
+		{
+			return stage_.end();
+		}
+
+		reference front()
+		{
+			return stage_.front();
+		}
+
+		reference back()
+		{
+			return stage_.back();
+		}
+
+		const_reference front() const
+		{
+			return stage_.front();
+		}
+
+		const_reference back() const
+		{
+			return stage_.back();
+		}
+
+	private:
+		static Scalar constexpr sNaN() 
+		{
+			return std::numeric_limits<Scalar>::signaling_NaN();
+		} 
+
+		std::vector<Stage> stage_;
 
 		std::vector<double *> _x;
 		std::vector<double *> _u;
 		std::vector<double *> _pi;
 		std::vector<double *> _lam;
 		std::vector<double *> _t;
-		StaticVector<double, 4> _inf_norm_res {sNaN};
+		StaticVector<double, 4> _inf_norm_res;
 
 		/// \brief Number of iterations performed by the QP solver.
 		unsigned numIter_ = 0;

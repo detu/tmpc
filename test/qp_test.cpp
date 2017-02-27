@@ -42,9 +42,9 @@ protected:
 
 	QuadraticProblemTest()
 	:	size_{
-			tmpc::QpSize(2, 1, 0),
-			tmpc::QpSize(2, 1, 0),
-			tmpc::QpSize(2, 0, 0)
+			tmpc::QpSize(2, 3, 4),
+			tmpc::QpSize(5, 6, 7),
+			tmpc::QpSize(8, 9, 10)
 		}
 	,	qp_(size_.begin(), size_.end())
 	{
@@ -78,6 +78,7 @@ TYPED_TEST(QuadraticProblemTest, get_set_interface_works)
 
 	std::vector<typename TestFixture::Vector> x_min(N), x_max(N);
 	std::vector<typename TestFixture::Vector> u_min(N), u_max(N);
+	std::vector<typename TestFixture::Vector> d_min(N), d_max(N);
 
 	// Writing random data
 	Rand<typename TestFixture::Matrix> rand_matrix;
@@ -102,7 +103,10 @@ TYPED_TEST(QuadraticProblemTest, get_set_interface_works)
 		stage.set_lbx(x_min[i] = rand_vector.generate(sz.nx()));
 		stage.set_ubx(x_max[i] = rand_vector.generate(sz.nx()));
 		stage.set_lbu(u_min[i] = rand_vector.generate(sz.nu()));
-		stage.set_ubu(u_max[i] = rand_vector.generate(sz.nu()));	}
+		stage.set_ubu(u_max[i] = rand_vector.generate(sz.nu()));
+		stage.set_lbd(d_min[i] = rand_vector.generate(sz.nc()));
+		stage.set_ubd(d_max[i] = rand_vector.generate(sz.nc()));
+	}
 
 	// Reading the data and checking that they are the same that we wrote
 	for (std::size_t i = 0; i < N; ++i)
@@ -123,5 +127,49 @@ TYPED_TEST(QuadraticProblemTest, get_set_interface_works)
 		EXPECT_EQ(print_wrap(stage.get_ubx()), print_wrap(x_max[i]));
 		EXPECT_EQ(print_wrap(stage.get_lbu()), print_wrap(u_min[i]));
 		EXPECT_EQ(print_wrap(stage.get_ubu()), print_wrap(u_max[i]));
+		EXPECT_EQ(print_wrap(stage.get_lbd()), print_wrap(d_min[i]));
+		EXPECT_EQ(print_wrap(stage.get_ubd()), print_wrap(d_max[i]));
+	}
+}
+
+TYPED_TEST(QuadraticProblemTest, testMatrixSizesCorrect)
+{
+	// Define dimensions
+	unsigned constexpr NX = 2;
+	unsigned constexpr NU = 1;
+	unsigned constexpr NC = 0;
+	unsigned constexpr NCT = 0;
+	unsigned constexpr NT = 2;
+	
+	auto const sz = RtiQpSize(NT, NX, NU, NC, NCT);
+	typename TestFixture::Problem qp(sz.begin(), sz.end());
+
+	for (std::size_t i = 0; i < sz.size(); ++i)
+	{
+		auto const& s = sz[i];
+		auto const nx1 = i + 1 < sz.size() ? sz[i + 1].nx() : 0;
+		auto& stage = qp[i];
+
+		EXPECT_EQ(rows   (stage.get_Q()), s.nx());
+		EXPECT_EQ(columns(stage.get_Q()), s.nx());
+		EXPECT_EQ(rows   (stage.get_R()), s.nu());
+		EXPECT_EQ(columns(stage.get_R()), s.nu());
+		EXPECT_EQ(rows   (stage.get_S()), s.nx());
+		EXPECT_EQ(columns(stage.get_R()), s.nu());
+		EXPECT_EQ(size   (stage.get_q()), s.nx());
+		EXPECT_EQ(size   (stage.get_r()), s.nu());
+
+		EXPECT_EQ(rows   (stage.get_A()),   nx1 );
+		EXPECT_EQ(columns(stage.get_A()), s.nx());
+		EXPECT_EQ(rows   (stage.get_B()),   nx1 );
+		EXPECT_EQ(columns(stage.get_B()), s.nu());
+		EXPECT_EQ(size   (stage.get_b()),   nx1 );
+
+		EXPECT_EQ(size(stage.get_lbx()), s.nx());
+		EXPECT_EQ(size(stage.get_ubx()), s.nx());
+		EXPECT_EQ(size(stage.get_lbu()), s.nu());
+		EXPECT_EQ(size(stage.get_ubu()), s.nu());
+		EXPECT_EQ(size(stage.get_lbd()), s.nc());
+		EXPECT_EQ(size(stage.get_ubd()), s.nc());
 	}
 }
