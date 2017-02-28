@@ -36,7 +36,7 @@ TEST(QpSizeTest, test_CondensedQpSize_iteratorRange)
 		tmpc::QpSize(2, 1 + 5 + 1, (3 + 6 + 1) + (4 + 2)));
 }
 
-class CondensingTestBlaze : public ::testing::Test
+class CondensingTest : public ::testing::Test
 {
 public:
 
@@ -70,7 +70,7 @@ protected:
 	typedef StaticMatrix<Scalar, NX, NX> StateStateMatrix;
 	typedef StaticMatrix<Scalar, NX, NU> StateInputMatrix;
 
-	CondensingTestBlaze()
+	CondensingTest()
 	:	size_(tmpc::RtiQpSize(NT, NX, NU, NC, NCT))
 	,	qp(size_.begin(), size_.end())
 	{
@@ -165,6 +165,12 @@ protected:
 		qc_expected                        = trans(A0) * Q1 * a0				+ trans(A0) * trans(A1) * Q2 * a1		+ trans(A0) * trans(A1) * Q2 * A1 * a0;
 		subvector(rc_expected, 0 * NU, NU) = trans(B0) * trans(A1) * Q2 * a1	+ trans(B0) * trans(A1) * Q2 * A1 * a0	+ trans(B0) * Q1 * a0;
 		subvector(rc_expected, 1 * NU, NU) = trans(B1) * Q2 * A1 * a0			+ trans(B1) * Q2 * a1					+ trans(S1) * a0;
+
+		lbx_expected = qp[0].get_lbx();
+		ubx_expected = qp[0].get_ubx();
+		 
+		subvector(lbu_expected, 0 * NU, NU) = qp[0].get_lbu();	subvector(ubu_expected, 0 * NU, NU) = qp[0].get_ubu();
+		subvector(lbu_expected, 1 * NU, NU) = qp[1].get_lbu();	subvector(ubu_expected, 1 * NU, NU) = qp[1].get_ubu();
 	}
 
 	std::vector<tmpc::QpSize> size_;
@@ -174,15 +180,19 @@ protected:
 	StaticMatrix<Scalar, NX, NT * NU> Sc_expected;
 	StaticVector<Scalar, NX> qc_expected;
 	StaticVector<Scalar, NT * NU> rc_expected;
+	StaticVector<Scalar, NX> lbx_expected;
+	StaticVector<Scalar, NX> ubx_expected;
+	StaticVector<Scalar, NT * NU> lbu_expected;
+	StaticVector<Scalar, NT * NU> ubu_expected;
 };
 
-unsigned constexpr CondensingTestBlaze::NX;
-unsigned constexpr CondensingTestBlaze::NU;
+unsigned constexpr CondensingTest::NX;
+unsigned constexpr CondensingTest::NU;
 
-TEST_F(CondensingTestBlaze, new_condensing_test)
+TEST_F(CondensingTest, new_condensing_test)
 {
 	// Condense
-	QuadraticProblem<Scalar> condensed({condensedQpSize(qpSizeIterator(qp.begin()), qpSizeIterator(qp.end()))});
+	QuadraticProblem<Scalar> condensed({condensedQpSize(sizeBegin(qp), sizeEnd(qp))});
 	condensed.front() = condense<Scalar>(qp.begin(), qp.end());
 
 	EXPECT_EQ(print_wrap(condensed[0].get_Q()), print_wrap(Qc_expected));
@@ -190,4 +200,8 @@ TEST_F(CondensingTestBlaze, new_condensing_test)
 	EXPECT_EQ(print_wrap(condensed[0].get_S()), print_wrap(Sc_expected));
 	EXPECT_EQ(print_wrap(condensed[0].get_q()), print_wrap(qc_expected));
 	EXPECT_EQ(print_wrap(condensed[0].get_r()), print_wrap(rc_expected));
+	EXPECT_EQ(print_wrap(condensed[0].get_lbx()), print_wrap(lbx_expected));
+	EXPECT_EQ(print_wrap(condensed[0].get_ubx()), print_wrap(ubx_expected));
+	EXPECT_EQ(print_wrap(condensed[0].get_lbu()), print_wrap(lbu_expected));
+	EXPECT_EQ(print_wrap(condensed[0].get_ubu()), print_wrap(ubu_expected));
 }

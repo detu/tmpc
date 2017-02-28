@@ -184,6 +184,10 @@ namespace tmpc
 			subvector(ubd, nc          , sz.nx()) = stage->get_ubx() - b;
 			subvector(ubd, nc + sz.nx(), sz.nc()) = stage->get_ubd() - stage->get_C() * b;
 
+			// Uplate lbu, ubu
+			subvector(lbu, nu, sz.nu()) = stage->get_lbu();
+			subvector(ubu, nu, sz.nu()) = stage->get_ubu();
+
 			// Update A
 			A = stage->get_A() * A;
 
