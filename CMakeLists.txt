@@ -22,6 +22,11 @@ else()
     message(STATUS "Eigen3 NOT FOUND")
 endif()
 
+if (BLAZE_DIR)
+    include_directories(${BLAZE_DIR})
+    message(STATUS "BLAZE_DIR=${BLAZE_DIR}")
+endif()
+
 include(ExternalProject)
 option(BUILD_QPDUNES "Build qpDUNES along with TMPC." ON)
 

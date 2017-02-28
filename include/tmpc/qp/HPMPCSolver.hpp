@@ -97,14 +97,17 @@ namespace tmpc
 		{
 			if (p.size() > 1)
 			{
+				// Number of QP steps for HPMPC
+				auto const N = p.size() - 1;
+
 				// Make sure we have enough workspace.
 				_workspace.resize(hpmpc_wrapper::d_ip_ocp_hard_tv_work_space_size_bytes(
-						static_cast<int>(p.size()), p.nx_data(), p.nu_data(), p.nb_data(), p.ng_data()));
+						static_cast<int>(N), p.nx_data(), p.nu_data(), p.nb_data(), p.ng_data()));
 
 				// Call HPMPC
 				int num_iter = 0;
 
-				auto const ret = hpmpc_wrapper::c_order_d_ip_ocp_hard_tv(&num_iter, getMaxIter(), _mu0, _muTol, p.size() - 1,
+				auto const ret = hpmpc_wrapper::c_order_d_ip_ocp_hard_tv(&num_iter, getMaxIter(), _mu0, _muTol, N,
 						p.nx_data(), p.nu_data(), p.nb_data(), p.ng_data(), _warmStart ? 1 : 0, p.A_data(), p.B_data(), p.b_data(),
 						p.Q_data(), p.S_data(), p.R_data(), p.q_data(), p.r_data(), p.lb_data(), p.ub_data(), p.C_data(), p.D_data(),
 						p.lg_data(), p.ug_data(), s.x_data(), s.u_data(), s.pi_data(), s.lam_data(), s.t_data(), s.inf_norm_res_data(),

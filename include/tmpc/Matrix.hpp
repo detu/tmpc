@@ -1,6 +1,8 @@
 #pragma once
 
-#ifdef USE_BLAZE
+#define USE_BLAZE 0
+
+#if USE_BLAZE
 #include <blaze/Math.h>
 
 namespace tmpc {
