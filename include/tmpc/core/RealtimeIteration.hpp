@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../qp/diagnostics.hpp"
-#include "Trajectory.hpp"
+#include "TrajectoryPoint.hpp"
 #include "../qp/QpSize.hpp"
 
 #include <stdexcept>
@@ -19,24 +19,18 @@ namespace tmpc
 	/**
 	 * \brief Implements an MPC controller with realtime iteration scheme.
 	 *
-	 * \tparam <Scalar> Scalar type
-	 * \tparam <D> Class defining problem dimensions
+	 * \tparam <Scalar_> Scalar type
 	 */
-	template <typename Scalar, typename D, typename OCP, typename QPSolver_>
+	template <typename Scalar_, typename OCP, typename QPSolver_>
 	class RealtimeIteration
 	{
-		static auto constexpr NX = D::NX;
-		static auto constexpr NU = D::NU;
-		static auto constexpr NC = D::NC;
-		static auto constexpr NCT = D::NCT;
-
 	public:
+		using Scalar = Scalar_;
 		typedef QPSolver_ QPSolver;
 		typedef typename QPSolver::Problem QP;
 		typedef typename QPSolver::Solution Solution;
 
-		// TODO: parameterize Trajectory with K
-		typedef Trajectory<NX, NU> WorkingPoint;
+		typedef std::vector<TrajectoryPoint<Scalar>> WorkingPoint;
 
 		RealtimeIteration(OCP const& ocp, QPSolver& solver, WorkingPoint const& working_point)
 		:	_ocp(ocp)
