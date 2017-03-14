@@ -44,6 +44,7 @@ namespace tmpc
 		}
 
 		MultiStageQPSolution(MultiStageQPSolution const&) = delete;
+		MultiStageQPSolution(MultiStageQPSolution&&) = default;
 
 		StateVector const& get_x(std::size_t i) const
 		{

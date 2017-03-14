@@ -114,12 +114,12 @@ if __name__ == '__main__':
     ode_sens = cs.Function(name + "_sens", [t, x, u, x_seed, u_seed], 
                           [cs.densify(dx), cs.densify(cs.jtimes(dx, x, x_seed) + cs.jtimes(dx, u, u_seed))], 
                           ['t', 'x0', 'u0', 'x_seed', 'u_seed'], ['xdot', 'xdot_sens'])
-    gen = cs.CodeGenerator({'mex' : False, 'with_header' : True})
-    gen.add(ode)
-    gen.add(ode_sens)
     name_c = '{0}_generated.c'.format(name)
     name_h = '{0}_generated.h'.format(name)
-    gen.generate(name_c)
+    gen = cs.CodeGenerator(name_c, {'mex' : False, 'with_header' : True})
+    gen.add(ode)
+    gen.add(ode_sens)
+    gen.generate()
     #os.rename(name_c, 'src/' + name_c)
     #os.rename(name_h, 'src/' + name_h)
     
@@ -184,9 +184,10 @@ if __name__ == '__main__':
             for key in keys:
                 np.array(data[key][k]).tofile(file, sep)        
                 file.write('\n')
-            
-    plt.subplot(2, 1, 1)
-    plt.step(cs.vertcat(data['t']), cs.transpose(cs.horzcat(*data['u' ]))      )
-    plt.subplot(2, 1, 2)
-    plt.plot(cs.vertcat(data['t']), cs.transpose(cs.horzcat(*data['x0'])), '.-')
-    plt.show()
+
+    if False:            
+        plt.subplot(2, 1, 1)
+        plt.step(cs.vertcat(data['t']), cs.transpose(cs.horzcat(*data['u' ]))      )
+        plt.subplot(2, 1, 2)
+        plt.plot(cs.vertcat(data['t']), cs.transpose(cs.horzcat(*data['x0'])), '.-')
+        plt.show()

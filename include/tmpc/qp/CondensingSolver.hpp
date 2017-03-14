@@ -1,10 +1,11 @@
 #pragma once
 
-#include "qpOASESProgram.hpp"
+#include "QuadraticProblem.hpp"
+#include "QpOasesProblem.hpp"
+#include "QpOasesSolver.hpp"
 
 #include <qpOASES.hpp>
 #include "Condensing.hpp"
-#include "MultiStageQuadraticProblem.hpp"
 #include "MultiStageQPSolution.hpp"
 #include "UnsolvedQpException.hpp"
 
@@ -15,28 +16,6 @@ namespace tmpc {
 namespace detail {
 qpOASES::Options qpOASES_DefaultOptions();
 }
-
-class QpOasesSolveException : public UnsolvedQpException
-{
-public:
-	template <typename QP>
-	QpOasesSolveException(qpOASES::returnValue code, qpOASESProgram const& cqp, QP const& qp)
-	:	UnsolvedQpException("qpOASES", qp),
-		_code(code),
-		_CondensedQP(cqp),
-		msg_(std::string(UnsolvedQpException::what()) + "\nqpOASES return code " + std::to_string(code))
-	{
-	}
-
-	qpOASES::returnValue getCode() const	{ return _code;	}
-	qpOASESProgram const& getCondensedQP() const { return _CondensedQP; }
-	char const * what() const noexcept override { return msg_.c_str(); }
-
-private:
-	qpOASES::returnValue const _code;
-	qpOASESProgram const _CondensedQP;
-	std::string const msg_;
-};
 
 /**
  * \brief Condensing solver using qpOASES
@@ -54,11 +33,11 @@ class CondensingSolver
 	static auto constexpr NCT = D::NCT;
 
 public:
-	typedef qpOASESProgram CondensedQP;
+	typedef QpOasesProblem CondensedQP;
 
 	// Problem type for CondensingSolver
 	// TODO: change MultiStageQuadraticProblem so that it takes D as a template parameter?
-	typedef MultiStageQuadraticProblem<NX, NU, NC, NCT> Problem;
+	typedef QuadraticProblemEigen<NX, NU, NC, NCT> Problem;
 
 	// Solution data type
 	// TODO: change MultiStageQPSolution so that it takes D as a template parameter?
@@ -72,7 +51,7 @@ public:
 
 	CondensingSolver(size_type nt, qpOASES::Options const& options = detail::qpOASES_DefaultOptions())
 	:	_Nt(nt)
-	,	_condensedQP(nIndep(nt), nDep(nt) + nConstr(nt))
+	,	_condensedQP({condensedQpSize(RtiQpSize(nt, NX, NU, NC, NCT))})
 	,	_condensedSolution(nIndep(nt))
 	,	_problem(nIndep(nt), nDep(nt) + nConstr(nt))
 	{
@@ -91,16 +70,7 @@ public:
 	 *
 	 * Move-construction is ok.
 	 */
-	CondensingSolver(CondensingSolver&& rhs)
-	:	_Nt(rhs._Nt)
-	,	_condensedQP(rhs._condensedQP)
-	,	_condensedSolution(rhs._condensedSolution)
-	,	_hotStart(rhs._hotStart)
-	,	_problem(rhs._problem)
-	,	_maxWorkingSetRecalculations(rhs._maxWorkingSetRecalculations)
-	{
-
-	}
+	CondensingSolver(CondensingSolver&& rhs) = default;
 
 	CondensingSolver& operator=(CondensingSolver const&) = delete;
 	CondensingSolver& operator=(CondensingSolver&&) = delete;
@@ -176,7 +146,7 @@ public:
 					_condensedQP.lb_data(), _condensedQP.ub_data(), _condensedQP.lbA_data(), _condensedQP.ubA_data(), nWSR);
 
 		if (res != qpOASES::SUCCESSFUL_RETURN)
-			throw QpOasesSolveException(res, _condensedQP, msqp);
+			throw QpOasesSolveException(res, _condensedQP);
 
 		solution.setNumIter(nWSR);
 		_hotStart = true;

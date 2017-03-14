@@ -7,10 +7,10 @@ set(PROJECT_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/include)
 find_package(Eigen3 3.2.10 REQUIRED)
 
 if (EIGEN3_FOUND)
-    message(STATUS "Eigen3 Found in ${EIGEN3_INCLUDE_DIR}") 
+    message(STATUS "Eigen3 Found in ${EIGEN3_INCLUDE_DIR}")
     include_directories(${EIGEN3_INCLUDE_DIR})
 else()
-    message(STATUS "Eigen3 NOT FOUND") 
+    message(STATUS "Eigen3 NOT FOUND")
 endif()
 
 include(ExternalProject)
@@ -37,8 +37,6 @@ endif()
 
 find_package(qpOASES)
 find_package(HPMPC)
-
-include(CompilerOptions.cmake)
 
 add_subdirectory(src)
 add_subdirectory(test)

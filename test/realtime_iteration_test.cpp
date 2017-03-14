@@ -8,6 +8,7 @@
 #include <Eigen/Dense>
 
 #include <gtest/gtest.h>
+#include <gmock/gmock.h>
 
 #include <type_traits>
 
@@ -203,7 +204,7 @@ typedef ::testing::Types<
 
 TYPED_TEST_CASE(RealtimeIterationTest, RTITypes);
 
-TYPED_TEST(RealtimeIterationTest, GivesCorrectU0)
+TYPED_TEST(RealtimeIterationTest, DISABLED_GivesCorrectU0)
 {
 	PS::StateVector x;
 	PS::InputVector u;
@@ -248,4 +249,16 @@ TYPED_TEST(RealtimeIterationTest, GivesCorrectU0)
 		u_expected << 0.218183;
 		EXPECT_TRUE(u.isApprox(u_expected, 1e-5));
 	}
+}
+
+TEST(QpSizeTest, test_RtiQpSize)
+{
+	auto const nx = 5u;
+	auto const nu = 1u;
+	auto const nc = 3u;
+	auto const nct = 4u;
+	auto const nt = 2u;
+
+	EXPECT_THAT(tmpc::RtiQpSize(nt, nx, nu, nc, nct),
+			::testing::ElementsAre(tmpc::QpSize(nx, nu, nc), tmpc::QpSize(nx, nu, nc), tmpc::QpSize(nx, 0, nct)));
 }

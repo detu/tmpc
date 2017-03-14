@@ -61,6 +61,24 @@ namespace tmpc
 
 		HPMPCSolution(HPMPCSolution const&) = delete;
 
+		HPMPCSolution(HPMPCSolution&& rhs)
+		:	_stage(std::move(rhs._stage))
+		,	_xEnd(std::move(rhs._xEnd))
+		,	_lamEnd(std::move(rhs._lamEnd))
+		,	_tEnd(std::move(rhs._tEnd))
+		,	_x    (std::move(rhs._x))
+		,	_u    (std::move(rhs._u))
+		,	_pi   (std::move(rhs._pi))
+		,	_lam  (std::move(rhs._lam))
+		,	_t    (std::move(rhs._t))
+		,	_inf_norm_res(std::move(rhs._inf_norm_res))
+		,	numIter_(std::move(rhs.numIter_))
+		{
+			_x  .back() = _xEnd  .data();
+			_lam.back() = _lamEnd.data();
+			_t  .back() = _tEnd  .data();
+		}
+
 		StateVector const& get_x(std::size_t i) const
 		{
 			if (i > nT())
@@ -139,6 +157,18 @@ namespace tmpc
 			LagrangeVector   _t = signaling_nan<LagrangeVector>();
 		};
 
+		StageData& stage(size_type i)
+		{
+			assert(i < nT());
+			return _stage[i];
+		}
+
+		StageData const& stage(size_type i) const
+		{
+			assert(i < nT());
+			return _stage[i];
+		}
+
 		std::vector<StageData> _stage;
 
 		// Initialize all numeric data to NaN so that if an uninitialized object
@@ -153,18 +183,6 @@ namespace tmpc
 		std::vector<double *> _lam;
 		std::vector<double *> _t;
 		Eigen::Matrix<double, 4, 1> _inf_norm_res = signaling_nan<Eigen::Matrix<double, 4, 1>>();
-
-		StageData& stage(size_type i)
-		{
-			assert(i < nT());
-			return _stage[i];
-		}
-
-		StageData const& stage(size_type i) const
-		{
-			assert(i < nT());
-			return _stage[i];
-		}
 
 		/// \brief Number of iterations performed by the QP solver.
 		unsigned numIter_ = 0;
