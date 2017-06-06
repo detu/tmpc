@@ -60,9 +60,9 @@ namespace tmpc
 	template <typename Scalar>
 	inline std::ostream& operator<<(std::ostream& os, TrajectoryPoint<Scalar> const& p)
 	{
-		os << "x=" << trans(tr.x()) 
-			<< "\tu=" << trans(tr.u()) 
-			<< "\tw=" << trans(tr.w()) 
-			<< "\ty=" << trans(tr.y());
+		os << "x=" << trans(p.x()) 
+			<< "\tu=" << trans(p.u()) 
+			<< "\tw=" << trans(p.w()) 
+			<< "\ty=" << trans(p.y());
 	}
 }

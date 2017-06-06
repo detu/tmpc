@@ -1,8 +1,8 @@
-#include <tmpc/core/RealtimeIteration.hpp>
+#include <tmpc/mpc/MpcQpSize.hpp>
 
 namespace tmpc {
 
-std::vector<QpSize> RtiQpSize(std::size_t nt,
+std::vector<QpSize> mpcQpSize(std::size_t nt,
 		std::size_t nx, std::size_t nu, std::size_t nc, std::size_t nct)
 {
 	std::vector<QpSize> sz;

@@ -1,8 +1,8 @@
 #pragma once
 
-#include "../qp/diagnostics.hpp"
-#include "TrajectoryPoint.hpp"
-#include "../qp/QpSize.hpp"
+#include <tmpc/qp/diagnostics.hpp>
+#include <tmpc/mpc/MpcTrajectoryPoint.hpp>
+#include <tmpc/qp/QpSize.hpp>
 
 #include <stdexcept>
 #include <limits>
@@ -12,37 +12,34 @@
 namespace tmpc
 {
 	/**
-	 * \brief Vector of QpSize corresponding to an MPC problem with given sizes.
-	 */
-	std::vector<QpSize> RtiQpSize(std::size_t nt, std::size_t nx, std::size_t nu, std::size_t nc, std::size_t nct);
-
-	/**
 	 * \brief Implements an MPC controller with realtime iteration scheme.
 	 *
 	 * \tparam <Scalar_> Scalar type
 	 */
 	template <typename Scalar_, typename OCP, typename QPSolver_>
-	class RealtimeIteration
+	class MpcRealtimeIteration
 	{
 	public:
 		using Scalar = Scalar_;
-		typedef QPSolver_ QPSolver;
-		typedef typename QPSolver::Problem QP;
-		typedef typename QPSolver::Solution Solution;
+		using QPSolver = QPSolver_;
+		using QP = typename QPSolver::Problem;
+		using Solution = typename QPSolver::Solution;
+		
+		using WorkingPoint = std::vector<MpcTrajectoryPoint<Scalar>>;
 
-		typedef std::vector<TrajectoryPoint<Scalar>> WorkingPoint;
-
-		RealtimeIteration(OCP const& ocp, QPSolver& solver, WorkingPoint const& working_point)
+		MpcRealtimeIteration(MpcSize const& sz, OCP const& ocp, QPSolver& solver, 
+			WorkingPoint const& working_point	// TODO: make it an iterator range?
+		)
 		:	_ocp(ocp)
-		,	solution_(sizeBegin(working_point), sizeEnd(working_point))
+		,	solution_(mpcQpSize(sz, working_point.size()))
 		,	solver_(solver)
-		,	work_(working_point)
+		,	work_(sz, working_point)
 		,	_prepared(false)
 		{
 			InitQP();
 		}
 
-		RealtimeIteration(RealtimeIteration const&) = delete;
+		MpcRealtimeIteration(MpcRealtimeIteration const&) = delete;
 
 		/**
 		 * \brief Number of intervals.
@@ -54,12 +51,12 @@ namespace tmpc
 		decltype(auto) Feedback(const StateVector& x0)
 		{
 			if (!_prepared)
-				throw std::logic_error("RealtimeIteration::Feedback(): RTI is not prepared.");
+				throw std::logic_error("MpcRealtimeIteration::Feedback(): RTI is not prepared.");
 
 			/** embed current initial value */
-			auto const w0 = eval(x0 - work_.workingPoint_.get_x(0));
-			work_.qp_.set_x_min(0, w0);
-			work_.qp_.set_x_max(0, w0);
+			auto const w0 = eval(x0 - work_.workingPoint_[0].x());
+			work_.qp_[0].set_lbx(w0);
+			work_.qp_[0].set_ubx(w0);
 
 			/** solve QP */
 			solver_.Solve(work_.qp_, solution_);
@@ -67,16 +64,16 @@ namespace tmpc
 			// Add QP step to the working point.
 			{
 				for (std::size_t i = 0; i < nT() + 1; ++i)
-					work_.workingPoint_.set_x(i, work_.workingPoint_.get_x(i) + solution_.get_x(i));
+					work_.workingPoint_[i].set_x(work_.workingPoint_[i].get_x() + solution_[i].get_x());
 
 				for (std::size_t i = 0; i < nT(); ++i)
-					work_.workingPoint_.set_u(i, work_.workingPoint_.get_u(i) + solution_.get_u(i));
+					work_.workingPoint_[i].set_u(work_.workingPoint_[i].get_u() + solution_[i].get_u());
 			}
 
 			_prepared = false;
 
 			// Return the calculated control input.
-			return work_.workingPoint_.get_u(0);
+			return work_.workingPoint_[0].get_u();
 		}
 
 		/// \brief Number of iterations performed by the QP solver during the last Feedback phase.
@@ -85,7 +82,7 @@ namespace tmpc
 		void Preparation()
 		{
 			if (_prepared)
-				throw std::logic_error("RealtimeIteration::Preparation(): RTI is already prepared.");
+				throw std::logic_error("MpcRealtimeIteration::Preparation(): RTI is already prepared.");
 
 			// MK: Working point shifting is disabled. The main reason is that it is possible to have
 			// time step in MPC different (typically bigger than) from the controller sampling time.
@@ -103,10 +100,10 @@ namespace tmpc
 
 		void setWorkingPoint(WorkingPoint const& wp)
 		{
-			if (wp.nT() != work_.workingPoint_.nT())
+			if (wp.size() != work_.workingPoint_.size())
 			{
 				throw std::invalid_argument(
-					"RealtimeIteration::setWorkingPoint(): new working point length is different. "
+					"MpcRealtimeIteration::setWorkingPoint(): new working point length is different. "
 					"Changing prediction horizon on the fly is not supported (yet?).");
 			}
 
@@ -120,10 +117,10 @@ namespace tmpc
 		void setLevenbergMarquardt(Scalar val)
 		{
 			if (_prepared)
-				throw std::logic_error("RealtimeIteration::setLevenbergMarquardt(): RTI must not be prepared when setting LevenbergMarquardt.");
+				throw std::logic_error("MpcRealtimeIteration::setLevenbergMarquardt(): RTI must not be prepared when setting LevenbergMarquardt.");
 
 			if (val < 0.)
-				throw std::invalid_argument("RealtimeIteration::setLevenbergMarquardt(): LevenbergMarquardt must be non-negative.");
+				throw std::invalid_argument("MpcRealtimeIteration::setLevenbergMarquardt(): LevenbergMarquardt must be non-negative.");
 
 			if (work_.levenbergMarquardt_ != val)
 			{
@@ -472,7 +469,7 @@ namespace tmpc
 			if (!messages.empty())
 			{
 				std::stringstream err_msg;
-				err_msg << "RealtimeIteration encountered an ill-formed QP. Messages follow:" << std::endl;
+				err_msg << "MpcRealtimeIteration encountered an ill-formed QP. Messages follow:" << std::endl;
 				std::copy(messages.begin(), messages.end(), std::ostream_iterator<std::string>(err_msg, "\n"));
 
 				throw std::logic_error(err_msg.str());
