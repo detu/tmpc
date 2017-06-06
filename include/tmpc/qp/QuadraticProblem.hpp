@@ -3,7 +3,7 @@
 #include <tmpc/Matrix.hpp>
 
 #include "QpSize.hpp"
-#include "../core/RealtimeIteration.hpp"	// for RtiQpSize only
+#include "../mpc/MpcRealtimeIteration.hpp"	// for RtiQpSize only
 
 #include <vector>
 #include <initializer_list>

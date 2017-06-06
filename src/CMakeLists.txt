@@ -7,12 +7,12 @@ set(TMPC_INCLUDE_DIR ${PROJECT_INCLUDE_DIR}/tmpc)
 
 set (SRC
     ${TMPC_INCLUDE_DIR}/Matrix.hpp
-    ${TMPC_INCLUDE_DIR}/core/RealtimeIteration.hpp    rti/RealtimeIteration.cpp
-    ${TMPC_INCLUDE_DIR}/core/Trajectory.hpp
-    ${TMPC_INCLUDE_DIR}/core/gauss_newton.hpp
-    ${TMPC_INCLUDE_DIR}/core/problem_specific.hpp
+    
+    ${TMPC_INCLUDE_DIR}/util/TrajectoryPoint.hpp
+    ${TMPC_INCLUDE_DIR}/util/gauss_newton.hpp
+    ${TMPC_INCLUDE_DIR}/util/problem_specific.hpp
 
-	${TMPC_INCLUDE_DIR}/casadi_interface/GeneratedFunction.hpp
+    ${TMPC_INCLUDE_DIR}/casadi_interface/GeneratedFunction.hpp
 
 	${TMPC_INCLUDE_DIR}/integrator/rk4.hpp
 
@@ -23,6 +23,10 @@ set (SRC
 
 	${TMPC_INCLUDE_DIR}/qp/diagnostics.hpp
 	${TMPC_INCLUDE_DIR}/qp/UnsolvedQpException.hpp
+
+    ${TMPC_INCLUDE_DIR}/mpc/MpcQpSize.hpp mpc/MpcQpSize.cpp
+    ${TMPC_INCLUDE_DIR}/mpc/MpcRealtimeIteration.hpp
+    ${TMPC_INCLUDE_DIR}/mpc/MpcTrajectoryPoint.hpp
 )
 
 add_library(tmpc STATIC ${SRC})
