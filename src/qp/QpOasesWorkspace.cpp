@@ -24,10 +24,10 @@ qpOASES::Options qpOASES_DefaultOptions()
 }
 }	// namespace detail
 
-QpOasesSolveException::QpOasesSolveException(qpOASES::returnValue code)
-:	UnsolvedQpException("qpOASES"),
+QpOasesException::QpOasesException(qpOASES::returnValue code)
+:	QpSolverException("qpOASES"),
 	_code(code),
-	msg_(std::string(UnsolvedQpException::what()) + "\nqpOASES return code " + std::to_string(code))
+	msg_(std::string(QpSolverException::what()) + "\nqpOASES return code " + std::to_string(code))
 {
 }
 
@@ -84,7 +84,7 @@ void QpOasesWorkspace::solve()
 				ws_.lb.data(), ws_.ub.data(), ws_.lbA.data(), ws_.ubA.data(), nWSR);
 
 	if (res != qpOASES::SUCCESSFUL_RETURN)
-		throw QpOasesSolveException(res);
+		throw QpOasesException(res);
 
 	numIter_ = nWSR;
 	_hotStart = true;

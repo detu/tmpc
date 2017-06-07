@@ -1,6 +1,6 @@
 #pragma once
 
-#include "UnsolvedQpException.hpp"
+#include "QpSolverException.hpp"
 #include <tmpc/Matrix.hpp>
 #include <tmpc/qp/QpSize.hpp>
 
@@ -10,10 +10,10 @@
 
 namespace tmpc {
 
-class QpOasesSolveException : public UnsolvedQpException
+class QpOasesException : public QpSolverException
 {
 public:
-	QpOasesSolveException(qpOASES::returnValue code);
+	QpOasesException(qpOASES::returnValue code);
 
 	qpOASES::returnValue code() const	{ return _code;	}
 	char const * what() const noexcept override { return msg_.c_str(); }

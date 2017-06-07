@@ -22,7 +22,7 @@ set (SRC
 	${TMPC_INCLUDE_DIR}/qp/QuadraticProblem.hpp
 
 	${TMPC_INCLUDE_DIR}/qp/diagnostics.hpp
-	${TMPC_INCLUDE_DIR}/qp/UnsolvedQpException.hpp
+	${TMPC_INCLUDE_DIR}/qp/QpSolverException.hpp
 
     ${TMPC_INCLUDE_DIR}/mpc/MpcQpSize.hpp mpc/MpcQpSize.cpp
     ${TMPC_INCLUDE_DIR}/mpc/MpcRealtimeIteration.hpp

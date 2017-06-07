@@ -7,7 +7,7 @@
 #include <qpOASES.hpp>
 #include "Condensing.hpp"
 #include "MultiStageQPSolution.hpp"
-#include "UnsolvedQpException.hpp"
+#include "QpSolverException.hpp"
 
 #include <ostream>
 

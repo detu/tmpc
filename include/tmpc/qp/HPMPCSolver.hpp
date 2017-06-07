@@ -2,7 +2,7 @@
 
 #include "HPMPCProblem.hpp"
 #include "HPMPCSolution.hpp"
-#include "UnsolvedQpException.hpp"
+#include "QpSolverException.hpp"
 
 #include <limits>
 #include <stdexcept>
@@ -28,14 +28,14 @@ namespace tmpc
 		int d_ip_ocp_hard_tv_work_space_size_bytes(int N, int const *nx, int const *nu, int const *nb, int const *ng);
 	}
 
-	class HpmpcUnsolvedQpException : public UnsolvedQpException
+	class HpmpcUnsolvedQpException : public QpSolverException
 	{
 	public:
 		template <typename QP>
 		HpmpcUnsolvedQpException(QP const& qp, int code)
-		:	UnsolvedQpException("HPMPC", qp),
+		:	QpSolverException("HPMPC", qp),
 			_code(code),
-			msg_(std::string(UnsolvedQpException::what()) + "\nReturn code " + std::to_string(code))
+			msg_(std::string(QpSolverException::what()) + "\nReturn code " + std::to_string(code))
 		{
 		}
 
