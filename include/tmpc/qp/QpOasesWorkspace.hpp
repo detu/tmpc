@@ -32,6 +32,8 @@ qpOASES::Options qpOASES_DefaultOptions();
  */
 class QpOasesWorkspace
 {
+	struct Workspace;
+
 public:
 	// Scalar data type.
 	using Scalar = double;
@@ -43,17 +45,14 @@ public:
 	typedef unsigned int size_type;
 	typedef DynamicMatrix<Scalar, storageOrder> Matrix;
 	typedef DynamicVector<Scalar, columnVector> Vector;
-	typedef Submatrix<Matrix> SubM;
-	typedef Subvector<Vector> SubV;
-	typedef CustomVector<Scalar, unaligned, unpadded> VectorMap;
 
 	class Stage
 	{
-	public:
-		Stage(QpSize const& sz, SubM const& Q, SubM const& R, SubM const& S, SubM const& ST, SubV const& q, SubV const& r,
-				SubV const& lbx, SubV const& ubx, SubV const& lbu, SubV const& ubu, SubM const& A, SubM const& B, SubV const& lbb, SubV const& ubb,
-				SubM const& C, SubM const& D, SubV const& lbd, SubV const& ubd);
+		typedef Submatrix<Matrix> SubM;
+		typedef Subvector<Vector> SubV;
 
+	public:
+		Stage(Workspace& ws, QpSize const& sz, size_t n, size_t na, size_t nx_next);
 		Stage(Stage const&) = delete;
 		Stage(Stage &&) = default;
 
@@ -64,184 +63,62 @@ public:
 			return *this;
 		}
 
-		const SubM& get_A() const {
-			return A_;
-		}
+		const SubM& Q() const {	return Q_; }
+		template <typename T> void Q(const T& q) { Q_ = q; }
 
-		template <typename T>
-		void set_A(const T& a) {
-			A_ = a;
-		}
+		const SubM& R() const {	return R_; }
+		template <typename T> void R(const T& r) { R_ = r; }
 
-		decltype(auto) get_b() const {
-			return -lbb_;
-		}
+		const SubM& S() const {	return S_; }
+		template <typename T> void S(const T& s) { ST_ = (S_ = s).transpose(); }
 
-		template <typename T>
-		void set_b(const T& b) {
-			lbb_ = ubb_ = -b;
-		}
+		const SubV& q() const {	return q_; }
+		template <typename T> void q(const T& q) { q_ = q; }
 
-		const SubM& get_B() const {
-			return B_;
-		}
+		const SubV& r() const {	return r_; }
+		template <typename T> void r(const T& r) { r_ = r; }
 
-		template <typename T>
-		void set_B(const T& b) {
-			B_ = b;
-		}
+		const SubM& A() const {	return A_; }
+		template <typename T> void A(const T& a) { A_ = a; }
 
-		const SubM& get_C() const {
-			return C_;
-		}
+		const SubM& B() const {	return B_; }
+		template <typename T> void B(const T& b) { B_ = b; }
 
-		template <typename T>
-		void set_C(const T& c) {
-			C_ = c;
-		}
+		decltype(auto) b() const { return -lbb_; }
+		template <typename T> void b(const T& b) { lbb_ = ubb_ = -b; }
 
-		const SubM& get_D() const {
-			return D_;
-		}
+		const SubM& C() const {	return C_; }
+		template <typename T> void C(const T& c) { C_ = c; }
 
-		template <typename T>
-		void set_D(const T& d) {
-			D_ = d;
-		}
+		const SubM& D() const {	return D_; }
+		template <typename T> void D(const T& d) { D_ = d; }
 
-		const SubV& get_lbd() const {
-			return lbd_;
-		}
+		const SubV& lbd() const { return lbd_; }
+		template <typename T> void lbd(const T& lbd) { lbd_ = lbd; }
 
-		template <typename T>
-		void set_lbd(const T& lbd) {
-			lbd_ = lbd;
-		}
+		const SubV& ubd() const { return ubd_; }
+		template <typename T> void ubd(const T& ubd) { ubd_ = ubd; }
 
-		const SubV& get_lbu() const {
-			return lbu_;
-		}
+		const SubV& lbu() const { return lbu_; }
+		template <typename T> void lbu(const T& lbu) { lbu_ = lbu; }
 
-		template <typename T>
-		void set_lbu(const T& lbu) {
-			lbu_ = lbu;
-		}
+		const SubV& ubu() const { return ubu_; }
+		template <typename T> void ubu(const T& ubu) { ubu_ = ubu; }
 
-		const SubV& get_lbx() const {
-			return lbx_;
-		}
+		const SubV& lbx() const { return lbx_; }
+		template <typename T> void lbx(const T& lbx) { lbx_ = lbx; }		
 
-		template <typename T>
-		void set_lbx(const T& lbx) {
-			lbx_ = lbx;
-		}
+		const SubV& ubx() const { return ubx_; }
+		template <typename T> void ubx(const T& ubx) { ubx_ = ubx; }
 
-		const SubV& get_q() const {
-			return q_;
-		}
+		SubV const& x() const { return x_;	}
+		SubV const& u() const { return u_;	}
+		SubV const& pi() const	{ return pi_; }
+		SubV const& lam_u() const { return lamU_; }
+		SubV const& lam_x() const { return lamX_; }
+		SubV const& lam_d() const { return lam_; }
 
-		template <typename T>
-		void set_q(const T& q) {
-			q_ = q;
-		}
-
-		const SubM& get_Q() const {
-			return Q_;
-		}
-
-		template <typename T>
-		void set_Q(const T& q) {
-			Q_ = q;
-		}
-
-		const SubV& get_r() const {
-			return r_;
-		}
-
-		template <typename T>
-		void set_r(const T& r) {
-			r_ = r;
-		}
-
-		const SubM& get_R() const {
-			return R_;
-		}
-
-		template <typename T>
-		void set_R(const T& r) {
-			R_ = r;
-		}
-
-		const SubM& get_S() const {
-			return S_;
-		}
-
-		template <typename T>
-		void set_S(const T& s) {
-			ST_ = (S_ = s).transpose();
-		}
-
-		const SubV& get_ubd() const {
-			return ubd_;
-		}
-
-		template <typename T>
-		void set_ubd(const T& ubd) {
-			ubd_ = ubd;
-		}
-
-		const SubV& get_ubu() const {
-			return ubu_;
-		}
-
-		template <typename T>
-		void set_ubu(const T& ubu) {
-			ubu_ = ubu;
-		}
-
-		const SubV& get_ubx() const {
-			return ubx_;
-		}
-
-		template <typename T>
-		void set_ubx(const T& ubx) {
-			ubx_ = ubx;
-		}
-
-		VectorMap const& get_x() const
-		{
-			return x_;
-		}
-
-		VectorMap const& get_u() const
-		{
-			return u_;
-		}
-
-		VectorMap const& get_pi() const
-		{
-			return pi_;
-		}
-
-		VectorMap const& get_lam_u() const
-		{
-			return lamU_;
-		}
-
-		VectorMap const& get_lam_x() const
-		{
-			return lamX_;
-		}
-
-		VectorMap const& get_lam_d() const
-		{
-			return lam_;
-		}
-
-		QpSize const& size() const
-		{
-			return size_;
-		}
+		QpSize const& size() const { return size_; }
 
 	private:
 		QpSize size_;
@@ -263,20 +140,23 @@ public:
 		SubM D_;
 		SubV lbd_;
 		SubV ubd_;
-		VectorMap x_;
-		VectorMap u_;
-		VectorMap lamX_;
-		VectorMap lamU_;
-		VectorMap lam_;
-		VectorMap pi_;
+		SubV x_;
+		SubV u_;
+		SubV lamX_;
+		SubV lamU_;
+		SubV lam_;
+		SubV pi_;
 	};
 
 	template <typename InputIt>
-	QpOasesWorkspace(InputIt sz_begin, InputIt sz_end, qpOASES::Options const& options = detail::qpOASES_DefaultOptions())
-	:	QpOasesWorkspace(sz_begin, sz_end, options,
-			numVariables(sz_begin, sz_end), numEqualities(sz_begin, sz_end) + numInequalities(sz_begin, sz_end))
+	QpOasesWorkspace(InputIt sz_begin, InputIt sz_end)
+	:	problem_(numVariables(sz_begin, sz_end), numEqualities(sz_begin, sz_end) + numInequalities(sz_begin, sz_end))
+	,	ws_(problem_.getNV(), problem_.getNC())
 	{
-		_problem.setOptions(options);
+		ws_.initABlocks(sz_begin, sz_end);
+		initStages(sz_begin, sz_end);
+		
+		problem_.setOptions(detail::qpOASES_DefaultOptions());
 	}
 
 	/**
@@ -296,65 +176,23 @@ public:
 	QpOasesWorkspace& operator=(QpOasesWorkspace const&) = delete;
 	QpOasesWorkspace& operator=(QpOasesWorkspace&&) = delete;
 
-	Stage& operator[](std::size_t i)
-	{
-		return stage_.at(i);
-	}
-
-	Stage const& operator[](std::size_t i) const
-	{
-		return stage_.at(i);
-	}
-
-	std::size_t size() const
-	{
-		return stage_.size();
-	}
+	Stage& operator[](std::size_t i) { return stage_.at(i);	}
+	Stage const& operator[](std::size_t i) const { return stage_.at(i);	}
+	std::size_t size() const { return stage_.size(); }
 
 	typedef std::vector<Stage>::iterator iterator;
 	typedef std::vector<Stage>::const_iterator const_iterator;
 	typedef std::vector<Stage>::reference reference;
 	typedef std::vector<Stage>::const_reference const_reference;
 
-	iterator begin()
-	{
-		return stage_.begin();
-	}
-
-	iterator end()
-	{
-		return stage_.end();
-	}
-
-	const_iterator begin() const
-	{
-		return stage_.begin();
-	}
-
-	const_iterator end() const
-	{
-		return stage_.end();
-	}
-
-	reference front()
-	{
-		return stage_.front();
-	}
-
-	reference back()
-	{
-		return stage_.back();
-	}
-
-	const_reference front() const
-	{
-		return stage_.front();
-	}
-
-	const_reference back() const
-	{
-		return stage_.back();
-	}
+	iterator begin() { return stage_.begin(); }
+	iterator end() { return stage_.end(); }
+	const_iterator begin() const { return stage_.begin(); }
+	const_iterator end() const { return stage_.end(); }
+	reference front() {	return stage_.front(); }
+	reference back() { return stage_.back(); }
+	const_reference front() const {	return stage_.front(); }
+	const_reference back() const { return stage_.back(); }
 
 	// qpOASES-specific part
 	//
@@ -362,107 +200,128 @@ public:
 	//
 	// Full matrix and vector access functions.
 	//
-	Matrix& H() { return H_; }
-	const Matrix& H() const { return H_; }
+	Matrix& H() { return ws_.H; }
+	const Matrix& H() const { return ws_.H; }
 
-	Vector& g() { return g_; }
-	const Vector& g() const { return g_; }
+	Vector& g() { return ws_.g; }
+	const Vector& g() const { return ws_.g; }
 
-	Matrix& A() { return A_; }
-	const Matrix& A() const { return A_; }
+	Matrix& A() { return ws_.A; }
+	const Matrix& A() const { return ws_.A; }
 
-	Vector& lbA() { return lbA_; }
-	const Vector& lbA() const { return lbA_; }
+	Vector& lbA() { return ws_.lbA; }
+	const Vector& lbA() const { return ws_.lbA; }
 
-	Vector& ubA() { return ubA_; }
-	const Vector& ubA() const { return ubA_; }
+	Vector& ubA() { return ws_.ubA; }
+	const Vector& ubA() const { return ws_.ubA; }
 
-	Vector& lb() { return lb_; }
-	const Vector& lb() const { return lb_; }
+	Vector& lb() { return ws_.lb; }
+	const Vector& lb() const { return ws_.lb; }
 
-	Vector& ub() { return ub_; }
-	const Vector& ub() const { return ub_; }
+	Vector& ub() { return ws_.ub; }
+	const Vector& ub() const { return ws_.ub; }
 
-	bool getHotStart() const noexcept { return _hotStart; }
+	bool hotStart() const noexcept { return _hotStart; }
 
 	// Get maximum number of working set recalculations for qpOASES
-	unsigned const getMaxWorkingSetRecalculations() const noexcept { return _maxWorkingSetRecalculations; }
+	unsigned const maxWorkingSetRecalculations() const noexcept { return _maxWorkingSetRecalculations; }
 
 	// Set maximum number of working set recalculations for qpOASES
-	void setMaxWorkingSetRecalculations(unsigned val) noexcept { _maxWorkingSetRecalculations = val; }
+	void maxWorkingSetRecalculations(unsigned val) noexcept { _maxWorkingSetRecalculations = val; }
 
 	void solve();
 
 private:
 	bool _hotStart = false;
 
-	// TODO: wrap _problem into a pImpl to
+	// TODO: wrap problem_ into a pImpl to
 	// a) Reduce dependencies
-	// b) Avoid deep-copy of qpOASES::SQProblem object of move-construction of CondensingSolver.
-	qpOASES::SQProblem _problem;
+	// b) Avoid deep-copy of qpOASES::SQProblem object on move-construction of CondensingSolver.
+	qpOASES::SQProblem problem_;
 	unsigned _maxWorkingSetRecalculations = 1000;
+	
+	struct Workspace
+	{
+		Workspace(size_t nx, size_t nc);
 
-	Matrix H_;
-	Vector g_;
+		//
+		// Init the -I blocks in the A matrix and 0 blocks in lbA and ubA
+		//
+		template <typename InputIt>
+		void initABlocks(InputIt sz_begin, InputIt sz_end)
+		{
+			// (i, j) = top left corner of the current AB block
+			size_type i = 0;
+			size_type j = 0;
 
-	// The layout of lb_ is [lbx, lbu, ...]
-	Vector lb_;
+			for (auto sz = sz_begin; sz + 1 < sz_end; ++sz)
+			{
+				// Move (i, j) one column right from the top left corner of the current AB block,
+				// which is the top left corner of the -I block.
+				j += sz->nx() + sz->nu();
 
-	// The layout of ub_ is [ubx, ubu, ...]
-	Vector ub_;
+				// Size of the -I block
+				auto const nx_next = (sz + 1)->nx();
 
-	Matrix A_;
+				// Assign the -I block in A
+				submatrix(A, i, j, nx_next, nx_next) = -IdentityMatrix<Matrix>(nx_next);
 
-	// The layout of lbA_ is [lbb, lbd, ...]
-	Vector lbA_;
+				// Assign the 0 blocks in lbA and ubA
+				subvector(lbA, i, nx_next) = 0.;
+				subvector(ubA, i, nx_next) = 0.;
 
-	// The layout of ubA_ is [ubb, ubd, ...]
-	Vector ubA_;
+				// Move (i, j) to the top left corner of the next AB block.
+				i += nx_next + sz->nc();
+			}
+		}
+		
+		Matrix H;
+		Vector g;
 
-	DynamicVector<Scalar> primalSolution_;
-	DynamicVector<Scalar> dualSolution_;
+		// The layout of lb is [lbx, lbu, ...]
+		Vector lb;
 
-	/// \brief Number of iterations performed by the QP solver.
+		// The layout of ub is [ubx, ubu, ...]
+		Vector ub;
+
+		Matrix A;
+
+		// The layout of lbA is [lbb, lbd, ...]
+		Vector lbA;
+
+		// The layout of ubA_ is [ubb, ubd, ...]
+		Vector ubA;
+
+		Vector primalSolution;
+		Vector dualSolution;
+	};
+
+	Workspace ws_;
+
+	/// \brief Number of iterations performed by the QP solver on the last call to solve().
 	unsigned numIter_ = 0;
 
 	std::vector<Stage> stage_;
 
-	static auto constexpr sNaN = std::numeric_limits<Scalar>::signaling_NaN();
-
+	//
+	// Init stage objects.
+	//
 	template <typename InputIt>
-	QpOasesWorkspace(InputIt sz_begin, InputIt sz_end, qpOASES::Options const& options, size_t nx, size_t nc)
-	:	_problem(nx, nc)
-	,	H_(nx, nx, Scalar{0})
-	,	g_(nx, sNaN)
-	, 	lb_(nx, sNaN)
-	, 	ub_(nx, sNaN)
-	, 	A_(nc, nx, Scalar{0})
-	, 	lbA_(nc, sNaN)
-	, 	ubA_(nc, sNaN)
-	,	primalSolution_(nx)
-	,	dualSolution_(nx + nc)
+	void initStages(InputIt sz_begin, InputIt sz_end)
 	{
 		stage_.reserve(std::distance(sz_begin, sz_end));
 
-		double * x = primalSolution_.data();
-		double * lambda_x = dualSolution_.data();
-		double * lambda = dualSolution_.data() + primalSolution_.size();
+		std::size_t n = 0, na = 0;
 
-		for (auto s = sz_begin; s != sz_end; ++s)
+		for (auto sz = sz_begin; sz != sz_end; ++sz)
 		{
-			auto const s_next = s + 1;
-			auto const nx_next = s_next != sz_end ? s_next->nx() : 0;
-			stage_.emplace_back(*s, nx_next, x, lambda_x, lambda);
+			auto const nx_next = sz + 1 != sz_end ? (sz + 1)->nx() : 0;
+			stage_.emplace_back(ws_, *sz, n, na, nx_next);
 
-			x += s->nx() + s->nu();
-			lambda_x += s->nx() + s->nu();
-			lambda += s->nc() + nx_next;
+			n += sz->nx() + sz->nu();
+			na += nx_next + sz->nc();
 		}
-		
-		_problem.setOptions(options);
 	}
-
-	void InitStages();
 };
 
 }	// namespace tmpc
