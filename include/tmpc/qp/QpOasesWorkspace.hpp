@@ -171,10 +171,10 @@ public:
 	 *
 	 * Move-construction is ok.
 	 */
-	QpOasesWorkspace(QpOasesWorkspace&& rhs) = default;
+	QpOasesWorkspace(QpOasesWorkspace &&) = default;
 
 	QpOasesWorkspace& operator=(QpOasesWorkspace const&) = delete;
-	QpOasesWorkspace& operator=(QpOasesWorkspace&&) = delete;
+	QpOasesWorkspace& operator=(QpOasesWorkspace &&) = delete;
 
 	Stage& operator[](std::size_t i) { return stage_.at(i);	}
 	Stage const& operator[](std::size_t i) const { return stage_.at(i);	}

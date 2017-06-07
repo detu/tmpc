@@ -58,7 +58,7 @@ add_executable(tmpc_test
     #mhe_test.cpp
     QpWorkspaceTest.cpp
     QpOasesWorkspaceTest.cpp
-    #qp_solver_test.cpp
+    QpWorkspaceSolveTest.cpp
     casadi_function_test.cpp
     gtest_tools_eigen.hpp
 
