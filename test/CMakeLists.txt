@@ -1,11 +1,7 @@
 #
 # test
 #
-ExternalProject_Add(googletest
-    PREFIX ${EXTERN_DIR}
-    GIT_REPOSITORY https://github.com/google/googletest.git
-    CMAKE_ARGS "-DCMAKE_INSTALL_PREFIX=${EXTERN_DIR}" "-DBUILD_GMOCK=ON"
-)
+find_package(GTest REQUIRED)
 
 find_package(Threads REQUIRED)    # required for gtest
 
@@ -60,9 +56,9 @@ add_executable(tmpc_test
     rk4_test.cpp
     #realtime_iteration_test.cpp
     #mhe_test.cpp
-    qp_test.cpp
-    qpoases_problem_test.cpp
-    qp_solver_test.cpp
+    #qp_test.cpp
+    #qpoases_problem_test.cpp
+    #qp_solver_test.cpp
     casadi_function_test.cpp
     gtest_tools_eigen.hpp
 
@@ -77,7 +73,6 @@ add_dependencies(tmpc_test googletest)
 target_compile_definitions(tmpc_test
     PRIVATE TEST_DATA_PATH="${TEST_DATA_PATH}")
 
-
 if (HPMPC_FOUND)
     #target_sources(tmpc_test
     #    PRIVATE hpmpc_test.cpp
@@ -90,8 +85,8 @@ target_include_directories(tmpc_test
 
 target_link_libraries(tmpc_test
     tmpc
-    gtest
-    gtest_main
+    GTest::GTest
+    GTest::Main
     gmock
     ${CMAKE_THREAD_LIBS_INIT}    # Needed for gtest
 )

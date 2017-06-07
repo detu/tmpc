@@ -46,6 +46,11 @@ target_include_directories(tmpc
     PUBLIC ${PROJECT_INCLUDE_DIR}
 )
 
+if (BLAZE_DIR)
+    target_include_directories(tmpc PUBLIC ${BLAZE_DIR})
+    message(STATUS "BLAZE_DIR=${BLAZE_DIR}")
+endif()
+
 #
 # Add qpOASES interface
 #

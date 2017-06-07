@@ -56,9 +56,9 @@ def rk4gn(name, ode, options):
     cQ3, cR3, cS3 = Gauss_Newton_approximation(k3['r'], cs.jacobian(k3['r'], x0), cs.jacobian(k3['r'], ode['p']))
     cQ4, cR4, cS4 = Gauss_Newton_approximation(k4['r'], cs.jacobian(k4['r'], x0), cs.jacobian(k4['r'], ode['p']))
     
-    cQ = (h / 6.) * (cQ1 + 2. * cQ2 + 2. * cQ3 + cQ4);
-    cR = (h / 6.) * (cR1 + 2. * cR2 + 2. * cR3 + cR4);
-    cS = (h / 6.) * (cS1 + 2. * cS2 + 2. * cS3 + cS4);
+    cQ = (h / 6.) * (cQ1 + 2. * cQ2 + 2. * cQ3 + cQ4)
+    cR = (h / 6.) * (cR1 + 2. * cR2 + 2. * cR3 + cR4)
+    cS = (h / 6.) * (cS1 + 2. * cS2 + 2. * cS3 + cS4)
     
     return cs.Function(name, [x0, u, t0], [xf, qf, cf, cQ, cR, cS], ['x0', 'p', 't0'], ['xf', 'qf', 'cf', 'cQ', 'cR', 'cS'])
 
@@ -114,12 +114,12 @@ if __name__ == '__main__':
     ode_sens = cs.Function(name + "_sens", [t, x, u, x_seed, u_seed], 
                           [cs.densify(dx), cs.densify(cs.jtimes(dx, x, x_seed) + cs.jtimes(dx, u, u_seed))], 
                           ['t', 'x0', 'u0', 'x_seed', 'u_seed'], ['xdot', 'xdot_sens'])
-    gen = cs.CodeGenerator({'mex' : False, 'with_header' : True})
-    gen.add(ode)
-    gen.add(ode_sens)
     name_c = '{0}_generated.c'.format(name)
     name_h = '{0}_generated.h'.format(name)
-    gen.generate(name_c)
+    gen = cs.CodeGenerator(name_c, {'mex' : False, 'with_header' : True, 'with_mem' : True})
+    gen.add(ode)
+    gen.add(ode_sens)
+    gen.generate()
     #os.rename(name_c, 'src/' + name_c)
     #os.rename(name_h, 'src/' + name_h)
     

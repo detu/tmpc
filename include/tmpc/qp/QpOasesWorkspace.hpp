@@ -1,6 +1,8 @@
 #pragma once
 
 #include "UnsolvedQpException.hpp"
+#include <tmpc/Matrix.hpp>
+#include <tmpc/qp/QpSize.hpp>
 
 #include <qpOASES.hpp>
 
@@ -11,15 +13,13 @@ namespace tmpc {
 class QpOasesSolveException : public UnsolvedQpException
 {
 public:
-	QpOasesSolveException(qpOASES::returnValue code, QpOasesProblem const& qp);
+	QpOasesSolveException(qpOASES::returnValue code);
 
-	qpOASES::returnValue getCode() const	{ return _code;	}
-	QpOasesProblem const& getQpOasesQp() const { return qpOasesProblem_; }
+	qpOASES::returnValue code() const	{ return _code;	}
 	char const * what() const noexcept override { return msg_.c_str(); }
 
 private:
 	qpOASES::returnValue const _code;
-	QpOasesProblem const qpOasesProblem_;
 	std::string const msg_;
 };
 
@@ -41,7 +41,6 @@ public:
 	static auto constexpr storageOrder = rowMajor;
 
 	typedef unsigned int size_type;
-	typedef double Scalar;
 	typedef DynamicMatrix<Scalar, storageOrder> Matrix;
 	typedef DynamicVector<Scalar, columnVector> Vector;
 	typedef Submatrix<Matrix> SubM;
@@ -428,16 +427,18 @@ private:
 
 	std::vector<Stage> stage_;
 
+	static auto constexpr sNaN = std::numeric_limits<Scalar>::signaling_NaN();
+
 	template <typename InputIt>
-	QpOasesWorkspace(InputIt sz_begin, InputIt sz_end, qpOASES::Options const& options, size_t nx, size_t nc))
+	QpOasesWorkspace(InputIt sz_begin, InputIt sz_end, qpOASES::Options const& options, size_t nx, size_t nc)
 	:	_problem(nx, nc)
-	,	_H(nx, nx, Scalar{0})
-	,	_g(nx, sNaN)
-	, 	_lb(nx, sNaN)
-	, 	_ub(nx, sNaN)
-	, 	_A(nc, nx, Scalar{0})
-	, 	_lbA(nc, sNaN)
-	, 	_ubA(nc, sNaN)
+	,	H_(nx, nx, Scalar{0})
+	,	g_(nx, sNaN)
+	, 	lb_(nx, sNaN)
+	, 	ub_(nx, sNaN)
+	, 	A_(nc, nx, Scalar{0})
+	, 	lbA_(nc, sNaN)
+	, 	ubA_(nc, sNaN)
 	,	primalSolution_(nx)
 	,	dualSolution_(nx + nc)
 	{
