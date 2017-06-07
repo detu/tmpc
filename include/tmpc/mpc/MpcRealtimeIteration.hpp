@@ -2,7 +2,7 @@
 
 #include <tmpc/qp/diagnostics.hpp>
 #include <tmpc/mpc/MpcTrajectoryPoint.hpp>
-#include <tmpc/qp/QpSize.hpp>
+#include <tmpc/mpc/MpcSize.hpp>
 
 #include <stdexcept>
 #include <limits>

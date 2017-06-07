@@ -43,42 +43,16 @@ set_property(TARGET tmpc PROPERTY CXX_EXTENSIONS False)
 set_property(TARGET tmpc PROPERTY POSITION_INDEPENDENT_CODE True)
 
 target_include_directories(tmpc
-    PRIVATE ${TMPC_INCLUDE_DIR}
     PUBLIC ${PROJECT_INCLUDE_DIR}
 )
-
-#
-# Add qpDUNES interface
-#
-if (qpDUNES_FOUND)
-    add_dependencies(tmpc qpDUNES)
-
-    target_sources(tmpc
-        PRIVATE ${TMPC_INCLUDE_DIR}/qp/qpDUNESProgram.hpp
-	)
-
-	target_include_directories(tmpc
-        PRIVATE ${qpDUNES_INCLUDE_DIRS}
-    )
-
-    target_link_libraries(tmpc
-        PUBLIC ${qpDUNES_LIBRARY_DIRS}
-    )
-endif()
 
 #
 # Add qpOASES interface
 #
 if (qpOASES_FOUND)
     target_sources(tmpc
-        PRIVATE ${TMPC_INCLUDE_DIR}/qp/CondensingSolver.hpp
-        PRIVATE qp/CondensingSolver.cpp
-        PRIVATE ${TMPC_INCLUDE_DIR}/qp/QpOasesSolver.hpp
-        PRIVATE qp/QpOasesSolver.cpp
-        PRIVATE ${TMPC_INCLUDE_DIR}/qp/QpOasesProblem.hpp
-        PRIVATE qp/QpOasesProblem.cpp
-        PRIVATE ${TMPC_INCLUDE_DIR}/qp/QpOasesSolution.hpp
-        PRIVATE qp/QpOasesSolution.cpp
+        PRIVATE ${TMPC_INCLUDE_DIR}/qp/QpOasesWorkspace.hpp
+        PRIVATE qp/QpOasesWorkspace.cpp
 	)
 
 	target_include_directories(tmpc

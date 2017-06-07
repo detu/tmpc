@@ -239,10 +239,6 @@ public:
 	QpOasesProblem(QpOasesProblem const& rhs);
 	QpOasesProblem(QpOasesProblem &&) = default;
 
-	size_type nx() const { return static_cast<size_type>(_H.rows()); }
-	size_type nc() const { return static_cast<size_type>(_A.rows()); }
-	size_type nT() const { return nT_; }
-
 	// Is this going to become a "modern" multistage QP interface?
 	Stage& operator[](std::size_t i)
 	{
@@ -250,16 +246,6 @@ public:
 	}
 
 	Stage const& operator[](std::size_t i) const
-	{
-		return stage_.at(i);
-	}
-
-	Stage& stage(std::size_t i)
-	{
-		return stage_.at(i);
-	}
-
-	Stage const& stage(std::size_t i) const
 	{
 		return stage_.at(i);
 	}
@@ -314,261 +300,6 @@ public:
 		return stage_.back();
 	}
 
-	// TODO: declare deprecated?
-	std::vector<QpSize> const& stageSize() const
-	{
-		return size_;
-	}
-
-	// ******************************************************
-	//
-	// Multistage QP interface
-	//
-	// ******************************************************
-	SubM const& get_Q(size_type i) const
-	{
-		return stage(i).get_Q();
-	}
-
-	template <typename Matrix>
-	void set_Q(size_type i, Matrix const& val)
-	{
-		stage(i).set_Q(val);
-	}
-
-	/**
-	 * \brief Get R matrix of stage k
-	 */
-	SubM const& get_R(size_type k) const
-	{
-		return stage(k).get_R();
-	}
-
-	/**
-	 * \brief Set R matrix of a given stage
-	 */
-	template <typename Matrix>
-	void set_R(size_type k, Matrix const& val)
-	{
-		stage(k).set_R(val);
-	}
-
-	/**
-	 * \brief Get S matrix of stage k
-	 */
-	SubM const& get_S(size_type k) const
-	{
-		return stage(k).get_S();
-	}
-
-	/**
-	 * \brief Set S matrix of stage k
-	 */
-	template <typename Matrix>
-	void set_S(size_type k, Matrix const& val)
-	{
-		stage(k).set_S(val);
-	}
-
-	/**
-	 * \brief Get q vector of stage i
-	 */
-	SubV const& get_q(size_type i) const
-	{
-		return stage(i).get_q();
-	}
-
-	/**
-	 * \brief Set q vector of stage i
-	 */
-	template <typename Matrix>
-	void set_q(size_type i, Matrix const& val)
-	{
-		stage(i).set_q(val);
-	}
-
-	/**
-	 * \brief Get r vector of stage k
-	 */
-	SubV const& get_r(size_type k) const
-	{
-		return stage(k).get_r();
-	}
-
-	/**
-	 * \brief Set r vector of stage k
-	 */
-	template <typename Matrix>
-	void set_r(size_type k, Matrix const& val)
-	{
-		stage(k).set_r(val);
-	}
-
-	/**
-	 * \brief Get A matrix of stage i
-	 */
-	SubM const& get_A(size_type i) const
-	{
-		return stage(i).get_A();
-	}
-
-	/**
-	 * \brief Set A matrix of stage i
-	 */
-	template <typename Matrix>
-	void set_A(size_type i, Matrix const& val)
-	{
-		stage(i).set_A(val);
-	}
-
-	/**
-	 * \brief Get B matrix of stage k
-	 */
-	SubM const& get_B(size_type k) const
-	{
-		return stage(k).get_B();
-	}
-
-	/**
-	 * \brief Set B matrix of stage k
-	 */
-	template <typename Matrix>
-	void set_B(size_type k, Matrix const& val)
-	{
-		stage(k).set_B(val);
-	}
-
-	decltype(auto) get_b(size_type i) const
-	{
-		return stage(i).get_b();
-	}
-
-	template <typename Matrix>
-	void set_b(size_type i, Matrix const& val)
-	{
-		stage(i).set_b(val);
-	}
-
-	SubM const& get_C(size_type i) const
-	{
-		return stage(i).get_C();
-	}
-
-	template <typename Matrix>
-	void set_C(size_type i, Matrix const& val)
-	{
-		stage(i).set_C(val);
-	}
-
-	SubM const& get_D(size_type i) const
-	{
-		return stage(i).get_D();
-	}
-
-	template <typename Matrix>
-	void set_D(size_type i, Matrix const& val)
-	{
-		stage(i).set_D(val);
-	}
-
-	SubM const& get_C_end() const
-	{
-		return stage_.back().get_C();
-	}
-
-	template <typename Matrix>
-	void set_C_end(Matrix const& val)
-	{
-		stage_.back().set_C(val);
-	}
-
-	SubV const& get_d_min(size_type i) const
-	{
-		return stage(i).get_lbd();
-	}
-
-	template <typename Matrix>
-	void set_d_min(size_type i, Matrix const& val)
-	{
-		stage(i).set_lbd(val);
-	}
-
-	SubV const& get_d_end_min() const
-	{
-		return stage_.back().get_lbd();
-	}
-
-	template <typename Matrix>
-	void set_d_end_min(Matrix const& val)
-	{
-		stage_.back().set_lbd(val);
-	}
-
-	SubV const& get_d_max(size_type i) const
-	{
-		return stage(i).get_ubd();
-	}
-
-	template <typename Matrix>
-	void set_d_max(size_type i, Matrix const& val)
-	{
-		stage(i).set_ubd(val);
-	}
-
-	SubV const& get_d_end_max() const
-	{
-		return stage_.back().get_ubd();
-	}
-
-	template <typename Matrix>
-	void set_d_end_max(Matrix const& val)
-	{
-		stage_.back().set_ubd(val);
-	}
-
-	SubV const& get_x_min(size_type i) const
-	{
-		return stage(i).get_lbx();
-	}
-
-	template <typename Matrix>
-	void set_x_min(size_type i, Matrix const& val)
-	{
-		stage(i).set_lbx(val);
-	}
-
-	SubV const& get_x_max(size_type i) const
-	{
-		return stage(i).get_ubx();
-	}
-
-	template <typename Matrix> void set_x_max(size_type i, Matrix const& val)
-	{
-		stage(i).set_ubx(val);
-	}
-
-	SubV const& get_u_min(size_type i) const
-	{
-		return stage(i).get_lbu();
-	}
-
-	template <typename Matrix>
-	void set_u_min(size_type i, Matrix const& val)
-	{
-		stage(i).set_lbu(val);
-	}
-
-	SubV const& get_u_max(size_type i) const
-	{
-		return stage(i).get_ubu();
-	}
-
-	template <typename Matrix>
-	void set_u_max(size_type i, Matrix const& val)
-	{
-		stage(i).set_ubu(val);
-	}
-
 	//
 	// Full matrix and vector access functions.
 	//
@@ -593,6 +324,7 @@ public:
 	Vector& ub() { return _ub; }
 	const Vector& ub() const { return _ub; }
 
+private:
 	//
 	// Raw data access functions for qpOASES.
 	//
@@ -604,12 +336,9 @@ public:
 	double const * lb_data() const noexcept { return _lb.data(); }
 	double const * ub_data() const noexcept { return _ub.data(); }
 
-private:
 	QpOasesProblem(std::vector<QpSize> const& sz, size_type n_var, size_type n_constr);
 	void InitStages();
 
-	std::vector<QpSize> const size_;
-	size_type nT_;
 	std::vector<Stage> stage_;
 
 	Matrix _H;
