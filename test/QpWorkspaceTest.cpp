@@ -1,8 +1,5 @@
 /*
- * hpmpc_test.cpp
- *
- *  Created on: Jun 17, 2016
- *      Author: kotlyar
+ * Unit tests for common functionality of QP workspaces.
  */
 
 #include "gtest_tools_eigen.hpp"
@@ -18,7 +15,7 @@
 using namespace tmpc;
 
 template <typename WS>
-class QuadraticProblemTest : public ::testing::Test
+class QpWorkspaceTest : public ::testing::Test
 {
 public:
 	using Workspace = WS;
@@ -28,7 +25,7 @@ protected:
 	using Vector = DynamicVector<Scalar>;
 	using Matrix = DynamicMatrix<Scalar>;
 
-	QuadraticProblemTest()
+	QpWorkspaceTest()
 	:	size_{
 			QpSize(2, 3, 4),
 			QpSize(5, 6, 7),
@@ -46,9 +43,9 @@ using WsTypes = ::testing::Types<
 	QpOasesWorkspace
 	>;
 
-TYPED_TEST_CASE(QuadraticProblemTest, WsTypes);
+TYPED_TEST_CASE(QpWorkspaceTest, WsTypes);
 
-TYPED_TEST(QuadraticProblemTest, get_set_interface_works)
+TYPED_TEST(QpWorkspaceTest, testQpInterface)
 {
 	auto const N = this->size_.size();
 
@@ -118,7 +115,7 @@ TYPED_TEST(QuadraticProblemTest, get_set_interface_works)
 	}
 }
 
-TYPED_TEST(QuadraticProblemTest, testMatrixSizesCorrect)
+TYPED_TEST(QpWorkspaceTest, testMatrixSizesCorrect)
 {
 	// Define dimensions
 	unsigned constexpr NX = 2;

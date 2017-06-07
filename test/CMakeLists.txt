@@ -56,8 +56,8 @@ add_executable(tmpc_test
     rk4_test.cpp
     #realtime_iteration_test.cpp
     #mhe_test.cpp
-    qp_test.cpp
-    #qpoases_problem_test.cpp
+    QpWorkspaceTest.cpp
+    QpOasesWorkspaceTest.cpp
     #qp_solver_test.cpp
     casadi_function_test.cpp
     gtest_tools_eigen.hpp

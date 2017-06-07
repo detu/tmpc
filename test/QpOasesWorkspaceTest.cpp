@@ -7,7 +7,7 @@
 
 //#include "qp_test_problems.hpp"
 
-#include <tmpc/qp/QpOasesProblem.hpp>
+#include <tmpc/qp/QpOasesWorkspace.hpp>
 #include <tmpc/qp/Printing.hpp>
 #include <tmpc/Matrix.hpp>
 
@@ -19,16 +19,17 @@
 
 using namespace tmpc;
 
-TEST(QpOasesProblemTest, test_MatricesCorrect)
+TEST(QpOasesWorkspaceTest, testMatricesCorrect)
 {
-	QpOasesProblem p({QpSize(2, 1, 0)});
+	std::array<QpSize, 1> sz { QpSize{2, 1, 0} };
+	QpOasesWorkspace p(sz.begin(), sz.end());
 
 	StaticMatrix<double, 3, 2, columnMajor> x;
 
 	// Test H = [Q, S; S', R]
-	p[0].set_Q(DynamicMatrix<double>({{1., 2.}, {2., 1.}}));
-	p[0].set_R(DynamicMatrix<double>({{3}}));
-	p[0].set_S(DynamicMatrix<double>({{4.}, {5.}}));
+	p[0].Q(DynamicMatrix<double>({{1., 2.}, {2., 1.}}));
+	p[0].R(DynamicMatrix<double>({{3}}));
+	p[0].S(DynamicMatrix<double>({{4.}, {5.}}));
 
 	EXPECT_EQ(p.H(), DynamicMatrix<double>({
 		{1., 2., 4.},
@@ -37,19 +38,19 @@ TEST(QpOasesProblemTest, test_MatricesCorrect)
 	}));
 
 	// Test g = [q; r]
-	p[0].set_q(DynamicMatrix<double>({{6.}, {7.}}));
-	p[0].set_r(DynamicMatrix<double>({{8.}}));
+	p[0].q(DynamicMatrix<double>({{6.}, {7.}}));
+	p[0].r(DynamicMatrix<double>({{8.}}));
 
 	EXPECT_EQ(p.g(), DynamicMatrix<double>({{6.}, {7.}, {8.}}));
 }
 
-TEST(QpOasesProblemTest, test_MatricesCorrect_1)
+TEST(QpOasesWorkspaceTest, testMatricesCorrect1)
 {
 	std::array<QpSize, 3> sz = {QpSize(2, 1, 2), QpSize(2, 2, 1), QpSize(3, 1, 3)};
 	auto const total_nx = numVariables(sz.begin(), sz.end());
 	auto const total_nc = numEqualities(sz.begin(), sz.end()) + numInequalities(sz.begin(), sz.end());
 
-	QpOasesProblem p(sz.begin(), sz.end());
+	QpOasesWorkspace p(sz.begin(), sz.end());
 
 	//---------------
 	// Test H, g
@@ -63,32 +64,32 @@ TEST(QpOasesProblemTest, test_MatricesCorrect_1)
 
 		{
 			auto tmp = rand_matrix.generate(sz.nx(), sz.nx());
-			stage->set_Q(trans(tmp) * tmp);
+			stage->Q(trans(tmp) * tmp);
 		}
 
 		{
 			auto tmp = rand_matrix.generate(sz.nu(), sz.nu());
-			stage->set_R(trans(tmp) * tmp);
+			stage->R(trans(tmp) * tmp);
 		}
 
-		stage->set_S(rand_matrix.generate(sz.nx(), sz.nu()));
-		stage->set_q(rand_vector.generate(sz.nx()));
-		stage->set_r(rand_vector.generate(sz.nu()));
-		stage->set_lbx(rand_vector.generate(sz.nx()));
-		stage->set_ubx(rand_vector.generate(sz.nx()));
-		stage->set_lbu(rand_vector.generate(sz.nu()));
-		stage->set_ubu(rand_vector.generate(sz.nu()));
+		stage->S(rand_matrix.generate(sz.nx(), sz.nu()));
+		stage->q(rand_vector.generate(sz.nx()));
+		stage->r(rand_vector.generate(sz.nu()));
+		stage->lbx(rand_vector.generate(sz.nx()));
+		stage->ubx(rand_vector.generate(sz.nx()));
+		stage->lbu(rand_vector.generate(sz.nu()));
+		stage->ubu(rand_vector.generate(sz.nu()));
 
 		if (stage + 1 != p.end())
 		{
-			stage->set_A(rand_matrix.generate((stage + 1)->size().nx(), sz.nx()));
-			stage->set_B(rand_matrix.generate((stage + 1)->size().nx(), sz.nu()));
+			stage->A(rand_matrix.generate((stage + 1)->size().nx(), sz.nx()));
+			stage->B(rand_matrix.generate((stage + 1)->size().nx(), sz.nu()));
 		}
 
-		stage->set_C(rand_matrix.generate(sz.nc(), sz.nx()));
-		stage->set_D(rand_matrix.generate(sz.nc(), sz.nu()));
-		stage->set_lbd(rand_vector.generate(sz.nc()));
-		stage->set_ubd(rand_vector.generate(sz.nc()));
+		stage->C(rand_matrix.generate(sz.nc(), sz.nx()));
+		stage->D(rand_matrix.generate(sz.nc(), sz.nu()));
+		stage->lbd(rand_vector.generate(sz.nc()));
+		stage->ubd(rand_vector.generate(sz.nc()));
 	}
 
 	/*
@@ -118,18 +119,18 @@ TEST(QpOasesProblemTest, test_MatricesCorrect_1)
 		size_t const nc = stage->size().nc();
 		size_t const nx1 = stage + 1 != p.end() ? stage[1].size().nx() : 0;
 
-		submatrix(H_expected,  i     , i, nx, nx) =       stage->get_Q();	submatrix(H_expected, i     , i + nx, nx, nu) = stage->get_S();
-		submatrix(H_expected,  i + nx, i, nu, nx) = trans(stage->get_S());	submatrix(H_expected, i + nx, i + nx, nu, nu) = stage->get_R();
+		submatrix(H_expected,  i     , i, nx, nx) =       stage->Q();	submatrix(H_expected, i     , i + nx, nx, nu) = stage->S();
+		submatrix(H_expected,  i + nx, i, nu, nx) = trans(stage->S());	submatrix(H_expected, i + nx, i + nx, nu, nu) = stage->R();
 
-		subvector(g_expected, i, nx) = stage->get_q();	subvector(g_expected, i + nx, nu) = stage->get_r();
-		subvector(lb_expected, i, nx) = stage->get_lbx();	subvector(lb_expected, i + nx, nu) = stage->get_lbu();
-		subvector(ub_expected, i, nx) = stage->get_ubx();	subvector(ub_expected, i + nx, nu) = stage->get_ubu();
+		subvector(g_expected, i, nx) = stage->q();	subvector(g_expected, i + nx, nu) = stage->r();
+		subvector(lb_expected, i, nx) = stage->lbx();	subvector(lb_expected, i + nx, nu) = stage->lbu();
+		subvector(ub_expected, i, nx) = stage->ubx();	subvector(ub_expected, i + nx, nu) = stage->ubu();
 
-		submatrix(A_expected, ia      , i, nx1, nx) = stage->get_A();	submatrix(A_expected, ia      , i + nx, nx1, nu) = stage->get_B();	submatrix(A_expected, ia, i + nx + nu, nx1, nx1) = -IdentityMatrix<DynamicMatrix<double>>(nx1);
-		submatrix(A_expected, ia + nx1, i, nc , nx) = stage->get_C();	submatrix(A_expected, ia + nx1, i + nx, nc , nu) = stage->get_D();
+		submatrix(A_expected, ia      , i, nx1, nx) = stage->A();	submatrix(A_expected, ia      , i + nx, nx1, nu) = stage->B();	submatrix(A_expected, ia, i + nx + nu, nx1, nx1) = -IdentityMatrix<DynamicMatrix<double>>(nx1);
+		submatrix(A_expected, ia + nx1, i, nc , nx) = stage->C();	submatrix(A_expected, ia + nx1, i + nx, nc , nu) = stage->D();
 
-		subvector(lbA_expected, ia, nx1) = 0.;	subvector(lbA_expected, ia + nx1, nc) = stage->get_lbd();
-		subvector(ubA_expected, ia, nx1) = 0.;	subvector(ubA_expected, ia + nx1, nc) = stage->get_ubd();
+		subvector(lbA_expected, ia, nx1) = 0.;	subvector(lbA_expected, ia + nx1, nc) = stage->lbd();
+		subvector(ubA_expected, ia, nx1) = 0.;	subvector(ubA_expected, ia + nx1, nc) = stage->ubd();
 
 		i += nx + nu;
 		ia += nx1 + nc;
