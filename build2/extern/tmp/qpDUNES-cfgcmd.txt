@@ -1,0 +1,1 @@
+cmd='/usr/bin/cmake;-DCMAKE_INSTALL_PREFIX=/home/molivari/Work/software/projects/tmpc/build/extern;-DQPDUNES_MAKE_EXAMPLES=OFF;-GUnix Makefiles;/home/molivari/Work/software/projects/tmpc/build/extern/src/qpDUNES'
