@@ -1,1 +1,0 @@
-cmd='/usr/bin/cmake;-DCMAKE_INSTALL_PREFIX=/home/molivari/Work/software/projects/tmpc/build/extern;-DBUILD_GMOCK=ON;-GUnix Makefiles;/home/molivari/Work/software/projects/tmpc/build/extern/src/googletest'
