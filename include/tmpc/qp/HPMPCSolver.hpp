@@ -9,12 +9,13 @@
 #include <algorithm>
 #include <cmath>
 
+
 namespace tmpc
 {
 	namespace hpmpc_wrapper
-	{
+	{	
 		int c_order_d_ip_ocp_hard_tv(	int *kk, int k_max, double mu0, double mu_tol,
-										int N, int const *nx, int const *nu, int const *nb, int const *ng,
+										int N, int const *nx, int const *nu, int const *nb, int **hidxb, int const *ng, int N2, 
 										int warm_start,
 										double const * const *A, double const * const *B, double const * const *b,
 										double const * const *Q, double const * const *S, double const * const *R, double const * const *q, double const * const *r,
@@ -25,7 +26,8 @@ namespace tmpc
 										void *work0,
 										double *stat );
 
-		int d_ip_ocp_hard_tv_work_space_size_bytes(int N, int const *nx, int const *nu, int const *nb, int const *ng);
+		int d_ip_ocp_hard_tv_work_space_size_bytes(int N, int const *nx, int const *nu, int const *nb, int **hidxb, int const *ng, int N2);
+		
 	}
 
 	class HpmpcUnsolvedQpException : public UnsolvedQpException
@@ -98,9 +100,35 @@ namespace tmpc
 			lg_.back() = terminalStageBounds_.lg.data();
 			ug_.back() = terminalStageBounds_.ug.data();
 
+			// Data structure for new hpmpc interface
+			_hidxb = new int *[nt+1];
+			for(int kk = 0; kk < nt; kk++) {
+				_hidxb[kk] = new int[NU + NX];
+				for (int ii = 0; ii < NU + NX; ii++) {
+					_hidxb[kk][ii] = ii;	
+				}	
+			}
+			
+			_hidxb[nt] = new int[NX];
+			for (int ii = 0; ii < NX; ii++) {
+				_hidxb[nt][ii] = ii;
+			}
+
 			// Allocate workspace
 			_workspace.resize(hpmpc_wrapper::d_ip_ocp_hard_tv_work_space_size_bytes(
-					static_cast<int>(nt), _nx.data(), _nu.data(), _nb.data(), _ng.data()));
+					static_cast<int>(nt), _nx.data(), _nu.data(), _nb.data(), _hidxb, _ng.data(), static_cast<int>(nt)));
+		}
+		
+		/**
+		 * \brief Destructor
+		 */
+		~HPMPCSolver() {
+			if(_hidxb) {
+			for (int kk = 0; kk <= nT(); kk++) {
+				delete [] _hidxb[kk];
+			}
+			delete [] _hidxb;
+			}	
 		}
 
 		/**
@@ -137,6 +165,9 @@ namespace tmpc
 			ub_.back() = terminalStageBounds_.ub.data();
 			lg_.back() = terminalStageBounds_.lg.data();
 			ug_.back() = terminalStageBounds_.ug.data();
+			
+			_hidxb = rhs._hidxb;
+			rhs._hidxb = nullptr;
 		}
 
 		HPMPCSolver& operator= (HPMPCSolver const&) = delete;
@@ -165,11 +196,10 @@ namespace tmpc
 			int num_iter = 0;
 
 			auto const ret = hpmpc_wrapper::c_order_d_ip_ocp_hard_tv(&num_iter, getMaxIter(), _mu0, _muTol, nT(),
-					_nx.data(), _nu.data(), _nb.data(), _ng.data(), _warmStart ? 1 : 0, p.A_data(), p.B_data(), p.b_data(),
+					_nx.data(), _nu.data(), _nb.data(), _hidxb, _ng.data(), nT(), _warmStart ? 1 : 0, p.A_data(), p.B_data(), p.b_data(),
 					p.Q_data(), p.S_data(), p.R_data(), p.q_data(), p.r_data(), lb_.data(), ub_.data(), p.C_data(), p.D_data(),
 					lg_.data(), ug_.data(), s.x_data(), s.u_data(), s.pi_data(), s.lam_data(), s.t_data(), s.inf_norm_res_data(),
 					_workspace.data(), _stat[0].data());
-
 			if (ret != 0)
 			{
 				throw HpmpcUnsolvedQpException(p, ret);
@@ -281,5 +311,9 @@ namespace tmpc
 
 		// Upper constraint bound pointers passed to HPMPC
 		std::vector<Scalar const *> ug_;
+		
+		// Additional data for new hpmpc interface
+		int** _hidxb; 
+		
 	};
 }

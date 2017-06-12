@@ -8,7 +8,9 @@ find_package(Eigen3 3.2.10 REQUIRED)
 include_directories(${EIGEN3_INCLUDE_DIR})
 
 find_package(qpOASES)
+
 find_package(HPMPC)
+include_directories(${HPMPC_INCLUDE_DIR})
 
 add_subdirectory(src)
 add_subdirectory(test)
