@@ -26,93 +26,71 @@ namespace tmpc
 	{
 	}
 
-	namespace hpmpc_wrapper
+	static int ip_ocp_hard_tv(
+		int *kk, int k_max, double mu0, double mu_tol,
+		int N, int const *nx, int const *nu, int const *nb, int const *ng,
+		int warm_start,
+		double const * const *A, double const * const *B, double const * const *b,
+		double const * const *Q, double const * const *S, double const * const *R, double const * const *q, double const * const *r,
+		double const * const *lb, double const * const *ub,
+		double const * const *C, double const * const *D, double const * const *lg, double const * const *ug,
+		double * const *x, double * const *u, double * const *pi, double * const *lam, double * const *t,
+		double *inf_norm_res,
+		void *work0,
+		double *stat)
 	{
-		void throw_hpmpc_error(int err_code, std::string const& s = "")
-		{
-			std::ostringstream msg;
-			msg << "HPMPC error: return code = " << err_code << " . " << s << ".";
-			throw std::runtime_error(msg.str());
-		}
+		return ::c_order_d_ip_ocp_hard_tv(
+			kk, k_max, mu0, mu_tol,
+			N, nx, nu, nb, ng,
+			warm_start,
+			A, B, b,
+			Q, S, R, q, r,
+			lb, ub,
+			C, D, lg, ug,
+			x, u, pi, lam, t,
+			inf_norm_res,
+			work0,
+			stat);
+	}
 
-		int c_order_d_ip_ocp_hard_tv(
-									int *kk, int k_max, double mu0, double mu_tol,
-									int N, int const *nx, int const *nu, int const *nb, int const *ng,
-									int warm_start,
-									double const * const *A, double const * const *B, double const * const *b,
-									double const * const *Q, double const * const *S, double const * const *R, double const * const *q, double const * const *r,
-									double const * const *lb, double const * const *ub,
-									double const * const *C, double const * const *D, double const * const *lg, double const * const *ug,
-									double * const *x, double * const *u, double * const *pi, double * const *lam, double * const *t,
-									double *inf_norm_res,
-									void *work0,
-									double *stat)
-		{
-			//int rr = feenableexcept(FE_ALL_EXCEPT);
-			//double nan = std::numeric_limits<double>::signaling_NaN();
-			//double xx = nan + 1;
+	/*
+	static int ip_ocp_hard_tv(
+		int *kk, int k_max, float mu0, float mu_tol,
+		int N, int const *nx, int const *nu, int const *nb, int const *ng,
+		int warm_start,
+		float const * const *A, float const * const *B, float const * const *b,
+		float const * const *Q, float const * const *S, float const * const *R, float const * const *q, float const * const *r,
+		float const * const *lb, float const * const *ub,
+		float const * const *C, float const * const *D, float const * const *lg, float const * const *ug,
+		float * const *x, float * const *u, float * const *pi, float * const *lam, float * const *t,
+		float *inf_norm_res,
+		void *work0,
+		float *stat)
+	{
+		::c_order_s_ip_ocp_hard_tv(
+			kk, k_max, mu0, mu_tol,
+			N, nx, nu, nb, ng,
+			warm_start,
+			A, B, b,
+			Q, S, R, q, r,
+			lb, ub,
+			C, D, lg, ug,
+			x, u, pi, lam, t,
+			inf_norm_res,
+			work0,
+			stat);
+	}
+	*/
 
-			int const ret = ::c_order_d_ip_ocp_hard_tv(
-					kk, k_max, mu0, mu_tol,
-					N, nx, nu, nb, ng,
-					warm_start,
-					A, B, b,
-					Q, S, R, q, r,
-					lb, ub,
-					C, D, lg, ug,
-					x, u, pi, lam, t,
-					inf_norm_res,
-					work0,
-					stat);
+	int fortran_order_d_ip_ocp_hard_tv(int *kk, int k_max, double mu0, double mu_tol, int N, int *nx, int *nu, int *nb, int *ng, int warm_start, double **A, double **B, double **b, double **Q, double **S, double **R, double **q, double **r, double **lb, double **ub, double **C, double **D, double **lg, double **ug, double **x, double **u, double **pi, double **lam, double **t, double *inf_norm_res, void *work0, double *stat);
 
-			if (ret != 0)
-			{
-				using namespace hpmpc_problem_export;
+	template <typename Scalar>
+	static int ip_ocp_hard_tv_work_space_size_bytes(int N, int const *nx, int const *nu, int const *nb, int const *ng);
 
-				{
-					std::ofstream os("failed_qp_hpmpc.m");
-					os << std::scientific << std::setprecision(std::numeric_limits<double>::digits10 + 1);
-
-					MATLABFormatter f(os, "qp.");
-
-					print_c_order_d_ip_ocp_hard_tv(f,
-						k_max, mu0, mu_tol,
-						N, nx, nu, nb, ng,
-						warm_start,
-						A, B, b,
-						Q, S, R, q, r,
-						lb, ub,
-						C, D, lg, ug, x, u);
-				}
-
-				{
-					std::ofstream os("failed_qp_hpmpc.c");
-					os << std::scientific << std::setprecision(std::numeric_limits<double>::digits10 + 1);
-
-					CFormatter f(os);
-
-					print_c_order_d_ip_ocp_hard_tv(f,
-						k_max, mu0, mu_tol,
-						N, nx, nu, nb, ng,
-						warm_start,
-						A, B, b,
-						Q, S, R, q, r,
-						lb, ub,
-						C, D, lg, ug, x, u);
-				}
-
-				//throw_hpmpc_error(ret, "The QP dumped to failed_qp_hpmpc.m and failed_qp_hpmpc.c");
-			}
-
-			return ret;
-		}
-
-		int fortran_order_d_ip_ocp_hard_tv(int *kk, int k_max, double mu0, double mu_tol, int N, int *nx, int *nu, int *nb, int *ng, int warm_start, double **A, double **B, double **b, double **Q, double **S, double **R, double **q, double **r, double **lb, double **ub, double **C, double **D, double **lg, double **ug, double **x, double **u, double **pi, double **lam, double **t, double *inf_norm_res, void *work0, double *stat);
-
-		int d_ip_ocp_hard_tv_work_space_size_bytes(int N, int const *nx, int const *nu, int const *nb, int const *ng)
-		{
-			return ::hpmpc_d_ip_ocp_hard_tv_work_space_size_bytes(N, nx, nu, nb, ng);
-		}
+	template <>
+	int ip_ocp_hard_tv_work_space_size_bytes<double>(int N, int const *nx, int const *nu, int const *nb, int const *ng)
+	{
+		return ::hpmpc_d_ip_ocp_hard_tv_work_space_size_bytes(N, nx, nu, nb, ng);
 	}
 
 	template <typename Scalar_>
@@ -124,11 +102,11 @@ namespace tmpc
 			auto const N = size() - 1;
 
 			// Make sure we have enough workspace.
-			solverWorkspace_.resize(hpmpc_wrapper::d_ip_ocp_hard_tv_work_space_size_bytes(
+			solverWorkspace_.resize(ip_ocp_hard_tv_work_space_size_bytes<Scalar_>(
 					static_cast<int>(N), nx_.data(), nu_.data(), nb_.data(), ng_.data()));
 
 			// Call HPMPC
-			auto const ret = hpmpc_wrapper::c_order_d_ip_ocp_hard_tv(&numIter_, maxIter(), mu_, muTol_, N,
+			auto const ret = ip_ocp_hard_tv(&numIter_, maxIter(), mu_, muTol_, N,
 					nx_.data(), nu_.data(), nb_.data(), ng_.data(), _warmStart ? 1 : 0, A_.data(), B_.data(), b_.data(),
 					Q_.data(), S_.data(), R_.data(), q_.data(), r_.data(), lb_.data(), ub_.data(), C_.data(), D_.data(),
 					lg_.data(), ug_.data(), x_.data(), u_.data(), pi_.data(), lam_.data(), t_.data(), infNormRes_.data(),
