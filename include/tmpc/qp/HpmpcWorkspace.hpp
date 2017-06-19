@@ -108,7 +108,6 @@ namespace tmpc
 			DynamicVector<Scalar> const& u() const { return u_;	}
 			DynamicVector<Scalar> const& pi() const	{ return pi_; }
 			DynamicVector<Scalar> const& lam() const { return lam_; }
-			DynamicVector<Scalar> const& t() const { return t_; }
 
 			QpSize const& size() const { return size_; }
 
@@ -132,15 +131,18 @@ namespace tmpc
 			double const * D_data () const { return D_.data(); }
 			double const * lg_data() const { return lbd_.data(); }
 			double const * ug_data() const { return ubd_.data(); }
+			int const * hidxb_data() const { return hidxb_.data(); }
 
 			double * x_data() { return x_.data(); }
 			double * u_data() { return u_.data(); }
 			double * pi_data() { return pi_.data(); }
 			double * lam_data() { return lam_.data(); }
-			double * t_data() { return t_.data(); }
 
 		private:
 			QpSize size_;
+
+			// Some magic data for HPMPC
+			std::vector<int> hidxb_;
 
 			// Hessian = [R, S; S', Q]
 			Matrix R_;
@@ -171,7 +173,6 @@ namespace tmpc
 			DynamicVector<Scalar> u_;
 			DynamicVector<Scalar> pi_;
 			DynamicVector<Scalar> lam_;
-			DynamicVector<Scalar> t_;
 		};
 
 		Stage& operator[](std::size_t i) { return stage_.at(i); }
@@ -311,6 +312,9 @@ namespace tmpc
 		// Array of NG (path constraints) sizes
 		std::vector<int> ng_;
 
+		// Additional data for new hpmpc interface
+		std::vector<int const *> hidxb_;
+
 		// --------------------------------
 		//
 		// HPMPC QP solution data
@@ -321,7 +325,6 @@ namespace tmpc
 		std::vector<double *> u_;
 		std::vector<double *> pi_;
 		std::vector<double *> lam_;
-		std::vector<double *> t_;
 		StaticVector<double, 4> infNormRes_;
 
 		/// \brief Number of iterations performed by the QP solver.

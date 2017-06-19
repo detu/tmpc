@@ -9,7 +9,7 @@
 
 #include "HPMPCProblemExport.hpp"
 
-#include <hpmpc/c_interface.h>
+#include <c_interface.h>
 
 #include <stdexcept>
 #include <sstream>
@@ -28,69 +28,39 @@ namespace tmpc
 
 	static int ip_ocp_hard_tv(
 		int *kk, int k_max, double mu0, double mu_tol,
-		int N, int const *nx, int const *nu, int const *nb, int const *ng,
+		int N, int const *nx, int const *nu, int const *nb, int const * const *hidxb, int const *ng, int N2,
 		int warm_start,
 		double const * const *A, double const * const *B, double const * const *b,
 		double const * const *Q, double const * const *S, double const * const *R, double const * const *q, double const * const *r,
 		double const * const *lb, double const * const *ub,
 		double const * const *C, double const * const *D, double const * const *lg, double const * const *ug,
-		double * const *x, double * const *u, double * const *pi, double * const *lam, double * const *t,
+		double * const *x, double * const *u, double * const *pi, double * const *lam,
 		double *inf_norm_res,
 		void *work0,
 		double *stat)
 	{
 		return ::c_order_d_ip_ocp_hard_tv(
 			kk, k_max, mu0, mu_tol,
-			N, nx, nu, nb, ng,
+			N, const_cast<int*>(nx), const_cast<int*>(nu), const_cast<int*>(nb), const_cast<int **>(hidxb), const_cast<int*>(ng), N2,
 			warm_start,
-			A, B, b,
-			Q, S, R, q, r,
-			lb, ub,
-			C, D, lg, ug,
-			x, u, pi, lam, t,
+			const_cast<double**>(A), const_cast<double**>(B), const_cast<double**>(b),
+			const_cast<double**>(Q), const_cast<double**>(S), const_cast<double**>(R), const_cast<double**>(q), const_cast<double**>(r),
+			const_cast<double**>(lb), const_cast<double**>(ub),
+			const_cast<double**>(C), const_cast<double**>(D), const_cast<double**>(lg), const_cast<double**>(ug),
+			const_cast<double**>(x), const_cast<double**>(u), const_cast<double**>(pi), const_cast<double**>(lam), 
 			inf_norm_res,
 			work0,
 			stat);
 	}
-
-	/*
-	static int ip_ocp_hard_tv(
-		int *kk, int k_max, float mu0, float mu_tol,
-		int N, int const *nx, int const *nu, int const *nb, int const *ng,
-		int warm_start,
-		float const * const *A, float const * const *B, float const * const *b,
-		float const * const *Q, float const * const *S, float const * const *R, float const * const *q, float const * const *r,
-		float const * const *lb, float const * const *ub,
-		float const * const *C, float const * const *D, float const * const *lg, float const * const *ug,
-		float * const *x, float * const *u, float * const *pi, float * const *lam, float * const *t,
-		float *inf_norm_res,
-		void *work0,
-		float *stat)
-	{
-		::c_order_s_ip_ocp_hard_tv(
-			kk, k_max, mu0, mu_tol,
-			N, nx, nu, nb, ng,
-			warm_start,
-			A, B, b,
-			Q, S, R, q, r,
-			lb, ub,
-			C, D, lg, ug,
-			x, u, pi, lam, t,
-			inf_norm_res,
-			work0,
-			stat);
-	}
-	*/
-
-	int fortran_order_d_ip_ocp_hard_tv(int *kk, int k_max, double mu0, double mu_tol, int N, int *nx, int *nu, int *nb, int *ng, int warm_start, double **A, double **B, double **b, double **Q, double **S, double **R, double **q, double **r, double **lb, double **ub, double **C, double **D, double **lg, double **ug, double **x, double **u, double **pi, double **lam, double **t, double *inf_norm_res, void *work0, double *stat);
 
 	template <typename Scalar>
-	static int ip_ocp_hard_tv_work_space_size_bytes(int N, int const *nx, int const *nu, int const *nb, int const *ng);
+	static int ip_ocp_hard_tv_work_space_size_bytes(int N, int const *nx, int const *nu, int const *nb, int const * const * hidxb, int const *ng, int N2);
 
 	template <>
-	int ip_ocp_hard_tv_work_space_size_bytes<double>(int N, int const *nx, int const *nu, int const *nb, int const *ng)
+	int ip_ocp_hard_tv_work_space_size_bytes<double>(int N, int const *nx, int const *nu, int const *nb, int const * const * hidxb, int const *ng, int N2)
 	{
-		return ::hpmpc_d_ip_ocp_hard_tv_work_space_size_bytes(N, nx, nu, nb, ng);
+		return ::hpmpc_d_ip_ocp_hard_tv_work_space_size_bytes(
+			N, const_cast<int*>(nx), const_cast<int*>(nu),  const_cast<int*>(nb), const_cast<int **>(hidxb), const_cast<int*>(ng), N2);
 	}
 
 	template <typename Scalar_>
@@ -103,13 +73,13 @@ namespace tmpc
 
 			// Make sure we have enough workspace.
 			solverWorkspace_.resize(ip_ocp_hard_tv_work_space_size_bytes<Scalar_>(
-					static_cast<int>(N), nx_.data(), nu_.data(), nb_.data(), ng_.data()));
+					static_cast<int>(N), nx_.data(), nu_.data(), nb_.data(), hidxb_.data(), ng_.data(), static_cast<int>(N)));
 
 			// Call HPMPC
 			auto const ret = ip_ocp_hard_tv(&numIter_, maxIter(), mu_, muTol_, N,
-					nx_.data(), nu_.data(), nb_.data(), ng_.data(), _warmStart ? 1 : 0, A_.data(), B_.data(), b_.data(),
+					nx_.data(), nu_.data(), nb_.data(), hidxb_.data(), ng_.data(), N, _warmStart ? 1 : 0, A_.data(), B_.data(), b_.data(),
 					Q_.data(), S_.data(), R_.data(), q_.data(), r_.data(), lb_.data(), ub_.data(), C_.data(), D_.data(),
-					lg_.data(), ug_.data(), x_.data(), u_.data(), pi_.data(), lam_.data(), t_.data(), infNormRes_.data(),
+					lg_.data(), ug_.data(), x_.data(), u_.data(), pi_.data(), lam_.data(), infNormRes_.data(),
 					solverWorkspace_.data(), stat_[0].data());
 
 			if (ret != 0)
@@ -122,6 +92,7 @@ namespace tmpc
 	template <typename Scalar_>
 	HpmpcWorkspace<Scalar_>::Stage::Stage(QpSize const& sz, size_t nx_next)
 	:	size_(sz)
+	,	hidxb_(sz.nu() + sz.nx())
 	// Initialize all numeric data to NaN so that if an uninitialized object
 	// by mistake used in calculations is easier to detect.
 	,	Q_(sz.nx(), sz.nx(), sNaN())
@@ -142,8 +113,9 @@ namespace tmpc
 	,	u_(sz.nu(), sNaN())
 	,	pi_(nx_next, sNaN())
 	,	lam_(2 * sz.nc() + 2 * (sz.nx() + sz.nu()), sNaN())
-	,	t_(2 * sz.nc() + 2 * (sz.nx() + sz.nu()), sNaN())
 	{
+		int n = 0;
+		std::generate(hidxb_.begin(), hidxb_.end(), [&n] { return n++; });
 	}
 
 	template <typename Scalar_>
@@ -156,6 +128,8 @@ namespace tmpc
 		nu_.push_back(sz.nu());
 		nb_.push_back(sz.nx() + sz.nu());
 		ng_.push_back(sz.nc());
+		
+		hidxb_.push_back(st.hidxb_data());
 
 		A_.push_back(st.A_data());
 		B_.push_back(st.B_data());
@@ -178,7 +152,6 @@ namespace tmpc
 		u_.push_back(st.u_data());
 		pi_.push_back(st.pi_data());
 		lam_.push_back(st.lam_data());
-		t_.push_back(st.t_data());
 	}
 
 	template <typename Scalar_>
@@ -190,6 +163,7 @@ namespace tmpc
 		nu_.reserve(nt);
 		nb_.reserve(nt);
 		ng_.reserve(nt);
+		hidxb_.reserve(nt);
 
 		A_ .reserve(nt);
 		B_ .reserve(nt);
@@ -210,7 +184,6 @@ namespace tmpc
 		u_.reserve(nt);
 		pi_.reserve(nt);
 		lam_.reserve(nt);
-		t_.reserve(nt);
 	}
 
 	// Explicit instantiation of HpmpcWorkspace for supported data types and storage orders.
