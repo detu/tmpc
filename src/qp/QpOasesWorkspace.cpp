@@ -61,13 +61,13 @@ QpOasesWorkspace::Stage::Stage(Workspace& ws, QpSize const& sz, size_t n, size_t
 }
 
 QpOasesWorkspace::Workspace::Workspace(size_t nx, size_t nc)
-:	H(nx, nx, Scalar{0})
-,	g(nx, std::numeric_limits<Scalar>::signaling_NaN())
-, 	lb(nx, std::numeric_limits<Scalar>::signaling_NaN())
-, 	ub(nx, std::numeric_limits<Scalar>::signaling_NaN())
-, 	A(nc, nx, Scalar{0})
-, 	lbA(nc, std::numeric_limits<Scalar>::signaling_NaN())
-, 	ubA(nc, std::numeric_limits<Scalar>::signaling_NaN())
+:	H(nx, nx, Real{0})
+,	g(nx, std::numeric_limits<Real>::signaling_NaN())
+, 	lb(nx, std::numeric_limits<Real>::signaling_NaN())
+, 	ub(nx, std::numeric_limits<Real>::signaling_NaN())
+, 	A(nc, nx, Real{0})
+, 	lbA(nc, std::numeric_limits<Real>::signaling_NaN())
+, 	ubA(nc, std::numeric_limits<Real>::signaling_NaN())
 ,	primalSolution(nx)
 ,	dualSolution(nx + nc)
 {		

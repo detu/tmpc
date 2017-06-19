@@ -53,7 +53,7 @@ namespace tmpc
 			stat);
 	}
 
-	template <typename Scalar>
+	template <typename Real>
 	static int ip_ocp_hard_tv_work_space_size_bytes(int N, int const *nx, int const *nu, int const *nb, int const * const * hidxb, int const *ng, int N2);
 
 	template <>
@@ -63,8 +63,8 @@ namespace tmpc
 			N, const_cast<int*>(nx), const_cast<int*>(nu),  const_cast<int*>(nb), const_cast<int **>(hidxb), const_cast<int*>(ng), N2);
 	}
 
-	template <typename Scalar_>
-	void HpmpcWorkspace<Scalar_>::solve()
+	template <typename Real_>
+	void HpmpcWorkspace<Real_>::solve()
 	{
 		if (size() > 0)
 		{
@@ -72,7 +72,7 @@ namespace tmpc
 			auto const N = size() - 1;
 
 			// Make sure we have enough workspace.
-			solverWorkspace_.resize(ip_ocp_hard_tv_work_space_size_bytes<Scalar_>(
+			solverWorkspace_.resize(ip_ocp_hard_tv_work_space_size_bytes<Real_>(
 					static_cast<int>(N), nx_.data(), nu_.data(), nb_.data(), hidxb_.data(), ng_.data(), static_cast<int>(N)));
 
 			// Call HPMPC
@@ -89,8 +89,8 @@ namespace tmpc
 		}
 	}
 
-	template <typename Scalar_>
-	HpmpcWorkspace<Scalar_>::Stage::Stage(QpSize const& sz, size_t nx_next)
+	template <typename Real_>
+	HpmpcWorkspace<Real_>::Stage::Stage(QpSize const& sz, size_t nx_next)
 	:	size_(sz)
 	,	hidxb_(sz.nu() + sz.nx())
 	// Initialize all numeric data to NaN so that if an uninitialized object
@@ -118,8 +118,8 @@ namespace tmpc
 		std::generate(hidxb_.begin(), hidxb_.end(), [&n] { return n++; });
 	}
 
-	template <typename Scalar_>
-	void HpmpcWorkspace<Scalar_>::addStage(QpSize const& sz, size_t nx_next)
+	template <typename Real_>
+	void HpmpcWorkspace<Real_>::addStage(QpSize const& sz, size_t nx_next)
 	{
 		stage_.emplace_back(sz, nx_next);
 		auto& st = stage_.back();
@@ -154,8 +154,8 @@ namespace tmpc
 		lam_.push_back(st.lam_data());
 	}
 
-	template <typename Scalar_>
-	void HpmpcWorkspace<Scalar_>::preallocateStages(size_t nt)
+	template <typename Real_>
+	void HpmpcWorkspace<Real_>::preallocateStages(size_t nt)
 	{
 		stage_.reserve(nt);
 

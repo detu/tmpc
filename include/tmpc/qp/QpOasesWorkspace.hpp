@@ -35,16 +35,16 @@ class QpOasesWorkspace
 	struct Workspace;
 
 public:
-	// Scalar data type.
-	using Scalar = double;
+	// Real data type.
+	using Real = double;
 
 	// Matrix storage option -- important!
 	// Must be rowMajor, because qpOASES expects input matrices in row-major format.
 	static auto constexpr storageOrder = rowMajor;
 
 	typedef unsigned int size_type;
-	typedef DynamicMatrix<Scalar, storageOrder> Matrix;
-	typedef DynamicVector<Scalar, columnVector> Vector;
+	typedef DynamicMatrix<Real, storageOrder> Matrix;
+	typedef DynamicVector<Real, columnVector> Vector;
 
 	class Stage
 	{

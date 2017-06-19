@@ -27,7 +27,7 @@ class QpWorkspaceSolveTest : public ::testing::Test
 {
 protected:
 	using Workspace = WS;
-	using Scalar = typename Workspace::Scalar;
+	using Real = typename Workspace::Real;
 
 	static Workspace problem_0()
 	{
@@ -141,7 +141,7 @@ TYPED_TEST(QpWorkspaceSolveTest, testMoveConstructor)
 
 	ws1.solve();
 
-	using Vector = DynamicVector<typename TestFixture::Scalar>;
+	using Vector = DynamicVector<typename TestFixture::Real>;
 
 	EXPECT_PRED2(MatrixApproxEquality(1e-6), ws1[0].x(), (Vector {1., -1.}));
 	EXPECT_PRED2(MatrixApproxEquality(1e-6), ws1[0].u(), (Vector {-1.}));
@@ -158,7 +158,7 @@ TYPED_TEST(QpWorkspaceSolveTest, testSolve0)
 
 	ws.solve();
 
-	using Vector = DynamicVector<typename TestFixture::Scalar>;
+	using Vector = DynamicVector<typename TestFixture::Real>;
 
 	EXPECT_PRED2(MatrixApproxEquality(1e-6), ws[0].x(), (Vector {1., -1.}));
 	EXPECT_PRED2(MatrixApproxEquality(1e-6), ws[0].u(), (Vector {-1.}));
@@ -175,7 +175,7 @@ TYPED_TEST(QpWorkspaceSolveTest, testSolve1)
 
 	ws.solve();
 
-	using Vector = DynamicVector<typename TestFixture::Scalar>;
+	using Vector = DynamicVector<typename TestFixture::Real>;
 
 	EXPECT_PRED2(MatrixApproxEquality(1e-6), ws[0].x(), (Vector {1., 0.}));
 	EXPECT_PRED2(MatrixApproxEquality(1e-6), ws[0].u(), (Vector {-0.690877362606266}));

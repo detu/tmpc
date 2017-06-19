@@ -22,9 +22,9 @@ public:
 	using Workspace = WS;
 
 protected:
-	using Scalar = typename Workspace::Scalar;
-	using Vector = DynamicVector<Scalar>;
-	using Matrix = DynamicMatrix<Scalar>;
+	using Real = typename Workspace::Real;
+	using Vector = DynamicVector<Real>;
+	using Matrix = DynamicMatrix<Real>;
 
 	QpWorkspaceTest()
 	:	size_{

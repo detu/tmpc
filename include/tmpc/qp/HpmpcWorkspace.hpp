@@ -30,20 +30,20 @@ namespace tmpc
 	/**
 	 * \brief Multistage QP solver using qpOASES
 	 *
-	 * \tparam <Scalar_> Scalar type
+	 * \tparam <Real_> real number type
 	 */
-	template <typename Scalar_>
+	template <typename Real_>
 	class HpmpcWorkspace
 	{
 	public:
-		using Scalar = Scalar_;
+		using Real = Real_;
 
 		class Stage
 		{
 		public:
 			static auto constexpr storageOrder = rowMajor;
-			typedef DynamicMatrix<Scalar, storageOrder> Matrix;
-			typedef DynamicVector<Scalar, columnVector> Vector;
+			typedef DynamicMatrix<Real, storageOrder> Matrix;
+			typedef DynamicVector<Real, columnVector> Vector;
 
 			Stage(QpSize const& sz, size_t nx_next);
 			Stage(Stage const&) = default;
@@ -104,10 +104,10 @@ namespace tmpc
 			Subvector<Vector const> ubx() const { return subvector(ub_, size_.nu(), size_.nx()); }
 			template <typename T> void ubx(const T& ubx) { subvector(ub_, size_.nu(), size_.nx()) = ubx; }
 
-			DynamicVector<Scalar> const& x() const { return x_; }
-			DynamicVector<Scalar> const& u() const { return u_;	}
-			DynamicVector<Scalar> const& pi() const	{ return pi_; }
-			DynamicVector<Scalar> const& lam() const { return lam_; }
+			DynamicVector<Real> const& x() const { return x_; }
+			DynamicVector<Real> const& u() const { return u_;	}
+			DynamicVector<Real> const& pi() const	{ return pi_; }
+			DynamicVector<Real> const& lam() const { return lam_; }
 
 			QpSize const& size() const { return size_; }
 
@@ -117,26 +117,26 @@ namespace tmpc
 			// The prefixes before _data() correspond to the names of
 			// the argument to c_order_d_ip_ocp_hard_tv().
 			// ******************************************************
-			double const * A_data () const { return A_.data(); }
-			double const * B_data () const { return B_.data(); }
-			double const * b_data () const { return b_.data();	}
-			double const * Q_data () const { return Q_.data(); }
-			double const * S_data () const { return S_.data(); }
-			double const * R_data () const { return R_.data(); }
-			double const * q_data () const { return q_.data(); }
-			double const * r_data () const { return r_.data();	}
-			double const * lb_data() const { return lb_.data(); }
-			double const * ub_data() const { return ub_.data(); }
-			double const * C_data () const { return C_.data(); }
-			double const * D_data () const { return D_.data(); }
-			double const * lg_data() const { return lbd_.data(); }
-			double const * ug_data() const { return ubd_.data(); }
+			Real const * A_data () const { return A_.data(); }
+			Real const * B_data () const { return B_.data(); }
+			Real const * b_data () const { return b_.data();	}
+			Real const * Q_data () const { return Q_.data(); }
+			Real const * S_data () const { return S_.data(); }
+			Real const * R_data () const { return R_.data(); }
+			Real const * q_data () const { return q_.data(); }
+			Real const * r_data () const { return r_.data();	}
+			Real const * lb_data() const { return lb_.data(); }
+			Real const * ub_data() const { return ub_.data(); }
+			Real const * C_data () const { return C_.data(); }
+			Real const * D_data () const { return D_.data(); }
+			Real const * lg_data() const { return lbd_.data(); }
+			Real const * ug_data() const { return ubd_.data(); }
 			int const * hidxb_data() const { return hidxb_.data(); }
 
-			double * x_data() { return x_.data(); }
-			double * u_data() { return u_.data(); }
-			double * pi_data() { return pi_.data(); }
-			double * lam_data() { return lam_.data(); }
+			Real * x_data() { return x_.data(); }
+			Real * u_data() { return u_.data(); }
+			Real * pi_data() { return pi_.data(); }
+			Real * lam_data() { return lam_.data(); }
 
 		private:
 			QpSize size_;
@@ -169,10 +169,10 @@ namespace tmpc
 			Vector lb_;
 			Vector ub_;
 
-			DynamicVector<Scalar> x_;
-			DynamicVector<Scalar> u_;
-			DynamicVector<Scalar> pi_;
-			DynamicVector<Scalar> lam_;
+			DynamicVector<Real> x_;
+			DynamicVector<Real> u_;
+			DynamicVector<Real> pi_;
+			DynamicVector<Real> lam_;
 		};
 
 		Stage& operator[](std::size_t i) { return stage_.at(i); }
@@ -235,9 +235,9 @@ namespace tmpc
 
 		std::size_t maxIter() const noexcept { return stat_.size(); }
 
-		double muTol() const noexcept { return muTol_; }
+		Real muTol() const noexcept { return muTol_; }
 
-		void muTol(double val)
+		void muTol(Real val)
 		{
 			if (val <= 0.)
 				throw std::invalid_argument("mu tolerance for hpmpc must be positive");
@@ -259,46 +259,46 @@ namespace tmpc
 		std::vector<Stage> stage_;
 
 		// "A" data array for HPMPC
-		std::vector<Scalar const *> A_;
+		std::vector<Real const *> A_;
 
 		// "B" data array for HPMPC
-		std::vector<Scalar const *> B_;
+		std::vector<Real const *> B_;
 
 		// "b" data array for HPMPC
-		std::vector<Scalar const *> b_;
+		std::vector<Real const *> b_;
 
 		// "Q" data array for HPMPC
-		std::vector<Scalar const *> Q_;
+		std::vector<Real const *> Q_;
 
 		// "S" data array for HPMPC
-		std::vector<Scalar const *> S_;
+		std::vector<Real const *> S_;
 
 		// "R" data array for HPMPC
-		std::vector<Scalar const *> R_;
+		std::vector<Real const *> R_;
 
 		// "q" data array for HPMPC
-		std::vector<Scalar const *> q_;
+		std::vector<Real const *> q_;
 
 		// "r" data array for HPMPC
-		std::vector<Scalar const *> r_;
+		std::vector<Real const *> r_;
 
 		// "lb" data array for HPMPC
-		std::vector<Scalar const *> lb_;
+		std::vector<Real const *> lb_;
 
 		// "ub" data array for HPMPC
-		std::vector<Scalar const *> ub_;
+		std::vector<Real const *> ub_;
 
 		// "C" data array for HPMPC
-		std::vector<Scalar const *> C_;
+		std::vector<Real const *> C_;
 
 		// "D" data array for HPMPC
-		std::vector<Scalar const *> D_;
+		std::vector<Real const *> D_;
 
 		// "lg" data array for HPMPC
-		std::vector<Scalar const *> lg_;
+		std::vector<Real const *> lg_;
 
 		// "ug" data array for HPMPC
-		std::vector<Scalar const *> ug_;
+		std::vector<Real const *> ug_;
 
 		// Array of NX sizes
 		std::vector<int> nx_;
@@ -321,11 +321,11 @@ namespace tmpc
 		//
 		// --------------------------------
 
-		std::vector<double *> x_;
-		std::vector<double *> u_;
-		std::vector<double *> pi_;
-		std::vector<double *> lam_;
-		StaticVector<double, 4> infNormRes_;
+		std::vector<Real *> x_;
+		std::vector<Real *> u_;
+		std::vector<Real *> pi_;
+		std::vector<Real *> lam_;
+		StaticVector<Real, 4> infNormRes_;
 
 		/// \brief Number of iterations performed by the QP solver.
 		int numIter_ = 0;
@@ -339,21 +339,21 @@ namespace tmpc
 		// Workspace for HPMPC functions
 		std::vector<char> solverWorkspace_;
 
-		// Iteration statistics. HPMPC returns 5 double numbers per iteration.
-		typedef std::array<double, 5> IterStat;
+		// Iteration statistics. HPMPC returns 5 Real numbers per iteration.
+		typedef std::array<Real, 5> IterStat;
 		std::vector<IterStat> stat_;
 
-		double mu_ = 0.;
-		double muTol_ = 1e-10;
+		Real mu_ = 0.;
+		Real muTol_ = 1e-10;
 
 		// Warmstarting disabled on purpose.
 		// On AMD K8 (hpmpc compiled for SSE3), WITHOUT warmstarting it is significantly
 		// FASTER (9ms vs 14ms per time step) than with warmstarting. I am curious why.
 		bool _warmStart = false;
 
-		static Scalar constexpr sNaN()
+		static Real constexpr sNaN()
 		{
-			return std::numeric_limits<Scalar>::signaling_NaN();
+			return std::numeric_limits<Real>::signaling_NaN();
 		}
 
 		// Preallocate arrays holding QP stage data.
