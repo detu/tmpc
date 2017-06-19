@@ -13,34 +13,13 @@
 
 namespace tmpc
 {
-	namespace hpmpc_wrapper
-	{
-		int c_order_d_ip_ocp_hard_tv(	int *kk, int k_max, double mu0, double mu_tol,
-										int N, int const *nx, int const *nu, int const *nb, int const *ng,
-										int warm_start,
-										double const * const *A, double const * const *B, double const * const *b,
-										double const * const *Q, double const * const *S, double const * const *R, double const * const *q, double const * const *r,
-										double const * const *lb, double const * const *ub,
-										double const * const *C, double const * const *D, double const * const *lg, double const * const *ug,
-										double * const *x, double * const *u, double * const *pi, double * const *lam, double * const *t,
-										double *inf_norm_res,
-										void *work0,
-										double *stat );
-
-		int d_ip_ocp_hard_tv_work_space_size_bytes(int N, int const *nx, int const *nu, int const *nb, int const *ng);
-	}
-
-	class HpmpcException : public QpSolverException
+	class HpmpcException 
+	:	public QpSolverException
 	{
 	public:
-		HpmpcException(int code)
-		:	QpSolverException("HPMPC"),
-			_code(code),
-			msg_(std::string(QpSolverException::what()) + "\nReturn code " + std::to_string(code))
-		{
-		}
+		HpmpcException(int code);
 
-		int getCode() const	{ return _code;	}
+		int code() const { return _code;	}
 		char const * what() const noexcept override { return msg_.c_str(); }
 
 	private:
@@ -57,7 +36,7 @@ namespace tmpc
 	class HpmpcWorkspace
 	{
 	public:
-		typedef Scalar_ Scalar;
+		using Scalar = Scalar_;
 
 		class Stage
 		{
@@ -66,33 +45,8 @@ namespace tmpc
 			typedef DynamicMatrix<Scalar, storageOrder> Matrix;
 			typedef DynamicVector<Scalar, columnVector> Vector;
 
-			Stage(QpSize const& sz, size_t nx_next)
-			:	size_(sz)
-			// Initialize all numeric data to NaN so that if an uninitialized object
-			// by mistake used in calculations is easier to detect.
-			,	Q_(sz.nx(), sz.nx(), sNaN())
-			,	R_(sz.nu(), sz.nu(), sNaN())
-			,	S_(sz.nx(), sz.nu(), sNaN())
-			,	q_(sz.nx(), sNaN())
-			,	r_(sz.nu(), sNaN())
-			,	A_(nx_next, sz.nx(), sNaN())
-			,	B_(nx_next, sz.nu(), sNaN())
-			,	b_(nx_next, sNaN())
-			,	C_(sz.nc(), sz.nx(), sNaN())
-			,	D_(sz.nc(), sz.nu(), sNaN())
-			,	lb_(sz.nu() + sz.nx(), sNaN())
-			,	ub_(sz.nu() + sz.nx(), sNaN())
-			,	lbd_(sz.nc(), sNaN())
-			,	ubd_(sz.nc(), sNaN())
-			,	x_(sz.nx(), sNaN())
-			,	u_(sz.nu(), sNaN())
-			,	pi_(nx_next, sNaN())
-			,	lam_(2 * sz.nc() + 2 * (sz.nx() + sz.nu()), sNaN())
-			,	t_(2 * sz.nc() + 2 * (sz.nx() + sz.nu()), sNaN())
-			{
-			}
-
-			Stage(Stage const&) = default; //delete;
+			Stage(QpSize const& sz, size_t nx_next);
+			Stage(Stage const&) = default;
 			Stage(Stage &&) = default;
 
 			template <typename Expr>
@@ -250,69 +204,11 @@ namespace tmpc
 		:	stat_(max_iter)
 		,	infNormRes_(sNaN())
 		{
-			auto const nt = std::distance(size_first, size_last);
-			stage_.reserve(nt);
-
-			nx_.reserve(nt);
-			nu_.reserve(nt);
-			nb_.reserve(nt);
-			ng_.reserve(nt);
-
-			A_ .reserve(nt);
-			B_ .reserve(nt);
-			b_ .reserve(nt);
-			Q_ .reserve(nt);
-			S_ .reserve(nt);
-			R_ .reserve(nt);
-			q_ .reserve(nt);
-			r_ .reserve(nt);
-			lb_.reserve(nt);
-			ub_.reserve(nt);
-			C_ .reserve(nt);
-			D_ .reserve(nt);
-			lg_.reserve(nt);
-			ug_.reserve(nt);
-			
-			x_.reserve(nt);
-			u_.reserve(nt);
-			pi_.reserve(nt);
-			lam_.reserve(nt);
-			t_.reserve(nt);
+			preallocateStages(std::distance(size_first, size_last));
 
 			for (auto sz = size_first; sz != size_last; ++sz)
-			{
-				stage_.emplace_back(*sz, sz + 1 != size_last ? sz[1].nx() : 0);
-				auto& st = stage_.back();
-
-				nx_.push_back(sz->nx());
-				nu_.push_back(sz->nu());
-				nb_.push_back(sz->nx() + sz->nu());
-				ng_.push_back(sz->nc());
-
-				A_.push_back(st.A_data());
-				B_.push_back(st.B_data());
-				b_.push_back(st.b_data());
-
-				Q_.push_back(st.Q_data());
-				S_.push_back(st.S_data());
-				R_.push_back(st.R_data());
-				q_.push_back(st.q_data());
-				r_.push_back(st.r_data());
-				lb_.push_back(st.lb_data());
-				ub_.push_back(st.ub_data());
-
-				C_ .push_back(st.C_data());
-				D_ .push_back(st.D_data());
-				lg_.push_back(st.lg_data());
-				ug_.push_back(st.ug_data());
-
-				x_.push_back(st.x_data());
-				u_.push_back(st.u_data());
-				pi_.push_back(st.pi_data());
-				lam_.push_back(st.lam_data());
-				t_.push_back(st.t_data());
-			}
-
+				addStage(*sz, sz + 1 != size_last ? sz[1].nx() : 0);
+				
 			// TODO: calculate workspace size and call
 			// solverWorkspace_.reserve();
 		}
@@ -334,30 +230,7 @@ namespace tmpc
 		HpmpcWorkspace& operator= (HpmpcWorkspace const&) = delete;
 		HpmpcWorkspace& operator= (HpmpcWorkspace &&) = delete;
 
-		void solve()
-		{
-			if (size() > 0)
-			{
-				// Number of QP steps for HPMPC
-				auto const N = size() - 1;
-
-				// Make sure we have enough workspace.
-				solverWorkspace_.resize(hpmpc_wrapper::d_ip_ocp_hard_tv_work_space_size_bytes(
-						static_cast<int>(N), nx_.data(), nu_.data(), nb_.data(), ng_.data()));
-
-				// Call HPMPC
-				auto const ret = hpmpc_wrapper::c_order_d_ip_ocp_hard_tv(&numIter_, maxIter(), mu_, muTol_, N,
-						nx_.data(), nu_.data(), nb_.data(), ng_.data(), _warmStart ? 1 : 0, A_.data(), B_.data(), b_.data(),
-						Q_.data(), S_.data(), R_.data(), q_.data(), r_.data(), lb_.data(), ub_.data(), C_.data(), D_.data(),
-						lg_.data(), ug_.data(), x_.data(), u_.data(), pi_.data(), lam_.data(), t_.data(), infNormRes_.data(),
-						solverWorkspace_.data(), stat_[0].data());
-
-				if (ret != 0)
-				{
-					throw HpmpcException(ret);
-				}
-			}
-		}
+		void solve();
 
 		std::size_t maxIter() const noexcept { return stat_.size(); }
 
@@ -479,5 +352,11 @@ namespace tmpc
 		{
 			return std::numeric_limits<Scalar>::signaling_NaN();
 		}
+
+		// Preallocate arrays holding QP stage data.
+		void preallocateStages(size_t nt);
+
+		// Add one stage with specified sizes at the end of the stage sequence.
+		void addStage(QpSize const& sz, size_t nx_next);
 	};
 }
