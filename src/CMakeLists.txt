@@ -74,10 +74,8 @@ endif()
 #
 if (HPMPC_FOUND)
     target_sources(tmpc PRIVATE 
-        ${TMPC_INCLUDE_DIR}/qp/HPMPCSolver.hpp
-        qp/HPMPCSolver.cpp
-        ${TMPC_INCLUDE_DIR}/qp/HPMPCProblem.hpp
-        ${TMPC_INCLUDE_DIR}/qp/HPMPCSolution.hpp
+        ${TMPC_INCLUDE_DIR}/qp/HpmpcWorkspace.hpp
+        qp/HpmpcWorkspace.cpp
         qp/HPMPCProblemExport.hpp
         qp/HPMPCProblemExport.cpp
     )
