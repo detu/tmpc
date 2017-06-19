@@ -84,11 +84,11 @@ namespace tmpc
 			,	ub_(sz.nu() + sz.nx(), sNaN())
 			,	lbd_(sz.nc(), sNaN())
 			,	ubd_(sz.nc(), sNaN())
-			,	_x(sz.nx(), sNaN())
-			,	_u(sz.nu(), sNaN())
-			,	_pi(nx_next, sNaN())
-			,	_lam(2 * sz.nc() + 2 * (sz.nx() + sz.nu()), sNaN())
-			,	_t(2 * sz.nc() + 2 * (sz.nx() + sz.nu()), sNaN())
+			,	x_(sz.nx(), sNaN())
+			,	u_(sz.nu(), sNaN())
+			,	pi_(nx_next, sNaN())
+			,	lam_(2 * sz.nc() + 2 * (sz.nx() + sz.nu()), sNaN())
+			,	t_(2 * sz.nc() + 2 * (sz.nx() + sz.nu()), sNaN())
 			{
 			}
 
@@ -150,11 +150,11 @@ namespace tmpc
 			Subvector<Vector const> ubx() const { return subvector(ub_, size_.nu(), size_.nx()); }
 			template <typename T> void ubx(const T& ubx) { subvector(ub_, size_.nu(), size_.nx()) = ubx; }
 
-			DynamicVector<Scalar> const& x() const { return _x; }
-			DynamicVector<Scalar> const& u() const { return _u;	}
-			DynamicVector<Scalar> const& pi() const	{ return _pi; }
-			DynamicVector<Scalar> const& lam() const { return _lam; }
-			DynamicVector<Scalar> const& t() const { return _t; }
+			DynamicVector<Scalar> const& x() const { return x_; }
+			DynamicVector<Scalar> const& u() const { return u_;	}
+			DynamicVector<Scalar> const& pi() const	{ return pi_; }
+			DynamicVector<Scalar> const& lam() const { return lam_; }
+			DynamicVector<Scalar> const& t() const { return t_; }
 
 			QpSize const& size() const { return size_; }
 
@@ -179,11 +179,11 @@ namespace tmpc
 			double const * lg_data() const { return lbd_.data(); }
 			double const * ug_data() const { return ubd_.data(); }
 
-			double * x_data() { return _x.data(); }
-			double * u_data() { return _u.data(); }
-			double * pi_data() { return _pi.data(); }
-			double * lam_data() { return _lam.data(); }
-			double * t_data() { return _t.data(); }
+			double * x_data() { return x_.data(); }
+			double * u_data() { return u_.data(); }
+			double * pi_data() { return pi_.data(); }
+			double * lam_data() { return lam_.data(); }
+			double * t_data() { return t_.data(); }
 
 		private:
 			QpSize size_;
@@ -213,11 +213,11 @@ namespace tmpc
 			Vector lb_;
 			Vector ub_;
 
-			DynamicVector<Scalar> _x;
-			DynamicVector<Scalar> _u;
-			DynamicVector<Scalar> _pi;
-			DynamicVector<Scalar> _lam;
-			DynamicVector<Scalar> _t;
+			DynamicVector<Scalar> x_;
+			DynamicVector<Scalar> u_;
+			DynamicVector<Scalar> pi_;
+			DynamicVector<Scalar> lam_;
+			DynamicVector<Scalar> t_;
 		};
 
 		Stage& operator[](std::size_t i) { return stage_.at(i); }
@@ -242,84 +242,79 @@ namespace tmpc
 		const_reference front() const { return stage_.front(); }
 		const_reference back() const { return stage_.back(); }
 
-		HpmpcWorkspace(int max_iter = 100)
-		:	_stat(max_iter)
-		{
-		}
-
 		/**
 		 * \brief Takes QP problem size to preallocate workspace.
 		 */
 		template <typename InputIterator>
 		HpmpcWorkspace(InputIterator size_first, InputIterator size_last, int max_iter = 100)
-		:	_stat(max_iter)
-		,	_inf_norm_res(sNaN())
+		:	stat_(max_iter)
+		,	infNormRes_(sNaN())
 		{
 			auto const nt = std::distance(size_first, size_last);
 			stage_.reserve(nt);
 
-			_nx.reserve(nt);
-			_nu.reserve(nt);
-			_nb.reserve(nt);
-			_ng.reserve(nt);
+			nx_.reserve(nt);
+			nu_.reserve(nt);
+			nb_.reserve(nt);
+			ng_.reserve(nt);
 
-			_A .reserve(nt);
-			_B .reserve(nt);
-			_b .reserve(nt);
-			_Q .reserve(nt);
-			_S .reserve(nt);
-			_R .reserve(nt);
-			_q .reserve(nt);
-			_r .reserve(nt);
-			_lb.reserve(nt);
-			_ub.reserve(nt);
-			_C .reserve(nt);
-			_D .reserve(nt);
-			_lg.reserve(nt);
-			_ug.reserve(nt);
+			A_ .reserve(nt);
+			B_ .reserve(nt);
+			b_ .reserve(nt);
+			Q_ .reserve(nt);
+			S_ .reserve(nt);
+			R_ .reserve(nt);
+			q_ .reserve(nt);
+			r_ .reserve(nt);
+			lb_.reserve(nt);
+			ub_.reserve(nt);
+			C_ .reserve(nt);
+			D_ .reserve(nt);
+			lg_.reserve(nt);
+			ug_.reserve(nt);
 			
-			_x.reserve(nt);
-			_u.reserve(nt);
-			_pi.reserve(nt);
-			_lam.reserve(nt);
-			_t.reserve(nt);
+			x_.reserve(nt);
+			u_.reserve(nt);
+			pi_.reserve(nt);
+			lam_.reserve(nt);
+			t_.reserve(nt);
 
 			for (auto sz = size_first; sz != size_last; ++sz)
 			{
 				stage_.emplace_back(*sz, sz + 1 != size_last ? sz[1].nx() : 0);
 				auto& st = stage_.back();
 
-				_nx.push_back(sz->nx());
-				_nu.push_back(sz->nu());
-				_nb.push_back(sz->nx() + sz->nu());
-				_ng.push_back(sz->nc());
+				nx_.push_back(sz->nx());
+				nu_.push_back(sz->nu());
+				nb_.push_back(sz->nx() + sz->nu());
+				ng_.push_back(sz->nc());
 
-				_A.push_back(st.A_data());
-				_B.push_back(st.B_data());
-				_b.push_back(st.b_data());
+				A_.push_back(st.A_data());
+				B_.push_back(st.B_data());
+				b_.push_back(st.b_data());
 
-				_Q.push_back(st.Q_data());
-				_S.push_back(st.S_data());
-				_R.push_back(st.R_data());
-				_q.push_back(st.q_data());
-				_r.push_back(st.r_data());
-				_lb.push_back(st.lb_data());
-				_ub.push_back(st.ub_data());
+				Q_.push_back(st.Q_data());
+				S_.push_back(st.S_data());
+				R_.push_back(st.R_data());
+				q_.push_back(st.q_data());
+				r_.push_back(st.r_data());
+				lb_.push_back(st.lb_data());
+				ub_.push_back(st.ub_data());
 
-				_C .push_back(st.C_data());
-				_D .push_back(st.D_data());
-				_lg.push_back(st.lg_data());
-				_ug.push_back(st.ug_data());
+				C_ .push_back(st.C_data());
+				D_ .push_back(st.D_data());
+				lg_.push_back(st.lg_data());
+				ug_.push_back(st.ug_data());
 
-				_x.push_back(st.x_data());
-				_u.push_back(st.u_data());
-				_pi.push_back(st.pi_data());
-				_lam.push_back(st.lam_data());
-				_t.push_back(st.t_data());
+				x_.push_back(st.x_data());
+				u_.push_back(st.u_data());
+				pi_.push_back(st.pi_data());
+				lam_.push_back(st.lam_data());
+				t_.push_back(st.t_data());
 			}
 
 			// TODO: calculate workspace size and call
-			// workspace_.reserve();
+			// solverWorkspace_.reserve();
 		}
 
 		/**
@@ -347,15 +342,15 @@ namespace tmpc
 				auto const N = size() - 1;
 
 				// Make sure we have enough workspace.
-				_workspace.resize(hpmpc_wrapper::d_ip_ocp_hard_tv_work_space_size_bytes(
-						static_cast<int>(N), nx_data(), nu_data(), nb_data(), ng_data()));
+				solverWorkspace_.resize(hpmpc_wrapper::d_ip_ocp_hard_tv_work_space_size_bytes(
+						static_cast<int>(N), nx_.data(), nu_.data(), nb_.data(), ng_.data()));
 
 				// Call HPMPC
-				auto const ret = hpmpc_wrapper::c_order_d_ip_ocp_hard_tv(&numIter_, getMaxIter(), _mu0, _muTol, N,
-						nx_data(), nu_data(), nb_data(), ng_data(), _warmStart ? 1 : 0, A_data(), B_data(), b_data(),
-						Q_data(), S_data(), R_data(), q_data(), r_data(), lb_data(), ub_data(), C_data(), D_data(),
-						lg_data(), ug_data(), x_data(), u_data(), pi_data(), lam_data(), t_data(), inf_norm_res_data(),
-						_workspace.data(), _stat[0].data());
+				auto const ret = hpmpc_wrapper::c_order_d_ip_ocp_hard_tv(&numIter_, maxIter(), mu_, muTol_, N,
+						nx_.data(), nu_.data(), nb_.data(), ng_.data(), _warmStart ? 1 : 0, A_.data(), B_.data(), b_.data(),
+						Q_.data(), S_.data(), R_.data(), q_.data(), r_.data(), lb_.data(), ub_.data(), C_.data(), D_.data(),
+						lg_.data(), ug_.data(), x_.data(), u_.data(), pi_.data(), lam_.data(), t_.data(), infNormRes_.data(),
+						solverWorkspace_.data(), stat_[0].data());
 
 				if (ret != 0)
 				{
@@ -364,20 +359,20 @@ namespace tmpc
 			}
 		}
 
-		std::size_t getMaxIter() const noexcept { return _stat.size(); }
+		std::size_t maxIter() const noexcept { return stat_.size(); }
 
-		double getMuTol() const noexcept { return _muTol; }
+		double muTol() const noexcept { return muTol_; }
 
-		void setMuTol(double val)
+		void muTol(double val)
 		{
 			if (val <= 0.)
 				throw std::invalid_argument("mu tolerance for hpmpc must be positive");
 
-			_muTol = val;
+			muTol_ = val;
 		}
 
 		/// \brief Get number of iterations performed by the QP solver.
-		unsigned getNumIter() const { return numIter_; }
+		unsigned numIter() const { return numIter_; }
 		
 	private:
 		// --------------------------------
@@ -390,58 +385,58 @@ namespace tmpc
 		std::vector<Stage> stage_;
 
 		// "A" data array for HPMPC
-		std::vector<Scalar const *> _A;
+		std::vector<Scalar const *> A_;
 
 		// "B" data array for HPMPC
-		std::vector<Scalar const *> _B;
+		std::vector<Scalar const *> B_;
 
 		// "b" data array for HPMPC
-		std::vector<Scalar const *> _b;
+		std::vector<Scalar const *> b_;
 
 		// "Q" data array for HPMPC
-		std::vector<Scalar const *> _Q;
+		std::vector<Scalar const *> Q_;
 
 		// "S" data array for HPMPC
-		std::vector<Scalar const *> _S;
+		std::vector<Scalar const *> S_;
 
 		// "R" data array for HPMPC
-		std::vector<Scalar const *> _R;
+		std::vector<Scalar const *> R_;
 
 		// "q" data array for HPMPC
-		std::vector<Scalar const *> _q;
+		std::vector<Scalar const *> q_;
 
 		// "r" data array for HPMPC
-		std::vector<Scalar const *> _r;
+		std::vector<Scalar const *> r_;
 
 		// "lb" data array for HPMPC
-		std::vector<Scalar const *> _lb;
+		std::vector<Scalar const *> lb_;
 
 		// "ub" data array for HPMPC
-		std::vector<Scalar const *> _ub;
+		std::vector<Scalar const *> ub_;
 
 		// "C" data array for HPMPC
-		std::vector<Scalar const *> _C;
+		std::vector<Scalar const *> C_;
 
 		// "D" data array for HPMPC
-		std::vector<Scalar const *> _D;
+		std::vector<Scalar const *> D_;
 
 		// "lg" data array for HPMPC
-		std::vector<Scalar const *> _lg;
+		std::vector<Scalar const *> lg_;
 
 		// "ug" data array for HPMPC
-		std::vector<Scalar const *> _ug;
+		std::vector<Scalar const *> ug_;
 
 		// Array of NX sizes
-		std::vector<int> _nx;
+		std::vector<int> nx_;
 
 		// Array of NU sizes
-		std::vector<int> _nu;
+		std::vector<int> nu_;
 
 		// Array of NB (bound constraints) sizes
-		std::vector<int> _nb;
+		std::vector<int> nb_;
 
 		// Array of NG (path constraints) sizes
-		std::vector<int> _ng;
+		std::vector<int> ng_;
 
 		// --------------------------------
 		//
@@ -449,12 +444,12 @@ namespace tmpc
 		//
 		// --------------------------------
 
-		std::vector<double *> _x;
-		std::vector<double *> _u;
-		std::vector<double *> _pi;
-		std::vector<double *> _lam;
-		std::vector<double *> _t;
-		StaticVector<double, 4> _inf_norm_res;
+		std::vector<double *> x_;
+		std::vector<double *> u_;
+		std::vector<double *> pi_;
+		std::vector<double *> lam_;
+		std::vector<double *> t_;
+		StaticVector<double, 4> infNormRes_;
 
 		/// \brief Number of iterations performed by the QP solver.
 		int numIter_ = 0;
@@ -466,14 +461,14 @@ namespace tmpc
 		// --------------------------------
 
 		// Workspace for HPMPC functions
-		std::vector<char> _workspace;
+		std::vector<char> solverWorkspace_;
 
 		// Iteration statistics. HPMPC returns 5 double numbers per iteration.
 		typedef std::array<double, 5> IterStat;
-		std::vector<IterStat> _stat;
+		std::vector<IterStat> stat_;
 
-		double _mu0 = 0.;
-		double _muTol = 1e-10;
+		double mu_ = 0.;
+		double muTol_ = 1e-10;
 
 		// Warmstarting disabled on purpose.
 		// On AMD K8 (hpmpc compiled for SSE3), WITHOUT warmstarting it is significantly
@@ -484,37 +479,5 @@ namespace tmpc
 		{
 			return std::numeric_limits<Scalar>::signaling_NaN();
 		}
-
-		// ******************************************************
-		//                HPMPC raw data interface.
-		//
-		// The prefixes before _data() correspond to the names of
-		// the argument to c_order_d_ip_ocp_hard_tv().
-		// ******************************************************
-		double const * const * A_data () const { return _A .data(); }
-		double const * const * B_data () const { return _B .data(); }
-		double const * const * b_data () const { return _b.data();	}
-		double const * const * Q_data () const { return _Q .data(); }
-		double const * const * S_data () const { return _S .data(); }
-		double const * const * R_data () const { return _R .data(); }
-		double const * const * q_data () const { return _q .data(); }
-		double const * const * r_data () const { return _r .data();	}
-		double const * const * lb_data() const { return _lb.data(); }
-		double const * const * ub_data() const { return _ub.data(); }
-		double const * const * C_data () const { return _C .data(); }
-		double const * const * D_data () const { return _D .data(); }
-		double const * const * lg_data() const { return _lg.data(); }	// TODO: beware of x[0] being equality constrained!
-		double const * const * ug_data() const { return _ug.data(); }	// TODO: beware of x[0] being equality constrained!
-		int const * nx_data() const { return _nx.data(); }
-		int const * nu_data() const { return _nu.data(); }
-		int const * nb_data() const { return _nb.data(); }
-		int const * ng_data() const { return _ng.data(); }
-
-		double * const * x_data() { return _x.data(); }
-		double * const * u_data() { return _u.data(); }
-		double * const * pi_data() { return _pi.data(); }
-		double * const * lam_data() { return _lam.data(); }
-		double * const * t_data() { return _t.data(); }
-		double * inf_norm_res_data() { return _inf_norm_res.data(); }
 	};
 }
