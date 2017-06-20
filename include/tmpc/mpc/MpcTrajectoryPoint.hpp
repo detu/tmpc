@@ -4,11 +4,11 @@
 
 namespace tmpc
 {
-	template <typename Scalar_>
+	template <typename Real_>
 	class MpcTrajectoryPoint
 	{
 	public:
-		typedef Scalar_ Scalar;
+		using Real = Real_;
 
 		MpcTrajectoryPoint(size_t NX, size_t NU)
 		:	x_(NX)
@@ -16,33 +16,42 @@ namespace tmpc
 		{
 		}
 
-		decltype(auto) x()
+		template <typename VectorX, typename VectorU>
+		MpcTrajectoryPoint(VectorX const& x, VectorU const& u)
+		:	x_(x)
+		,	u_(u)
 		{
-			return full(x_);
 		}
 
-		DynamicVector<Scalar> const& x() const
+		template <typename T>
+		void x(T const& val)
+		{
+			x_ = val;
+		}
+
+		DynamicVector<Real> const& x() const
 		{
 			return x_;
 		}
 
-		decltype(auto) u()
+		template <typename T>
+		void u(T const& val)
 		{
-			return full(u_);
+			u_ = val;
 		}
 
-		DynamicVector<Scalar> const& u() const
+		DynamicVector<Real> const& u() const
 		{
 			return u_;
 		}
 
 	private:
-		DynamicVector<Scalar> x_;
-		DynamicVector<Scalar> u_;
+		DynamicVector<Real> x_;
+		DynamicVector<Real> u_;
 	};
 
-	template <typename Scalar>
-	inline std::ostream& operator<<(std::ostream& os, MpcTrajectoryPoint<Scalar> const& p)
+	template <typename Real>
+	inline std::ostream& operator<<(std::ostream& os, MpcTrajectoryPoint<Real> const& p)
 	{
 		os << "x=" << trans(p.x()) << "\tu=" << trans(p.u());
 	}

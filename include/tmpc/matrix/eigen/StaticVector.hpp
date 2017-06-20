@@ -57,6 +57,13 @@ namespace tmpc
             Base::operator=(rhs);
             return *this;
         }
+
+        template <typename T1>
+        StaticVector& operator=(initializer_list<T1> list)
+        {
+            assign(*this, list);
+            return *this;
+        }
     };
 
     /*

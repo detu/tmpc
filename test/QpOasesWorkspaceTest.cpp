@@ -126,7 +126,7 @@ TEST(QpOasesWorkspaceTest, testMatricesCorrect1)
 		subvector(lb_expected, i, nx) = stage->lbx();	subvector(lb_expected, i + nx, nu) = stage->lbu();
 		subvector(ub_expected, i, nx) = stage->ubx();	subvector(ub_expected, i + nx, nu) = stage->ubu();
 
-		submatrix(A_expected, ia      , i, nx1, nx) = stage->A();	submatrix(A_expected, ia      , i + nx, nx1, nu) = stage->B();	submatrix(A_expected, ia, i + nx + nu, nx1, nx1) = -IdentityMatrix<DynamicMatrix<double>>(nx1);
+		submatrix(A_expected, ia      , i, nx1, nx) = stage->A();	submatrix(A_expected, ia      , i + nx, nx1, nu) = stage->B();	submatrix(A_expected, ia, i + nx + nu, nx1, nx1) = -IdentityMatrix<double>(nx1);
 		submatrix(A_expected, ia + nx1, i, nc , nx) = stage->C();	submatrix(A_expected, ia + nx1, i + nx, nc , nu) = stage->D();
 
 		subvector(lbA_expected, ia, nx1) = 0.;	subvector(lbA_expected, ia + nx1, nc) = stage->lbd();

@@ -1,14 +1,19 @@
-#include <tmpc/core/RealtimeIteration.hpp>
-#include <tmpc/qp/CondensingSolver.hpp>
-#include <tmpc/qp/HPMPCSolver.hpp>
+#include <tmpc/mpc/MpcRealtimeIteration.hpp>
+#include <tmpc/mpc/MpcQpSize.hpp>
+#include <tmpc/mpc/MpcTrajectory.hpp>
+
+#include <tmpc/qp/QpOasesWorkspace.hpp>
+#include <tmpc/qp/HpmpcWorkspace.hpp>
 #include <tmpc/integrator/rk4.hpp>
 #include <tmpc/Matrix.hpp>
-#include <tmpc/core/problem_specific.hpp>
+#include <tmpc/util/problem_specific.hpp>
 
 #include "gtest_tools_eigen.hpp"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
+
+#include <boost/range/iterator_range_core.hpp>
 
 #include <type_traits>
 
@@ -47,6 +52,10 @@ public:
 	SampleOCP(std::size_t nt)
 	:	nt_(nt)
 	{
+		size_.reserve(nt + 1);
+		std::fill_n(std::back_inserter(size_), nt, QpSize(NX, NU, NC));
+		size_.push_back(QpSize(NX, 0, NCT));
+
 		A = {{1.,  1.},
 			 {0.,  1.}};
 
@@ -150,8 +159,15 @@ public:
 		// Nothing to update.
 	}
 
+	boost::iterator_range<std::vector<QpSize>::const_iterator> size() const
+	{
+		return {size_.begin(), size_.end()};
+	}
+
 private:
 	std::size_t nt_;
+	std::vector<QpSize> size_;
+
 	StateVector _x_min;
 	StateVector _x_max;
 	StateVector _x_terminal_min;
@@ -171,20 +187,15 @@ class RealtimeIterationTest : public ::testing::Test
 public:
 	RealtimeIterationTest(unsigned Nt = 2)
 	:	_ocp(Nt)
-	,	qpSize_(RtiQpSize(Nt, SampleOCP::NX, SampleOCP::NU, SampleOCP::NC, SampleOCP::NCT))
-	,	_qpSolver(qpSize_.begin(), qpSize_.end())
-	,	_rti(_ocp, _qpSolver, WorkingPoint(Nt, OCP::StateVector(0.), OCP::InputVector(0.)))
+	,	_rti(_ocp, constantMpcTrajectory(MpcTrajectoryPoint<double>(OCP::StateVector(0.), OCP::InputVector(0.)), Nt))
 	{
 	}
 
 protected:
 	//typedef tmpc::RealtimeIteration<OCP, Integrator, QPSolver> RealtimeIteration;
 	typedef typename RealtimeIteration::WorkingPoint WorkingPoint;
-	typedef typename RealtimeIteration::QPSolver QPSolver;
 
 	OCP _ocp;
-	std::vector<QpSize> qpSize_;
-	QPSolver _qpSolver;
 	RealtimeIteration _rti;
 
 	void Preparation()
@@ -200,13 +211,13 @@ protected:
 
 typedef ::testing::Types<
 		// TODO: make Solver a template template parameter of RealtimeIteration?
-		tmpc::RealtimeIteration<double, Dimensions, OCP, tmpc::CondensingSolver<double>>,
-		tmpc::RealtimeIteration<double, Dimensions, OCP, tmpc::HPMPCSolver     <double>>
+		tmpc::MpcRealtimeIteration<double, OCP, tmpc::QpOasesWorkspace>,
+		tmpc::MpcRealtimeIteration<double, OCP, tmpc::HpmpcWorkspace<double>>
 	> RTITypes;
 
 TYPED_TEST_CASE(RealtimeIterationTest, RTITypes);
 
-TYPED_TEST(RealtimeIterationTest, DISABLED_GivesCorrectU0)
+TYPED_TEST(RealtimeIterationTest, GivesCorrectU0)
 {
 	PS::StateVector x;
 	PS::InputVector u;
@@ -233,15 +244,15 @@ TYPED_TEST(RealtimeIterationTest, DISABLED_GivesCorrectU0)
 			MatrixApproxEquality is_approx(1e-6);
 
 			x = {0.654561318696867,	 -0.690877362606266};	u = {0.215679569867116};
-			EXPECT_PRED2(is_approx, this->_rti.getWorkingPoint().get_x(0), x);
-			EXPECT_PRED2(is_approx, this->_rti.getWorkingPoint().get_u(0), u);
+			EXPECT_PRED2(is_approx, this->_rti.workingPoint()[0].x(), x);
+			EXPECT_PRED2(is_approx, this->_rti.workingPoint()[0].u(), u);
 
 			x = {0.0715237410241597, -0.475197792739149};	u = {0.215679569867116};
-			EXPECT_PRED2(is_approx, this->_rti.getWorkingPoint().get_x(1), x);
-			EXPECT_PRED2(is_approx, this->_rti.getWorkingPoint().get_u(1), u);
+			EXPECT_PRED2(is_approx, this->_rti.workingPoint()[1].x(), x);
+			EXPECT_PRED2(is_approx, this->_rti.workingPoint()[1].u(), u);
 
 			x = {0.0715237410241597, -0.475197792739149};
-			EXPECT_PRED2(is_approx, this->_rti.getWorkingPoint().get_x(2), x);
+			EXPECT_PRED2(is_approx, this->_rti.workingPoint()[2].x(), x);
 		}
 
 		x = {0.654561318696867,	-0.690877362606266};
@@ -260,6 +271,6 @@ TEST(QpSizeTest, test_RtiQpSize)
 	auto const nct = 4u;
 	auto const nt = 2u;
 
-	EXPECT_THAT(tmpc::RtiQpSize(nt, nx, nu, nc, nct),
+	EXPECT_THAT(tmpc::mpcQpSize(nt, nx, nu, nc, nct),
 			::testing::ElementsAre(tmpc::QpSize(nx, nu, nc), tmpc::QpSize(nx, nu, nc), tmpc::QpSize(nx, 0, nct)));
 }

@@ -54,7 +54,7 @@ add_custom_command(
 add_executable(tmpc_test
     #condensing_test.cpp
     rk4_test.cpp
-    #realtime_iteration_test.cpp
+    RealtimeIterationTest.cpp
     #mhe_test.cpp
     QpWorkspaceTest.cpp
     QpOasesWorkspaceTest.cpp

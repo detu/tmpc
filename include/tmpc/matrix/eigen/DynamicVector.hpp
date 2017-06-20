@@ -51,6 +51,12 @@ namespace tmpc
         }
 
         template <typename T>
+        DynamicVector(Eigen::MatrixBase<T> const& rhs)
+        :   Base(rhs)
+        {
+        }
+
+        template <typename T>
         DynamicVector& operator=(Eigen::MatrixBase<T> const& rhs)
         {
             Base::operator=(rhs);
@@ -60,6 +66,13 @@ namespace tmpc
         DynamicVector& operator=(ElementType const& rhs)
         {
             this->setConstant(rhs);
+            return *this;
+        }
+
+        template <typename T1>
+        DynamicVector& operator=(initializer_list<T1> list)
+        {
+            assign(*this, list);
             return *this;
         }
     };

@@ -159,6 +159,12 @@ public:
 		problem_.setOptions(detail::qpOASES_DefaultOptions());
 	}
 
+	template <typename IteratorRange>
+	QpOasesWorkspace(IteratorRange sz)
+	:	QpOasesWorkspace(sz.begin(), sz.end())
+	{
+	}
+
 	/**
 	 * \brief Copy constructor.
 	 *
@@ -264,7 +270,7 @@ private:
 				auto const nx_next = (sz + 1)->nx();
 
 				// Assign the -I block in A
-				submatrix(A, i, j, nx_next, nx_next) = -IdentityMatrix<Matrix>(nx_next);
+				submatrix(A, i, j, nx_next, nx_next) = -IdentityMatrix<Real>(nx_next);
 
 				// Assign the 0 blocks in lbA and ubA
 				subvector(lbA, i, nx_next) = 0.;

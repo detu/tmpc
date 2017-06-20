@@ -214,6 +214,12 @@ namespace tmpc
 			// solverWorkspace_.reserve();
 		}
 
+		template <typename IteratorRange>
+		HpmpcWorkspace(IteratorRange sz, int max_iter = 100)
+		:	HpmpcWorkspace(sz.begin(), sz.end(), max_iter)
+		{
+		}
+
 		/**
 		 * \brief Copy constructor
 		 *

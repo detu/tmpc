@@ -67,32 +67,27 @@ OutputIterator diagnose(QP const& qp, OutputIterator msg_out)
 	using detail::CheckFinite;
 	using detail::CheckNotNaN;
 
-	for (unsigned i = 0; i < qp.nT(); ++i)
+	size_t i = 0;
+	for (auto const& st : qp)
 	{
-		CheckFinite("Q", qp.get_Q(i), i, msg_out);
-		CheckFinite("R", qp.get_R(i), i, msg_out);
-		CheckFinite("S", qp.get_S(i), i, msg_out);
-		CheckFinite("q", qp.get_q(i), i, msg_out);
-		CheckFinite("r", qp.get_r(i), i, msg_out);
-		CheckFinite("A", qp.get_A(i), i, msg_out);
-		CheckFinite("B", qp.get_B(i), i, msg_out);
-		CheckFinite("C", qp.get_C(i), i, msg_out);
-		CheckFinite("D", qp.get_D(i), i, msg_out);
-		CheckNotNaN("x_min", qp.get_x_min(i), i, msg_out);
-		CheckNotNaN("x_max", qp.get_x_max(i), i, msg_out);
-		CheckNotNaN("u_min", qp.get_u_min(i), i, msg_out);
-		CheckNotNaN("u_max", qp.get_u_max(i), i, msg_out);
-		CheckNotNaN("d_min", qp.get_d_min(i), i, msg_out);
-		CheckNotNaN("d_max", qp.get_d_max(i), i, msg_out);
-	}
+		CheckFinite("Q", st.Q(), i, msg_out);
+		CheckFinite("R", st.R(), i, msg_out);
+		CheckFinite("S", st.S(), i, msg_out);
+		CheckFinite("q", st.q(), i, msg_out);
+		CheckFinite("r", st.r(), i, msg_out);
+		CheckFinite("A", st.A(), i, msg_out);
+		CheckFinite("B", st.B(), i, msg_out);
+		CheckFinite("C", st.C(), i, msg_out);
+		CheckFinite("D", st.D(), i, msg_out);
+		CheckNotNaN("x_min", st.lbx(), i, msg_out);
+		CheckNotNaN("x_max", st.ubx(), i, msg_out);
+		CheckNotNaN("u_min", st.lbu(), i, msg_out);
+		CheckNotNaN("u_max", st.ubu(), i, msg_out);
+		CheckNotNaN("d_min", st.lbd(), i, msg_out);
+		CheckNotNaN("d_max", st.ubd(), i, msg_out);
 
-	CheckFinite("Q_end", get_Q_end(qp), qp.nT(), msg_out);
-	CheckFinite("q_end", get_q_end(qp), qp.nT(), msg_out);
-	CheckFinite("C_end", qp.get_C_end(), qp.nT(), msg_out);
-	CheckNotNaN("x_end_min", get_x_end_min(qp), qp.nT(), msg_out);
-	CheckNotNaN("x_end_max", get_x_end_max(qp), qp.nT(), msg_out);
-	CheckNotNaN("d_end_min", qp.get_d_end_min(), qp.nT(), msg_out);
-	CheckNotNaN("d_end_max", qp.get_d_end_max(), qp.nT(), msg_out);
+		++i;
+	}
 
 	return msg_out;
 }
