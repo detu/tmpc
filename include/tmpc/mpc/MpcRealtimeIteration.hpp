@@ -27,7 +27,7 @@ namespace tmpc
 
 		MpcRealtimeIteration(OCP const& ocp, WorkingPoint const& working_point)
 		:	ocp_(ocp)
-		,	qp_(ocp.size())
+		,	qp_(ocp.dimensions())
 		,	workingPoint_(working_point)
 		,	prepared_(false)
 		{
@@ -35,7 +35,7 @@ namespace tmpc
 			lowerBound_.reserve(working_point.size());
 			upperBound_.reserve(working_point.size());
 
-			for (auto const& sz : ocp.size())
+			for (auto const& sz : ocp.dimensions())
 			{
 				lowerBound_.emplace_back(
 					DynamicVector<Real>(sz.nx(), -inf()),
@@ -328,30 +328,28 @@ namespace tmpc
 		 */
 		void SetQpNaN()
 		{
-			auto constexpr nan = std::numeric_limits<Real>::signaling_NaN();
-
 			for (auto& stage : qp_)
 			{
-				stage.Q(nan);
-				stage.R(nan);
-				stage.S(nan);
-				stage.q(nan);
-				stage.r(nan);
+				stage.Q(nan());
+				stage.R(nan());
+				stage.S(nan());
+				stage.q(nan());
+				stage.r(nan());
 
-				stage.A(nan);
-				stage.B(nan);
-				stage.b(nan);
+				stage.A(nan());
+				stage.B(nan());
+				stage.b(nan());
 
-				stage.lbx(nan);
-				stage.ubx(nan);
-				stage.lbu(nan);
-				stage.ubu(nan);
+				stage.lbx(nan());
+				stage.ubx(nan());
+				stage.lbu(nan());
+				stage.ubu(nan());
 
-				stage.C(nan);
-				stage.D(nan);
+				stage.C(nan());
+				stage.D(nan());
 
-				stage.lbd(nan);
-				stage.ubd(nan);
+				stage.lbd(nan());
+				stage.ubd(nan());
 			}
 		}
 
@@ -422,6 +420,11 @@ namespace tmpc
 		static Real constexpr inf()
 		{
 			return std::numeric_limits<Real>::infinity();
+		}
+
+		static Real constexpr nan()
+		{
+			return std::numeric_limits<Real>::signaling_NaN();
 		}
 	};
 }

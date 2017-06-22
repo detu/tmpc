@@ -52,9 +52,9 @@ public:
 	SampleOCP(std::size_t nt)
 	:	nt_(nt)
 	{
-		size_.reserve(nt + 1);
-		std::fill_n(std::back_inserter(size_), nt, QpSize(NX, NU, NC));
-		size_.push_back(QpSize(NX, 0, NCT));
+		dimensions_.reserve(nt + 1);
+		std::fill_n(std::back_inserter(dimensions_), nt, QpSize(NX, NU, NC));
+		dimensions_.push_back(QpSize(NX, 0, NCT));
 
 		A = {{1.,  1.},
 			 {0.,  1.}};
@@ -159,14 +159,14 @@ public:
 		// Nothing to update.
 	}
 
-	boost::iterator_range<std::vector<QpSize>::const_iterator> size() const
+	boost::iterator_range<std::vector<QpSize>::const_iterator> dimensions() const
 	{
-		return {size_.begin(), size_.end()};
+		return {dimensions_.begin(), dimensions_.end()};
 	}
 
 private:
 	std::size_t nt_;
-	std::vector<QpSize> size_;
+	std::vector<QpSize> dimensions_;
 
 	StateVector _x_min;
 	StateVector _x_max;
