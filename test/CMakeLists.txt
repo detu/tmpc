@@ -68,8 +68,6 @@ add_executable(tmpc_test
     ${CMAKE_CURRENT_BINARY_DIR}/casadi_function_test_generated.c
 )
 
-add_dependencies(tmpc_test googletest)
-
 target_compile_definitions(tmpc_test
     PRIVATE TEST_DATA_PATH="${TEST_DATA_PATH}")
 

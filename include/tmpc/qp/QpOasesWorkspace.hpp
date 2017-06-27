@@ -235,6 +235,9 @@ public:
 	// Set maximum number of working set recalculations for qpOASES
 	void maxWorkingSetRecalculations(unsigned val) noexcept { _maxWorkingSetRecalculations = val; }
 
+	/// \brief Number of working set recalculations during last solve().
+	unsigned numIter() const { return numIter_; }
+
 	void solve();
 
 private:

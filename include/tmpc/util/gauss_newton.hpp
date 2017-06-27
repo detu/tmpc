@@ -13,9 +13,9 @@ namespace tmpc
 		//      S R]
 		//
 
-		Q = transpose(C) * C;
-		R = transpose(D) * D;
-		S = transpose(C) * D;
+		Q = trans(C) * C;
+		R = trans(D) * D;
+		S = trans(C) * D;
 	}
 
 	// Gauss-Newton approximation of a Hessian. The gradient is also computed.
@@ -29,14 +29,14 @@ namespace tmpc
 		//      S R]
 		//
 
-		Q = transpose(C) * C;
-		R = transpose(D) * D;
-		S = transpose(C) * D;
+		Q = trans(C) * C;
+		R = trans(D) * D;
+		S = trans(C) * D;
 
 		// g = 2 * (y_bar - y_hat)^T * W * G
 		// g = [q; r]
-		q = transpose(res) * C;
-		r = transpose(res) * D;
+		q = trans(res) * C;
+		r = trans(res) * D;
 	}
 
 	// Gauss-Newton approximation of a Hessian with weighting matrix.
@@ -50,13 +50,13 @@ namespace tmpc
 		//      S R]
 		//
 
-		Q = transpose(C) * W * C;
-		R = transpose(D) * W * D;
-		S = transpose(C) * W * D;
+		Q = trans(C) * W * C;
+		R = trans(D) * W * D;
+		S = trans(C) * W * D;
 
 		// g = 2 * (y_bar - y_hat)^T * W * G
 		// g = [q; r]
-		q = transpose(res) * W * C;
-		r = transpose(res) * W * D;
+		q = trans(res) * W * C;
+		r = trans(res) * W * D;
 	}
 }
