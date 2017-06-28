@@ -39,6 +39,9 @@ namespace tmpc
 	{
 	public:
 		using Real = Real_;
+		
+		// Iteration statistics. HPMPC returns 5 Real numbers per iteration.
+		using IterStat = std::array<Real, 5>;
 
 		class Stage
 		{
@@ -197,6 +200,11 @@ namespace tmpc
 			return stage_;
 		}
 
+		boost::iterator_range<typename std::vector<IterStat>::const_iterator> stat() const
+		{
+			return boost::make_iterator_range(stat_.begin(), stat_.begin() + numIter_);
+		}
+
 		/**
 		 * \brief Takes QP problem size to preallocate workspace.
 		 */
@@ -209,9 +217,8 @@ namespace tmpc
 
 			for (auto sz = size_first; sz != size_last; ++sz)
 				addStage(*sz, sz + 1 != size_last ? sz[1].nx() : 0);
-				
-			// TODO: calculate workspace size and call
-			// solverWorkspace_.reserve();
+
+			allocateSolverWorkspace();
 		}
 
 		template <typename IteratorRange>
@@ -346,7 +353,6 @@ namespace tmpc
 		std::vector<char> solverWorkspace_;
 
 		// Iteration statistics. HPMPC returns 5 Real numbers per iteration.
-		typedef std::array<Real, 5> IterStat;
 		std::vector<IterStat> stat_;
 
 		Real mu_ = 0.;
@@ -367,5 +373,8 @@ namespace tmpc
 
 		// Add one stage with specified sizes at the end of the stage sequence.
 		void addStage(QpSize const& sz, size_t nx_next);
+
+		// Allocate soverWorkspace_ according to nx, nu, nb, ng etc.
+		void allocateSolverWorkspace();
 	};
 }

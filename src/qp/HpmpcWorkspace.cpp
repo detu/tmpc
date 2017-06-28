@@ -71,10 +71,6 @@ namespace tmpc
 			// Number of QP steps for HPMPC
 			auto const N = stage_.size() - 1;
 
-			// Make sure we have enough workspace.
-			solverWorkspace_.resize(ip_ocp_hard_tv_work_space_size_bytes<Real_>(
-					static_cast<int>(N), nx_.data(), nu_.data(), nb_.data(), hidxb_.data(), ng_.data(), static_cast<int>(N)));
-
 			// Call HPMPC
 			auto const ret = ip_ocp_hard_tv(&numIter_, maxIter(), mu_, muTol_, N,
 					nx_.data(), nu_.data(), nb_.data(), hidxb_.data(), ng_.data(), N, _warmStart ? 1 : 0, A_.data(), B_.data(), b_.data(),
@@ -184,6 +180,16 @@ namespace tmpc
 		u_.reserve(nt);
 		pi_.reserve(nt);
 		lam_.reserve(nt);
+	}
+
+	template <typename Real_>
+	void HpmpcWorkspace<Real_>::allocateSolverWorkspace()
+	{
+		// Number of QP steps for HPMPC
+		auto const N = stage_.size() - 1;
+
+		solverWorkspace_.resize(ip_ocp_hard_tv_work_space_size_bytes<Real_>(
+			static_cast<int>(N), nx_.data(), nu_.data(), nb_.data(), hidxb_.data(), ng_.data(), static_cast<int>(N)));
 	}
 
 	// Explicit instantiation of HpmpcWorkspace for supported data types and storage orders.
