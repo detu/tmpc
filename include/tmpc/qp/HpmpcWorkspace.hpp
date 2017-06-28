@@ -190,11 +190,6 @@ namespace tmpc
 			return stage_;
 		}
 
-		boost::iterator_range<typename std::vector<Stage>::iterator> solution()
-		{
-			return stage_;
-		}
-
 		boost::iterator_range<typename std::vector<Stage>::const_iterator> solution() const
 		{
 			return stage_;
