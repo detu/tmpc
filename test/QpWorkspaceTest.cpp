@@ -73,7 +73,7 @@ TYPED_TEST(QpWorkspaceTest, testQpInterface)
 	{
 		auto const& sz = this->size_[i];
 		auto const nx1 = i + 1 < N ? this->size_[i + 1].nx() : 0;
-		auto& stage = this->ws_[i];
+		auto& stage = this->ws_.problem()[i];
 
 		stage.Q(Q[i] = rand_matrix.generate(sz.nx(), sz.nx()));
 		stage.R(R[i] = rand_matrix.generate(sz.nu(), sz.nu()));
@@ -96,7 +96,7 @@ TYPED_TEST(QpWorkspaceTest, testQpInterface)
 	// Reading the data and checking that they are the same that we wrote
 	for (std::size_t i = 0; i < N; ++i)
 	{
-		auto const& stage = this->ws_[i];
+		auto const& stage = this->ws_.problem()[i];
 
 		EXPECT_EQ(print_wrap(stage.Q()), print_wrap(Q[i])) << "at i=" << i;
 		EXPECT_EQ(print_wrap(stage.R()), print_wrap(R[i])) << "at i=" << i;
@@ -139,7 +139,7 @@ TYPED_TEST(QpWorkspaceTest, testMatrixSizesCorrect)
 	{
 		auto const& s = sz[i];
 		auto const nx1 = i + 1 < sz.size() ? sz[i + 1].nx() : 0;
-		auto const& stage = ws[i];
+		auto const& stage = ws.problem()[i];
 
 		EXPECT_EQ(rows   (stage.Q()), s.nx());
 		EXPECT_EQ(columns(stage.Q()), s.nx());

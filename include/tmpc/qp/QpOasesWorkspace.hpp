@@ -6,6 +6,8 @@
 
 #include <qpOASES.hpp>
 
+#include <boost/range/iterator_range_core.hpp>
+
 #include <ostream>
 
 namespace tmpc {
@@ -160,7 +162,7 @@ public:
 	}
 
 	template <typename IteratorRange>
-	QpOasesWorkspace(IteratorRange sz)
+	explicit QpOasesWorkspace(IteratorRange sz)
 	:	QpOasesWorkspace(sz.begin(), sz.end())
 	{
 	}
@@ -182,23 +184,25 @@ public:
 	QpOasesWorkspace& operator=(QpOasesWorkspace const&) = delete;
 	QpOasesWorkspace& operator=(QpOasesWorkspace &&) = delete;
 
-	Stage& operator[](std::size_t i) { return stage_.at(i);	}
-	Stage const& operator[](std::size_t i) const { return stage_.at(i);	}
-	std::size_t size() const { return stage_.size(); }
+	boost::iterator_range<std::vector<Stage>::iterator> problem()
+	{
+		return stage_;
+	}
 
-	typedef std::vector<Stage>::iterator iterator;
-	typedef std::vector<Stage>::const_iterator const_iterator;
-	typedef std::vector<Stage>::reference reference;
-	typedef std::vector<Stage>::const_reference const_reference;
+	boost::iterator_range<std::vector<Stage>::const_iterator> problem() const
+	{
+		return stage_;
+	}
 
-	iterator begin() { return stage_.begin(); }
-	iterator end() { return stage_.end(); }
-	const_iterator begin() const { return stage_.begin(); }
-	const_iterator end() const { return stage_.end(); }
-	reference front() {	return stage_.front(); }
-	reference back() { return stage_.back(); }
-	const_reference front() const {	return stage_.front(); }
-	const_reference back() const { return stage_.back(); }
+	boost::iterator_range<std::vector<Stage>::iterator> solution()
+	{
+		return stage_;
+	}
+
+	boost::iterator_range<std::vector<Stage>::const_iterator> solution() const
+	{
+		return stage_;
+	}
 
 	// qpOASES-specific part
 	//

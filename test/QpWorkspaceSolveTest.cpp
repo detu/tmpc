@@ -41,7 +41,8 @@ protected:
 		typedef StaticMatrix<double, NZ, NZ> StageHessianMatrix;
 
 		const auto sz = mpcQpSize(NT, NX, NU, NC, NCT);
-		Workspace qp(sz.begin(), sz.end());
+		Workspace ws(sz.begin(), sz.end());
+		auto qp = ws.problem();
 		
 		qp[0].lbx(-1.);	qp[0].lbu(-1.);	qp[0].ubx(1.);	qp[0].ubu(1.);
 		qp[1].lbx(-1.);	qp[1].lbu(-1.);	qp[1].ubx(1.);	qp[1].ubu(1.);
@@ -108,12 +109,13 @@ protected:
 		qp[1].B(B1);		
 		qp[1].b(a1);
 
-		return std::move(qp);
+		return std::move(ws);
 	}
 
 	static Workspace problem_1()
 	{
-		Workspace qp = problem_0();
+		Workspace ws = problem_0();
+		auto qp = ws.problem();
 
 		StaticVector<double, 2> x0 {1., 0.};
 		qp[0].lbx(x0);	qp[0].ubx(x0);
@@ -121,7 +123,7 @@ protected:
 		qp[0].b(0.);
 		qp[1].b(0.);
 
-		return std::move(qp);
+		return std::move(ws);
 	}
 };
 
@@ -140,16 +142,17 @@ TYPED_TEST(QpWorkspaceSolveTest, testMoveConstructor)
 	auto ws1 = std::move(ws);
 
 	ws1.solve();
+	auto const sol = ws1.solution();
 
 	using Vector = DynamicVector<typename TestFixture::Real>;
 
-	EXPECT_PRED2(MatrixApproxEquality(1e-6), ws1[0].x(), (Vector {1., -1.}));
-	EXPECT_PRED2(MatrixApproxEquality(1e-6), ws1[0].u(), (Vector {-1.}));
+	EXPECT_PRED2(MatrixApproxEquality(1e-6), sol[0].x(), (Vector {1., -1.}));
+	EXPECT_PRED2(MatrixApproxEquality(1e-6), sol[0].u(), (Vector {-1.}));
 
-	EXPECT_PRED2(MatrixApproxEquality(1e-6), ws1[1].x(), (Vector {0.5, 0.}));
-	EXPECT_PRED2(MatrixApproxEquality(1e-6), ws1[1].u(), (Vector {-1.}));
+	EXPECT_PRED2(MatrixApproxEquality(1e-6), sol[1].x(), (Vector {0.5, 0.}));
+	EXPECT_PRED2(MatrixApproxEquality(1e-6), sol[1].u(), (Vector {-1.}));
 
-	EXPECT_PRED2(MatrixApproxEquality(1e-6), ws1[2].x(), (Vector {1., 1.}));
+	EXPECT_PRED2(MatrixApproxEquality(1e-6), sol[2].x(), (Vector {1., 1.}));
 }
 
 TYPED_TEST(QpWorkspaceSolveTest, testSolve0)
@@ -157,16 +160,17 @@ TYPED_TEST(QpWorkspaceSolveTest, testSolve0)
 	auto ws = TestFixture::problem_0();
 
 	ws.solve();
+	auto const sol = ws.solution();
 
 	using Vector = DynamicVector<typename TestFixture::Real>;
 
-	EXPECT_PRED2(MatrixApproxEquality(1e-6), ws[0].x(), (Vector {1., -1.}));
-	EXPECT_PRED2(MatrixApproxEquality(1e-6), ws[0].u(), (Vector {-1.}));
+	EXPECT_PRED2(MatrixApproxEquality(1e-6), sol[0].x(), (Vector {1., -1.}));
+	EXPECT_PRED2(MatrixApproxEquality(1e-6), sol[0].u(), (Vector {-1.}));
 
-	EXPECT_PRED2(MatrixApproxEquality(1e-6), ws[1].x(), (Vector {0.5, 0.}));
-	EXPECT_PRED2(MatrixApproxEquality(1e-6), ws[1].u(), (Vector {-1.}));
+	EXPECT_PRED2(MatrixApproxEquality(1e-6), sol[1].x(), (Vector {0.5, 0.}));
+	EXPECT_PRED2(MatrixApproxEquality(1e-6), sol[1].u(), (Vector {-1.}));
 
-	EXPECT_PRED2(MatrixApproxEquality(1e-6), ws[2].x(), (Vector {1., 1.}));
+	EXPECT_PRED2(MatrixApproxEquality(1e-6), sol[2].x(), (Vector {1., 1.}));
 }
 
 TYPED_TEST(QpWorkspaceSolveTest, testSolve1)
@@ -174,14 +178,15 @@ TYPED_TEST(QpWorkspaceSolveTest, testSolve1)
 	auto ws = TestFixture::problem_1();
 
 	ws.solve();
+	auto const sol = ws.solution();
 
 	using Vector = DynamicVector<typename TestFixture::Real>;
 
-	EXPECT_PRED2(MatrixApproxEquality(1e-6), ws[0].x(), (Vector {1., 0.}));
-	EXPECT_PRED2(MatrixApproxEquality(1e-6), ws[0].u(), (Vector {-0.690877362606266}));
+	EXPECT_PRED2(MatrixApproxEquality(1e-6), sol[0].x(), (Vector {1., 0.}));
+	EXPECT_PRED2(MatrixApproxEquality(1e-6), sol[0].u(), (Vector {-0.690877362606266}));
 
-	EXPECT_PRED2(MatrixApproxEquality(1e-6), ws[1].x(), (Vector {0.654561318696867, -0.690877362606266}));
-	EXPECT_PRED2(MatrixApproxEquality(1e-6), ws[1].u(), (Vector {0.215679569867116}));
+	EXPECT_PRED2(MatrixApproxEquality(1e-6), sol[1].x(), (Vector {0.654561318696867, -0.690877362606266}));
+	EXPECT_PRED2(MatrixApproxEquality(1e-6), sol[1].u(), (Vector {0.215679569867116}));
 
-	EXPECT_PRED2(MatrixApproxEquality(1e-6), ws[2].x(), (Vector {0.0715237410241597, -0.475197792739149}));
+	EXPECT_PRED2(MatrixApproxEquality(1e-6), sol[2].x(), (Vector {0.0715237410241597, -0.475197792739149}));
 }

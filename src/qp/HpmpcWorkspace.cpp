@@ -66,10 +66,10 @@ namespace tmpc
 	template <typename Real_>
 	void HpmpcWorkspace<Real_>::solve()
 	{
-		if (size() > 0)
+		if (stage_.size() > 0)
 		{
 			// Number of QP steps for HPMPC
-			auto const N = size() - 1;
+			auto const N = stage_.size() - 1;
 
 			// Make sure we have enough workspace.
 			solverWorkspace_.resize(ip_ocp_hard_tv_work_space_size_bytes<Real_>(

@@ -68,8 +68,8 @@ namespace tmpc
 
 			/** embed current initial value */
 			auto const w0 = eval(x0 - workingPoint_[0].x());
-			qp_[0].lbx(w0);
-			qp_[0].ubx(w0);
+			qp_.problem()[0].lbx(w0);
+			qp_.problem()[0].ubx(w0);
 
 			/** solve QP */
 			qp_.solve();
@@ -77,8 +77,8 @@ namespace tmpc
 			// Add the calculated QP step to the working point.
 			for (size_t i = 0; i < nT() + 1; ++i)
 			{
-				workingPoint_[i].x(workingPoint_[i].x() + qp_[i].x());
-				workingPoint_[i].u(workingPoint_[i].u() + qp_[i].u());
+				workingPoint_[i].x(workingPoint_[i].x() + qp_.problem()[i].x());
+				workingPoint_[i].u(workingPoint_[i].u() + qp_.problem()[i].u());
 			}
 			
 			prepared_ = false;
@@ -168,7 +168,7 @@ namespace tmpc
 			Stage(std::size_t i, MpcRealtimeIteration& rti)
 			:	i_(i)
 			,	rti_(rti)
-			,	qp_(rti.qp_[i])
+			,	qp_(rti.qp_.problem()[i])
 			,	workingPoint_(rti_.workingPoint_[i])
 			,	lowerBound_(rti_.lowerBound_[i])
 			,	upperBound_(rti_.upperBound_[i])
@@ -328,7 +328,7 @@ namespace tmpc
 		 */
 		void SetQpNaN()
 		{
-			for (auto& stage : qp_)
+			for (auto& stage : qp_.problem())
 			{
 				stage.Q(nan());
 				stage.R(nan());

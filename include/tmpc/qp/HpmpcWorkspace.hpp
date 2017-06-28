@@ -5,6 +5,8 @@
 
 #include <tmpc/Matrix.hpp>
 
+#include <boost/range/iterator_range_core.hpp>
+
 #include <limits>
 #include <stdexcept>
 #include <algorithm>
@@ -175,27 +177,25 @@ namespace tmpc
 			DynamicVector<Real> lam_;
 		};
 
-		Stage& operator[](std::size_t i) { return stage_.at(i); }
-		Stage const& operator[](std::size_t i) const { return stage_.at(i);	}
+		boost::iterator_range<typename std::vector<Stage>::iterator> problem()
+		{
+			return stage_;
+		}
 
-		std::size_t size() const { return stage_.size(); }
+		boost::iterator_range<typename std::vector<Stage>::const_iterator> problem() const
+		{
+			return stage_;
+		}
 
-		typedef typename std::vector<Stage>::iterator iterator;
-		typedef typename std::vector<Stage>::const_iterator const_iterator;
-		typedef typename std::vector<Stage>::reference reference;
-		typedef typename std::vector<Stage>::const_reference const_reference;
+		boost::iterator_range<typename std::vector<Stage>::iterator> solution()
+		{
+			return stage_;
+		}
 
-		iterator begin() { return stage_.begin(); }
-		iterator end() { return stage_.end(); }
-
-		const_iterator begin() const { return stage_.begin(); }
-		const_iterator end() const { return stage_.end(); }
-
-		reference front() { return stage_.front(); }
-		reference back() { return stage_.back(); }
-
-		const_reference front() const { return stage_.front(); }
-		const_reference back() const { return stage_.back(); }
+		boost::iterator_range<typename std::vector<Stage>::const_iterator> solution() const
+		{
+			return stage_;
+		}
 
 		/**
 		 * \brief Takes QP problem size to preallocate workspace.
@@ -215,7 +215,7 @@ namespace tmpc
 		}
 
 		template <typename IteratorRange>
-		HpmpcWorkspace(IteratorRange sz, int max_iter = 100)
+		explicit HpmpcWorkspace(IteratorRange sz, int max_iter = 100)
 		:	HpmpcWorkspace(sz.begin(), sz.end(), max_iter)
 		{
 		}
