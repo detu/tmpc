@@ -23,7 +23,6 @@ f = cs.Function('f', [A, B, x], [cs.mtimes(A * x, B), cs.sum1(cs.mtimes(A, B))])
 # Generate C code
 #------------------------------
 name_c = sys.argv[1]
-gen = cs.CodeGenerator(name_c, {'mex' : False, 'with_header' : True})
+gen = cs.CodeGenerator(name_c, {'mex' : False, 'with_header' : True, 'with_mem' : True})
 gen.add(f)
-
 gen.generate()

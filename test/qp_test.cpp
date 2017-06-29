@@ -5,13 +5,17 @@
  *      Author: kotlyar
  */
 
-#include "../include/qp/MultiStageQuadraticProblem.hpp"
-#include "../include/qp/HPMPCProblem.hpp"
-#include "../include/qp/Printing.hpp"
+#include "gtest_tools_eigen.hpp"
+
+#include <tmpc/qp/HPMPCProblem.hpp>
+#include <tmpc/qp/Printing.hpp>
+#include <tmpc/qp/QpOasesProblem.hpp>
+#include <tmpc/qp/QuadraticProblem.hpp>
 
 #include <gtest/gtest.h>
 
 #include <iostream>
+#include <array>
 
 template <typename Matrix>
 bool isZero(Eigen::MatrixBase<Matrix> const& m)
@@ -31,9 +35,49 @@ Matrix random()
 	return m;
 }
 
+template <unsigned NX_, unsigned NU_, unsigned NC_, unsigned NCT_>
+class FixedSizeQpOasesProblem : public tmpc::QpOasesProblem
+{
+public:
+	static auto constexpr NX = NX_;
+	static auto constexpr NU = NU_;
+	static auto constexpr NC = NC_;
+	static auto constexpr NCT = NCT_;
+
+	/*
+	static unsigned constexpr NX = NX_;
+	static unsigned const NU = NU_;
+	static unsigned const NC = NC_;
+	static unsigned const NCT = NCT_;
+	*/
+
+	typedef Eigen::Matrix<double, NX, 1> StateVector;
+	typedef Eigen::Matrix<double, NU, 1> InputVector;
+
+	FixedSizeQpOasesProblem(std::size_t N)
+	:	tmpc::QpOasesProblem(Sizes(N))
+	{
+	}
+
+	static unsigned constexpr nX() { return NX; }
+	static unsigned constexpr nU() { return NU; }
+
+private:
+	std::vector<tmpc::QpSize> Sizes(std::size_t N)
+	{
+		std::vector<tmpc::QpSize> sz;
+		sz.reserve(N + 1);
+
+		std::fill_n(std::back_inserter(sz), N, tmpc::QpSize(NX, NU, 0));
+		sz.emplace_back(tmpc::QpSize::size_type{NX}, 0, 0);
+		//sz.push_back(tmpc::QpSize(NX, 0, 0));
+
+		return sz;
+	}
+};
 
 template <typename QP>
-class MultiStageQuadraticProblemTest : public ::testing::Test
+class QuadraticProblemTest : public ::testing::Test
 {
 public:
 	typedef QP Problem;
@@ -56,7 +100,7 @@ protected:
 
 	unsigned const NT = 2;
 
-	MultiStageQuadraticProblemTest()
+	QuadraticProblemTest()
 	:	qp(NT)
 	{
 	}
@@ -65,13 +109,14 @@ protected:
 };
 
 typedef ::testing::Types<
-		tmpc::MultiStageQuadraticProblem<2, 1, 0, 0>
-,		tmpc::HPMPCProblem              <2, 1, 0, 0>
+	tmpc::QuadraticProblemEigen<2, 1, 0, 0>,
+	tmpc::HPMPCProblem<2, 1, 0, 0>,
+	FixedSizeQpOasesProblem<2, 1, 0, 0>
 	> QPTypes;
 
-TYPED_TEST_CASE(MultiStageQuadraticProblemTest, QPTypes);
+TYPED_TEST_CASE(QuadraticProblemTest, QPTypes);
 
-TYPED_TEST(MultiStageQuadraticProblemTest, get_set_interface_works)
+TYPED_TEST(QuadraticProblemTest, get_set_interface_works)
 {
 	std::vector<typename TestFixture::StateStateMatrix> Q(this->NT + 1);
 	std::vector<typename TestFixture::StateVector> x_min(this->NT + 1), x_max(this->NT + 1);
@@ -105,24 +150,24 @@ TYPED_TEST(MultiStageQuadraticProblemTest, get_set_interface_works)
 	// Reading the data and checking that they are the same that we wrote
 	for (std::size_t i = 0; i <= this->NT; ++i)
 	{
-		EXPECT_EQ(this->qp.get_Q(i), Q[i]);
-		EXPECT_EQ(this->qp.get_x_min(i), x_min[i]);
-		EXPECT_EQ(this->qp.get_x_max(i), x_max[i]);
+		EXPECT_EQ(print_wrap(this->qp.get_Q(i)), print_wrap(Q[i])) << "at i=" << i;
+		EXPECT_EQ(print_wrap(this->qp.get_x_min(i)), print_wrap(x_min[i]));
+		EXPECT_EQ(print_wrap(this->qp.get_x_max(i)), print_wrap(x_max[i]));
 	}
 
 	for (std::size_t i = 0; i < this->NT; ++i)
 	{
-		EXPECT_EQ(this->qp.get_S(i), S[i]);
-		EXPECT_EQ(this->qp.get_R(i), R[i]);
-		EXPECT_EQ(this->qp.get_A(i), A[i]);
-		EXPECT_EQ(this->qp.get_B(i), B[i]);
-		EXPECT_EQ(this->qp.get_b(i), b[i]);
-		EXPECT_EQ(this->qp.get_u_min(i), u_min[i]);
-		EXPECT_EQ(this->qp.get_u_max(i), u_max[i]);
+		EXPECT_EQ(print_wrap(this->qp.get_S(i)), print_wrap(S[i]));
+		EXPECT_EQ(print_wrap(this->qp.get_R(i)), print_wrap(R[i])) << "at i=" << i;
+		EXPECT_EQ(print_wrap(this->qp.get_A(i)), print_wrap(A[i]));
+		EXPECT_EQ(print_wrap(this->qp.get_B(i)), print_wrap(B[i]));
+		EXPECT_EQ(print_wrap(this->qp.get_b(i)), print_wrap(b[i]));
+		EXPECT_EQ(print_wrap(this->qp.get_u_min(i)), print_wrap(u_min[i]));
+		EXPECT_EQ(print_wrap(this->qp.get_u_max(i)), print_wrap(u_max[i]));
 	}
 }
 
-TYPED_TEST(MultiStageQuadraticProblemTest, qp_interface_works)
+TYPED_TEST(QuadraticProblemTest, qp_interface_works)
 {
 	auto const NZ = TestFixture::Problem::NX + TestFixture::Problem::NU;
 
@@ -216,4 +261,110 @@ TYPED_TEST(MultiStageQuadraticProblemTest, qp_interface_works)
 	this->qp.set_b(1, a1);
 	EXPECT_EQ(this->qp.get_b(1), a1);
 	//EXPECT_EQ(Eigen::Map<Problem::StateVector const>(this->qp.b_data()[1]), a1);
+}
+
+template <typename QP>
+class QuadraticProblemTestBlaze : public ::testing::Test
+{
+public:
+	typedef QP Problem;
+	//typedef typename Problem::StateInputVector StateInputVector;
+	//typedef typename Problem::StageHessianMatrix StageHessianMatrix;
+	//typedef typename Problem::InterStageMatrix InterStageMatrix;
+
+protected:
+	/*
+	unsigned const NX = n_x<QP>();
+	unsigned const NU = n_u<QP>();
+	unsigned const NC = n_d<QP>();
+	unsigned const NCT = n_d_end<QP>();
+	*/
+	typedef typename Problem::Scalar Scalar;
+
+	typedef blaze::DynamicVector<Scalar> Vector;
+	typedef blaze::DynamicMatrix<Scalar> Matrix;
+
+	QuadraticProblemTestBlaze()
+	:	size_{
+			tmpc::QpSize(2, 1, 0),
+			tmpc::QpSize(2, 1, 0),
+			tmpc::QpSize(2, 0, 0)
+		}
+	,	qp_(size_.begin(), size_.end())
+	{
+	}
+
+	std::array<tmpc::QpSize, 3> const size_;
+	Problem qp_;
+};
+
+typedef ::testing::Types<
+	tmpc::QuadraticProblemBlaze<double>
+	> QPTypesBlaze;
+
+TYPED_TEST_CASE(QuadraticProblemTestBlaze, QPTypesBlaze);
+
+TYPED_TEST(QuadraticProblemTestBlaze, get_set_interface_works)
+{
+	auto const N = this->size_.size();
+
+	std::vector<typename TestFixture::Matrix> Q(N);
+	std::vector<typename TestFixture::Vector> q(N);
+	std::vector<typename TestFixture::Vector> r(N);
+
+	std::vector<typename TestFixture::Matrix> S(N);
+	std::vector<typename TestFixture::Matrix> R(N);
+	std::vector<typename TestFixture::Matrix> A(N);
+	std::vector<typename TestFixture::Matrix> B(N);
+	std::vector<typename TestFixture::Vector> b(N);
+
+	std::vector<typename TestFixture::Vector> x_min(N), x_max(N);
+	std::vector<typename TestFixture::Vector> u_min(N), u_max(N);
+
+	// Writing random data
+	blaze::Rand<typename TestFixture::Matrix> rand_matrix;
+	blaze::Rand<typename TestFixture::Vector> rand_vector;
+
+	for (std::size_t i = 0; i < N; ++i)
+	{
+		auto const& sz = this->size_[i];
+		auto const nx1 = i + 1 < N ? this->size_[i + 1].nx() : 0;
+		auto& stage = this->qp_[i];
+
+		stage.Q() = Q[i] = rand_matrix.generate(sz.nx(), sz.nx());
+		stage.R() = R[i] = rand_matrix.generate(sz.nu(), sz.nu());
+		stage.S() = S[i] = rand_matrix.generate(sz.nx(), sz.nu());
+		stage.q() = q[i] = rand_vector.generate(sz.nx());
+		stage.r() = r[i] = rand_vector.generate(sz.nx());
+
+		stage.A() = A[i] = rand_matrix.generate(nx1, sz.nx());
+		stage.B() = B[i] = rand_matrix.generate(nx1, sz.nu());
+		stage.b() = b[i] = rand_vector.generate(nx1);
+
+		stage.lbx() = x_min[i] = rand_vector.generate(sz.nx());
+		stage.ubx() = x_max[i] = rand_vector.generate(sz.nx());
+		stage.lbu() = u_min[i] = rand_vector.generate(sz.nu());
+		stage.ubu() = u_max[i] = rand_vector.generate(sz.nu());
+	}
+
+	// Reading the data and checking that they are the same that we wrote
+	for (std::size_t i = 0; i < N; ++i)
+	{
+		auto const& stage = this->qp_[i];
+
+		EXPECT_EQ(print_wrap(stage.Q()), print_wrap(Q[i])) << "at i=" << i;
+		EXPECT_EQ(print_wrap(stage.R()), print_wrap(R[i])) << "at i=" << i;
+		EXPECT_EQ(print_wrap(stage.S()), print_wrap(S[i]));
+		EXPECT_EQ(print_wrap(stage.q()), print_wrap(q[i]));
+		EXPECT_EQ(print_wrap(stage.r()), print_wrap(r[i]));
+
+		EXPECT_EQ(print_wrap(stage.A()), print_wrap(A[i]));
+		EXPECT_EQ(print_wrap(stage.B()), print_wrap(B[i]));
+		EXPECT_EQ(print_wrap(stage.b()), print_wrap(b[i]));
+
+		EXPECT_EQ(print_wrap(stage.lbx()), print_wrap(x_min[i]));
+		EXPECT_EQ(print_wrap(stage.ubx()), print_wrap(x_max[i]));
+		EXPECT_EQ(print_wrap(stage.lbu()), print_wrap(u_min[i]));
+		EXPECT_EQ(print_wrap(stage.ubu()), print_wrap(u_max[i]));
+	}
 }

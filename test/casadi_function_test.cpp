@@ -1,4 +1,4 @@
-#include <casadi_interface/GeneratedFunction.hpp>
+#include <tmpc/casadi_interface/GeneratedFunction.hpp>
 
 #include "casadi_function_test_generated.h"
 
@@ -14,19 +14,19 @@
 class CasADiFunctionTest : public ::testing::Test
 {
 protected:
-	casadi_interface::GeneratedFunction<CASADI_GENERATED_FUNCTION_INTERFACE(f), 3, 2> fun_;
+	casadi_interface::GeneratedFunction fun_ {f_functions()};
 };
 
 TEST_F(CasADiFunctionTest, incorrect_n_inputs_throws)
 {
-	typedef casadi_interface::GeneratedFunction<CASADI_GENERATED_FUNCTION_INTERFACE(f), 4, 2> wrong_fun_type;
-	ASSERT_THROW(wrong_fun_type(), std::logic_error);
+	double x = 0.;
+	ASSERT_THROW(fun_({&x, &x, &x, &x}, {&x, &x}), std::invalid_argument);
 }
 
 TEST_F(CasADiFunctionTest, incorrect_n_outputs_throws)
 {
-	typedef casadi_interface::GeneratedFunction<CASADI_GENERATED_FUNCTION_INTERFACE(f), 3, 3> wrong_fun_type;
-	ASSERT_THROW(wrong_fun_type(), std::logic_error);
+	double x = 0.;
+	ASSERT_THROW(fun_({&x, &x, &x}, {&x, &x, &x}), std::invalid_argument);
 }
 
 TEST_F(CasADiFunctionTest, n_in_correct)

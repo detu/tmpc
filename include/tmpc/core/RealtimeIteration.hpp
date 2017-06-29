@@ -1,8 +1,10 @@
 #pragma once
 
-#include <qp/diagnostics.hpp>
+#include "../qp/diagnostics.hpp"
 #include "Trajectory.hpp"
 #include "../qp/qp.hpp"
+#include "../qp/QpSize.hpp"
+
 #include <stdexcept>
 #include <limits>
 #include <iterator>
@@ -10,6 +12,11 @@
 
 namespace tmpc
 {
+	/**
+	 * \brief Vector of QpSize corresponding to an MPC problem with given sizes.
+	 */
+	std::vector<QpSize> RtiQpSize(std::size_t nt, std::size_t nx, std::size_t nu, std::size_t nc, std::size_t nct);
+
 	/**
 	 * \brief Implements an MPC controller with realtime iteration scheme.
 	 *
@@ -27,6 +34,7 @@ namespace tmpc
 	public:
 		typedef QPSolver_ QPSolver;
 		typedef typename QPSolver::Problem QP;
+		typedef typename QPSolver::Solution Solution;
 
 		// TODO: parameterize Trajectory with K
 		typedef Trajectory<NX, NU> WorkingPoint;
@@ -86,7 +94,11 @@ namespace tmpc
 			if (_prepared)
 				throw std::logic_error("RealtimeIteration::Preparation(): RTI is already prepared.");
 
-			shift(work_.workingPoint_);
+			// MK: Working point shifting is disabled. The main reason is that it is possible to have
+			// time step in MPC different (typically bigger than) from the controller sampling time.
+			// Perhaps, shifting policy can be defined externally.
+
+			// shift(work_.workingPoint_);
 
 			// Calculate new QP.
 			UpdateQP();
@@ -95,6 +107,19 @@ namespace tmpc
 		}
 
 		WorkingPoint const& getWorkingPoint() const { return work_.workingPoint_; }
+
+		void setWorkingPoint(WorkingPoint const& wp)
+		{
+			if (wp.nT() != work_.workingPoint_.nT())
+			{
+				throw std::invalid_argument(
+					"RealtimeIteration::setWorkingPoint(): new working point length is different. "
+					"Changing prediction horizon on the fly is not supported (yet?).");
+			}
+
+			work_.workingPoint_ = wp;
+			_prepared = false;
+		}
 
 		// TODO: change LevenbergMarquardt to be an argument of Preparation()?
 		typename K::Scalar getLevenbergMarquardt() const { return work_.levenbergMarquardt_; }
@@ -119,6 +144,11 @@ namespace tmpc
 			return work_.qp_;
 		}
 
+		Solution const& getSolution() const
+		{
+			return solution_;
+		}
+
 		/*
 		unsigned nT() const { return _ocp.getNumberOfIntervals(); }
 		unsigned nU() const	noexcept { return _Nu; }
@@ -127,7 +157,6 @@ namespace tmpc
 		*/
 
 	private:
-		typedef typename QPSolver::Solution Solution;
 
 		struct Work;
 
@@ -331,13 +360,27 @@ namespace tmpc
 			 */
 			decltype(auto) get_x() const { return work_.workingPoint_.get_x(get_index()); }
 
+			// TODO: Isn't it more flexible and clear to add Lev-Mar in the OCP?
 			template <typename Matrix>
 			void set_Q(Matrix const &Q)	{
 				work_.qp_.set_Q(get_index(), Q + work_.levenbergMarquardt_ * identity<Matrix>());	// Adding Levenberg-Marquardt term to make H positive-definite.
 			}
 
+			decltype(auto) get_Q() const
+			{
+				return work_.qp_.get_Q(get_index());
+			}
+
 			template <typename Vector>
-			void set_q(Vector const &q) { work_.qp_.set_q(get_index(), q); }
+			void set_q(Vector const &q)
+			{
+				work_.qp_.set_q(get_index(), q);
+			}
+
+			decltype(auto) get_q() const
+			{
+				return work_.qp_.get_q(get_index());
+			}
 
 			template <typename Matrix>
 			void set_C(Matrix const &C) { work_.qp_.set_C_end(C); }

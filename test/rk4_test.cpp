@@ -1,5 +1,5 @@
-#include <integrator/rk4.hpp>
-#include <casadi_interface/GeneratedFunction.hpp>
+#include <tmpc/integrator/rk4.hpp>
+#include <tmpc/casadi_interface/GeneratedFunction.hpp>
 
 #include "pendulum_ode_generated.h"
 #include <gtest/gtest.h>
@@ -41,7 +41,7 @@ public:
 	typedef Eigen::Matrix<double, NR, NU, Eigen::ColMajor> ResInputMatrix;
 
 protected:
-	casadi_interface::GeneratedFunction<CASADI_GENERATED_FUNCTION_INTERFACE(pendulum_ode), 3, 9> const _ode;
+	casadi_interface::GeneratedFunction const _ode {pendulum_ode_functions()};
 };
 
 class PendulumODE : public PendulumODEBase
@@ -76,7 +76,7 @@ public:
 	void operator()(double t, StateVector const& x0, InputVector const& u0,
 			StateVector const& x0_seed, InputVector const& u_seed, StateVector& xdot, StateVector& xdot_sens) const
 	{
-		static casadi_interface::GeneratedFunction<CASADI_GENERATED_FUNCTION_INTERFACE(pendulum_ode_sens), 5, 2> const _ode;
+		static casadi_interface::GeneratedFunction const _ode(pendulum_ode_sens_functions());
 		_ode({&t, x0.data(), u0.data(), x0_seed.data(), u_seed.data()}, {xdot.data(), xdot_sens.data()});
 	}
 
@@ -115,7 +115,7 @@ protected:
 	PendulumODE_r ode_r_;
 	Integrator integrator_ {0.01};
 
-	std::ifstream test_data_ {"test/data/rk4/pendulum.txt"};
+	std::ifstream test_data_ {std::string(TEST_DATA_PATH) + "/rk4/pendulum.txt"};
 
 	void SetUp() override
 	{

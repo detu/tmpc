@@ -1,11 +1,13 @@
 #pragma once
 
-#include "qpOASESProgram.hpp"
+#include "QuadraticProblem.hpp"
+#include "QpOasesProblem.hpp"
+#include "QpOasesSolver.hpp"
 
 #include <qpOASES.hpp>
-#include <qp/Condensing.hpp>
-#include <qp/MultiStageQuadraticProblem.hpp>
-#include <qp/MultiStageQPSolution.hpp>
+#include "Condensing.hpp"
+#include "MultiStageQPSolution.hpp"
+#include "UnsolvedQpException.hpp"
 
 #include <ostream>
 
@@ -31,11 +33,11 @@ class CondensingSolver
 	static auto constexpr NCT = D::NCT;
 
 public:
-	typedef qpOASESProgram CondensedQP;
+	typedef QpOasesProblem CondensedQP;
 
 	// Problem type for CondensingSolver
 	// TODO: change MultiStageQuadraticProblem so that it takes D as a template parameter?
-	typedef MultiStageQuadraticProblem<NX, NU, NC, NCT> Problem;
+	typedef QuadraticProblemEigen<NX, NU, NC, NCT> Problem;
 
 	// Solution data type
 	// TODO: change MultiStageQPSolution so that it takes D as a template parameter?
@@ -49,7 +51,7 @@ public:
 
 	CondensingSolver(size_type nt, qpOASES::Options const& options = detail::qpOASES_DefaultOptions())
 	:	_Nt(nt)
-	,	_condensedQP(nIndep(nt), nDep(nt) + nConstr(nt))
+	,	_condensedQP({condensedQpSize(RtiQpSize(nt, NX, NU, NC, NCT))})
 	,	_condensedSolution(nIndep(nt))
 	,	_problem(nIndep(nt), nDep(nt) + nConstr(nt))
 	{
@@ -68,16 +70,7 @@ public:
 	 *
 	 * Move-construction is ok.
 	 */
-	CondensingSolver(CondensingSolver&& rhs)
-	:	_Nt(rhs._Nt)
-	,	_condensedQP(rhs._condensedQP)
-	,	_condensedSolution(rhs._condensedSolution)
-	,	_hotStart(rhs._hotStart)
-	,	_problem(rhs._problem)
-	,	_maxWorkingSetRecalculations(rhs._maxWorkingSetRecalculations)
-	{
-
-	}
+	CondensingSolver(CondensingSolver&& rhs) = default;
 
 	CondensingSolver& operator=(CondensingSolver const&) = delete;
 	CondensingSolver& operator=(CondensingSolver&&) = delete;
@@ -132,23 +125,6 @@ private:
 	unsigned _maxWorkingSetRecalculations = 1000;
 
 public:
-	class SolveException : public std::runtime_error
-	{
-	public:
-		SolveException(qpOASES::returnValue code, qpOASESProgram const& cqp) :
-			std::runtime_error("CondensingSolver::Solve() failed. qpOASES return code " + std::to_string(code)),
-			_code(code), _CondensedQP(cqp)
-		{
-		}
-
-		qpOASES::returnValue getCode() const	{ return _code;	}
-		qpOASESProgram const& getCondensedQP() const { return _CondensedQP; }
-
-	private:
-		qpOASES::returnValue const _code;
-		qpOASESProgram const _CondensedQP;
-	};
-
 	void Solve(Problem const& msqp, Solution& solution)
 	{
 		// Check argument sizes.
@@ -170,7 +146,7 @@ public:
 					_condensedQP.lb_data(), _condensedQP.ub_data(), _condensedQP.lbA_data(), _condensedQP.ubA_data(), nWSR);
 
 		if (res != qpOASES::SUCCESSFUL_RETURN)
-			throw SolveException(res, _condensedQP);
+			throw QpOasesSolveException(res, _condensedQP);
 
 		solution.setNumIter(nWSR);
 		_hotStart = true;

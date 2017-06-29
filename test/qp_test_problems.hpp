@@ -1,5 +1,8 @@
 #pragma once
 
+#include <tmpc/qp/qp.hpp>
+#include <tmpc/qp/QpSize.hpp>
+
 #include <stdexcept>
 
 namespace tmpc_test
@@ -21,8 +24,6 @@ namespace tmpc_test
 			typedef Eigen::Matrix<double, NZ, NZ> StageHessianMatrix;
 			typedef Eigen::Matrix<double, NZ,  1> StageGradientVector;
 
-			static_assert(n_x<QP>() == NX && n_u<QP>() == NU && n_d<QP>() == NC && n_d_end<QP>() == NCT, "Problem sizes must match");
-
 			if (qp.nT() != NT)
 				throw std::logic_error("Invalid size of the QP problem");
 
@@ -38,18 +39,18 @@ namespace tmpc_test
 			StageGradientVector g0;
 			g0 << 0., 0., 0.;
 
-			const Eigen::MatrixXd Q0 = H0.topLeftCorner(qp.nX(), qp.nX());
-			const Eigen::MatrixXd R0 = H0.bottomRightCorner(qp.nU(), qp.nU());
-			const Eigen::MatrixXd S0 = H0.topRightCorner(qp.nX(), qp.nU());
-			const Eigen::MatrixXd S0T = H0.bottomLeftCorner(qp.nU(), qp.nX());
+			const Eigen::MatrixXd Q0 = H0.topLeftCorner(NX, NX);
+			const Eigen::MatrixXd R0 = H0.bottomRightCorner(NU, NU);
+			const Eigen::MatrixXd S0 = H0.topRightCorner(NX, NU);
+			const Eigen::MatrixXd S0T = H0.bottomLeftCorner(NU, NX);
 
-			Eigen::MatrixXd A0(qp.nX(), qp.nX());
+			Eigen::MatrixXd A0(NX, NX);
 			A0 << 1, 1, 0, 1;
 
-			Eigen::MatrixXd B0(qp.nX(), qp.nU());
+			Eigen::MatrixXd B0(NX, NU);
 			B0 << 0.5, 1.0;
 
-			Eigen::VectorXd a0(qp.nX());
+			Eigen::VectorXd a0(NX);
 			a0 << 1, 2;
 
 			// Stage 1
@@ -60,29 +61,29 @@ namespace tmpc_test
 			StageGradientVector g1;
 			g1 << 0., 0., 0.;
 
-			const Eigen::MatrixXd Q1 = H1.topLeftCorner(qp.nX(), qp.nX());
-			const Eigen::MatrixXd R1 = H1.bottomRightCorner(qp.nU(), qp.nU());
-			const Eigen::MatrixXd S1 = H1.topRightCorner(qp.nX(), qp.nU());
-			const Eigen::MatrixXd S1T = H1.bottomLeftCorner(qp.nU(), qp.nX());
+			const Eigen::MatrixXd Q1 = H1.topLeftCorner(NX, NX);
+			const Eigen::MatrixXd R1 = H1.bottomRightCorner(NU, NU);
+			const Eigen::MatrixXd S1 = H1.topRightCorner(NX, NU);
+			const Eigen::MatrixXd S1T = H1.bottomLeftCorner(NU, NX);
 
-			Eigen::MatrixXd A1(qp.nX(), qp.nX());
+			Eigen::MatrixXd A1(NX, NX);
 			A1 << 1, 1, 0, 1;
 
-			Eigen::MatrixXd B1(qp.nX(), qp.nU());
+			Eigen::MatrixXd B1(NX, NU);
 			B1 << 0.5, 1.0;
 
-			Eigen::VectorXd a1(qp.nX());
+			Eigen::VectorXd a1(NX);
 			a1 << 1, 2;
 
 			// Stage 2
-			Eigen::MatrixXd H2(qp.nX(), qp.nX());
+			Eigen::MatrixXd H2(NX, NX);
 			H2 << 1, 2, 3, 4;
 			H2 = H2.transpose() * H2;	// Make positive definite.
 
-			typename QP::StateVector g2;
+			Eigen::Matrix<double, NX, 1> g2;
 			g2 << 0., 0.;
 
-			const Eigen::MatrixXd Q2 = H2.topLeftCorner(qp.nX(), qp.nX());
+			const Eigen::MatrixXd Q2 = H2.topLeftCorner(NX, NX);
 
 			// Setup QP
 			set_H(qp, 0, H0);	set_g(qp, 0, g0);
@@ -93,17 +94,34 @@ namespace tmpc_test
 			qp.set_A(1, A1);	qp.set_B(1, B1);		qp.set_b(1, a1);
 		}
 
+		template <typename QP>
+		QP problem_0()
+		{
+			using namespace tmpc;
+
+			unsigned const NX = 2;
+			unsigned const NU = 1;
+			unsigned const NC = 0;
+			unsigned const NCT = 0;
+			unsigned const NT = 2;
+
+			QP qp({QpSize(NX, NU, NC), QpSize(NX, NU, NC), QpSize(NX, 0, NCT)});
+			problem_0(qp);
+
+			return qp;
+		}
+
 		template <typename Problem>
 		void problem_1(Problem& qp)
 		{
 			problem_0(qp);
 
-			typename Problem::StateVector x0;
+			Eigen::Vector2d x0;
 			x0 << 1., 0.;
 			qp.set_x_min(0, x0);	qp.set_x_max(0, x0);
 
-			qp.set_b(0, Problem::StateVector::Zero());
-			qp.set_b(1, Problem::StateVector::Zero());
+			qp.set_b(0, Eigen::Vector2d::Zero());
+			qp.set_b(1, Eigen::Vector2d::Zero());
 		}
 	}
 }
