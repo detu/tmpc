@@ -208,7 +208,12 @@ namespace tmpc
 		:	stat_(max_iter)
 		,	infNormRes_(sNaN())
 		{
-			preallocateStages(std::distance(size_first, size_last));
+			auto const n_stages = std::distance(size_first, size_last);
+
+			if (n_stages < 2)
+				throw std::invalid_argument("HPMPC needs at least 2 stages problem");
+
+			preallocateStages(n_stages);
 
 			for (auto sz = size_first; sz != size_last; ++sz)
 				addStage(*sz, sz + 1 != size_last ? sz[1].nx() : 0);
