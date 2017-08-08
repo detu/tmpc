@@ -7,7 +7,7 @@
 
 #include "HPMPCProblemExport.hpp"
 
-#include <hpmpc/c_interface.h>
+#include <c_interface.h>
 
 #include <stdexcept>
 #include <sstream>
