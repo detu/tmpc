@@ -57,7 +57,11 @@ private:
 		QP const qp_;
 	};
 
-	std::unique_ptr<QpData> qpData_;
+	// Declaring qpData_ as a shared_ptr<> allows copying of UnsolvedQpException.
+	// This can be necessary, for example, if we want to start a separate thread to dump a failed QP
+	// and at the same time rethrow the exception for further processing.
+	// See also https://gitlab.tuebingen.mpg.de/mkatliar/cms/issues/17
+	std::shared_ptr<QpData> qpData_;
 };
 
 }	// namespace tmpc
