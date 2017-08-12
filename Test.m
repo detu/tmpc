@@ -58,7 +58,7 @@ classdef Test < matlab.unittest.TestCase
             [x1, fval1, ~, ~, lam1] = quadprog(qp);
             
             testCase.assertEqual(x, x1, 'AbsTol', 1e-6);
-            testCase.assertEqual(lam.eqlin, lam1.eqlin);
+            testCase.assertEqual(lam.eqlin, lam1.eqlin, 'AbsTol', 1e-6);
             testCase.assertEmpty(lam.ineqlin);
             testCase.assertEqual(lam.lower, lam1.lower, 'AbsTol', 1e-6);
             testCase.assertEqual(lam.upper, lam1.upper, 'AbsTol', 1e-6);

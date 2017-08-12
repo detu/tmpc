@@ -66,7 +66,11 @@ function [X, fval, exitflag, output, Lam, T] = ip_qp(qp)
     end
 
     N = 10;
-    w = [zeros(nx, 1); 5 * ones(nl + nmbar + nmbar, 1)];
+    w = [
+        zeros(nx + nl, 1); 
+        5 * ones(nmbar, 1); 
+        5 * ones(nmbar, 1)
+        ];
     
     for i = 1 : N
         [y, J] = F(w);
