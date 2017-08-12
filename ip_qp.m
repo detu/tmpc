@@ -16,12 +16,12 @@ function [X, fval, exitflag, output, Lam, T] = ip_qp(qp)
     if isfield(qp, 'A')
         A = qp.A;
         b = qp.b;
-        nl = size(A, 1);
+        nm = size(A, 1);
         
-        assert(isequal(size(A), [nl, nx]));
-        assert(isequal(size(b), [nl, 1]));
+        assert(isequal(size(A), [nm, nx]));
+        assert(isequal(size(b), [nm, 1]));
     else
-        nl = 0;
+        nm = 0;
         A = zeros(0, nx);
         b = zeros(0, 1);
     end
@@ -30,11 +30,11 @@ function [X, fval, exitflag, output, Lam, T] = ip_qp(qp)
         Aeq = qp.Aeq;
         beq = qp.beq;
     
-        nm = size(Aeq, 1);
-        assert(isequal(size(Aeq), [nm, nx]));
-        assert(isequal(size(beq), [nm, 1]));
+        nl = size(Aeq, 1);
+        assert(isequal(size(Aeq), [nl, nx]));
+        assert(isequal(size(beq), [nl, 1]));
     else
-        nm = 0;
+        nl = 0;
         Aeq = zeros(0, nx);
         beq = zeros(0, 1);
     end
