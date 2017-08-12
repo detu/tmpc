@@ -1,4 +1,4 @@
-function [X, Lam, Mu, T] = ip_qp(qp)
+function [X, fval, exitflag, output, Lam, T] = ip_qp(qp)
 % Solve a QP using interior point metiod.
 % qp is a quadprog-style structure.
     H = qp.H;
@@ -88,9 +88,19 @@ function [X, Lam, Mu, T] = ip_qp(qp)
     end
 
     X = w(1 : nx);
-    Lam = w(nx + (1 : nl));
-    Mu = w(nx + nl + (1 : nmbar));
+    fval = X.' * H * X / 2 + f.' * X;
+    
+%     Lam = w(nx + (1 : nl));
+%     Mu = w(nx + nl + (1 : nmbar));
     T = w(nx + nl + nmbar + (1 : nmbar));
+    
+    Lam.eqlin = w(nx + (1 : nl));
+    Lam.ineqlin = w(nx + nl + (1 : nm));
+    Lam.lower = w(nx + nl + nm + (1 : nx));
+    Lam.upper = w(nx + nl + nm + nx + (1 : nx));
+    
+    exitflag = 1;
+    output = [];
 end
 
 function A = spdiag(v)
