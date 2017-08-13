@@ -192,6 +192,12 @@ namespace tmpc
 			static_cast<int>(N), nx_.data(), nu_.data(), nb_.data(), hidxb_.data(), ng_.data(), static_cast<int>(N)));
 	}
 
+	template <typename Real_>
+	void HpmpcWorkspace<Real_>::maxIter(size_t val)
+	{
+		stat_.resize(val);
+	}
+
 	// Explicit instantiation of HpmpcWorkspace for supported data types and storage orders.
 	template class HpmpcWorkspace<double>;
 }

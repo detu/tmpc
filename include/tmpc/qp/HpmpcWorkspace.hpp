@@ -248,6 +248,9 @@ namespace tmpc
 
 		std::size_t maxIter() const noexcept { return stat_.size(); }
 
+		/// \brief Set max number of iterations
+		void maxIter(size_t val);
+
 		Real muTol() const noexcept { return muTol_; }
 
 		void muTol(Real val)
