@@ -50,25 +50,27 @@ namespace tmpc
 
 		for (auto const& stage : qp)
 		{
-			os << var_name << ".Q{" << k << "} = " << AsMatlab(stage.Q()) << ";" << endl << endl;
-			os << var_name << ".R{" << k << "} = " << AsMatlab(stage.R()) << ";" << endl << endl;
-			os << var_name << ".S{" << k << "} = " << AsMatlab(stage.S()) << ";" << endl << endl;
-			os << var_name << ".q{" << k << "} = " << AsMatlab(stage.q()) << ";" << endl << endl;
-			os << var_name << ".r{" << k << "} = " << AsMatlab(stage.r()) << ";" << endl << endl;
+			std::string const qp_i = var_name + "(" + std::to_string(k) + ")";
 
-			os << var_name << ".A{" << k << "} = " << AsMatlab(stage.A()) << ";" << endl << endl;
-			os << var_name << ".B{" << k << "} = " << AsMatlab(stage.B()) << ";" << endl << endl;
-			os << var_name << ".b{" << k << "} = " << AsMatlab(stage.b()) << ";" << endl << endl;
+			os << qp_i << ".Q = " << AsMatlab(stage.Q()) << ";" << endl << endl;
+			os << qp_i << ".R = " << AsMatlab(stage.R()) << ";" << endl << endl;
+			os << qp_i << ".S = " << AsMatlab(stage.S()) << ";" << endl << endl;
+			os << qp_i << ".q = " << AsMatlab(stage.q()) << ";" << endl << endl;
+			os << qp_i << ".r = " << AsMatlab(stage.r()) << ";" << endl << endl;
 
-			os << var_name << ".C{" << k << "} = " << AsMatlab(stage.C()) << ";" << endl << endl;
-			os << var_name << ".D{" << k << "} = " << AsMatlab(stage.D()) << ";" << endl << endl;
-			os << var_name << ".lbd{" << k << "} = " << AsMatlab(stage.lbd()) << ";" << endl << endl;
-			os << var_name << ".ubd{" << k << "} = " << AsMatlab(stage.ubd()) << ";" << endl << endl;
+			os << qp_i << ".A = " << AsMatlab(stage.A()) << ";" << endl << endl;
+			os << qp_i << ".B = " << AsMatlab(stage.B()) << ";" << endl << endl;
+			os << qp_i << ".b = " << AsMatlab(stage.b()) << ";" << endl << endl;
 
-			os << var_name << ".lbx{" << k << "} = " << AsMatlab(stage.lbx()) << ";" << endl << endl;
-			os << var_name << ".ubx{" << k << "} = " << AsMatlab(stage.ubx()) << ";" << endl << endl;
-			os << var_name << ".lbu{" << k << "} = " << AsMatlab(stage.lbu()) << ";" << endl << endl;
-			os << var_name << ".ubu{" << k << "} = " << AsMatlab(stage.ubu()) << ";" << endl << endl;
+			os << qp_i << ".C = " << AsMatlab(stage.C()) << ";" << endl << endl;
+			os << qp_i << ".D = " << AsMatlab(stage.D()) << ";" << endl << endl;
+			os << qp_i << ".lbd = " << AsMatlab(stage.lbd()) << ";" << endl << endl;
+			os << qp_i << ".ubd = " << AsMatlab(stage.ubd()) << ";" << endl << endl;
+
+			os << qp_i << ".lbx = " << AsMatlab(stage.lbx()) << ";" << endl << endl;
+			os << qp_i << ".ubx = " << AsMatlab(stage.ubx()) << ";" << endl << endl;
+			os << qp_i << ".lbu = " << AsMatlab(stage.lbu()) << ";" << endl << endl;
+			os << qp_i << ".ubu = " << AsMatlab(stage.ubu()) << ";" << endl << endl;
 			
 			++k;
 		}
