@@ -65,7 +65,7 @@ function [X, fval, exitflag, output, Lam, T] = ip_qp(qp)
             ];
     end
 
-    N = 10;
+    N = 20;
     w = [
         zeros(nx + nl, 1); 
         5 * ones(nmbar, 1); 
@@ -80,12 +80,16 @@ function [X, fval, exitflag, output, Lam, T] = ip_qp(qp)
         d = -J \ y;
 
         % Limit Newton step s.t. [mu, t]=x(3:4)>=0 is satisfied
-        ind_mu_t = nx + (1 : nl + nmbar + nmbar);
+        ind_mu_t = nx + nl + (1 : nmbar + nmbar);
         mu_t = w(ind_mu_t);
-    %     assert(all(mu_t >= 0));
+        assert(all(mu_t >= 0));
 
         delta_mu_t = d(ind_mu_t);
-        alpha = max(min(max(-mu_t ./ delta_mu_t, 0), 1));
+        alpha_max = ones(size(mu_t));
+        
+        ind_neg_step = delta_mu_t < 0;
+        alpha_max(ind_neg_step) = min(-mu_t(ind_neg_step) ./ delta_mu_t(ind_neg_step), 1);
+        alpha = min(alpha_max);
 
         w = w + 0.99 * alpha * d;
     %     x(:, i + 1) = x(:, i) + d;
