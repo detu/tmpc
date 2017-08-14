@@ -118,3 +118,12 @@ if (HPMPC_FOUND)
         PUBLIC ${HPMPC_STATIC_LIB}
     )
 endif()
+
+#
+# Link to BLASFEO, which might be needed by HPMPC
+#
+if (BLASFEO_FOUND)
+    target_link_libraries(tmpc
+        PUBLIC ${BLASFEO_STATIC_LIB}
+    )
+endif()

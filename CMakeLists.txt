@@ -1,16 +1,35 @@
 cmake_minimum_required (VERSION 2.8)
 project (tmpc)
 
+# Enable modern C++
+set(CMAKE_CXX_STANDARD 14)
+
+# Don't use compiler's C++ extensions
+set(CMAKE_CXX_EXTENSIONS False)
+
+# Include CMakeToolsHelpers for easier debugging from VS Code
+include(CMakeToolsHelpers OPTIONAL)
+
 SET(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/CMakeModules;${CMAKE_MODULE_PATH})
 set(PROJECT_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/include)
 
-find_package(Eigen3 3.2.10 REQUIRED)
-include_directories(${EIGEN3_INCLUDE_DIR})
+find_package(Eigen3 3.2.10)
+
+if (EIGEN3_FOUND)
+    message(STATUS "Eigen3 Found in ${EIGEN3_INCLUDE_DIR}")
+    include_directories(${EIGEN3_INCLUDE_DIR})
+else()
+    message(STATUS "Eigen3 NOT FOUND")
+endif()
+
+if (BLAZE_DIR)
+    include_directories(${BLAZE_DIR})
+    message(STATUS "BLAZE_DIR=${BLAZE_DIR}")
+endif()
 
 find_package(qpOASES)
-
 find_package(HPMPC)
-include_directories(${HPMPC_INCLUDE_DIR})
+find_package(BLASFEO)
 
 add_subdirectory(src)
 add_subdirectory(test)
