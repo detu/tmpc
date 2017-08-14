@@ -6,8 +6,14 @@
 
 #include <tmpc/qp/Printing.hpp>
 #include <tmpc/qp/QpOasesWorkspace.hpp>
+
+#ifdef WITH_HPMPC
 #include <tmpc/qp/HpmpcWorkspace.hpp>
+#endif
+
+#ifdef WITH_HPIPM
 #include <tmpc/qp/HpipmWorkspace.hpp>
+#endif
 
 #include <gtest/gtest.h>
 
@@ -42,9 +48,13 @@ protected:
 };
 
 using WsTypes = ::testing::Types<
-	QpOasesWorkspace,
-	HpmpcWorkspace<double>,
-	HpipmWorkspace<double>
+	QpOasesWorkspace
+	#ifdef WITH_HPMPC
+	,	HpmpcWorkspace<double>
+	#endif
+	#ifdef WITH_HPIPM
+	,	HpipmWorkspace<double>
+	#endif
 	>;
 
 TYPED_TEST_CASE(QpWorkspaceTest, WsTypes);
