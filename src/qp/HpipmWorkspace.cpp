@@ -98,10 +98,10 @@ namespace tmpc
 	template <typename Real_>
 	void HpipmWorkspace<Real_>::solve()
 	{
-		if (size() > 0)
+		if (stage_.size() > 1)
 		{
 			// Number of QP steps for HPIPM
-			auto const N = size() - 1;
+			auto const N = stage_.size() - 1;
 
 			// Convert the problem
 			HPIPM::cvt_colmaj_to_ocp_qp(

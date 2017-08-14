@@ -9,6 +9,8 @@
 #include <hpipm_d_ocp_qp_sol.h>
 #include <hpipm_d_ocp_qp_ipm_hard.h>
 
+#include <boost/range/iterator_range_core.hpp>
+
 #include <limits>
 #include <stdexcept>
 #include <algorithm>
@@ -211,35 +213,27 @@ namespace tmpc
 			DynamicVector<Real> lam_;
 		};
 
-		Stage& operator[](std::size_t i) { return stage_.at(i); }
-		Stage const& operator[](std::size_t i) const { return stage_.at(i);	}
+		boost::iterator_range<typename std::vector<Stage>::iterator> problem()
+		{
+			return stage_;
+		}
 
-		std::size_t size() const { return stage_.size(); }
+		boost::iterator_range<typename std::vector<Stage>::const_iterator> problem() const
+		{
+			return stage_;
+		}
 
-		typedef typename std::vector<Stage>::iterator iterator;
-		typedef typename std::vector<Stage>::const_iterator const_iterator;
-		typedef typename std::vector<Stage>::reference reference;
-		typedef typename std::vector<Stage>::const_reference const_reference;
-
-		iterator begin() { return stage_.begin(); }
-		iterator end() { return stage_.end(); }
-
-		const_iterator begin() const { return stage_.begin(); }
-		const_iterator end() const { return stage_.end(); }
-
-		reference front() { return stage_.front(); }
-		reference back() { return stage_.back(); }
-
-		const_reference front() const { return stage_.front(); }
-		const_reference back() const { return stage_.back(); }
+		boost::iterator_range<typename std::vector<Stage>::const_iterator> solution() const
+		{
+			return stage_;
+		}
 
 		/**
 		 * \brief Takes QP problem size to preallocate workspace.
 		 */
 		template <typename InputIterator>
 		HpipmWorkspace(InputIterator size_first, InputIterator size_last, int max_iter = 100)
-		:	stat_(max_iter)
-		,	infNormRes_(sNaN())
+		:	infNormRes_(sNaN())
 		,	solverArg_ {}
 		{
 			solverArg_.alpha_min = 1e-8;
@@ -267,6 +261,12 @@ namespace tmpc
 			}
 		}
 
+		template <typename IteratorRange>
+		explicit HpipmWorkspace(IteratorRange sz, int max_iter = 100)
+		:	HpipmWorkspace(sz.begin(), sz.end(), max_iter)
+		{
+		}
+
 		/**
 		 * \brief Copy constructor
 		 *
@@ -286,17 +286,7 @@ namespace tmpc
 
 		void solve();
 
-		std::size_t maxIter() const noexcept { return stat_.size(); }
-
-		Real muTol() const noexcept { return muTol_; }
-
-		void muTol(Real val)
-		{
-			if (val <= 0.)
-				throw std::invalid_argument("mu tolerance for hpmpc must be positive");
-
-			muTol_ = val;
-		}
+		std::size_t maxIter() const noexcept { return solverArg_.iter_max; }
 
 		/// \brief Get number of iterations performed by the QP solver.
 		unsigned numIter() const { return numIter_; }
@@ -435,12 +425,6 @@ namespace tmpc
 
 		typename HPIPM::ipm_hard_ocp_qp_arg solverArg_;
 
-		// Iteration statistics. HPIPM returns 5 Real numbers per iteration.
-		typedef std::array<Real, 5> IterStat;
-		std::vector<IterStat> stat_;
-
-		Real mu_ = 0.;
-		Real muTol_ = 1e-10;
 
 		// Warmstarting disabled on purpose.
 		// On AMD K8 (hpmpc compiled for SSE3), WITHOUT warmstarting it is significantly
