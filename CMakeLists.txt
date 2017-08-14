@@ -26,8 +26,11 @@ if (BLAZE_DIR)
     include_directories(${BLAZE_DIR})
     message(STATUS "BLAZE_DIR=${BLAZE_DIR}")
 endif()
+
 find_package(qpOASES)
 find_package(HPMPC)
+find_package(HPIPM)
+find_package(BLASFEO)
 
 add_subdirectory(src)
 add_subdirectory(test)

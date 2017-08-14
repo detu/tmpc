@@ -88,3 +88,23 @@ if (HPMPC_FOUND)
         PUBLIC ${HPMPC_STATIC_LIB}
     )
 endif()
+
+#
+# Add HPIPM interface
+#
+if (HPIPM_FOUND AND BLASFEO_FOUND)
+    target_sources(tmpc PRIVATE 
+        ${TMPC_INCLUDE_DIR}/qp/HpipmWorkspace.hpp
+        qp/HpipmWorkspace.cpp
+    )
+
+    target_include_directories(tmpc
+        PUBLIC ${HPIPM_INCLUDE_DIR}
+        PUBLIC ${BLASFEO_INCLUDE_DIR}
+    )
+
+    target_link_libraries(tmpc
+        PUBLIC ${HPIPM_STATIC_LIB}
+        PUBLIC ${BLASFEO_STATIC_LIB}
+    )
+endif()

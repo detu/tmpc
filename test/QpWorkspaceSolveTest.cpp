@@ -11,6 +11,7 @@
 #include <tmpc/qp/Printing.hpp>
 #include <tmpc/qp/QpOasesWorkspace.hpp>
 #include <tmpc/qp/HpmpcWorkspace.hpp>
+#include <tmpc/qp/HpipmWorkspace.hpp>
 #include <tmpc/Matrix.hpp>
 
 #include <tmpc/qp/Printing.hpp>
@@ -131,8 +132,9 @@ protected:
 
 typedef ::testing::Types<
 //		tmpc::CondensingSolver<double>
-		QpOasesWorkspace
-		,		HpmpcWorkspace<double>
+		QpOasesWorkspace,
+		HpmpcWorkspace<double>,
+		HpipmWorkspace<double>
 	> SolverTypes;
 
 TYPED_TEST_CASE(QpWorkspaceSolveTest, SolverTypes);
