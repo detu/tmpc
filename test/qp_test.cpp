@@ -5,8 +5,7 @@
  *      Author: kotlyar
  */
 
-#include "gtest_tools_eigen.hpp"
-
+#include <tmpc/test_tools.hpp>
 #include <tmpc/qp/HPMPCProblem.hpp>
 #include <tmpc/qp/Printing.hpp>
 #include <tmpc/qp/QpOasesProblem.hpp>

@@ -4,9 +4,9 @@
 #include <tmpc/kernel/eigen.hpp>
 #include <tmpc/core/problem_specific.hpp>
 #include <tmpc/core/RealtimeIteration.hpp>
+#include <tmpc/test_tools.hpp>
 
 #include "qp_test_problems.hpp"
-#include "gtest_tools_eigen.hpp"
 
 #include <gtest/gtest.h>
 
