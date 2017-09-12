@@ -52,7 +52,6 @@ add_custom_command(
 
 # ~~~~~~~~~~ Our tests ~~~~~~~~~~~~~~
 add_executable(tmpc_test
-    #qp/condensing_test.cpp
     rk4_test.cpp
     #mhe_test.cpp
     casadi_function_test.cpp

@@ -43,205 +43,263 @@ namespace tmpc
 	class Condensing
 	{
 	public:
-		template <typename InIter>
-		Condensing(InIter const& sz_first, InIter const& sz_last);
-	};
-
-	/**
-	 * \brief An expression defining a call to condensing algorithm.
-	 * \tparam <Scalar> Scalar type used for intermediate variables in the condensing algorithm.
-	 * \tparam <InIter> Class defining input iterator to multistage QP stages
-	 */
-	template <typename Scalar, typename InIter>
-	class CondenseExpression
-	{
-	public:
-		CondenseExpression(InIter const& first, InIter const& last)
-		:	first_(first)
-		,	last_(last)
+		class CondensedStage
 		{
-			if (first == last)
-				throw std::invalid_argument("CondenseExpression(): the input range must not be empty");
-		}
+			typedef std::size_t size_type;
+			typedef DynamicMatrix<Scalar> Matrix;
+			typedef DynamicVector<Scalar> Vector;
 
-		InIter const& first() const { return first_; }
-		InIter const& last() const { return last_; }
+		public:
+			CondensedStage(CondensedStage const&) = delete;
+			CondensedStage(CondensedStage &&) = default;
 
-	private:
-		InIter const first_;
-		InIter const last_;
-	};
-
-	/**
-	 * \brief Performs the actual condensing.
-	 *
-	 * \tparam <CondensedStage> Class implementing a QpStage concept
-	 */
-	template <typename CondensedStage, typename Scalar, typename InIter>
-	void assign(CondensedStage& condensed, CondenseExpression<Scalar, InIter> const& rhs)
-	{
-		auto const& first = rhs.first();
-		auto const& last = rhs.last();
-		QpSize const cs = condensedQpSize(tmpc::qpSizeIterator(first), tmpc::qpSizeIterator(last));
-
-		DynamicMatrix<Scalar> Qc(cs.nx(), cs.nx());
-		DynamicMatrix<Scalar> Rc(cs.nu(), cs.nu());
-		DynamicMatrix<Scalar> Sc(cs.nx(), cs.nu());
-		DynamicVector<Scalar> qc(cs.nx());
-		DynamicVector<Scalar> rc(cs.nu());
-
-		DynamicMatrix<Scalar> Cc(cs.nc(), cs.nx());
-		DynamicMatrix<Scalar> Dc(cs.nc(), cs.nu(), 0);
-		DynamicVector<Scalar> lbd(cs.nc());
-		DynamicVector<Scalar> ubd(cs.nc());
-
-		DynamicVector<Scalar> lbu(cs.nu());
-		DynamicVector<Scalar> ubu(cs.nu());
-
-		// Initialization of QP variables
-		auto nu = first->size().nu();
-		auto nc = first->size().nc();
-
-		Qc = first->get_Q();
-		submatrix(Rc, 0, 0, nu, nu) = first->get_R();
-		//K::left_cols(Sc, nu) = first_->get_S();
-		submatrix(Sc, 0, 0, Sc.rows(), nu) = first->get_S();
-		qc = first->get_q();
-		//K::head(rc, nu) = first_->get_r();
-		subvector(rc, 0, nu) = first->get_r();
-
-		//K::top_rows(Cc, nc) = first_->get_C();
-		submatrix(Cc, 0, 0, nc, columns(Cc)) = first->get_C();
-		//K::top_left_corner(Dc, nc, nu) = first_->get_D();
-		submatrix(Dc, 0, 0, nc, nu) = first->get_D();
-		//K::head(lbd, nc) = first_->get_lbd();
-		subvector(lbd, 0, nc) = first->get_lbd();
-		//K::head(ubd, nc) = first_->get_ubd();
-		subvector(ubd, 0, nc) = first->get_ubd();
-
-		//K::head(lbu, nu) = first_->get_lbu();
-		subvector(lbu, 0, nu) = first->get_lbu();
-		//K::head(ubu, nu) = first_->get_ubu();
-		subvector(ubu, 0, nu) = first->get_ubu();
-
-		DynamicMatrix<Scalar> A = first->get_A();
-		DynamicMatrix<Scalar> B = first->get_B();
-		DynamicVector<Scalar> b = first->get_b();
-
-		for (auto stage = first + 1; stage != last; ++stage)
-		{
-			auto const& sz = stage->size();
-			// TODO: add nx1() to QpSize
-			auto const nx_next = stage->get_B().rows();
-
-			// Update Q
-			Qc += trans(A) * stage->get_Q() * A;
-
-			// Update S
-			//K::left_cols(Sc, nu) += K::trans(A) * stage->get_Q() * B;
-			submatrix(Sc, 0, 0, Sc.rows(), nu) += trans(A) * stage->get_Q() * B;
-			//K::middle_cols(Sc, nu, sz.nu()) = K::trans(A) * stage->get_S();
-			submatrix(Sc, 0, nu, Sc.rows(), sz.nu()) = trans(A) * stage->get_S();
-
-			// Update R
-			//K::top_left_corner(Rc, nu, nu) += K::trans(B) * stage->get_Q() * B;
-			submatrix(Rc, 0, 0, nu, nu) += trans(B) * stage->get_Q() * B;
-			//K::block(Rc, 0, nu, nu, sz.nu()) = K::trans(B) * stage->get_S();
-			submatrix(Rc, 0, nu, nu, sz.nu()) = trans(B) * stage->get_S();
-			//K::block(Rc, nu, 0, sz.nu(), nu) = K::trans(stage->get_S()) * B;
-			submatrix(Rc, nu, 0, sz.nu(), nu) = trans(stage->get_S()) * B;
-			//K::block(Rc, nu, nu, sz.nu(), sz.nu()) = stage->get_R();
-			submatrix(Rc, nu, nu, sz.nu(), sz.nu()) = stage->get_R();
-
-			// Update q
-			qc += trans(A) * (stage->get_Q() * b + stage->get_q());
-
-			// Update r
-			//K::head(rc, nu) += K::trans(B) * (stage->get_Q() * b + stage->get_q());
-			subvector(rc, 0, nu) += trans(B) * (stage->get_Q() * b + stage->get_q());
-			//K::segment(rc, nu, sz.nu()) = K::trans(stage->get_S()) * b + stage->get_r();
-			subvector(rc, nu, sz.nu()) = trans(stage->get_S()) * b + stage->get_r();
-
-			// Update C
-			//K::middle_rows(Cc, nc, sz.nx() + sz.nc()) << A, stage->get_C() * A;
-			submatrix(Cc, nc          , 0, sz.nx(), columns(Cc)) = A;
-			submatrix(Cc, nc + sz.nx(), 0, sz.nc(), columns(Cc)) = stage->get_C() * A;
-
-			// Update D (which is initialized to 0)
-			//K::middle_rows(Dc, nc, sz.nx() + sz.nc()) << B, K::zero(sz.nx(), cs.nu() - nu),
-			//									  stage->get_C() * B, stage->get_D(), K::zero(sz.nc(), cs.nu() - nu - sz.nu());
-			submatrix(Dc, nc          ,  0, sz.nx(),      nu) = B;
-			submatrix(Dc, nc + sz.nx(),  0, sz.nc(),      nu) = stage->get_C() * B;
-			submatrix(Dc, nc + sz.nx(), nu, sz.nc(), sz.nu()) = stage->get_D();
-
-			// Update lbd
-			//K::segment(lbd, nc, sz.nx() + sz.nc()) << stage->get_lbx() - b, stage->get_lbd() - stage->get_C() * b;
-			subvector(lbd, nc          , sz.nx()) = stage->get_lbx() - b;
-			subvector(lbd, nc + sz.nx(), sz.nc()) = stage->get_lbd() - stage->get_C() * b;
-
-			// Update ubd
-			//K::segment(ubd, nc, sz.nx() + sz.nc()) << stage->get_ubx() - b, stage->get_ubd() - stage->get_C() * b;
-			subvector(ubd, nc          , sz.nx()) = stage->get_ubx() - b;
-			subvector(ubd, nc + sz.nx(), sz.nc()) = stage->get_ubd() - stage->get_C() * b;
-
-			// Uplate lbu, ubu
-			subvector(lbu, nu, sz.nu()) = stage->get_lbu();
-			subvector(ubu, nu, sz.nu()) = stage->get_ubu();
-
-			// Update A
-			A = stage->get_A() * A;
-
-			// Update B
+			CondensedStage(Condensing const& c)
+			:	c_(c)
 			{
-				DynamicMatrix<Scalar> B_next(nx_next, nu + sz.nu());
-				submatrix(B_next, 0,  0, nx_next,      nu) = stage->get_A() * B;
-				submatrix(B_next, 0, nu, nx_next, sz.nu()) = stage->get_B();
-				B = std::move(B_next);
+			}
+	
+			const Matrix& A() const {
+				return c_.A_;
+			}
+	
+			const Matrix& B() const {
+				return c_.B_;
+			}
+	
+			Vector const& b() const {
+				return c_.b_;
+			}
+	
+			const Matrix& C() const {
+				return c_.Cc_;
+			}
+	
+			const Matrix& D() const {
+				return c_.Dc_;
+			}
+		
+			const Vector& lbd() const {
+				return c_.lbd_;
+			}
+	
+			const Vector& lbu() const {
+				return c_.lbu_;
+			}
+	
+			const Vector& lbx() const {
+				return c_.lbx_;
+			}
+	
+			const Matrix& Q() const {
+				return c_.Qc_;
+			}
+	
+			const Matrix& R() const {
+				return c_.Rc_;
+			}
+	
+			const Matrix& S() const {
+				return c_.Sc_;
+			}
+		
+			const Vector& q() const {
+				return c_.qc_;
+			}
+	
+			const Vector& r() const {
+				return c_.rc_;
+			}
+	
+			const Vector& ubd() const {
+				return c_.ubd_;
+			}
+		
+			const Vector& ubu() const {
+				return c_.ubu_;
+			}
+		
+			const Vector& ubx() const {
+				return c_.ubx_;
+			}
+	
+			QpSize const& size() const
+			{
+				return c_.cs_;
 			}
 
-			// Update b
-			b = stage->get_A() * b + stage->get_b();
+			size_t nxNext() const
+			{
+				return rows(c_.A_);
+			}
+	
+		private:
+			Condensing const& c_;
+		};
 
-			// Update indices
-			nu += sz.nu();
-			nc += sz.nx() + sz.nc();
+		template <typename InIter>
+		Condensing(InIter const& sz_first, InIter const& sz_last)
+		:	cs_(condensedQpSize(sz_first, sz_last))
+		,	Qc_(cs_.nx(), cs_.nx())
+		,   Rc_(cs_.nu(), cs_.nu())
+		,   Sc_(cs_.nx(), cs_.nu())
+		,   qc_(cs_.nx())
+		,   rc_(cs_.nu())
+		,   Cc_(cs_.nc(), cs_.nx())
+		,   Dc_(cs_.nc(), cs_.nu(), 0)
+		,   lbd_(cs_.nc())
+		,   ubd_(cs_.nc())
+		,   lbu_(cs_.nu())
+		,   ubu_(cs_.nu())
+		{
 		}
 
-		// Fill the condensed stage
-		condensed.set_Q(Qc);
-		condensed.set_R(Rc);
-		condensed.set_S(Sc);
-		condensed.set_q(qc);
-		condensed.set_r(rc);
+		/**
+		* \brief Perform the condensing.
+		*/
+		template <typename InIter>
+		CondensedStage operator()(InIter first, InIter last)
+		{
+			if (condensedQpSize(qpSizeIterator(first), qpSizeIterator(last)) != cs_)
+				throw std::invalid_argument("QP size does not match the condensed size");
 
-		condensed.set_C(Cc);
-		condensed.set_D(Dc);
-		condensed.set_lbd(lbd);
-		condensed.set_ubd(ubd);
+			// Initialization of QP variables
+			auto nu = first->size().nu();
+			auto nc = first->size().nc();
 
-		condensed.set_A(A);
-		condensed.set_B(B);
-		condensed.set_b(b);
+			Qc_ = first->Q();
+			submatrix(Rc_, 0, 0, nu, nu) = first->R();
+			//K::left_cols(Sc_, nu) = first_->S();
+			submatrix(Sc_, 0, 0, Sc_.rows(), nu) = first->S();
+			qc_ = first->q();
+			//K::head(rc_, nu) = first_->r();
+			subvector(rc_, 0, nu) = first->r();
 
-		condensed.set_lbx(first->get_lbx());
-		condensed.set_ubx(first->get_ubx());
-		condensed.set_lbu(lbu);
-		condensed.set_ubu(ubu);
-	}
+			//K::top_rows(Cc_, nc) = first_->C();
+			submatrix(Cc_, 0, 0, nc, columns(Cc_)) = first->C();
+			//K::top_left_corner(Dc_, nc, nu) = first_->D();
+			submatrix(Dc_, 0, 0, nc, nu) = first->D();
+			//K::head(lbd, nc) = first_->lbd();
+			subvector(lbd_, 0, nc) = first->lbd();
+			//K::head(ubd, nc) = first_->ubd();
+			subvector(ubd_, 0, nc) = first->ubd();
 
-	/**
-	 * \brief Lazy expression for condensing of a multistage QP to a dense QP.
-	 *
-	 * This is a version using Blaze.
-	 *
-	 * \tparam <Scalar> Scalar type used for intermediate variables in the condensing algorithm.
-	 * \tparam <InIter> Class defining input iterator to multistage QP stages
-	 *
-	 * TODO: should D be deduced from MultiStageQP_ or not?
-	 * */
-	template <typename Scalar, typename InIter>
-	CondenseExpression<Scalar, InIter> condense(InIter first, InIter last)
-	{
-		return CondenseExpression<Scalar, InIter>(first, last);
-	}
+			//K::head(lbu, nu) = first_->lbu();
+			subvector(lbu_, 0, nu) = first->lbu();
+			//K::head(ubu, nu) = first_->ubu();
+			subvector(ubu_, 0, nu) = first->ubu();
+
+			A_ = first->A();
+			B_ = first->B();
+			b_ = first->b();
+
+			for (auto stage = first + 1; stage != last; ++stage)
+			{
+				auto const& sz = stage->size();
+				// TODO: add nx1() to QpSize
+				auto const nx_next = stage->B().rows();
+
+				// Update Q
+				Qc_ += trans(A_) * stage->Q() * A_;
+
+				// Update S
+				//K::left_cols(Sc_, nu) += K::trans(A) * stage->Q() * B;
+				submatrix(Sc_, 0, 0, Sc_.rows(), nu) += trans(A_) * stage->Q() * B_;
+				//K::middle_cols(Sc_, nu, sz.nu()) = K::trans(A) * stage->S();
+				submatrix(Sc_, 0, nu, Sc_.rows(), sz.nu()) = trans(A_) * stage->S();
+
+				// Update R
+				//K::top_left_corner(Rc_, nu, nu) += K::trans(B) * stage->Q() * B;
+				submatrix(Rc_, 0, 0, nu, nu) += trans(B_) * stage->Q() * B_;
+				//K::block(Rc_, 0, nu, nu, sz.nu()) = K::trans(B) * stage->S();
+				submatrix(Rc_, 0, nu, nu, sz.nu()) = trans(B_) * stage->S();
+				//K::block(Rc_, nu, 0, sz.nu(), nu) = K::trans(stage->S()) * B;
+				submatrix(Rc_, nu, 0, sz.nu(), nu) = trans(stage->S()) * B_;
+				//K::block(Rc_, nu, nu, sz.nu(), sz.nu()) = stage->R();
+				submatrix(Rc_, nu, nu, sz.nu(), sz.nu()) = stage->R();
+
+				// Update q
+				qc_ += trans(A_) * (stage->Q() * b_ + stage->q());
+
+				// Update r
+				//K::head(rc_, nu) += K::trans(B) * (stage->Q() * b + stage->q());
+				subvector(rc_, 0, nu) += trans(B_) * (stage->Q() * b_ + stage->q());
+				//K::segment(rc_, nu, sz.nu()) = K::trans(stage->S()) * b + stage->r();
+				subvector(rc_, nu, sz.nu()) = trans(stage->S()) * b_ + stage->r();
+
+				// Update C
+				//K::middle_rows(Cc_, nc, sz.nx() + sz.nc()) << A, stage->C() * A;
+				submatrix(Cc_, nc          , 0, sz.nx(), columns(Cc_)) = A_;
+				submatrix(Cc_, nc + sz.nx(), 0, sz.nc(), columns(Cc_)) = stage->C() * A_;
+
+				// Update D (which is initialized to 0)
+				//K::middle_rows(Dc_, nc, sz.nx() + sz.nc()) << B, K::zero(sz.nx(), cs_.nu() - nu),
+				//									  stage->C() * B, stage->D(), K::zero(sz.nc(), cs_.nu() - nu - sz.nu());
+				submatrix(Dc_, nc          ,  0, sz.nx(),      nu) = B_;
+				submatrix(Dc_, nc + sz.nx(),  0, sz.nc(),      nu) = stage->C() * B_;
+				submatrix(Dc_, nc + sz.nx(), nu, sz.nc(), sz.nu()) = stage->D();
+
+				// Update lbd
+				//K::segment(lbd, nc, sz.nx() + sz.nc()) << stage->lbx() - b, stage->lbd() - stage->C() * b;
+				subvector(lbd_, nc          , sz.nx()) = stage->lbx() - b_;
+				subvector(lbd_, nc + sz.nx(), sz.nc()) = stage->lbd() - stage->C() * b_;
+
+				// Update ubd
+				//K::segment(ubd, nc, sz.nx() + sz.nc()) << stage->ubx() - b, stage->ubd() - stage->C() * b;
+				subvector(ubd_, nc          , sz.nx()) = stage->ubx() - b_;
+				subvector(ubd_, nc + sz.nx(), sz.nc()) = stage->ubd() - stage->C() * b_;
+
+				// Uplate lbu, ubu
+				subvector(lbu_, nu, sz.nu()) = stage->lbu();
+				subvector(ubu_, nu, sz.nu()) = stage->ubu();
+
+				// Update A
+				A_ = stage->A() * A_;
+
+				// Update B
+				{
+					DynamicMatrix<Scalar> B_next(nx_next, nu + sz.nu());
+					submatrix(B_next, 0,  0, nx_next,      nu) = stage->A() * B_;
+					submatrix(B_next, 0, nu, nx_next, sz.nu()) = stage->B();
+					B_ = std::move(B_next);
+				}
+
+				// Update b
+				b_ = stage->A() * b_ + stage->b();
+
+				// Update indices
+				nu += sz.nu();
+				nc += sz.nx() + sz.nc();
+			}
+
+			// Set the state bounds of the condensed stage
+			lbx_ = first->lbx();
+			ubx_ = first->ubx();
+
+			CondensedStage result(*this);
+			return std::move(result);
+		}
+
+	private:
+		QpSize const cs_;
+
+		DynamicMatrix<Scalar> Qc_;
+		DynamicMatrix<Scalar> Rc_;
+		DynamicMatrix<Scalar> Sc_;
+		DynamicVector<Scalar> qc_;
+		DynamicVector<Scalar> rc_;
+
+		DynamicMatrix<Scalar> Cc_;
+		DynamicMatrix<Scalar> Dc_;
+		DynamicVector<Scalar> lbd_;
+		DynamicVector<Scalar> ubd_;
+
+		DynamicVector<Scalar> lbx_;
+		DynamicVector<Scalar> ubx_;
+		DynamicVector<Scalar> lbu_;
+		DynamicVector<Scalar> ubu_;
+
+		DynamicMatrix<Scalar> A_;
+		DynamicMatrix<Scalar> B_;
+		DynamicVector<Scalar> b_;
+	};
 }

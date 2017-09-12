@@ -2,16 +2,20 @@ if (WITH_qpOASES)
     target_sources(tmpc_test
         PRIVATE qp/QpOasesWorkspaceTest.cpp
     )
-endif()
+endif ()
 
 if (WITH_HPMPC)
     target_sources(tmpc_test
         PRIVATE qp/HpmpcWorkspaceTest.cpp
     )
-endif()
+endif ()
 
 if (WITH_HPIPM)
     target_sources(tmpc_test
         PRIVATE qp/HpipmWorkspaceTest.cpp
     )
-endif()
+endif ()
+
+target_sources(tmpc_test
+    PRIVATE qp/CondensingTest.cpp
+)

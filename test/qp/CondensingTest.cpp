@@ -1,12 +1,10 @@
 #include <tmpc/qp/Condensing.hpp>
-#include <tmpc/qp/QpOasesProblem.hpp>
 #include <tmpc/qp/QuadraticProblem.hpp>
 #include <tmpc/Matrix.hpp>
 #include <tmpc/core/problem_specific.hpp>
-#include <tmpc/core/RealtimeIteration.hpp>
+#include <tmpc/mpc/MpcQpSize.hpp>
 
-#include "qp_test_problems.hpp"
-#include "gtest_tools_eigen.hpp"
+#include "../gtest_tools_eigen.hpp"
 
 #include <gtest/gtest.h>
 
@@ -14,7 +12,7 @@
 
 using namespace tmpc;
 
-TEST(QpSizeTest, test_CondensedQpSize)
+TEST(QpSizeTest, testCondensedQpSize)
 {
 	EXPECT_EQ(tmpc::condensedQpSize({
 		tmpc::QpSize(2, 1, 3),
@@ -24,7 +22,7 @@ TEST(QpSizeTest, test_CondensedQpSize)
 		tmpc::QpSize(2, 1 + 5 + 1, (3 + 6 + 1) + (4 + 2)));
 }
 
-TEST(QpSizeTest, test_CondensedQpSize_iteratorRange)
+TEST(QpSizeTest, testCondensedQpSizeIteratorRange)
 {
 	std::array<tmpc::QpSize, 3> sz = {
 		tmpc::QpSize(2, 1, 3),
@@ -42,24 +40,13 @@ public:
 
 protected:
 	// Define dimensions
-	struct Dimensions
-	{
-		static unsigned constexpr NX = 2;
-		static unsigned constexpr NU = 1;
-		static unsigned constexpr NW = 0;
-		static unsigned constexpr NY = 0;
-		static unsigned constexpr NP = 0;
-		static unsigned constexpr NC = 0;
-		static unsigned constexpr NCT = 0;
-	};
-
-	static unsigned constexpr NX = Dimensions::NX;
-	static unsigned constexpr NU = Dimensions::NU;
-	static unsigned constexpr NW = Dimensions::NW;
-	static unsigned constexpr NY = Dimensions::NY;
-	static unsigned constexpr NP = Dimensions::NP;
-	static unsigned constexpr NC = Dimensions::NC;
-	static unsigned constexpr NCT = Dimensions::NCT;
+	static unsigned constexpr NX = 2;
+	static unsigned constexpr NU = 1;
+	static unsigned constexpr NW = 0;
+	static unsigned constexpr NY = 0;
+	static unsigned constexpr NP = 0;
+	static unsigned constexpr NC = 0;
+	static unsigned constexpr NCT = 0;
 	static auto constexpr NT = 2u;
 	static auto constexpr NZ = NX + NU;
 
@@ -71,20 +58,20 @@ protected:
 	typedef StaticMatrix<Scalar, NX, NU> StateInputMatrix;
 
 	CondensingTest()
-	:	size_(tmpc::RtiQpSize(NT, NX, NU, NC, NCT))
+	:	size_(tmpc::mpcQpSize(NT, NX, NU, NC, NCT))
 	,	qp(size_.begin(), size_.end())
 	{
 	}
 
 	void SetUp() override
 	{
-		qp[0].set_lbx(StateVector(-1.));	qp[0].set_ubx(StateVector(1.));
-		qp[0].set_lbu(InputVector(-1.));	qp[0].set_ubu(InputVector(1.));
+		qp[0].lbx(StateVector(-1.));	qp[0].ubx(StateVector(1.));
+		qp[0].lbu(InputVector(-1.));	qp[0].ubu(InputVector(1.));
 
-		qp[1].set_lbx(StateVector(-1.));	qp[1].set_ubx(StateVector(1.));
-		qp[1].set_lbu(InputVector(-1.));	qp[1].set_ubu(InputVector(1.));
+		qp[1].lbx(StateVector(-1.));	qp[1].ubx(StateVector(1.));
+		qp[1].lbu(InputVector(-1.));	qp[1].ubu(InputVector(1.));
 
-		qp[2].set_lbx(StateVector(-1.));	qp[2].set_ubx(StateVector(1.));
+		qp[2].lbx(StateVector(-1.));	qp[2].ubx(StateVector(1.));
 
 		// Stage 0
 		StaticMatrix<Scalar, NZ, NZ> H0 {
@@ -147,12 +134,12 @@ protected:
 		const auto Q2 = submatrix(H2, 0, 0, NX, NX);
 
 		// Setup QP
-		qp[0].set_Q(Q0);	qp[0].set_R(R0);	qp[0].set_S(S0);	qp[0].set_q(StateVector(0.));	qp[0].set_r(InputVector(0.));
-		qp[1].set_Q(Q1);	qp[1].set_R(R1);	qp[1].set_S(S1);	qp[1].set_q(StateVector(0.));	qp[1].set_r(InputVector(0.));
-		qp[2].set_Q(Q2);											qp[2].set_q(StateVector(0.));
+		qp[0].Q(Q0);	qp[0].R(R0);	qp[0].S(S0);	qp[0].q(StateVector(0.));	qp[0].r(InputVector(0.));
+		qp[1].Q(Q1);	qp[1].R(R1);	qp[1].S(S1);	qp[1].q(StateVector(0.));	qp[1].r(InputVector(0.));
+		qp[2].Q(Q2);											qp[2].q(StateVector(0.));
 
-		qp[0].set_A(A0);	qp[0].set_B(B0);	qp[0].set_b(a0);
-		qp[1].set_A(A1);	qp[1].set_B(B1);	qp[1].set_b(a1);
+		qp[0].A(A0);	qp[0].B(B0);	qp[0].b(a0);
+		qp[1].A(A1);	qp[1].B(B1);	qp[1].b(a1);
 
 		Qc_expected = trans(A0) * Q1 * A0 + trans(A0) * trans(A1) * Q2 * A1 * A0 + Q0;
 		submatrix(Rc_expected, 0 * NU, 0 * NU, NU, NU) = trans(B0) * Q1 * B0 + trans(B0) * trans(A1) * Q2 * A1 * B0 + R0;
@@ -166,11 +153,11 @@ protected:
 		subvector(rc_expected, 0 * NU, NU) = trans(B0) * trans(A1) * Q2 * a1	+ trans(B0) * trans(A1) * Q2 * A1 * a0	+ trans(B0) * Q1 * a0;
 		subvector(rc_expected, 1 * NU, NU) = trans(B1) * Q2 * A1 * a0			+ trans(B1) * Q2 * a1					+ trans(S1) * a0;
 
-		lbx_expected = qp[0].get_lbx();
-		ubx_expected = qp[0].get_ubx();
+		lbx_expected = qp[0].lbx();
+		ubx_expected = qp[0].ubx();
 		 
-		subvector(lbu_expected, 0 * NU, NU) = qp[0].get_lbu();	subvector(ubu_expected, 0 * NU, NU) = qp[0].get_ubu();
-		subvector(lbu_expected, 1 * NU, NU) = qp[1].get_lbu();	subvector(ubu_expected, 1 * NU, NU) = qp[1].get_ubu();
+		subvector(lbu_expected, 0 * NU, NU) = qp[0].lbu();	subvector(ubu_expected, 0 * NU, NU) = qp[0].ubu();
+		subvector(lbu_expected, 1 * NU, NU) = qp[1].lbu();	subvector(ubu_expected, 1 * NU, NU) = qp[1].ubu();
 	}
 
 	std::vector<tmpc::QpSize> size_;
@@ -189,19 +176,19 @@ protected:
 unsigned constexpr CondensingTest::NX;
 unsigned constexpr CondensingTest::NU;
 
-TEST_F(CondensingTest, new_condensing_test)
+TEST_F(CondensingTest, testCondensing)
 {
 	// Condense
-	QuadraticProblem<Scalar> condensed({condensedQpSize(sizeBegin(qp), sizeEnd(qp))});
-	condensed.front() = condense<Scalar>(qp.begin(), qp.end());
+	Condensing<Scalar> condensing(sizeBegin(qp), sizeEnd(qp));
+	QuadraticProblemStage<Scalar> const condensed = condensing(qp.begin(), qp.end());
 
-	EXPECT_EQ(print_wrap(condensed[0].get_Q()), print_wrap(Qc_expected));
-	EXPECT_EQ(print_wrap(condensed[0].get_R()), print_wrap(Rc_expected));
-	EXPECT_EQ(print_wrap(condensed[0].get_S()), print_wrap(Sc_expected));
-	EXPECT_EQ(print_wrap(condensed[0].get_q()), print_wrap(qc_expected));
-	EXPECT_EQ(print_wrap(condensed[0].get_r()), print_wrap(rc_expected));
-	EXPECT_EQ(print_wrap(condensed[0].get_lbx()), print_wrap(lbx_expected));
-	EXPECT_EQ(print_wrap(condensed[0].get_ubx()), print_wrap(ubx_expected));
-	EXPECT_EQ(print_wrap(condensed[0].get_lbu()), print_wrap(lbu_expected));
-	EXPECT_EQ(print_wrap(condensed[0].get_ubu()), print_wrap(ubu_expected));
+	EXPECT_EQ(print_wrap(condensed.Q()), print_wrap(Qc_expected));
+	EXPECT_EQ(print_wrap(condensed.R()), print_wrap(Rc_expected));
+	EXPECT_EQ(print_wrap(condensed.S()), print_wrap(Sc_expected));
+	EXPECT_EQ(print_wrap(condensed.q()), print_wrap(qc_expected));
+	EXPECT_EQ(print_wrap(condensed.r()), print_wrap(rc_expected));
+	EXPECT_EQ(print_wrap(condensed.lbx()), print_wrap(lbx_expected));
+	EXPECT_EQ(print_wrap(condensed.ubx()), print_wrap(ubx_expected));
+	EXPECT_EQ(print_wrap(condensed.lbu()), print_wrap(lbu_expected));
+	EXPECT_EQ(print_wrap(condensed.ubu()), print_wrap(ubu_expected));
 }
