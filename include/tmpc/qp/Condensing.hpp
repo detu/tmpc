@@ -1,7 +1,6 @@
 #pragma once
 
 #include <tmpc/qp/QpSize.hpp>
-#include <tmpc/Matrix.hpp>
 
 #include <vector>
 #include <sstream>
@@ -37,17 +36,20 @@ namespace tmpc
 	 *
 	 * Manages resources needed for the condensing algorithm of a given size.
 	 *
-	 * \tparam <Scalar> Scalar type used for intermediate variables in the condensing algorithm.
+	 * \tparam <Kernel> Kernel for matrix arithmetic.
 	 */
-	template <typename Scalar>
+	template <typename Kernel>
 	class Condensing
 	{
+		using DynamicMatrix = typename Kernel::DynamicMatrix;
+		using DynamicVector = typename Kernel::DynamicVector;
+
 	public:
 		class CondensedStage
 		{
-			typedef std::size_t size_type;
-			typedef DynamicMatrix<Scalar> Matrix;
-			typedef DynamicVector<Scalar> Vector;
+			using size_type = typename Kernel::size_t;
+			using Matrix = typename Kernel::DynamicMatrix;
+			using Vector = typename Kernel::DynamicVector;
 
 		public:
 			CondensedStage(CondensedStage const&) = delete;
@@ -257,7 +259,7 @@ namespace tmpc
 
 				// Update B
 				{
-					DynamicMatrix<Scalar> B_next(nx_next, nu + sz.nu());
+					DynamicMatrix B_next(nx_next, nu + sz.nu());
 					submatrix(B_next, 0,  0, nx_next,      nu) = stage->A() * B_;
 					submatrix(B_next, 0, nu, nx_next, sz.nu()) = stage->B();
 					B_ = std::move(B_next);
@@ -282,24 +284,24 @@ namespace tmpc
 	private:
 		QpSize const cs_;
 
-		DynamicMatrix<Scalar> Qc_;
-		DynamicMatrix<Scalar> Rc_;
-		DynamicMatrix<Scalar> Sc_;
-		DynamicVector<Scalar> qc_;
-		DynamicVector<Scalar> rc_;
+		DynamicMatrix Qc_;
+		DynamicMatrix Rc_;
+		DynamicMatrix Sc_;
+		DynamicVector qc_;
+		DynamicVector rc_;
 
-		DynamicMatrix<Scalar> Cc_;
-		DynamicMatrix<Scalar> Dc_;
-		DynamicVector<Scalar> lbd_;
-		DynamicVector<Scalar> ubd_;
+		DynamicMatrix Cc_;
+		DynamicMatrix Dc_;
+		DynamicVector lbd_;
+		DynamicVector ubd_;
 
-		DynamicVector<Scalar> lbx_;
-		DynamicVector<Scalar> ubx_;
-		DynamicVector<Scalar> lbu_;
-		DynamicVector<Scalar> ubu_;
+		DynamicVector lbx_;
+		DynamicVector ubx_;
+		DynamicVector lbu_;
+		DynamicVector ubu_;
 
-		DynamicMatrix<Scalar> A_;
-		DynamicMatrix<Scalar> B_;
-		DynamicVector<Scalar> b_;
+		DynamicMatrix A_;
+		DynamicMatrix B_;
+		DynamicVector b_;
 	};
 }

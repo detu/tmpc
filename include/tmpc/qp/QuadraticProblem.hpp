@@ -1,7 +1,5 @@
 #pragma once
 
-#include <tmpc/Matrix.hpp>
-
 #include "QpSize.hpp"
 
 #include <vector>
@@ -9,14 +7,14 @@
 
 namespace tmpc 
 {
-	template <typename Scalar_>
+	template <typename Kernel>
 	class QuadraticProblemStage
 	{
 	public:
-		typedef std::size_t size_type;
-		typedef Scalar_ Scalar;
-		typedef DynamicMatrix<Scalar> Matrix;
-		typedef DynamicVector<Scalar> Vector;
+		using size_type = typename Kernel::size_t;
+		using Scalar = typename Kernel::Scalar;
+		using Matrix = typename Kernel::DynamicMatrix;
+		using Vector = typename Kernel::DynamicVector;
 
 		QuadraticProblemStage(QpSize const& sz, size_type nx_next)
 		:	size_(sz)
@@ -268,16 +266,15 @@ namespace tmpc
 	*	nX < nZ
 	*	nU = nZ - nX
 	*/
-	template <typename Scalar_>
+	template <typename Kernel>
 	class QuadraticProblem
 	{
 	public:
-		typedef std::size_t size_type;
-		typedef Scalar_ Scalar;
-		typedef DynamicMatrix<Scalar> Matrix;
-		typedef DynamicVector<Scalar> Vector;
-
-		using Stage = QuadraticProblemStage<Scalar>;
+		using size_type = typename Kernel::size_t;
+		using Scalar = typename Kernel::Scalar;
+		using Matrix = typename Kernel::DynamicMatrix;
+		using Vector = typename Kernel::DynamicVector;
+		using Stage = QuadraticProblemStage<Kernel>;
 
 		Stage& operator[](std::size_t i)
 		{
