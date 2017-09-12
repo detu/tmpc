@@ -54,7 +54,7 @@ endif()
 #
 # Add qpOASES interface
 #
-if (qpOASES_FOUND)
+if (WITH_qpOASES)
     target_sources(tmpc
         PRIVATE ${TMPC_INCLUDE_DIR}/qp/QpOasesWorkspace.hpp
         PRIVATE qp/QpOasesWorkspace.cpp

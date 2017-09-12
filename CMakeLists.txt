@@ -13,14 +13,22 @@ include(CMakeToolsHelpers OPTIONAL)
 SET(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/CMakeModules;${CMAKE_MODULE_PATH})
 set(PROJECT_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/include)
 
-# Cached CMake variables.
-set(WITH_BLASFEO OFF CACHE BOOL "Link to BLASFEO")
-set(WITH_HPMPC OFF CACHE BOOL "Link to HPMPC")
-set(WITH_HPIPM OFF CACHE BOOL "Link to HPIPM")
+# List of QP solvers
+set(qp_solvers "qpOASES" "HPMPC" "HPIPM")
 
-message(STATUS "WITH_HPMPC=${WITH_HPMPC}")
-message(STATUS "WITH_HPIPM=${WITH_HPIPM}")
-message(STATUS "WITH_BLASFEO=${WITH_BLASFEO}")
+# List of selectable extern libs
+set(extern_libs ${qp_solvers} "BLASFEO")
+
+# Create WITH_${lib} cached variables and find selected packages
+foreach (lib ${extern_libs})
+    set(WITH_${lib} OFF CACHE BOOL "Link to ${lib}")
+
+    if (WITH_${lib})
+        find_package(${lib} REQUIRED)
+    endif ()
+
+    message(STATUS "WITH_${lib}=${WITH_${lib}}")
+endforeach ()
 
 if (WITH_HPIPM AND NOT WITH_BLASFEO)
     message(SEND_ERROR "If you choose WITH_HPIPM, you have to choose WITH_BLASFEO as well.")
@@ -39,23 +47,6 @@ if (BLAZE_DIR)
     include_directories(${BLAZE_DIR})
     message(STATUS "BLAZE_DIR=${BLAZE_DIR}")
 endif()
-
-find_package(qpOASES)
-
-if (WITH_HPMPC)
-    find_package(HPMPC REQUIRED)
-    add_definitions("-DWITH_HPMPC")
-endif ()
-
-if (WITH_HPIPM)
-    find_package(HPIPM REQUIRED)
-    add_definitions("-DWITH_HPIPM")
-endif ()
-
-if (WITH_BLASFEO)
-    find_package(BLASFEO REQUIRED)
-    add_definitions("-DWITH_BLASFEO")
-endif ()
 
 add_subdirectory(src)
 add_subdirectory(test)

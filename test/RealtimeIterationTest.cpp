@@ -3,7 +3,6 @@
 #include <tmpc/mpc/MpcTrajectory.hpp>
 
 #include <tmpc/qp/QpOasesWorkspace.hpp>
-#include <tmpc/qp/HpmpcWorkspace.hpp>
 #include <tmpc/integrator/rk4.hpp>
 #include <tmpc/Matrix.hpp>
 #include <tmpc/util/problem_specific.hpp>
@@ -212,7 +211,7 @@ protected:
 typedef ::testing::Types<
 		// TODO: make Solver a template template parameter of RealtimeIteration?
 		tmpc::MpcRealtimeIteration<double, OCP, tmpc::QpOasesWorkspace>
-		,	tmpc::MpcRealtimeIteration<double, OCP, tmpc::HpmpcWorkspace<double>>
+		//,	tmpc::MpcRealtimeIteration<double, OCP, tmpc::HpmpcWorkspace<double>>
 	> RTITypes;
 
 TYPED_TEST_CASE(RealtimeIterationTest, RTITypes);
