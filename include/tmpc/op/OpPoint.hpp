@@ -4,20 +4,23 @@
 
 namespace tmpc
 {
+	/**
+	 * \brief Point as a minimization variable of an optimization problem.
+	 */
 	template <typename Real_>
-	class MpcTrajectoryPoint
+	class OpPoint
 	{
 	public:
 		using Real = Real_;
 
-		MpcTrajectoryPoint(size_t NX, size_t NU)
+		OpPoint(size_t NX, size_t NU)
 		:	x_(NX)
 		,	u_(NU)
 		{
 		}
 
 		template <typename VectorX, typename VectorU>
-		MpcTrajectoryPoint(VectorX const& x, VectorU const& u)
+		OpPoint(VectorX const& x, VectorU const& u)
 		:	x_(x)
 		,	u_(u)
 		{
@@ -51,7 +54,7 @@ namespace tmpc
 	};
 
 	template <typename Real>
-	inline std::ostream& operator<<(std::ostream& os, MpcTrajectoryPoint<Real> const& p)
+	inline std::ostream& operator<<(std::ostream& os, OpPoint<Real> const& p)
 	{
 		os << "x=" << trans(p.x()) << "\tu=" << trans(p.u());
 	}

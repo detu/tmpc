@@ -54,7 +54,7 @@ add_custom_command(
 add_executable(tmpc_test
     #condensing_test.cpp
     rk4_test.cpp
-    #realtime_iteration_test.cpp
+    RealtimeIterationTest.cpp
     #mhe_test.cpp
     QpWorkspaceTest.cpp
     QpOasesWorkspaceTest.cpp
@@ -67,8 +67,6 @@ add_executable(tmpc_test
     ${CMAKE_CURRENT_BINARY_DIR}/casadi_function_test_generated.h
     ${CMAKE_CURRENT_BINARY_DIR}/casadi_function_test_generated.c
 )
-
-add_dependencies(tmpc_test googletest)
 
 target_compile_definitions(tmpc_test
     PRIVATE TEST_DATA_PATH="${TEST_DATA_PATH}")

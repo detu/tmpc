@@ -42,40 +42,38 @@ namespace tmpc
 	 * Then if a Print*** function is called for a QP class, it will be the function from the qp namespace.
 	 */
 	template <typename QP>
-	inline void PrintMultistageQpMatlab(std::ostream& os, QP const& qp_, const std::string& var_name)
+	inline void PrintMultistageQpMatlab(std::ostream& os, QP const& qp, const std::string& var_name)
 	{
-		throw std::logic_error("PrintMultistageQpMatlab() not implemented");
-		/*
 		using std::endl;
 
-		QP const& qp = static_cast<QP const&>(qp_);
+		unsigned k = 1;
 
-		for (unsigned k = 0; k < qp.nT(); ++k)
+		for (auto const& stage : qp)
 		{
-			os << var_name << ".H{" << k + 1 << "} = " << AsMatlab(get_H(qp, k)) << ";" << endl;
-			os << var_name << ".g{" << k + 1 << "} = " << AsMatlab(get_g(qp, k)) << ";" << endl;
+			std::string const qp_i = var_name + "(" + std::to_string(k) + ")";
 
-			os << var_name << ".C{" << k + 1 << "} = " << AsMatlab(get_AB(qp, k)) << ";" << endl;
-			os << var_name << ".c{" << k + 1 << "} = " << AsMatlab(qp.get_b(k)) << ";" << endl;
+			os << qp_i << ".Q = " << AsMatlab(stage.Q()) << ";" << endl << endl;
+			os << qp_i << ".R = " << AsMatlab(stage.R()) << ";" << endl << endl;
+			os << qp_i << ".S = " << AsMatlab(stage.S()) << ";" << endl << endl;
+			os << qp_i << ".q = " << AsMatlab(stage.q()) << ";" << endl << endl;
+			os << qp_i << ".r = " << AsMatlab(stage.r()) << ";" << endl << endl;
 
-			os << var_name << ".D{" << k + 1 << "} = " << AsMatlab(get_CD(qp, k)) << ";" << endl;
-			os << var_name << ".dMin{" << k + 1 << "} = " << AsMatlab(qp.get_d_min(k)) << ";" << endl;
-			os << var_name << ".dMax{" << k + 1 << "} = " << AsMatlab(qp.get_d_max(k)) << ";" << endl;
+			os << qp_i << ".A = " << AsMatlab(stage.A()) << ";" << endl << endl;
+			os << qp_i << ".B = " << AsMatlab(stage.B()) << ";" << endl << endl;
+			os << qp_i << ".b = " << AsMatlab(stage.b()) << ";" << endl << endl;
 
-			os << var_name << ".zMin{" << k + 1 << "} = " << AsMatlab(get_xu_min(qp, k)) << ";" << endl;
-			os << var_name << ".zMax{" << k + 1 << "} = " << AsMatlab(get_xu_max(qp, k)) << ";" << endl;
+			os << qp_i << ".C = " << AsMatlab(stage.C()) << ";" << endl << endl;
+			os << qp_i << ".D = " << AsMatlab(stage.D()) << ";" << endl << endl;
+			os << qp_i << ".lbd = " << AsMatlab(stage.lbd()) << ";" << endl << endl;
+			os << qp_i << ".ubd = " << AsMatlab(stage.ubd()) << ";" << endl << endl;
+
+			os << qp_i << ".lbx = " << AsMatlab(stage.lbx()) << ";" << endl << endl;
+			os << qp_i << ".ubx = " << AsMatlab(stage.ubx()) << ";" << endl << endl;
+			os << qp_i << ".lbu = " << AsMatlab(stage.lbu()) << ";" << endl << endl;
+			os << qp_i << ".ubu = " << AsMatlab(stage.ubu()) << ";" << endl << endl;
+			
+			++k;
 		}
-
-		os << var_name << ".H{" << qp.nT() + 1 << "} = " << AsMatlab(get_Q_end(qp)) << ";" << endl;
-		os << var_name << ".g{" << qp.nT() + 1 << "} = " << AsMatlab(get_q_end(qp)) << ";" << endl;
-
-		os << var_name << ".D{" << qp.nT() + 1 << "} = " << AsMatlab(qp.get_C_end()) << ";" << endl;
-		os << var_name << ".dMin{" << qp.nT() + 1 << "} = " << AsMatlab(qp.get_d_end_min()) << ";" << endl;
-		os << var_name << ".dMax{" << qp.nT() + 1 << "} = " << AsMatlab(qp.get_d_end_max()) << ";" << endl;
-
-		os << var_name << ".zMin{" << qp.nT() + 1 << "} = " << AsMatlab(get_x_end_min(qp)) << ";" << endl;
-		os << var_name << ".zMax{" << qp.nT() + 1 << "} = " << AsMatlab(get_x_end_max(qp)) << ";" << endl;
-		*/
 	}
 
 	/**

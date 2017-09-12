@@ -5,6 +5,10 @@
 
 #include <tmpc/Matrix.hpp>
 
+#include <hpipm_d_ocp_qp.h>
+#include <hpipm_d_ocp_qp_sol.h>
+#include <hpipm_d_ocp_qp_ipm_hard.h>
+
 #include <boost/range/iterator_range_core.hpp>
 
 #include <limits>
@@ -15,13 +19,42 @@
 
 namespace tmpc
 {
-	class HpmpcException 
+	template <typename Real>
+	struct Hpipm;
+
+	template <>
+	struct Hpipm<double>
+	{
+		using ocp_qp = ::d_ocp_qp;
+		using ocp_qp_sol = ::d_ocp_qp_sol;
+		using ipm_hard_ocp_qp_workspace = ::d_ipm_hard_ocp_qp_workspace;
+		using ipm_hard_ocp_qp_arg = ::d_ipm_hard_ocp_qp_arg;
+
+		static int memsize_ocp_qp(int N, int const *nx, int const *nu, int const *nb, int const *ng);
+		static void create_ocp_qp(int N, int const *nx, int const *nu, int const *nb, int const *ng, ocp_qp *qp, void *memory);
+		static void cvt_colmaj_to_ocp_qp(
+			double const * const *A, double const * const *B, double const * const *b, 
+			double const * const *Q, double const * const *S, double const * const *R, double const * const *q, double const * const *r, 
+			int const * const *idxb, double const * const *lb, double const * const *ub, 
+			double const * const *C, double const * const *D, double const * const *lg, double const * const *ug, ocp_qp * qp);
+		
+		static int memsize_ocp_qp_sol(int N, int const *nx, int const *nu, int const *nb, int const *ng);
+		static void create_ocp_qp_sol(int N, int const *nx, int const *nu, int const *nb, int const *ng, ocp_qp_sol *qp_sol, void *memory);
+		static void cvt_ocp_qp_sol_to_colmaj(ocp_qp const *qp, ocp_qp_sol const *qp_sol, 
+			double * const *u, double * const *x, double * const *pi, double * const *lam_lb, double * const *lam_ub, double * const *lam_lg, double * const *lam_ug);
+
+		static int memsize_ipm_hard_ocp_qp(ocp_qp const *qp, ipm_hard_ocp_qp_arg const *arg);
+		static void create_ipm_hard_ocp_qp(ocp_qp const *qp, ipm_hard_ocp_qp_arg const *arg, ipm_hard_ocp_qp_workspace *ws, void *mem);
+		static void solve_ipm_hard_ocp_qp(ocp_qp const *qp, ocp_qp_sol *qp_sol, ipm_hard_ocp_qp_workspace *ws);
+	};
+
+	class HpipmException 
 	:	public QpSolverException
 	{
 	public:
-		HpmpcException(int code);
+		HpipmException(int code);
 
-		int code() const { return _code;	}
+		int code() const { return _code; }
 		char const * what() const noexcept override { return msg_.c_str(); }
 
 	private:
@@ -35,18 +68,15 @@ namespace tmpc
 	 * \tparam <Real_> real number type
 	 */
 	template <typename Real_>
-	class HpmpcWorkspace
+	class HpipmWorkspace
 	{
 	public:
 		using Real = Real_;
-		
-		// Iteration statistics. HPMPC returns 5 Real numbers per iteration.
-		using IterStat = std::array<Real, 5>;
 
 		class Stage
 		{
 		public:
-			static auto constexpr storageOrder = rowMajor;
+			static auto constexpr storageOrder = columnMajor;
 			typedef DynamicMatrix<Real, storageOrder> Matrix;
 			typedef DynamicVector<Real, columnVector> Vector;
 
@@ -117,7 +147,7 @@ namespace tmpc
 			QpSize const& size() const { return size_; }
 
 			// ******************************************************
-			//                HPMPC raw data interface.
+			//                HPIPM raw data interface.
 			//
 			// The prefixes before _data() correspond to the names of
 			// the argument to c_order_d_ip_ocp_hard_tv().
@@ -141,12 +171,15 @@ namespace tmpc
 			Real * x_data() { return x_.data(); }
 			Real * u_data() { return u_.data(); }
 			Real * pi_data() { return pi_.data(); }
-			Real * lam_data() { return lam_.data(); }
+			Real * lam_lb_data() { return lam_.data(); }
+			Real * lam_ub_data() { return lam_lb_data() + size_.nx() + size_.nu(); }
+			Real * lam_lg_data() { return lam_ub_data() + size_.nx() + size_.nu(); }
+			Real * lam_ug_data() { return lam_lg_data() + size_.nc(); }
 
 		private:
 			QpSize size_;
 
-			// Some magic data for HPMPC
+			// Some magic data for HPIPM
 			std::vector<int> hidxb_;
 
 			// Hessian = [R, S; S', Q]
@@ -195,35 +228,42 @@ namespace tmpc
 			return stage_;
 		}
 
-		boost::iterator_range<typename std::vector<IterStat>::const_iterator> stat() const
-		{
-			return boost::make_iterator_range(stat_.begin(), stat_.begin() + numIter_);
-		}
-
 		/**
 		 * \brief Takes QP problem size to preallocate workspace.
 		 */
 		template <typename InputIterator>
-		HpmpcWorkspace(InputIterator size_first, InputIterator size_last, int max_iter = 100)
-		:	stat_(max_iter)
-		,	infNormRes_(sNaN())
+		HpipmWorkspace(InputIterator size_first, InputIterator size_last, int max_iter = 100)
+		:	infNormRes_(sNaN())
+		,	solverArg_ {}
 		{
-			auto const n_stages = std::distance(size_first, size_last);
-
-			if (n_stages < 2)
-				throw std::invalid_argument("HPMPC needs at least 2 stages problem");
-
-			preallocateStages(n_stages);
+			solverArg_.alpha_min = 1e-8;
+			solverArg_.mu_max = 1e-12;
+			solverArg_.iter_max = max_iter;
+			solverArg_.mu0 = 2.0;
+			
+			preallocateStages(std::distance(size_first, size_last));
 
 			for (auto sz = size_first; sz != size_last; ++sz)
 				addStage(*sz, sz + 1 != size_last ? sz[1].nx() : 0);
+				
+			if (stage_.size() > 1)
+			{
+				int const N = stage_.size() - 1;
 
-			allocateSolverWorkspace();
+				ocpQpMem_.resize(HPIPM::memsize_ocp_qp(N, nx_.data(), nu_.data(), nb_.data(), ng_.data()));
+				HPIPM::create_ocp_qp(N, nx_.data(), nu_.data(), nb_.data(), ng_.data(), &ocpQp_, ocpQpMem_.data());
+
+				ocpQpSolMem_.resize(HPIPM::memsize_ocp_qp_sol(N, nx_.data(), nu_.data(), nb_.data(), ng_.data()));
+				HPIPM::create_ocp_qp_sol(N, nx_.data(), nu_.data(), nb_.data(), ng_.data(), &ocpQpSol_, ocpQpSolMem_.data());
+				
+				solverWorkspaceMem_.resize(HPIPM::memsize_ipm_hard_ocp_qp(&ocpQp_, &solverArg_));
+				HPIPM::create_ipm_hard_ocp_qp(&ocpQp_, &solverArg_, &solverWorkspace_, solverWorkspaceMem_.data());
+			}
 		}
 
 		template <typename IteratorRange>
-		explicit HpmpcWorkspace(IteratorRange sz, int max_iter = 100)
-		:	HpmpcWorkspace(sz.begin(), sz.end(), max_iter)
+		explicit HpipmWorkspace(IteratorRange sz, int max_iter = 100)
+		:	HpipmWorkspace(sz.begin(), sz.end(), max_iter)
 		{
 		}
 
@@ -232,88 +272,108 @@ namespace tmpc
 		 *
 		 * Copying is not allowed.
 		 */
-		HpmpcWorkspace(HpmpcWorkspace const&) = delete;
+		HpipmWorkspace(HpipmWorkspace const&) = delete;
 
 		/**
 		 * \brief Move constructor
 		 *
 		 * Move-construction is ok.
 		 */
-		HpmpcWorkspace(HpmpcWorkspace&& rhs) = default;
+		HpipmWorkspace(HpipmWorkspace&& rhs) = default;
 
-		HpmpcWorkspace& operator= (HpmpcWorkspace const&) = delete;
-		HpmpcWorkspace& operator= (HpmpcWorkspace &&) = delete;
+		HpipmWorkspace& operator= (HpipmWorkspace const&) = delete;
+		HpipmWorkspace& operator= (HpipmWorkspace &&) = delete;
 
 		void solve();
 
-		std::size_t maxIter() const noexcept { return stat_.size(); }
-
-		/// \brief Set max number of iterations
-		void maxIter(size_t val);
-
-		Real muTol() const noexcept { return muTol_; }
-
-		void muTol(Real val)
-		{
-			if (val <= 0.)
-				throw std::invalid_argument("mu tolerance for hpmpc must be positive");
-
-			muTol_ = val;
-		}
+		std::size_t maxIter() const noexcept { return solverArg_.iter_max; }
 
 		/// \brief Get number of iterations performed by the QP solver.
 		unsigned numIter() const { return numIter_; }
 		
 	private:
+		using HPIPM = Hpipm<Real>;
+
+		class OcpQp
+		{
+		public:
+			OcpQp();
+			OcpQp(int N, int const *nx, int const *nu, int const *nb, int const *ng);
+	
+		private:
+			std::vector<char> memory_;
+			typename HPIPM::ocp_qp qp_;
+		};
+
+		class OcpQpSol
+		{
+		public:
+			OcpQpSol(int N, int const *nx, int const *nu, int const *nb, int const *ng);
+	
+		private:
+			std::vector<char> memory_;
+			typename HPIPM::ocp_qp_sol sol_;
+		};
+
+		class IpmHardOcpQpWorkspace
+		{
+		public:
+			IpmHardOcpQpWorkspace(typename HPIPM::ocp_qp const& qp, typename HPIPM::ipm_hard_ocp_qp_arg const& arg);
+	
+		private:
+			typename HPIPM::ipm_hard_ocp_qp_workspace workspace_;
+			std::vector<char> memory_;
+		};
+
 		// --------------------------------
 		//
-		// HPMPC QP problem data
+		// QP problem data
 		//
 		// --------------------------------
 
 		// Stores stage data
 		std::vector<Stage> stage_;
 
-		// "A" data array for HPMPC
+		// "A" data array for HPIPM
 		std::vector<Real const *> A_;
 
-		// "B" data array for HPMPC
+		// "B" data array for HPIPM
 		std::vector<Real const *> B_;
 
-		// "b" data array for HPMPC
+		// "b" data array for HPIPM
 		std::vector<Real const *> b_;
 
-		// "Q" data array for HPMPC
+		// "Q" data array for HPIPM
 		std::vector<Real const *> Q_;
 
-		// "S" data array for HPMPC
+		// "S" data array for HPIPM
 		std::vector<Real const *> S_;
 
-		// "R" data array for HPMPC
+		// "R" data array for HPIPM
 		std::vector<Real const *> R_;
 
-		// "q" data array for HPMPC
+		// "q" data array for HPIPM
 		std::vector<Real const *> q_;
 
-		// "r" data array for HPMPC
+		// "r" data array for HPIPM
 		std::vector<Real const *> r_;
 
-		// "lb" data array for HPMPC
+		// "lb" data array for HPIPM
 		std::vector<Real const *> lb_;
 
-		// "ub" data array for HPMPC
+		// "ub" data array for HPIPM
 		std::vector<Real const *> ub_;
 
-		// "C" data array for HPMPC
+		// "C" data array for HPIPM
 		std::vector<Real const *> C_;
 
-		// "D" data array for HPMPC
+		// "D" data array for HPIPM
 		std::vector<Real const *> D_;
 
-		// "lg" data array for HPMPC
+		// "lg" data array for HPIPM
 		std::vector<Real const *> lg_;
 
-		// "ug" data array for HPMPC
+		// "ug" data array for HPIPM
 		std::vector<Real const *> ug_;
 
 		// Array of NX sizes
@@ -333,14 +393,17 @@ namespace tmpc
 
 		// --------------------------------
 		//
-		// HPMPC QP solution data
+		// QP solution data
 		//
 		// --------------------------------
 
 		std::vector<Real *> x_;
 		std::vector<Real *> u_;
 		std::vector<Real *> pi_;
-		std::vector<Real *> lam_;
+		std::vector<Real *> lam_lb_;
+		std::vector<Real *> lam_ub_;
+		std::vector<Real *> lam_lg_;
+		std::vector<Real *> lam_ug_;
 		StaticVector<Real, 4> infNormRes_;
 
 		/// \brief Number of iterations performed by the QP solver.
@@ -348,18 +411,20 @@ namespace tmpc
 
 		// --------------------------------
 		//
-		// HPMPC solver data
+		// HPIPM solver data
 		//
 		// --------------------------------
+		std::vector<char> ocpQpMem_;
+		typename HPIPM::ocp_qp ocpQp_;
+		
+		std::vector<char> ocpQpSolMem_;
+		typename HPIPM::ocp_qp_sol ocpQpSol_;
+		
+		std::vector<char> solverWorkspaceMem_;
+		typename HPIPM::ipm_hard_ocp_qp_workspace solverWorkspace_;
 
-		// Workspace for HPMPC functions
-		std::vector<char> solverWorkspace_;
+		typename HPIPM::ipm_hard_ocp_qp_arg solverArg_;
 
-		// Iteration statistics. HPMPC returns 5 Real numbers per iteration.
-		std::vector<IterStat> stat_;
-
-		Real mu_ = 0.;
-		Real muTol_ = 1e-10;
 
 		// Warmstarting disabled on purpose.
 		// On AMD K8 (hpmpc compiled for SSE3), WITHOUT warmstarting it is significantly
@@ -376,8 +441,5 @@ namespace tmpc
 
 		// Add one stage with specified sizes at the end of the stage sequence.
 		void addStage(QpSize const& sz, size_t nx_next);
-
-		// Allocate soverWorkspace_ according to nx, nu, nb, ng etc.
-		void allocateSolverWorkspace();
 	};
 }

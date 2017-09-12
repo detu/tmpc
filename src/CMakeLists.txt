@@ -72,7 +72,7 @@ endif()
 #
 # Add HPMPC interface
 #
-if (HPMPC_FOUND)
+if (WITH_HPMPC)
     target_sources(tmpc PRIVATE 
         ${TMPC_INCLUDE_DIR}/qp/HpmpcWorkspace.hpp
         qp/HpmpcWorkspace.cpp
@@ -86,5 +86,36 @@ if (HPMPC_FOUND)
 
     target_link_libraries(tmpc
         PUBLIC ${HPMPC_STATIC_LIB}
+    )
+endif()
+
+#
+# Add HPIPM interface
+#
+if (WITH_HPIPM)
+    target_sources(tmpc PRIVATE 
+        ${TMPC_INCLUDE_DIR}/qp/HpipmWorkspace.hpp
+        qp/HpipmWorkspace.cpp
+    )
+
+    target_include_directories(tmpc
+        PUBLIC ${HPIPM_INCLUDE_DIR}
+    )
+
+    target_link_libraries(tmpc
+        PUBLIC ${HPIPM_STATIC_LIB}
+    )
+endif()
+
+#
+# Link to BLASFEO
+#
+if (WITH_BLASFEO)
+    target_include_directories(tmpc
+        PUBLIC ${BLASFEO_INCLUDE_DIR}
+    )
+
+    target_link_libraries(tmpc
+        PUBLIC ${BLASFEO_STATIC_LIB}
     )
 endif()

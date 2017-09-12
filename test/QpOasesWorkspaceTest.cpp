@@ -21,8 +21,8 @@ using namespace tmpc;
 
 TEST(QpOasesWorkspaceTest, testMatricesCorrect)
 {
-	std::array<QpSize, 1> sz { QpSize{2, 1, 0} };
-	QpOasesWorkspace p(sz.begin(), sz.end());
+	QpOasesWorkspace ws(std::array<QpSize, 1> {QpSize{2, 1, 0}});
+	auto p = ws.problem();
 
 	StaticMatrix<double, 3, 2, columnMajor> x;
 
@@ -31,7 +31,7 @@ TEST(QpOasesWorkspaceTest, testMatricesCorrect)
 	p[0].R(DynamicMatrix<double>({{3}}));
 	p[0].S(DynamicMatrix<double>({{4.}, {5.}}));
 
-	EXPECT_EQ(p.H(), DynamicMatrix<double>({
+	EXPECT_EQ(ws.H(), DynamicMatrix<double>({
 		{1., 2., 4.},
 		{2., 1., 5.},
 		{4., 5., 3.}
@@ -41,7 +41,7 @@ TEST(QpOasesWorkspaceTest, testMatricesCorrect)
 	p[0].q(DynamicMatrix<double>({{6.}, {7.}}));
 	p[0].r(DynamicMatrix<double>({{8.}}));
 
-	EXPECT_EQ(p.g(), DynamicMatrix<double>({{6.}, {7.}, {8.}}));
+	EXPECT_EQ(ws.g(), DynamicMatrix<double>({{6.}, {7.}, {8.}}));
 }
 
 TEST(QpOasesWorkspaceTest, testMatricesCorrect1)
@@ -50,7 +50,8 @@ TEST(QpOasesWorkspaceTest, testMatricesCorrect1)
 	auto const total_nx = numVariables(sz.begin(), sz.end());
 	auto const total_nc = numEqualities(sz.begin(), sz.end()) + numInequalities(sz.begin(), sz.end());
 
-	QpOasesWorkspace p(sz.begin(), sz.end());
+	QpOasesWorkspace ws(sz.begin(), sz.end());
+	auto p = ws.problem();
 
 	//---------------
 	// Test H, g
@@ -126,7 +127,7 @@ TEST(QpOasesWorkspaceTest, testMatricesCorrect1)
 		subvector(lb_expected, i, nx) = stage->lbx();	subvector(lb_expected, i + nx, nu) = stage->lbu();
 		subvector(ub_expected, i, nx) = stage->ubx();	subvector(ub_expected, i + nx, nu) = stage->ubu();
 
-		submatrix(A_expected, ia      , i, nx1, nx) = stage->A();	submatrix(A_expected, ia      , i + nx, nx1, nu) = stage->B();	submatrix(A_expected, ia, i + nx + nu, nx1, nx1) = -IdentityMatrix<DynamicMatrix<double>>(nx1);
+		submatrix(A_expected, ia      , i, nx1, nx) = stage->A();	submatrix(A_expected, ia      , i + nx, nx1, nu) = stage->B();	submatrix(A_expected, ia, i + nx + nu, nx1, nx1) = -IdentityMatrix<double>(nx1);
 		submatrix(A_expected, ia + nx1, i, nc , nx) = stage->C();	submatrix(A_expected, ia + nx1, i + nx, nc , nu) = stage->D();
 
 		subvector(lbA_expected, ia, nx1) = 0.;	subvector(lbA_expected, ia + nx1, nc) = stage->lbd();
@@ -138,11 +139,11 @@ TEST(QpOasesWorkspaceTest, testMatricesCorrect1)
 
 	ASSERT_EQ(ia, rows(A_expected));
 
-	EXPECT_EQ(print_wrap(p.H()), print_wrap(H_expected));
-	EXPECT_EQ(print_wrap(p.g()), print_wrap(g_expected));
-	EXPECT_EQ(print_wrap(p.lb()), print_wrap(lb_expected));
-	EXPECT_EQ(print_wrap(p.ub()), print_wrap(ub_expected));
-	EXPECT_EQ(print_wrap(p.A()), print_wrap(A_expected));
-	EXPECT_EQ(print_wrap(p.lbA()), print_wrap(lbA_expected));
-	EXPECT_EQ(print_wrap(p.ubA()), print_wrap(ubA_expected));
+	EXPECT_EQ(print_wrap(ws.H()), print_wrap(H_expected));
+	EXPECT_EQ(print_wrap(ws.g()), print_wrap(g_expected));
+	EXPECT_EQ(print_wrap(ws.lb()), print_wrap(lb_expected));
+	EXPECT_EQ(print_wrap(ws.ub()), print_wrap(ub_expected));
+	EXPECT_EQ(print_wrap(ws.A()), print_wrap(A_expected));
+	EXPECT_EQ(print_wrap(ws.lbA()), print_wrap(lbA_expected));
+	EXPECT_EQ(print_wrap(ws.ubA()), print_wrap(ubA_expected));
 }

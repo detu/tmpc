@@ -69,7 +69,7 @@ namespace tmpc
 		auto const  A3_bar = eval(A3 + (h / 2.) * A3 * A2_bar);	auto const  B3_bar = eval(B3 + (h / 2.) * A3 * B2_bar);
 		auto const  A4_bar =      A4 +  h       * A4 * A3_bar ;	auto const  B4_bar =      B4 +  h       * A4 * B3_bar ;
 
-		A = IdentityMatrix<StateStateMatrix>() + (h / 6.) * (A1_bar + 2. * A2_bar + 2. * A3_bar + A4_bar);
+		A = IdentityMatrix<double>(NX) + (h / 6.) * (A1_bar + 2. * A2_bar + 2. * A3_bar + A4_bar);
 		B = 					                 (h / 6.) * (B1_bar + 2. * B2_bar + 2. * B3_bar + B4_bar);
 	}
 
@@ -181,7 +181,7 @@ namespace tmpc
 		auto const  A3_bar = eval(A3 + (h / 2.) * A3 * A2_bar);	auto const  B3_bar = eval(B3 + (h / 2.) * A3 * B2_bar);
 		auto const  A4_bar =      A4 +  h       * A4 * A3_bar ;	auto const  B4_bar =      B4 +  h       * A4 * B3_bar ;
 
-		A = IdentityMatrix<StateStateMatrix>() + (h / 6.) * (A1_bar + 2. * A2_bar + 2. * A3_bar + A4_bar);
+		A = IdentityMatrix<double>(NX) + (h / 6.) * (A1_bar + 2. * A2_bar + 2. * A3_bar + A4_bar);
 		B = 					                 (h / 6.) * (B1_bar + 2. * B2_bar + 2. * B3_bar + B4_bar);
 
 		auto const& qA1_bar =      qA1;							    auto const& qB1_bar =      qB1;
@@ -270,7 +270,7 @@ namespace tmpc
 		auto const  A3_bar = eval(A3 + (h / 2.) * A3 * A2_bar);	auto const  B3_bar = eval(B3 + (h / 2.) * A3 * B2_bar);
 		auto const  A4_bar =      A4 +  h       * A4 * A3_bar ;	auto const  B4_bar =      B4 +  h       * A4 * B3_bar ;
 
-		A = IdentityMatrix<StateStateMatrix>() + (h / 6.) * (A1_bar + 2. * A2_bar + 2. * A3_bar + A4_bar);
+		A = IdentityMatrix<double>(NX) + (h / 6.) * (A1_bar + 2. * A2_bar + 2. * A3_bar + A4_bar);
 		B = 					                 (h / 6.) * (B1_bar + 2. * B2_bar + 2. * B3_bar + B4_bar);
 
 		auto const& rA1_bar =      rA1;							    auto const& rB1_bar =      rB1;
@@ -390,7 +390,7 @@ namespace tmpc
 		auto const  A3_bar = eval(A3 + (h / 2.) * A3 * A2_bar);	auto const  B3_bar = eval(B3 + (h / 2.) * A3 * B2_bar);
 		auto const  A4_bar =      A4 +  h       * A4 * A3_bar ;	auto const  B4_bar =      B4 +  h       * A4 * B3_bar ;
 
-		A = IdentityMatrix<StateStateMatrix>() + (h / 6.) * (A1_bar + 2. * A2_bar + 2. * A3_bar + A4_bar);
+		A = IdentityMatrix<double>(NX) + (h / 6.) * (A1_bar + 2. * A2_bar + 2. * A3_bar + A4_bar);
 		B = 					                 (h / 6.) * (B1_bar + 2. * B2_bar + 2. * B3_bar + B4_bar);
 
 		auto const& qA1_bar =      qA1;							    auto const& qB1_bar =      qB1;

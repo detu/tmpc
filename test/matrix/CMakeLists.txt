@@ -5,14 +5,13 @@ add_executable(test_matrix
 )
 
 target_include_directories(test_matrix
-    PRIVATE "${CMAKE_SOURCE_DIR}/include"
+    PRIVATE "${CMAKE_PROJECT_DIR}/include"
 )
 
-add_dependencies(test_matrix googletest)
-
 target_link_libraries(test_matrix
-    gtest
-    gtest_main
+    tmpc
+    GTest::GTest 
+    GTest::Main
     gmock
     ${CMAKE_THREAD_LIBS_INIT}    # Needed for gtest
 )

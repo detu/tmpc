@@ -6,6 +6,8 @@
 
 #include <qpOASES.hpp>
 
+#include <boost/range/iterator_range_core.hpp>
+
 #include <ostream>
 
 namespace tmpc {
@@ -35,16 +37,16 @@ class QpOasesWorkspace
 	struct Workspace;
 
 public:
-	// Scalar data type.
-	using Scalar = double;
+	// Real data type.
+	using Real = double;
 
 	// Matrix storage option -- important!
 	// Must be rowMajor, because qpOASES expects input matrices in row-major format.
 	static auto constexpr storageOrder = rowMajor;
 
 	typedef unsigned int size_type;
-	typedef DynamicMatrix<Scalar, storageOrder> Matrix;
-	typedef DynamicVector<Scalar, columnVector> Vector;
+	typedef DynamicMatrix<Real, storageOrder> Matrix;
+	typedef DynamicVector<Real, columnVector> Vector;
 
 	class Stage
 	{
@@ -159,6 +161,12 @@ public:
 		problem_.setOptions(detail::qpOASES_DefaultOptions());
 	}
 
+	template <typename IteratorRange>
+	explicit QpOasesWorkspace(IteratorRange sz)
+	:	QpOasesWorkspace(sz.begin(), sz.end())
+	{
+	}
+
 	/**
 	 * \brief Copy constructor.
 	 *
@@ -176,23 +184,20 @@ public:
 	QpOasesWorkspace& operator=(QpOasesWorkspace const&) = delete;
 	QpOasesWorkspace& operator=(QpOasesWorkspace &&) = delete;
 
-	Stage& operator[](std::size_t i) { return stage_.at(i);	}
-	Stage const& operator[](std::size_t i) const { return stage_.at(i);	}
-	std::size_t size() const { return stage_.size(); }
+	boost::iterator_range<std::vector<Stage>::iterator> problem()
+	{
+		return stage_;
+	}
 
-	typedef std::vector<Stage>::iterator iterator;
-	typedef std::vector<Stage>::const_iterator const_iterator;
-	typedef std::vector<Stage>::reference reference;
-	typedef std::vector<Stage>::const_reference const_reference;
+	boost::iterator_range<std::vector<Stage>::const_iterator> problem() const
+	{
+		return stage_;
+	}
 
-	iterator begin() { return stage_.begin(); }
-	iterator end() { return stage_.end(); }
-	const_iterator begin() const { return stage_.begin(); }
-	const_iterator end() const { return stage_.end(); }
-	reference front() {	return stage_.front(); }
-	reference back() { return stage_.back(); }
-	const_reference front() const {	return stage_.front(); }
-	const_reference back() const { return stage_.back(); }
+	boost::iterator_range<std::vector<Stage>::const_iterator> solution() const
+	{
+		return stage_;
+	}
 
 	// qpOASES-specific part
 	//
@@ -229,6 +234,9 @@ public:
 	// Set maximum number of working set recalculations for qpOASES
 	void maxWorkingSetRecalculations(unsigned val) noexcept { _maxWorkingSetRecalculations = val; }
 
+	/// \brief Number of working set recalculations during last solve().
+	unsigned numIter() const { return numIter_; }
+
 	void solve();
 
 private:
@@ -264,7 +272,7 @@ private:
 				auto const nx_next = (sz + 1)->nx();
 
 				// Assign the -I block in A
-				submatrix(A, i, j, nx_next, nx_next) = -IdentityMatrix<Matrix>(nx_next);
+				submatrix(A, i, j, nx_next, nx_next) = -IdentityMatrix<Real>(nx_next);
 
 				// Assign the 0 blocks in lbA and ubA
 				subvector(lbA, i, nx_next) = 0.;
