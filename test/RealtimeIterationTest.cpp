@@ -211,8 +211,8 @@ protected:
 
 typedef ::testing::Types<
 		// TODO: make Solver a template template parameter of RealtimeIteration?
-		tmpc::MpcRealtimeIteration<double, OCP, tmpc::QpOasesWorkspace>,
-		tmpc::MpcRealtimeIteration<double, OCP, tmpc::HpmpcWorkspace<double>>
+		tmpc::MpcRealtimeIteration<double, OCP, tmpc::QpOasesWorkspace>
+		,	tmpc::MpcRealtimeIteration<double, OCP, tmpc::HpmpcWorkspace<double>>
 	> RTITypes;
 
 TYPED_TEST_CASE(RealtimeIterationTest, RTITypes);
