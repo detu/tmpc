@@ -133,7 +133,7 @@ namespace tmpc
 	// by mistake used in calculations is easier to detect.
 	,	Q_(sz.nx(), sz.nx(), sNaN())
 	,	R_(sz.nu(), sz.nu(), sNaN())
-	,	S_(sz.nx(), sz.nu(), sNaN())
+	,	S_(sz.nu(), sz.nx(), sNaN())	// <-- HPIPM convention for S is [nu, nx] (the corresponding cost term is u' * S_{hpmpc} * x)
 	,	q_(sz.nx(), sNaN())
 	,	r_(sz.nu(), sNaN())
 	,	A_(nx_next, sz.nx(), sNaN())

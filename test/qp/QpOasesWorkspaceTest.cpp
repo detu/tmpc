@@ -112,7 +112,7 @@ namespace tmpc :: testing
 			size_t const nx = stage->size().nx();
 			size_t const nu = stage->size().nu();
 			size_t const nc = stage->size().nc();
-			size_t const nx1 = stage + 1 != p.end() ? stage[1].size().nx() : 0;
+			size_t const nx1 = stage + 1 != p.end() ? (stage + 1)->size().nx() : 0;
 
 			submatrix(H_expected,  i     , i, nx, nx) =       stage->Q();	submatrix(H_expected, i     , i + nx, nx, nu) = stage->S();
 			submatrix(H_expected,  i + nx, i, nu, nx) = trans(stage->S());	submatrix(H_expected, i + nx, i + nx, nu, nu) = stage->R();

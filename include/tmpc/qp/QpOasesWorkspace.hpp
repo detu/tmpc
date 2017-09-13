@@ -1,12 +1,16 @@
 #pragma once
 
 #include "QpSolverException.hpp"
+
 #include <tmpc/Matrix.hpp>
 #include <tmpc/qp/QpSize.hpp>
+#include <tmpc/qp/QpStageSolutionBase.hpp>
+#include <tmpc/qp/QpStageBase.hpp>
 
 #include <qpOASES.hpp>
 
 #include <boost/range/iterator_range_core.hpp>
+#include <boost/iterator/iterator_adaptor.hpp>
 
 #include <ostream>
 
@@ -49,6 +53,8 @@ public:
 	typedef DynamicVector<Real, columnVector> Vector;
 
 	class Stage
+	:	public QpStageSolutionBase<Stage>
+	,	public QpStageBase<Stage>
 	{
 		typedef Submatrix<Matrix> SubM;
 		typedef Subvector<Vector> SubV;
@@ -56,7 +62,7 @@ public:
 	public:
 		Stage(Workspace& ws, QpSize const& sz, size_t n, size_t na, size_t nx_next);
 		Stage(Stage const&) = delete;
-		Stage(Stage &&) = default;
+		Stage(Stage && s) = default;
 
 		template <typename Expr>
 		Stage& operator=(Expr const& rhs)
@@ -116,9 +122,12 @@ public:
 		SubV const& x() const { return x_;	}
 		SubV const& u() const { return u_;	}
 		SubV const& pi() const	{ return pi_; }
-		SubV const& lam_u() const { return lamU_; }
-		SubV const& lam_x() const { return lamX_; }
-		SubV const& lam_d() const { return lam_; }
+		decltype(auto) lam_lbu() const { return subvector(lamU_, 0, size_.nu()); }
+		decltype(auto) lam_ubu() const { return subvector(lamU_, size_.nu(), size_.nu()); }
+		decltype(auto) lam_lbx() const { return subvector(lamX_, 0, size_.nx()); }
+		decltype(auto) lam_ubx() const { return subvector(lamX_, size_.nx(), size_.nx()); }
+		decltype(auto) lam_lbd() const { return subvector(lam_, 0, size_.nc()); }
+		decltype(auto) lam_ubd() const { return subvector(lam_, size_.nc(), size_.nc()); }
 
 		QpSize const& size() const { return size_; }
 
@@ -184,19 +193,73 @@ public:
 	QpOasesWorkspace& operator=(QpOasesWorkspace const&) = delete;
 	QpOasesWorkspace& operator=(QpOasesWorkspace &&) = delete;
 
-	boost::iterator_range<std::vector<Stage>::iterator> problem()
+	class ProblemIterator
+	:	public boost::iterator_adaptor<
+			ProblemIterator	// derived
+		,	std::vector<Stage>::iterator	// base
+		,	QpStageBase<Stage>&	// value
+		,	boost::random_access_traversal_tag	// category of traversal
+		,	QpStageBase<Stage>&	// reference
+		>
 	{
-		return stage_;
+	public:
+		ProblemIterator() = default;
+		
+		ProblemIterator(base_type const& p)
+		:	iterator_adaptor_(p)
+		{			
+		}
+	};
+
+	class ConstProblemIterator
+	:	public boost::iterator_adaptor<
+			ConstProblemIterator	// derived
+		,	std::vector<Stage>::const_iterator	// base
+		,	QpStageBase<Stage> const&	// value
+		,	boost::random_access_traversal_tag	// category of traversal
+		,	QpStageBase<Stage> const&	// reference
+		>
+	{
+	public:
+		ConstProblemIterator() = default;
+		
+		ConstProblemIterator(base_type const& p)
+		:	iterator_adaptor_(p)
+		{			
+		}
+	};
+
+	class ConstSolutionIterator
+	:	public boost::iterator_adaptor<
+			ConstSolutionIterator	// derived
+		,	std::vector<Stage>::const_iterator	// base
+		,	QpStageSolutionBase<Stage> const&	// value
+		,	boost::random_access_traversal_tag	// category of traversal
+		,	QpStageSolutionBase<Stage> const&	// reference
+		>
+	{
+	public:
+		ConstSolutionIterator() = default;
+		
+		ConstSolutionIterator(base_type const& p)
+		:	iterator_adaptor_(p)
+		{			
+		}
+	};
+
+	boost::iterator_range<ProblemIterator> problem()
+	{
+		return boost::iterator_range<ProblemIterator>(stage_.begin(), stage_.end());
 	}
 
-	boost::iterator_range<std::vector<Stage>::const_iterator> problem() const
+	boost::iterator_range<ConstProblemIterator> problem() const
 	{
-		return stage_;
+		return boost::iterator_range<ConstProblemIterator>(stage_.begin(), stage_.end());
 	}
 
-	boost::iterator_range<std::vector<Stage>::const_iterator> solution() const
+	boost::iterator_range<ConstSolutionIterator> solution() const
 	{
-		return stage_;
+		return boost::iterator_range<ConstSolutionIterator>(stage_.begin(), stage_.end());
 	}
 
 	// qpOASES-specific part

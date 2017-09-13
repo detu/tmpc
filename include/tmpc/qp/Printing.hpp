@@ -1,5 +1,8 @@
 #pragma once
 
+#include "QpStageSolutionBase.hpp"
+#include "QpStageBase.hpp"
+
 #include <ostream>
 
 namespace tmpc
@@ -110,5 +113,55 @@ namespace tmpc
 
 			os << std::endl;
 		}
+	}
+
+	/**
+	 * \brief Print a QP stage in a human-readable format.
+	 */
+	template <typename Stage>
+	inline std::ostream& operator<<(std::ostream& os, QpStageBase<Stage> const& stage)
+	{
+		using std::endl;
+
+		os << "Q = " << endl << stage.Q() << endl << endl;
+		os << "R = " << endl << stage.R() << endl << endl;
+		os << "S = " << endl << stage.S() << endl << endl;
+		os << "q = " << endl << trans(stage.q()) << endl << endl;
+		os << "r = " << endl << trans(stage.r()) << endl << endl;
+
+		os << "A = " << endl << stage.A() << endl << endl;
+		os << "B = " << endl << stage.B() << endl << endl;
+		os << "b = " << endl << trans(stage.b()) << endl << endl;
+
+		os << "C = " << endl << stage.C() << endl << endl;
+		os << "D = " << endl << stage.D() << endl << endl;
+		os << "lbd = " << endl << trans(stage.lbd()) << endl << endl;
+		os << "ubd = " << endl << trans(stage.ubd()) << endl << endl;
+
+		os << "lbx = " << endl << trans(stage.lbx()) << endl << endl;
+		os << "ubx = " << endl << trans(stage.ubx()) << endl << endl;
+		os << "lbu = " << endl << trans(stage.lbu()) << endl << endl;
+		os << "ubu = " << endl << trans(stage.ubu()) << endl << endl;
+
+		return os;
+	}
+
+	/**
+	 * \brief Print a QP stage solution in a human-readable form.
+	 */
+	template <typename StageSolution>
+	inline std::ostream& operator<<(std::ostream& os, QpStageSolutionBase<StageSolution> const& solution)
+	{
+		os << "x = " << trans(solution.x()) << std::endl;
+		os << "u = " << trans(solution.u()) << std::endl;
+		os << "pi = " << trans(solution.pi()) << std::endl;
+		os << "lam_lbu = " << trans(solution.lam_lbu()) << std::endl;
+		os << "lam_ubu = " << trans(solution.lam_ubu()) << std::endl;
+		os << "lam_lbx = " << trans(solution.lam_lbx()) << std::endl;
+		os << "lam_ubx = " << trans(solution.lam_ubx()) << std::endl;
+		os << "lam_lbd = " << trans(solution.lam_lbd()) << std::endl;
+		os << "lam_ubd = " << trans(solution.lam_ubd()) << std::endl;
+
+		return os;
 	}
 }

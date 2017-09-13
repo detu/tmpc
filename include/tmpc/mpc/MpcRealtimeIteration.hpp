@@ -1,6 +1,7 @@
 #pragma once
 
 #include <tmpc/qp/diagnostics.hpp>
+#include <tmpc/qp/QpStageBase.hpp>
 #include <tmpc/mpc/MpcTrajectoryPoint.hpp>
 #include <tmpc/mpc/MpcSize.hpp>
 
@@ -77,8 +78,8 @@ namespace tmpc
 			// Add the calculated QP step to the working point.
 			for (size_t i = 0; i < nT() + 1; ++i)
 			{
-				workingPoint_[i].x(workingPoint_[i].x() + qp_.problem()[i].x());
-				workingPoint_[i].u(workingPoint_[i].u() + qp_.problem()[i].u());
+				workingPoint_[i].x(workingPoint_[i].x() + qp_.solution()[i].x());
+				workingPoint_[i].u(workingPoint_[i].u() + qp_.solution()[i].u());
 			}
 			
 			prepared_ = false;
@@ -310,7 +311,7 @@ namespace tmpc
 		private:
 			std::size_t const i_;
 			MpcRealtimeIteration& rti_;
-			typename QpWorkspace::Stage& qp_;
+			QpStageBase<typename QpWorkspace::Stage>& qp_;
 
 			/// \brief The working point (linearization point).
 			TrajectoryPoint& workingPoint_;

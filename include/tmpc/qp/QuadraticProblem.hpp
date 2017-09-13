@@ -1,6 +1,7 @@
 #pragma once
 
 #include "QpSize.hpp"
+#include "QpStageBase.hpp"
 
 #include <vector>
 #include <initializer_list>
@@ -9,6 +10,7 @@ namespace tmpc
 {
 	template <typename Kernel>
 	class QuadraticProblemStage
+	:	public QpStageBase<QuadraticProblemStage<Kernel>>
 	{
 	public:
 		using size_type = typename Kernel::size_t;

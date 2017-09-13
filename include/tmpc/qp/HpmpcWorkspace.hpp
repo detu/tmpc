@@ -2,10 +2,13 @@
 
 #include "QpSolverException.hpp"
 #include "QpSize.hpp"
+#include "QpStageSolutionBase.hpp"
+#include "QpStageBase.hpp"
 
 #include <tmpc/Matrix.hpp>
 
 #include <boost/range/iterator_range_core.hpp>
+#include <boost/iterator/iterator_adaptor.hpp>
 
 #include <limits>
 #include <stdexcept>
@@ -44,6 +47,8 @@ namespace tmpc
 		using IterStat = std::array<Real, 5>;
 
 		class Stage
+		:	public QpStageSolutionBase<Stage>
+		,	public QpStageBase<Stage>
 		{
 		public:
 			static auto constexpr storageOrder = rowMajor;
@@ -91,8 +96,9 @@ namespace tmpc
 			const Matrix& R() const { return R_; }
 			template <typename T> void R(const T& r) { full(R_) = r; }
 
-			const Matrix& S() const { return S_; }
-			template <typename T> void S(const T& s) { full(S_) = s; }
+			// HPMPC convention for S is [nu, nx], therefore the trans().
+			decltype(auto) S() const { return trans(S_); }
+			template <typename T> void S(const T& s) { full(S_) = trans(s); }
 
 			const Vector& q() const { return q_; }
 			template <typename T> void q(const T& q) { full(q_) = q; }
@@ -112,7 +118,36 @@ namespace tmpc
 			DynamicVector<Real> const& x() const { return x_; }
 			DynamicVector<Real> const& u() const { return u_;	}
 			DynamicVector<Real> const& pi() const	{ return pi_; }
-			DynamicVector<Real> const& lam() const { return lam_; }
+			
+			decltype(auto) lam_lbu() const 
+			{ 
+				return subvector(lam_, 2 * size_.nc(), size_.nu()); 
+			}
+
+			decltype(auto) lam_ubu() const 
+			{ 
+				return subvector(lam_, 2 * size_.nc() + size_.nu(), size_.nu()); 
+			}
+
+			decltype(auto) lam_lbx() const 
+			{ 
+				return subvector(lam_, 2 * size_.nc() + 2 * size_.nu(), size_.nx()); 
+			}
+
+			decltype(auto) lam_ubx() const 
+			{ 
+				return subvector(lam_, 2 * size_.nc() + 2 * size_.nu() + size_.nx(), size_.nx()); 
+			}
+
+			decltype(auto) lam_lbd() const 
+			{ 
+				return subvector(lam_, 0, size_.nc()); 
+			}
+
+			decltype(auto) lam_ubd() const 
+			{ 
+				return subvector(lam_, size_.nc(), size_.nc()); 
+			}
 
 			QpSize const& size() const { return size_; }
 
@@ -180,19 +215,73 @@ namespace tmpc
 			DynamicVector<Real> lam_;
 		};
 
-		boost::iterator_range<typename std::vector<Stage>::iterator> problem()
+		class ProblemIterator
+		:	public boost::iterator_adaptor<
+				ProblemIterator	// derived
+			,	typename std::vector<Stage>::iterator	// base
+			,	QpStageBase<Stage>&	// value
+			,	boost::random_access_traversal_tag	// category of traversal
+			,	QpStageBase<Stage>&	// reference
+			>
 		{
-			return stage_;
-		}
+		public:
+			ProblemIterator() = default;
+			
+			ProblemIterator(typename ProblemIterator::base_type const& p)
+			:	ProblemIterator::iterator_adaptor_(p)
+			{			
+			}
+		};
 
-		boost::iterator_range<typename std::vector<Stage>::const_iterator> problem() const
+		class ConstProblemIterator
+		:	public boost::iterator_adaptor<
+				ConstProblemIterator	// derived
+			,	typename std::vector<Stage>::const_iterator	// base
+			,	QpStageBase<Stage> const&	// value
+			,	boost::random_access_traversal_tag	// category of traversal
+			,	QpStageBase<Stage> const&	// reference
+			>
 		{
-			return stage_;
+		public:
+			ConstProblemIterator() = default;
+			
+			ConstProblemIterator(typename ConstProblemIterator::base_type const& p)
+			:	ConstProblemIterator::iterator_adaptor_(p)
+			{			
+			}
+		};
+	
+		class ConstSolutionIterator
+		:	public boost::iterator_adaptor<
+				ConstSolutionIterator	// derived
+			,	typename std::vector<Stage>::const_iterator	// base
+			,	QpStageSolutionBase<Stage> const&	// value
+			,	boost::random_access_traversal_tag	// category of traversal
+			,	QpStageSolutionBase<Stage> const&	// reference
+			>
+		{
+		public:
+			ConstSolutionIterator() = default;
+			
+			ConstSolutionIterator(typename ConstSolutionIterator::base_type const& p)
+			:	ConstSolutionIterator::iterator_adaptor_(p)
+			{			
+			}
+		};
+	
+		boost::iterator_range<ProblemIterator> problem()
+		{
+			return boost::iterator_range<ProblemIterator>(stage_.begin(), stage_.end());
 		}
-
-		boost::iterator_range<typename std::vector<Stage>::const_iterator> solution() const
+	
+		boost::iterator_range<ConstProblemIterator> problem() const
 		{
-			return stage_;
+			return boost::iterator_range<ConstProblemIterator>(stage_.begin(), stage_.end());
+		}
+	
+		boost::iterator_range<ConstSolutionIterator> solution() const
+		{
+			return boost::iterator_range<ConstSolutionIterator>(stage_.begin(), stage_.end());
 		}
 
 		boost::iterator_range<typename std::vector<IterStat>::const_iterator> stat() const

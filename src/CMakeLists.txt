@@ -18,7 +18,6 @@ set (SRC
 
     ${TMPC_INCLUDE_DIR}/qp/QpSize.hpp    qp/QpSize.cpp
 	${TMPC_INCLUDE_DIR}/qp/Condensing.hpp    qp/Condensing.cpp
-	${TMPC_INCLUDE_DIR}/qp/MultiStageQPSolution.hpp
 	${TMPC_INCLUDE_DIR}/qp/QuadraticProblem.hpp
 
 	${TMPC_INCLUDE_DIR}/qp/diagnostics.hpp
