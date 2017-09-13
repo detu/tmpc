@@ -4,21 +4,21 @@
 
 namespace tmpc
 {
-    template <typename Scalar_>
+    template <typename Real_>
     struct BlazeKernel
     {
         using size_t = blaze::size_t;
-        using Scalar = Scalar_;
+        using Real = Real_;
 
         template <size_t M>
-        using StaticVector = blaze::StaticVector<Scalar, M>;
+        using StaticVector = blaze::StaticVector<Real, M>;
         
-        using DynamicVector = blaze::DynamicVector<Scalar>;
+        using DynamicVector = blaze::DynamicVector<Real>;
 
         template <size_t M, size_t N>
-        using StaticMatrix = blaze::StaticMatrix<Scalar, M, N>;
+        using StaticMatrix = blaze::StaticMatrix<Real, M, N>;
         
-        using DynamicMatrix = blaze::DynamicMatrix<Scalar>;
+        using DynamicMatrix = blaze::DynamicMatrix<Real>;
     };
 }
 

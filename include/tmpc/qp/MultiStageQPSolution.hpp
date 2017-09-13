@@ -14,11 +14,11 @@
 
 namespace tmpc
 {
-	template <typename Scalar_>
+	template <typename Real_>
 	class SingleStageQPSolution
 	{
 	public:
-		typedef Scalar_ Scalar;
+		typedef Real_ Real;
 
 		SingleStageQPSolution(QpSize const& sz, size_t nx1)
 		// Initialize all numeric data to NaN so that if an uninitialized object
@@ -30,7 +30,7 @@ namespace tmpc
 		{
 		}
 
-		DynamicVector<Scalar> const& get_x() const
+		DynamicVector<Real> const& get_x() const
 		{
 			return _x;
 		}
@@ -41,7 +41,7 @@ namespace tmpc
 			_x = val;
 		}
 
-		DynamicVector<Scalar> const& get_u() const
+		DynamicVector<Real> const& get_u() const
 		{
 			return _u;
 		}
@@ -52,7 +52,7 @@ namespace tmpc
 			_u = val;
 		}
 
-		DynamicVector<Scalar> const& get_lam() const
+		DynamicVector<Real> const& get_lam() const
 		{
 			return _lam;
 		}
@@ -64,24 +64,24 @@ namespace tmpc
 
 	private:
 		QpSize size_;
-		DynamicVector<Scalar> _x;
-		DynamicVector<Scalar> _u;
-		DynamicVector<Scalar> _lam;
+		DynamicVector<Real> _x;
+		DynamicVector<Real> _u;
+		DynamicVector<Real> _lam;
 
-		static Scalar constexpr sNaN()
+		static Real constexpr sNaN()
 	 	{
-			return std::numeric_limits<Scalar>::signaling_NaN();
+			return std::numeric_limits<Real>::signaling_NaN();
 		}
 	};
 	
 	//
 	// Provides a generic solution interface for multistage QP solvers.
 	//
-	template <typename Scalar_>
-	class MultiStageQPSolution : public detail::NonResizableCollection<SingleStageQPSolution<Scalar_>>
+	template <typename Real_>
+	class MultiStageQPSolution : public detail::NonResizableCollection<SingleStageQPSolution<Real_>>
 	{
 	public:
-		typedef Scalar_ Scalar;
+		typedef Real_ Real;
 
 		template <typename InputIterator>
 		MultiStageQPSolution(InputIterator sz_first, InputIterator sz_last)

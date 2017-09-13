@@ -49,8 +49,8 @@ namespace tmpc :: testing
 		static auto constexpr NT = 2u;
 		static auto constexpr NZ = NX + NU;
 
-		using Scalar = double;
-		using Kernel = BlazeKernel<Scalar>;
+		using Real = double;
+		using Kernel = BlazeKernel<Real>;
 		using Problem = QuadraticProblem<Kernel>;
 		using StateVector = Kernel::StaticVector<NX>;
 		using InputVector = Kernel::StaticVector<NU>;

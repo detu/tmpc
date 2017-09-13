@@ -12,7 +12,7 @@ namespace tmpc
 	{
 	public:
 		using size_type = typename Kernel::size_t;
-		using Scalar = typename Kernel::Scalar;
+		using Real = typename Kernel::Real;
 		using Matrix = typename Kernel::DynamicMatrix;
 		using Vector = typename Kernel::DynamicVector;
 
@@ -271,7 +271,7 @@ namespace tmpc
 	{
 	public:
 		using size_type = typename Kernel::size_t;
-		using Scalar = typename Kernel::Scalar;
+		using Real = typename Kernel::Real;
 		using Matrix = typename Kernel::DynamicMatrix;
 		using Vector = typename Kernel::DynamicVector;
 		using Stage = QuadraticProblemStage<Kernel>;

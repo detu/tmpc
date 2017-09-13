@@ -4,18 +4,18 @@
 
 namespace tmpc
 {
-	template <typename Scalar_>
+	template <typename Real_>
 	class TrajectoryPoint
 	{
 	public:
-		typedef Scalar_ Scalar;
+		typedef Real_ Real;
 
 		decltype(auto) x()
 		{
 			return full(x_);
 		}
 
-		DynamicVector<Scalar> const& x() const
+		DynamicVector<Real> const& x() const
 		{
 			return x_;
 		}
@@ -25,7 +25,7 @@ namespace tmpc
 			return full(u_);
 		}
 
-		DynamicVector<Scalar> const& u() const
+		DynamicVector<Real> const& u() const
 		{
 			return u_;
 		}
@@ -35,7 +35,7 @@ namespace tmpc
 			return full(w_);
 		}
 
-		DynamicVector<Scalar> const& w() const
+		DynamicVector<Real> const& w() const
 		{
 			return w_;
 		}
@@ -45,20 +45,20 @@ namespace tmpc
 			return full(y_);
 		}
 
-		DynamicVector<Scalar> const& y() const
+		DynamicVector<Real> const& y() const
 		{
 			return y_;
 		}
 
 	private:
-		DynamicVector<Scalar> x_;
-		DynamicVector<Scalar> u_;
-		DynamicVector<Scalar> w_;
-		DynamicVector<Scalar> y_;
+		DynamicVector<Real> x_;
+		DynamicVector<Real> u_;
+		DynamicVector<Real> w_;
+		DynamicVector<Real> y_;
 	};
 
-	template <typename Scalar>
-	inline std::ostream& operator<<(std::ostream& os, TrajectoryPoint<Scalar> const& p)
+	template <typename Real>
+	inline std::ostream& operator<<(std::ostream& os, TrajectoryPoint<Real> const& p)
 	{
 		os << "x=" << trans(p.x()) 
 			<< "\tu=" << trans(p.u()) 
