@@ -270,7 +270,7 @@ namespace tmpc :: testing
 	{
 		using Real = typename TestFixture::Real;
 
-		typename TestFixture::Workspace ws {std::array<OpSize, 2> { OpSize(3, 2, 0), OpSize(3, 2, 0) } };
+		typename TestFixture::Workspace ws {std::array<OpSize, 2> { OpSize(3, 2, 0), OpSize(0, 0, 0) } };
 
 		auto problem = ws.problem();
 		problem[0].Q(DynamicMatrix<Real>({
@@ -301,23 +301,13 @@ namespace tmpc :: testing
 			0.118997681558377
 		}));
 
-		problem[0].A(IdentityMatrix<Real>(3));
-		problem[0].B(StaticMatrix<Real, 3, 2>(0.));
-		problem[0].b(StaticVector<Real, 3>(0.));
+		problem[0].A(StaticMatrix<Real, 0, 3>(0.));
+		problem[0].B(StaticMatrix<Real, 0, 2>(0.));
+		problem[0].b(StaticVector<Real, 0>(0.));
 		problem[0].lbx(-10000.);
 		problem[0].ubx(10000.);
 		problem[0].lbu(-10000.);
 		problem[0].ubu(10000.);
-
-		problem[1].Q(problem[0].Q());
-		problem[1].R(problem[0].R());
-		problem[1].S(problem[0].S());
-		problem[1].q(problem[0].q());
-		problem[1].r(problem[0].r());
-		problem[1].lbx(-10000.);
-		problem[1].ubx(10000.);
-		problem[1].lbu(-10000.);
-		problem[1].ubu(10000.);
 
 		try
 		{
@@ -332,21 +322,13 @@ namespace tmpc :: testing
 				-345.347969700289
 			}));
 
-			EXPECT_PRED2(MatrixApproxEquality(1e-6), solution[1].x(), (Vector {
-				146.566682434017,
-				-427.218558989821,
-				-345.347969700289
-			}));
-
 			EXPECT_PRED2(MatrixApproxEquality(1e-6), solution[0].u(), (Vector {
 				769.663140469139,
 				-191.122524763114
 			}));
 
-			EXPECT_PRED2(MatrixApproxEquality(1e-6), solution[1].u(), (Vector {
-				769.663140469139,
-				-191.122524763114
-			}));
+			EXPECT_PRED2(MatrixApproxEquality(1e-6), solution[1].x(), (Vector {}));
+			EXPECT_PRED2(MatrixApproxEquality(1e-6), solution[1].u(), (Vector {}));
 		}
 		catch (std::runtime_error const&)
 		{

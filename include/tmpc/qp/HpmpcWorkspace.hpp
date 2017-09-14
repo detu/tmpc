@@ -52,6 +52,7 @@ namespace tmpc
 		{
 		public:
 			static auto constexpr storageOrder = rowMajor;
+			using Real = HpmpcWorkspace::Real;
 			typedef DynamicMatrix<Real, storageOrder> Matrix;
 			typedef DynamicVector<Real, columnVector> Vector;
 
@@ -447,7 +448,6 @@ namespace tmpc
 		// Iteration statistics. HPMPC returns 5 Real numbers per iteration.
 		std::vector<IterStat> stat_;
 
-		Real mu_ = 0.;
 		Real muTol_ = 1e-10;
 
 		// Warmstarting disabled on purpose.

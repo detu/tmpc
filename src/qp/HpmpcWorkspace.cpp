@@ -71,8 +71,11 @@ namespace tmpc
 			// Number of QP steps for HPMPC
 			auto const N = stage_.size() - 1;
 
+			// What is a good value for mu0?
+			Real mu0 = 1.;
+
 			// Call HPMPC
-			auto const ret = ip_ocp_hard_tv(&numIter_, maxIter(), mu_, muTol_, N,
+			auto const ret = ip_ocp_hard_tv(&numIter_, maxIter(), mu0, muTol_, N,
 					nx_.data(), nu_.data(), nb_.data(), hidxb_.data(), ng_.data(), N, _warmStart ? 1 : 0, A_.data(), B_.data(), b_.data(),
 					Q_.data(), S_.data(), R_.data(), q_.data(), r_.data(), lb_.data(), ub_.data(), C_.data(), D_.data(),
 					lg_.data(), ug_.data(), x_.data(), u_.data(), pi_.data(), lam_.data(), infNormRes_.data(),
