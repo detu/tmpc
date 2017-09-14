@@ -33,7 +33,7 @@ namespace tmpc
 	};
 
 	/**
-	 * \brief Multistage QP solver using qpOASES
+	 * \brief Multistage QP solver using HPMPC
 	 *
 	 * \tparam <Real_> real number type
 	 */
@@ -43,7 +43,9 @@ namespace tmpc
 	public:
 		using Real = Real_;
 		
-		// Iteration statistics. HPMPC returns 5 Real numbers per iteration.
+		// Iteration statistics. HPMPC returns 5 Real numbers per iteration:
+		// step length for predictor and corrector, 
+		// centering parameter, duality measure for predictor and corrector.
 		using IterStat = std::array<Real, 5>;
 
 		class Stage
@@ -67,85 +69,85 @@ namespace tmpc
 				return *this;
 			}
 
-			const Matrix& A() const { return A_; }
+			auto const& A() const { return A_; }
 			template <typename T> void A(const T& a) { full(A_) = a; }
 
-			const Matrix& B() const { return B_; }
+			auto const& B() const { return B_; }
 			template <typename T> void B(const T& b) { full(B_) = b; }
 
-			Vector const& b() const { return b_; }
+			auto const& b() const { return b_; }
 			template <typename T> void b(const T& b) { full(b_) = b; }
 
-			const Matrix& C() const { return C_; }
+			auto const& C() const { return C_; }
 			template <typename T> void C(const T& c) { full(C_) = c; }
 
-			const Matrix& D() const { return D_; }
+			auto const& D() const { return D_; }
 			template <typename T> void D(const T& d) { full(D_) = d; }
 
-			const Vector& lbd() const {	return lbd_; }
+			auto const& lbd() const {	return lbd_; }
 			template <typename T> void lbd(const T& lbd) { full(lbd_) = lbd; }
 
-			Subvector<Vector const> lbu() const { return subvector(lb_, 0, size_.nu());	}			
+			auto lbu() const { return subvector(lb_, 0, size_.nu());	}			
 			template <typename T> void lbu(const T& lbu) { subvector(lb_, 0, size_.nu()) = lbu; }
 
-			Subvector<Vector const> lbx() const { return subvector(lb_, size_.nu(), size_.nx()); }
+			auto lbx() const { return subvector(lb_, size_.nu(), size_.nx()); }
 			template <typename T> void lbx(const T& lbx) { subvector(lb_, size_.nu(), size_.nx()) = lbx; }
 
-			const Matrix& Q() const { return Q_; }
+			auto const& Q() const { return Q_; }
 			template <typename T> void Q(const T& q) { full(Q_) = q; }
 
-			const Matrix& R() const { return R_; }
+			auto const& R() const { return R_; }
 			template <typename T> void R(const T& r) { full(R_) = r; }
 
 			// HPMPC convention for S is [nu, nx], therefore the trans().
-			decltype(auto) S() const { return trans(S_); }
+			auto S() const { return trans(S_); }
 			template <typename T> void S(const T& s) { full(S_) = trans(s); }
 
-			const Vector& q() const { return q_; }
+			auto const& q() const { return q_; }
 			template <typename T> void q(const T& q) { full(q_) = q; }
 
-			const Vector& r() const { return r_; }
+			auto const& r() const { return r_; }
 			template <typename T> void r(const T& r) { full(r_) = r; }
 
-			const Vector& ubd() const { return ubd_; }
+			auto const& ubd() const { return ubd_; }
 			template <typename T> void ubd(const T& ubd) { full(ubd_) = ubd; }
 
-			Subvector<Vector const> ubu() const { return subvector(ub_, 0, size_.nu()); }
+			auto ubu() const { return subvector(ub_, 0, size_.nu()); }
 			template <typename T> void ubu(const T& ubu) { subvector(ub_, 0, size_.nu()) = ubu; }
 
-			Subvector<Vector const> ubx() const { return subvector(ub_, size_.nu(), size_.nx()); }
+			auto ubx() const { return subvector(ub_, size_.nu(), size_.nx()); }
 			template <typename T> void ubx(const T& ubx) { subvector(ub_, size_.nu(), size_.nx()) = ubx; }
 
-			DynamicVector<Real> const& x() const { return x_; }
-			DynamicVector<Real> const& u() const { return u_;	}
-			DynamicVector<Real> const& pi() const	{ return pi_; }
+			auto const& x() const { return x_; }
+			auto const& u() const { return u_;	}
+			auto const& pi() const	{ return pi_; }
 			
-			decltype(auto) lam_lbu() const 
+			auto lam_lbu() const 
 			{ 
 				return subvector(lam_, 2 * size_.nc(), size_.nu()); 
 			}
 
-			decltype(auto) lam_ubu() const 
+			auto lam_ubu() const 
 			{ 
 				return subvector(lam_, 2 * size_.nc() + size_.nu(), size_.nu()); 
 			}
 
-			decltype(auto) lam_lbx() const 
+			auto lam_lbx() const 
 			{ 
 				return subvector(lam_, 2 * size_.nc() + 2 * size_.nu(), size_.nx()); 
 			}
 
-			decltype(auto) lam_ubx() const 
+			auto lam_ubx() const 
 			{ 
 				return subvector(lam_, 2 * size_.nc() + 2 * size_.nu() + size_.nx(), size_.nx()); 
 			}
 
-			decltype(auto) lam_lbd() const 
+			auto lam_lbd() const 
 			{ 
 				return subvector(lam_, 0, size_.nc()); 
 			}
 
-			decltype(auto) lam_ubd() const 
+			auto lam_ubd() const 
 			{ 
 				return subvector(lam_, size_.nc(), size_.nc()); 
 			}
