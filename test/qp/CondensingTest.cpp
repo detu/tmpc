@@ -1,6 +1,5 @@
 #include <tmpc/qp/Condensing.hpp>
 #include <tmpc/qp/QuadraticProblem.hpp>
-#include <tmpc/core/problem_specific.hpp>
 #include <tmpc/mpc/MpcQpSize.hpp>
 
 #include <tmpc/BlazeKernel.hpp>

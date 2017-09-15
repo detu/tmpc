@@ -8,7 +8,6 @@ set(TMPC_INCLUDE_DIR ${PROJECT_INCLUDE_DIR}/tmpc)
 set (SRC
     ${TMPC_INCLUDE_DIR}/Matrix.hpp
     
-    ${TMPC_INCLUDE_DIR}/util/TrajectoryPoint.hpp
     ${TMPC_INCLUDE_DIR}/util/gauss_newton.hpp
     ${TMPC_INCLUDE_DIR}/util/problem_specific.hpp
 

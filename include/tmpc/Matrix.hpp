@@ -16,6 +16,5 @@ using namespace blaze;
 #else
 
 #include "matrix/EigenAdapter.hpp"
-#include "core/matrix.hpp"
 
 #endif
