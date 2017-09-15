@@ -141,7 +141,8 @@ namespace tmpc
 			}
 		}
 
-		QpWorkspace const& qp() const
+		// TODO: expose only the solver interface.
+		QpWorkspace& qpWorkspace()
 		{
 			return qp_;
 		}
