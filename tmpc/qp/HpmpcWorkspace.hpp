@@ -101,6 +101,7 @@ namespace tmpc
 
 			// HPMPC convention for S is [nu, nx], therefore the trans().
 			auto S() const { return trans(S_); }
+			void S(Real v) { S_ = v; }
 			template <typename T> void S(const T& s) { full(S_) = trans(s); }
 
 			auto const& q() const { return q_; }
