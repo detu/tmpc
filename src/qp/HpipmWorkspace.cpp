@@ -162,6 +162,8 @@ namespace tmpc
 	,	D_(sz.nc(), sz.nu(), sNaN())
 	,	lb_(sz.nu() + sz.nx(), sNaN())
 	,	ub_(sz.nu() + sz.nx(), sNaN())
+	,	lb_internal_(sz.nu() + sz.nx(), sNaN())
+	,	ub_internal_(sz.nu() + sz.nx(), sNaN())
 	,	lbd_(sz.nc(), sNaN())
 	,	ubd_(sz.nc(), sNaN())
 	,	x_(sz.nx(), sNaN())

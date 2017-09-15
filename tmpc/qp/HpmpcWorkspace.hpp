@@ -174,16 +174,21 @@ namespace tmpc
 			// Adjust hidxb so to account for infs in state and input bounds.
 			void adjustBoundsIndex()
 			{
-				hidxb_.clear();	// this will not change the capacity and the hidxb_.data() pointer should stay the same.
-				auto idx = std::back_inserter(hidxb_);
+				// this will not change the capacity and the data() pointers should stay the same.
+				hidxb_.clear();
+				lb_internal_.clear();
+				ub_internal_.clear();
 
 				// Cycle through the bounds and check for infinities
 				for (size_t i = 0; i < size_.nu() + size_.nx(); ++i)
 				{
 					if (std::isfinite(lb_[i]) && std::isfinite(ub_[i]))
 					{
-						// If both bounds are finite, add i to the bounds index.
-						*idx++ = i;
+						// If both bounds are finite, add i to the bounds index,
+						// and copy values to the lb_internal_ and ub_internal_.
+						hidxb_.push_back(i);
+						lb_internal_.push_back(lb_[i]);
+						ub_internal_.push_back(ub_[i]);
 					}
 					else 
 					{
@@ -209,8 +214,8 @@ namespace tmpc
 			Real const * R_data () const { return R_.data(); }
 			Real const * q_data () const { return q_.data(); }
 			Real const * r_data () const { return r_.data();	}
-			Real const * lb_data() const { return lb_.data(); }
-			Real const * ub_data() const { return ub_.data(); }
+			Real const * lb_data() const { return lb_internal_.data(); }
+			Real const * ub_data() const { return ub_internal_.data(); }
 			Real const * C_data () const { return C_.data(); }
 			Real const * D_data () const { return D_.data(); }
 			Real const * lg_data() const { return lbd_.data(); }
@@ -253,6 +258,11 @@ namespace tmpc
 			// lb <= [u; x] <= ub
 			Vector lb_;
 			Vector ub_;
+
+			// Lower and upper bound arrays for HPMPC,
+			// containing finite values only.
+			std::vector<Real> lb_internal_;
+			std::vector<Real> ub_internal_;
 
 			DynamicVector<Real> x_;
 			DynamicVector<Real> u_;
