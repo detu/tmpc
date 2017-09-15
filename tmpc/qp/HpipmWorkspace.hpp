@@ -6,6 +6,7 @@
 #include "QpStageBase.hpp"
 
 #include <tmpc/Matrix.hpp>
+#include <tmpc/Math.hpp>
 
 #include <hpipm_d_ocp_qp.h>
 #include <hpipm_d_ocp_qp_sol.h>
@@ -181,6 +182,30 @@ namespace tmpc
 
 			QpSize const& size() const { return size_; }
 
+			// Adjust hidxb so to account for infs in state and input bounds.
+			void adjustBoundsIndex()
+			{
+				hidxb_.clear();	// this will not change the capacity and the hidxb_.data() pointer should stay the same.
+				auto idx = std::back_inserter(hidxb_);
+
+				// Cycle through the bounds and check for infinities
+				for (size_t i = 0; i < size_.nu() + size_.nx(); ++i)
+				{
+					if (std::isfinite(lb_[i]) && std::isfinite(ub_[i]))
+					{
+						// If both bounds are finite, add i to the bounds index.
+						*idx++ = i;
+					}
+					else 
+					{
+						// Otherwise, check that the values are [-inf, inf]
+						if (!(lb_[i] == -infinity<Real>() && ub_[i] == infinity<Real>()))
+							throw std::invalid_argument("And invalid QP bound is found. For HPMPC, "
+								"the bounds should be either both finite or [-inf, inf]");
+					}
+				}
+			}
+
 			// ******************************************************
 			//                HPIPM raw data interface.
 			//
@@ -202,6 +227,7 @@ namespace tmpc
 			Real const * lg_data() const { return lbd_.data(); }
 			Real const * ug_data() const { return ubd_.data(); }
 			int const * hidxb_data() const { return hidxb_.data(); }
+			int nb() const { return hidxb_.size(); }
 
 			Real * x_data() { return x_.data(); }
 			Real * u_data() { return u_.data(); }
@@ -339,14 +365,16 @@ namespace tmpc
 			{
 				int const N = stage_.size() - 1;
 
+				// Allocate big enough memory pools for Qp, QpSol and SolverWorkspace.
+				// nb_ is set to nx+nu at this point, which ensures maximum capacity.
 				ocpQpMem_.resize(HPIPM::memsize_ocp_qp(N, nx_.data(), nu_.data(), nb_.data(), ng_.data()));
-				HPIPM::create_ocp_qp(N, nx_.data(), nu_.data(), nb_.data(), ng_.data(), &ocpQp_, ocpQpMem_.data());
+
+				// This ocp_qp borns and dies just for memsize_ipm_hard_ocp_qp() to calculate the necessary workspace size.
+				typename HPIPM::ocp_qp qp;
+				HPIPM::create_ocp_qp(N, nx_.data(), nu_.data(), nb_.data(), ng_.data(), &qp, ocpQpMem_.data());
 
 				ocpQpSolMem_.resize(HPIPM::memsize_ocp_qp_sol(N, nx_.data(), nu_.data(), nb_.data(), ng_.data()));
-				HPIPM::create_ocp_qp_sol(N, nx_.data(), nu_.data(), nb_.data(), ng_.data(), &ocpQpSol_, ocpQpSolMem_.data());
-				
-				solverWorkspaceMem_.resize(HPIPM::memsize_ipm_hard_ocp_qp(&ocpQp_, &solverArg_));
-				HPIPM::create_ipm_hard_ocp_qp(&ocpQp_, &solverArg_, &solverWorkspace_, solverWorkspaceMem_.data());
+				solverWorkspaceMem_.resize(HPIPM::memsize_ipm_hard_ocp_qp(&qp, &solverArg_));				
 			}
 		}
 
@@ -504,13 +532,8 @@ namespace tmpc
 		//
 		// --------------------------------
 		std::vector<char> ocpQpMem_;
-		typename HPIPM::ocp_qp ocpQp_;
-		
 		std::vector<char> ocpQpSolMem_;
-		typename HPIPM::ocp_qp_sol ocpQpSol_;
-		
 		std::vector<char> solverWorkspaceMem_;
-		typename HPIPM::ipm_hard_ocp_qp_workspace solverWorkspace_;
 
 		typename HPIPM::ipm_hard_ocp_qp_arg solverArg_;
 

@@ -100,19 +100,38 @@ namespace tmpc
 	{
 		if (stage_.size() > 1)
 		{
+			// Recalculate bounds indices of each stage, at the bounds might have changed.				
+			// Update the nb_ array.
+			std::transform(stage_.begin(), stage_.end(), nb_.begin(), [] (Stage& s) -> int
+			{
+				s.adjustBoundsIndex();
+				return s.nb();
+			});
+
 			// Number of QP steps for HPIPM
 			auto const N = stage_.size() - 1;
+
+			// Init HPIPM structures. Since the nb_ might change if the bounds change, we need to do it every time, sorry.
+			// Hopefully these operations are not expensive compared to actual solving.
+			typename HPIPM::ocp_qp qp;
+			HPIPM::create_ocp_qp(N, nx_.data(), nu_.data(), nb_.data(), ng_.data(), &qp, ocpQpMem_.data());
+
+			typename HPIPM::ocp_qp_sol sol;
+			HPIPM::create_ocp_qp_sol(N, nx_.data(), nu_.data(), nb_.data(), ng_.data(), &sol, ocpQpSolMem_.data());
+
+			typename HPIPM::ipm_hard_ocp_qp_workspace solver_workspace;
+			HPIPM::create_ipm_hard_ocp_qp(&qp, &solverArg_, &solver_workspace, solverWorkspaceMem_.data());
 
 			// Convert the problem
 			HPIPM::cvt_colmaj_to_ocp_qp(
 				A_.data(), B_.data(), b_.data(), 
 				Q_.data(), S_.data(), R_.data(), q_.data(), r_.data(), 
 				hidxb_.data(), lb_.data(), ub_.data(), 
-				C_.data(), D_.data(), lg_.data(), ug_.data(), &ocpQp_);
+				C_.data(), D_.data(), lg_.data(), ug_.data(), &qp);
 
 			// Call HPIPM
 			auto const ret = 0;
-			HPIPM::solve_ipm_hard_ocp_qp(&ocpQp_, &ocpQpSol_, &solverWorkspace_);
+			HPIPM::solve_ipm_hard_ocp_qp(&qp, &sol, &solver_workspace);
 
 			if (ret != 0)
 			{
@@ -120,7 +139,7 @@ namespace tmpc
 			}
 
 			// Convert the solution
-			HPIPM::cvt_ocp_qp_sol_to_colmaj(&ocpQp_, &ocpQpSol_, 
+			HPIPM::cvt_ocp_qp_sol_to_colmaj(&qp, &sol, 
 				u_.data(), x_.data(), pi_.data(), lam_lb_.data(), lam_ub_.data(), lam_lg_.data(), lam_ug_.data());
 		}
 	}
@@ -162,7 +181,7 @@ namespace tmpc
 
 		nx_.push_back(sz.nx());
 		nu_.push_back(sz.nu());
-		nb_.push_back(sz.nx() + sz.nu());
+		nb_.push_back(st.nb());
 		ng_.push_back(sz.nc());
 		
 		hidxb_.push_back(st.hidxb_data());
