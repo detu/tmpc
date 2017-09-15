@@ -6,6 +6,7 @@
 #include "QpStageBase.hpp"
 
 #include <tmpc/Matrix.hpp>
+#include <tmpc/Math.hpp>
 
 #include <boost/range/iterator_range_core.hpp>
 #include <boost/iterator/iterator_adaptor.hpp>
@@ -87,11 +88,20 @@ namespace tmpc
 			auto const& lbd() const {	return lbd_; }
 			template <typename T> void lbd(const T& lbd) { full(lbd_) = lbd; }
 
-			auto lbu() const { return subvector(lb_, 0, size_.nu());	}			
-			template <typename T> void lbu(const T& lbu) { subvector(lb_, 0, size_.nu()) = lbu; }
+			auto lbu() const { return subvector(lb_, 0, size_.nu());	}		
+			
+			// TODO: consider setting both upper and lower bounds at the same time.
+			// Maybe create a Bounds class?
+			template <typename T> void lbu(const T& lbu) 
+			{ 
+				subvector(lb_, 0, size_.nu()) = lbu;
+			}
 
 			auto lbx() const { return subvector(lb_, size_.nu(), size_.nx()); }
-			template <typename T> void lbx(const T& lbx) { subvector(lb_, size_.nu(), size_.nx()) = lbx; }
+			template <typename T> void lbx(const T& lbx) 
+			{ 
+				subvector(lb_, size_.nu(), size_.nx()) = lbx; 
+			}
 
 			auto const& Q() const { return Q_; }
 			template <typename T> void Q(const T& q) { full(Q_) = q; }
@@ -114,10 +124,16 @@ namespace tmpc
 			template <typename T> void ubd(const T& ubd) { full(ubd_) = ubd; }
 
 			auto ubu() const { return subvector(ub_, 0, size_.nu()); }
-			template <typename T> void ubu(const T& ubu) { subvector(ub_, 0, size_.nu()) = ubu; }
+			template <typename T> void ubu(const T& ubu) 
+			{ 
+				subvector(ub_, 0, size_.nu()) = ubu;
+			}
 
 			auto ubx() const { return subvector(ub_, size_.nu(), size_.nx()); }
-			template <typename T> void ubx(const T& ubx) { subvector(ub_, size_.nu(), size_.nx()) = ubx; }
+			template <typename T> void ubx(const T& ubx) 
+			{ 
+				subvector(ub_, size_.nu(), size_.nx()) = ubx; 
+			}
 
 			auto const& x() const { return x_; }
 			auto const& u() const { return u_;	}
@@ -155,6 +171,30 @@ namespace tmpc
 
 			QpSize const& size() const { return size_; }
 
+			// Adjust hidxb so to account for infs in state and input bounds.
+			void adjustBoundsIndex()
+			{
+				hidxb_.clear();	// this will not change the capacity and the hidxb_.data() pointer should stay the same.
+				auto idx = std::back_inserter(hidxb_);
+
+				// Cycle through the bounds and check for infinities
+				for (size_t i = 0; i < size_.nu() + size_.nx(); ++i)
+				{
+					if (std::isfinite(lb_[i]) && std::isfinite(ub_[i]))
+					{
+						// If both bounds are finite, add i to the bounds index.
+						*idx++ = i;
+					}
+					else 
+					{
+						// Otherwise, check that the values are [-inf, inf]
+						if (!(lb_[i] == -infinity<Real>() && ub_[i] == infinity<Real>()))
+							throw std::invalid_argument("And invalid QP bound is found. For HPMPC, "
+								"the bounds should be either both finite or [-inf, inf]");
+					}
+				}
+			}
+
 			// ******************************************************
 			//                HPMPC raw data interface.
 			//
@@ -176,6 +216,7 @@ namespace tmpc
 			Real const * lg_data() const { return lbd_.data(); }
 			Real const * ug_data() const { return ubd_.data(); }
 			int const * hidxb_data() const { return hidxb_.data(); }
+			int nb() const { return hidxb_.size(); }
 
 			Real * x_data() { return x_.data(); }
 			Real * u_data() { return u_.data(); }

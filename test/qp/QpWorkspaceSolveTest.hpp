@@ -4,6 +4,7 @@
 #include <tmpc/qp/Printing.hpp>
 
 #include <tmpc/Matrix.hpp>
+#include <tmpc/Math.hpp>
 
 #include <tmpc/qp/Printing.hpp>
 
@@ -344,6 +345,88 @@ namespace tmpc :: testing
 		}
 	}
 
+	/**
+	 \brief Check that infinite state and input bounds are correctly handled by a QP solver.
+	 */
+	TYPED_TEST_P(QpWorkspaceSolveTest, testInfiniteBounds)
+	{
+		using Real = typename TestFixture::Real;
+
+		typename TestFixture::Workspace ws {std::array<OpSize, 2> { OpSize(3, 2, 0), OpSize(0, 0, 0) } };
+
+		auto problem = ws.problem();
+		problem[0].Q(DynamicMatrix<Real>({
+			{2.73449304081811,	1.88589647487061,	2.07850896302612},
+			{1.88589647487061,	2.23398400982993,	2.04607087035366},
+			{2.07850896302612,	2.04607087035366,	2.75909914758841}
+		}));
+		
+		problem[0].R(DynamicMatrix<Real>({
+			{2.58480403401811,	2.27683785836085},
+			{2.27683785836085,	2.48531656389865}
+		}));
+
+		problem[0].S(DynamicMatrix<Real>({
+			{1.94423942432824,	1.95671439063179},
+			{2.31644542710892,	2.08748866537729},
+			{2.46061457306194,	1.94728938270016}
+		}));
+
+		problem[0].q(DynamicVector<Real>({
+			0.276025076998578,
+			0.679702676853675,
+			0.655098003973841
+		}));
+
+		problem[0].r(DynamicVector<Real>({
+			0.162611735194631,
+			0.118997681558377
+		}));
+
+		problem[0].A(StaticMatrix<Real, 0, 3>(0.));
+		problem[0].B(StaticMatrix<Real, 0, 2>(0.));
+		problem[0].b(StaticVector<Real, 0>(0.));
+		problem[0].lbx(-infinity<Real>());
+		problem[0].ubx(infinity<Real>());
+		problem[0].lbu(-infinity<Real>());
+		problem[0].ubu(infinity<Real>());
+
+		try
+		{
+			ws.solve();
+			auto solution = ws.solution();
+
+			using Vector = DynamicVector<Real>;
+
+			EXPECT_PRED2(MatrixApproxEquality(1e-6), solution[0].x(), (Vector {
+				146.566682434017,
+				-427.218558989821,
+				-345.347969700289
+			}));
+
+			EXPECT_PRED2(MatrixApproxEquality(1e-6), solution[0].u(), (Vector {
+				769.663140469139,
+				-191.122524763114
+			}));
+
+			EXPECT_PRED2(MatrixApproxEquality(1e-6), solution[1].x(), (Vector {}));
+			EXPECT_PRED2(MatrixApproxEquality(1e-6), solution[1].u(), (Vector {}));
+		}
+		catch (std::runtime_error const&)
+		{
+			std::cout << "------ PROBLEM ------" << std::endl;
+			for (auto const& p : ws.problem())
+				std::cout << p << std::endl;
+
+			std::cout << "------ SOLUTION ------" << std::endl;
+			for (auto const& s : ws.solution())
+				std::cout << s << std::endl;
+
+			throw;
+		}
+	}
+
 	REGISTER_TYPED_TEST_CASE_P(QpWorkspaceSolveTest,
-        testMoveConstructor, testSolve0, testSolve1, DISABLED_testSolve1stage1d, testSolve2stage1d, testSolve2stage5d);
+		testMoveConstructor, testSolve0, testSolve1, DISABLED_testSolve1stage1d, 
+		testSolve2stage1d, testSolve2stage5d, testInfiniteBounds);
 }

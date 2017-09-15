@@ -68,6 +68,14 @@ namespace tmpc
 	{
 		if (stage_.size() > 0)
 		{
+			// Recalculate bounds indices of each stage, at the bounds might have changed.				
+			// Update the nb_ array.
+			std::transform(stage_.begin(), stage_.end(), nb_.begin(), [] (Stage& s) -> int
+			{
+				s.adjustBoundsIndex();
+				return s.nb();
+			});
+
 			// Number of QP steps for HPMPC
 			auto const N = stage_.size() - 1;
 
@@ -113,6 +121,8 @@ namespace tmpc
 	,	pi_(nx_next, sNaN())
 	,	lam_(2 * sz.nc() + 2 * (sz.nx() + sz.nu()), sNaN())
 	{
+		// hidxb is initialized to its maximum size, s.t. nb == nx + nu.
+		// This is necessary so that the solver workspace memory is calculated as its maximum when allocated.
 		int n = 0;
 		std::generate(hidxb_.begin(), hidxb_.end(), [&n] { return n++; });
 	}
@@ -125,7 +135,7 @@ namespace tmpc
 
 		nx_.push_back(sz.nx());
 		nu_.push_back(sz.nu());
-		nb_.push_back(sz.nx() + sz.nu());
+		nb_.push_back(st.nb());
 		ng_.push_back(sz.nc());
 		
 		hidxb_.push_back(st.hidxb_data());
