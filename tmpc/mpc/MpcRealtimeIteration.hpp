@@ -146,6 +146,13 @@ namespace tmpc
 		{
 			return qp_;
 		}
+
+		// Get the QP.
+		decltype(auto) qp() const
+		{
+			return qp_.problem();
+		}
+
 	private:
 		/**
 		 * \brief Interface for setting MPC stage data.
