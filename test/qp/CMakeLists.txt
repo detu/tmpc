@@ -18,4 +18,5 @@ endif ()
 
 target_sources(tmpc_test
     PRIVATE qp/CondensingTest.cpp
+    PRIVATE qp/QpTest.cpp
 )
