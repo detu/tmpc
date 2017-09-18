@@ -8,7 +8,6 @@ set(TMPC_INCLUDE_DIR ${PROJECT_INCLUDE_DIR}/tmpc)
 set (SRC
     ${TMPC_INCLUDE_DIR}/Matrix.hpp
     
-    ${TMPC_INCLUDE_DIR}/util/gauss_newton.hpp
     ${TMPC_INCLUDE_DIR}/util/problem_specific.hpp
 
     ${TMPC_INCLUDE_DIR}/casadi_interface/GeneratedFunction.hpp
@@ -43,11 +42,6 @@ set_property(TARGET tmpc PROPERTY POSITION_INDEPENDENT_CODE True)
 target_include_directories(tmpc
     PUBLIC ${PROJECT_INCLUDE_DIR}
 )
-
-if (BLAZE_DIR)
-    target_include_directories(tmpc PUBLIC ${BLAZE_DIR})
-    message(STATUS "BLAZE_DIR=${BLAZE_DIR}")
-endif()
 
 #
 # Add qpOASES interface
