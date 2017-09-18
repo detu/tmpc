@@ -2,7 +2,7 @@
 
 #include "ForEachExpr.hpp"
 
-namespace tmpc 
+namespace tmpc :: eigen_adaptor 
 {
     /*------------------------------------------------------
     *

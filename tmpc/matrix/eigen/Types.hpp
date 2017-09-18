@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-namespace tmpc {
+namespace tmpc :: eigen_adaptor {
 
 using std::size_t;
 

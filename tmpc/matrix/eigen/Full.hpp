@@ -6,7 +6,7 @@
 
 #include <type_traits>
 
-namespace tmpc
+namespace tmpc :: eigen_adaptor
 {
     template <typename VT>
     std::enable_if_t<

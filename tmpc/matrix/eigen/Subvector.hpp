@@ -8,7 +8,7 @@
 
 #include <type_traits>
 
-namespace tmpc 
+namespace tmpc :: eigen_adaptor 
 {
     template <typename VT, bool AF, bool TF>
     struct Subvector;

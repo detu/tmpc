@@ -4,7 +4,7 @@
 
 #include "Eigen.hpp"
 
-namespace tmpc
+namespace tmpc :: eigen_adaptor
 {
     template <typename T, typename T1>
     void assign(Eigen::DenseBase<T>& matrix, initializer_list<initializer_list<T1>> list)

@@ -5,7 +5,7 @@
 
 #include "Eigen.hpp"
 
-namespace tmpc
+namespace tmpc :: eigen_adaptor
 {
     template <typename Type, bool SO = defaultStorageOrder>
     struct IdentityMatrix

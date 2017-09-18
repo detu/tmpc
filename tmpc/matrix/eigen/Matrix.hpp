@@ -7,7 +7,7 @@
 #include "EigenBase.hpp"
 #include "IsEigenMatrix.hpp"
 
-namespace tmpc 
+namespace tmpc :: eigen_adaptor 
 {
     struct MatrixTag {};
 

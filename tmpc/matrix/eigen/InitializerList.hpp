@@ -4,7 +4,7 @@
 
 #include <initializer_list>
 
-namespace tmpc
+namespace tmpc :: eigen_adaptor
 {
     using std::initializer_list;
 

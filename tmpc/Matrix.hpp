@@ -5,16 +5,20 @@
 #if USE_BLAZE
 #include <blaze/Math.h>
 
-namespace tmpc {
-
-
-// Import blaze classed into tmpc namespace.
-using namespace blaze;
-
-}	// namespace tmpc
+namespace tmpc 
+{
+    // Import blaze classed into tmpc namespace.
+    using namespace blaze;
+}
 
 #else
 
-#include "matrix/EigenAdapter.hpp"
+#include "matrix/EigenAdaptor.hpp"
+
+namespace tmpc 
+{
+    // Import blaze classed into tmpc namespace.
+    using namespace eigen_adaptor;
+}
 
 #endif

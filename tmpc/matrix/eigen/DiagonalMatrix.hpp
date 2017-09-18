@@ -4,7 +4,7 @@
 
 #include <type_traits>
 
-namespace tmpc {
+namespace tmpc :: eigen_adaptor {
 
 /*------------------------------------------------------
  *

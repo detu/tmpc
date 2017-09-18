@@ -6,7 +6,7 @@
 
 #include "Eigen.hpp"
 
-namespace tmpc {
+namespace tmpc :: eigen_adaptor {
 
 template <typename Type, bool AF, bool PF, bool TF>
 using CustomVectorBase =

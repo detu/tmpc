@@ -8,7 +8,7 @@
 
 #include "Eigen.hpp"
 
-namespace tmpc 
+namespace tmpc :: eigen_adaptor 
 {
     template <typename Type, size_t M, size_t N, bool SO>
     struct StaticMatrix;

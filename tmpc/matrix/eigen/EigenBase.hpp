@@ -5,7 +5,7 @@
 
 #include "Eigen.hpp"
 
-namespace tmpc
+namespace tmpc :: eigen_adaptor
 {
     template <typename T>
     struct EigenBaseSelector;

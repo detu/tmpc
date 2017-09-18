@@ -2,7 +2,7 @@
 
 #include "IsVector.hpp"
 
-namespace tmpc
+namespace tmpc :: eigen_adaptor
 {
     template <typename VT>
     struct IsRowVector

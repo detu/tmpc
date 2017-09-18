@@ -1,8 +1,8 @@
-cmake_minimum_required (VERSION 2.8)
+cmake_minimum_required (VERSION 3.9)
 project (tmpc)
 
 # Enable modern C++
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
 
 # Don't use compiler's C++ extensions
 set(CMAKE_CXX_EXTENSIONS False)

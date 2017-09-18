@@ -4,7 +4,7 @@
 
 #include <type_traits>
 
-namespace tmpc
+namespace tmpc :: eigen_adaptor
 {
     template <typename T>
     using IsEigenMatrix = std::is_base_of<

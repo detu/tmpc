@@ -6,7 +6,7 @@
 #include "EigenBase.hpp"
 #include "Rand.hpp"
 
-namespace tmpc 
+namespace tmpc :: eigen_adaptor 
 {
     template <typename Type, bool TF>
     struct DynamicVector;

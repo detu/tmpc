@@ -1,6 +1,6 @@
 #pragma once
 
-namespace tmpc {
+namespace tmpc :: eigen_adaptor {
 
 bool constexpr unpadded = false;
 bool constexpr padded = true;

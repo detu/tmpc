@@ -1,6 +1,6 @@
 #pragma once
 
-namespace tmpc {
+namespace tmpc :: eigen_adaptor {
 
 bool constexpr columnVector = false;
 bool constexpr rowVector = true;

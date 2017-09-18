@@ -7,7 +7,7 @@
 
 #include <type_traits>
 
-namespace tmpc
+namespace tmpc :: eigen_adaptor
 {
     template <typename T, typename Enable = void>
     struct Size;

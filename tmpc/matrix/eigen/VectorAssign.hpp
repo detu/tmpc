@@ -7,7 +7,7 @@
 
 #include <type_traits>
 
-namespace tmpc
+namespace tmpc :: eigen_adaptor
 {
     template <typename T, typename T1>
     //std::enable_if_t<IsVector<T>::value, void> 

@@ -2,7 +2,7 @@
 
 #include "Types.hpp"
 
-namespace tmpc {
+namespace tmpc :: eigen_adaptor {
 
 template <typename MT>
 struct Columns

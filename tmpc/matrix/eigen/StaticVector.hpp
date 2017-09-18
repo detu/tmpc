@@ -6,7 +6,7 @@
 //#include "EigenType.hpp"
 #include "EigenBase.hpp"
 
-namespace tmpc 
+namespace tmpc :: eigen_adaptor 
 {
 	template <typename Type, size_t N, bool TF>
     struct StaticVector;
