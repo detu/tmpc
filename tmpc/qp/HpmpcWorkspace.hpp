@@ -348,7 +348,7 @@ namespace tmpc
 		 * \brief Takes QP problem size to preallocate workspace.
 		 */
 		template <typename InputIterator>
-		HpmpcWorkspace(InputIterator size_first, InputIterator size_last, int max_iter = 100)
+		explicit HpmpcWorkspace(InputIterator size_first, InputIterator size_last, int max_iter = 100)
 		:	stat_(max_iter)
 		,	infNormRes_(sNaN())
 		{
@@ -367,6 +367,11 @@ namespace tmpc
 
 		template <typename IteratorRange>
 		explicit HpmpcWorkspace(IteratorRange sz, int max_iter = 100)
+		:	HpmpcWorkspace(sz.begin(), sz.end(), max_iter)
+		{
+		}
+
+		explicit HpmpcWorkspace(std::initializer_list<QpSize> sz, int max_iter = 100)
 		:	HpmpcWorkspace(sz.begin(), sz.end(), max_iter)
 		{
 		}

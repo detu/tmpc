@@ -70,7 +70,57 @@ namespace tmpc
         decltype(auto) size() const
         {
             return derived().size();
-        }
+		}
+		
+		// Set the Gauss-Newton approximation of the hessian Hessian and the gradient.
+		template <typename ResidualVector, typename CMatrix, typename DMatrix>
+		void gaussNewtonCostApproximation(ResidualVector const& res, CMatrix const& C, DMatrix const& D)
+		{
+			// H = G^T G
+			//   = [Q S
+			//      S R]
+			//
+
+			Q(trans(C) * C);
+			R(trans(D) * D);
+			S(trans(C) * D);
+
+			// g = 2 * (y_bar - y_hat)^T * W * G
+			// g = [q; r]
+			q(trans(C) * res);
+			r(trans(D) * res);
+		}
+
+		// Set A, B and b to represent a linearized shooting equality
+		// of the form \Delta x_{k+1} = \frac{\dif f}{\dif x}(x_k,u_k)\, \Delta x_{k} 
+		//	+ \frac{\dif f}{\dif u}(x_k,u_k)\, \Delta u_{k} + f(x_{k},u_{k}) - x_{k+1}
+		template <typename Vector1, typename Matrix1, typename Matrix2, typename Vector2>
+		void linearizedShootingEquality(Vector1 const& f, Matrix1 const& Jx, Matrix2 const& Ju, Vector2 const& x_plus)
+		{
+			A(Jx);
+			B(Ju);
+			b(f - x_plus);
+		}
+
+		// Set upper and lower bounds relative to a point.
+		template <typename Vector1, typename Vector2, typename Vector3, typename Vector4, typename Vector5, typename Vector6>
+		void relativeBounds(Vector1 const& x, Vector2 const& u, Vector3 const& lx, Vector4 const& lu, Vector5 const& ux, Vector6 const& uu)
+		{
+			lbx(lx - x);
+			ubx(ux - x);
+			lbu(lu - u);
+			ubu(uu - u);
+		}
+
+		// Set upper and lower bounds.
+		template <typename Vector1, typename Vector2, typename Vector3, typename Vector4>
+		void bounds(Vector1 const& lx, Vector2 const& lu, Vector3 const& ux, Vector4 const& uu)
+		{
+			lbx(lx);
+			ubx(ux);
+			lbu(lu);
+			ubu(uu);
+		}
 
     protected:
 		// Allow default construction and copying only as a part of a derived class;

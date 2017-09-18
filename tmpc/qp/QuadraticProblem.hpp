@@ -152,6 +152,13 @@ namespace tmpc
 			full(Q_) = q;
 		}
 
+		template <typename T>
+		auto& Q(std::initializer_list<std::initializer_list<T>> q) 
+		{
+			full(Q_) = q;
+			return *this;
+		}
+
 		const Matrix& R() const {
 			return R_;
 		}
@@ -159,6 +166,13 @@ namespace tmpc
 		template <typename T>
 		void R(const T& r) {
 			full(R_) = r;
+		}
+
+		template <typename T>
+		auto& R(std::initializer_list<std::initializer_list<T>> val) 
+		{
+			full(R_) = val;
+			return *this;
 		}
 
 		const Matrix& S() const {
@@ -170,6 +184,13 @@ namespace tmpc
 			full(S_) = s;
 		}
 
+		template <typename T>
+		auto& S(std::initializer_list<std::initializer_list<T>> val) 
+		{
+			full(S_) = val;
+			return *this;
+		}
+
 		const Vector& q() const {
 			return q_;
 		}
@@ -179,6 +200,13 @@ namespace tmpc
 			full(q_) = q;
 		}
 
+		template <typename T>
+		auto& q(std::initializer_list<T> val) 
+		{
+			full(q_) = val;
+			return *this;
+		}
+
 		const Vector& r() const {
 			return r_;
 		}
@@ -186,6 +214,13 @@ namespace tmpc
 		template <typename T>
 		void r(const T& r) {
 			full(r_) = r;
+		}
+
+		template <typename T>
+		auto& r(std::initializer_list<T> val) 
+		{
+			full(r_) = val;
+			return *this;
 		}
 
 		const Vector& ubd() const {
