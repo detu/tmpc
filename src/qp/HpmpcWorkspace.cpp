@@ -26,7 +26,8 @@ namespace tmpc
 	{
 	}
 
-	static int ip_ocp_hard_tv(
+	template <>
+	int Hpmpc<double>::c_order_ip_ocp_hard_tv(
 		int *kk, int k_max, double mu0, double mu_tol,
 		int N, int const *nx, int const *nu, int const *nb, int const * const *hidxb, int const *ng, int N2,
 		int warm_start,
@@ -53,166 +54,10 @@ namespace tmpc
 			stat);
 	}
 
-	template <typename Real>
-	static int ip_ocp_hard_tv_work_space_size_bytes(int N, int const *nx, int const *nu, int const *nb, int const * const * hidxb, int const *ng, int N2);
-
 	template <>
-	int ip_ocp_hard_tv_work_space_size_bytes<double>(int N, int const *nx, int const *nu, int const *nb, int const * const * hidxb, int const *ng, int N2)
+	int Hpmpc<double>::ip_ocp_hard_tv_work_space_size_bytes(int N, int const *nx, int const *nu, int const *nb, int const * const * hidxb, int const *ng, int N2)
 	{
 		return ::hpmpc_d_ip_ocp_hard_tv_work_space_size_bytes(
 			N, const_cast<int*>(nx), const_cast<int*>(nu),  const_cast<int*>(nb), const_cast<int **>(hidxb), const_cast<int*>(ng), N2);
 	}
-
-	template <typename Real_>
-	void HpmpcWorkspace<Real_>::solve()
-	{
-		if (stage_.size() > 0)
-		{
-			// Recalculate bounds indices of each stage, at the bounds might have changed.				
-			// Update the nb_ array.
-			std::transform(stage_.begin(), stage_.end(), nb_.begin(), [] (Stage& s) -> int
-			{
-				s.adjustBoundsIndex();
-				return s.nb();
-			});
-
-			// Number of QP steps for HPMPC
-			auto const N = stage_.size() - 1;
-
-			// What is a good value for mu0?
-			Real mu0 = 1.;
-
-			// Call HPMPC
-			auto const ret = ip_ocp_hard_tv(&numIter_, maxIter(), mu0, muTol_, N,
-					nx_.data(), nu_.data(), nb_.data(), hidxb_.data(), ng_.data(), N, _warmStart ? 1 : 0, A_.data(), B_.data(), b_.data(),
-					Q_.data(), S_.data(), R_.data(), q_.data(), r_.data(), lb_.data(), ub_.data(), C_.data(), D_.data(),
-					lg_.data(), ug_.data(), x_.data(), u_.data(), pi_.data(), lam_.data(), infNormRes_.data(),
-					solverWorkspace_.data(), stat_[0].data());
-
-			if (ret != 0)
-			{
-				throw HpmpcException(ret);
-			}
-		}
-	}
-
-	template <typename Real_>
-	HpmpcWorkspace<Real_>::Stage::Stage(QpSize const& sz, size_t nx_next)
-	:	size_(sz)
-	,	hidxb_(sz.nu() + sz.nx())
-	// Initialize all numeric data to NaN so that if an uninitialized object
-	// by mistake used in calculations is easier to detect.
-	,	Q_(sz.nx(), sz.nx(), sNaN())
-	,	R_(sz.nu(), sz.nu(), sNaN())
-	,	S_(sz.nu(), sz.nx(), sNaN())	// <-- HPMPC convention for S is [nu, nx] (the corresponding cost term is u' * S_{hpmpc} * x)
-	,	q_(sz.nx(), sNaN())
-	,	r_(sz.nu(), sNaN())
-	,	A_(nx_next, sz.nx(), sNaN())
-	,	B_(nx_next, sz.nu(), sNaN())
-	,	b_(nx_next, sNaN())
-	,	C_(sz.nc(), sz.nx(), sNaN())
-	,	D_(sz.nc(), sz.nu(), sNaN())
-	,	lb_(sz.nu() + sz.nx(), sNaN())
-	,	ub_(sz.nu() + sz.nx(), sNaN())
-	,	lb_internal_(sz.nu() + sz.nx(), sNaN())
-	,	ub_internal_(sz.nu() + sz.nx(), sNaN())
-	,	lbd_(sz.nc(), sNaN())
-	,	ubd_(sz.nc(), sNaN())
-	,	x_(sz.nx(), sNaN())
-	,	u_(sz.nu(), sNaN())
-	,	pi_(nx_next, sNaN())
-	,	lam_(2 * sz.nc() + 2 * (sz.nx() + sz.nu()), sNaN())
-	{
-		// hidxb is initialized to its maximum size, s.t. nb == nx + nu.
-		// This is necessary so that the solver workspace memory is calculated as its maximum when allocated.
-		int n = 0;
-		std::generate(hidxb_.begin(), hidxb_.end(), [&n] { return n++; });
-	}
-
-	template <typename Real_>
-	void HpmpcWorkspace<Real_>::addStage(QpSize const& sz, size_t nx_next)
-	{
-		stage_.emplace_back(sz, nx_next);
-		auto& st = stage_.back();
-
-		nx_.push_back(sz.nx());
-		nu_.push_back(sz.nu());
-		nb_.push_back(st.nb());
-		ng_.push_back(sz.nc());
-		
-		hidxb_.push_back(st.hidxb_data());
-
-		A_.push_back(st.A_data());
-		B_.push_back(st.B_data());
-		b_.push_back(st.b_data());
-
-		Q_.push_back(st.Q_data());
-		S_.push_back(st.S_data());
-		R_.push_back(st.R_data());
-		q_.push_back(st.q_data());
-		r_.push_back(st.r_data());
-		lb_.push_back(st.lb_data());
-		ub_.push_back(st.ub_data());
-
-		C_ .push_back(st.C_data());
-		D_ .push_back(st.D_data());
-		lg_.push_back(st.lg_data());
-		ug_.push_back(st.ug_data());
-
-		x_.push_back(st.x_data());
-		u_.push_back(st.u_data());
-		pi_.push_back(st.pi_data());
-		lam_.push_back(st.lam_data());
-	}
-
-	template <typename Real_>
-	void HpmpcWorkspace<Real_>::preallocateStages(size_t nt)
-	{
-		stage_.reserve(nt);
-
-		nx_.reserve(nt);
-		nu_.reserve(nt);
-		nb_.reserve(nt);
-		ng_.reserve(nt);
-		hidxb_.reserve(nt);
-
-		A_ .reserve(nt);
-		B_ .reserve(nt);
-		b_ .reserve(nt);
-		Q_ .reserve(nt);
-		S_ .reserve(nt);
-		R_ .reserve(nt);
-		q_ .reserve(nt);
-		r_ .reserve(nt);
-		lb_.reserve(nt);
-		ub_.reserve(nt);
-		C_ .reserve(nt);
-		D_ .reserve(nt);
-		lg_.reserve(nt);
-		ug_.reserve(nt);
-		
-		x_.reserve(nt);
-		u_.reserve(nt);
-		pi_.reserve(nt);
-		lam_.reserve(nt);
-	}
-
-	template <typename Real_>
-	void HpmpcWorkspace<Real_>::allocateSolverWorkspace()
-	{
-		// Number of QP steps for HPMPC
-		auto const N = stage_.size() - 1;
-
-		solverWorkspace_.resize(ip_ocp_hard_tv_work_space_size_bytes<Real_>(
-			static_cast<int>(N), nx_.data(), nu_.data(), nb_.data(), hidxb_.data(), ng_.data(), static_cast<int>(N)));
-	}
-
-	template <typename Real_>
-	void HpmpcWorkspace<Real_>::maxIter(size_t val)
-	{
-		stat_.resize(val);
-	}
-
-	// Explicit instantiation of HpmpcWorkspace for supported data types and storage orders.
-	template class HpmpcWorkspace<double>;
 }

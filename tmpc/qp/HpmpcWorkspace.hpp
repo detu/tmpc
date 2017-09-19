@@ -19,6 +19,26 @@
 
 namespace tmpc
 {
+	// Type-parameterized HPMPC interface
+	template <typename Real>
+	struct Hpmpc
+	{
+		static int c_order_ip_ocp_hard_tv(
+			int *kk, int k_max, Real mu0, Real mu_tol,
+			int N, int const *nx, int const *nu, int const *nb, int const * const *hidxb, int const *ng, int N2,
+			int warm_start,
+			Real const * const *A, Real const * const *B, Real const * const *b,
+			Real const * const *Q, Real const * const *S, Real const * const *R, Real const * const *q, Real const * const *r,
+			Real const * const *lb, Real const * const *ub,
+			Real const * const *C, Real const * const *D, Real const * const *lg, Real const * const *ug,
+			Real * const *x, Real * const *u, Real * const *pi, Real * const *lam,
+			Real *inf_norm_res,
+			void *work0,
+			Real *stat);
+
+		static int ip_ocp_hard_tv_work_space_size_bytes(int N, int const *nx, int const *nu, int const *nb, int const * const * hidxb, int const *ng, int N2);
+	};
+
 	class HpmpcException 
 	:	public QpSolverException
 	{
@@ -59,7 +79,38 @@ namespace tmpc
 			typedef DynamicMatrix<Real, storageOrder> Matrix;
 			typedef DynamicVector<Real, columnVector> Vector;
 
-			Stage(QpSize const& sz, size_t nx_next);
+			Stage(QpSize const& sz, size_t nx_next)
+			:	size_(sz)
+			,	hidxb_(sz.nu() + sz.nx())
+			// Initialize all numeric data to NaN so that if an uninitialized object
+			// by mistake used in calculations is easier to detect.
+			,	Q_(sz.nx(), sz.nx(), sNaN<Real>())
+			,	R_(sz.nu(), sz.nu(), sNaN<Real>())
+			,	S_(sz.nu(), sz.nx(), sNaN<Real>())	// <-- HPMPC convention for S is [nu, nx] (the corresponding cost term is u' * S_{hpmpc} * x)
+			,	q_(sz.nx(), sNaN<Real>())
+			,	r_(sz.nu(), sNaN<Real>())
+			,	A_(nx_next, sz.nx(), sNaN<Real>())
+			,	B_(nx_next, sz.nu(), sNaN<Real>())
+			,	b_(nx_next, sNaN<Real>())
+			,	C_(sz.nc(), sz.nx(), sNaN<Real>())
+			,	D_(sz.nc(), sz.nu(), sNaN<Real>())
+			,	lb_(sz.nu() + sz.nx(), sNaN<Real>())
+			,	ub_(sz.nu() + sz.nx(), sNaN<Real>())
+			,	lb_internal_(sz.nu() + sz.nx(), sNaN<Real>())
+			,	ub_internal_(sz.nu() + sz.nx(), sNaN<Real>())
+			,	lbd_(sz.nc(), sNaN<Real>())
+			,	ubd_(sz.nc(), sNaN<Real>())
+			,	x_(sz.nx(), sNaN<Real>())
+			,	u_(sz.nu(), sNaN<Real>())
+			,	pi_(nx_next, sNaN<Real>())
+			,	lam_(2 * sz.nc() + 2 * (sz.nx() + sz.nu()), sNaN<Real>())
+			{
+				// hidxb is initialized to its maximum size, s.t. nb == nx + nu.
+				// This is necessary so that the solver workspace memory is calculated as its maximum when allocated.
+				int n = 0;
+				std::generate(hidxb_.begin(), hidxb_.end(), [&n] { return n++; });
+			}
+
 			Stage(Stage const&) = default;
 			Stage(Stage &&) = default;
 
@@ -193,7 +244,7 @@ namespace tmpc
 					else 
 					{
 						// Otherwise, check that the values are [-inf, inf]
-						if (!(lb_[i] == -infinity<Real>() && ub_[i] == infinity<Real>()))
+						if (!(lb_[i] == -inf<Real>() && ub_[i] == inf<Real>()))
 							throw std::invalid_argument("And invalid QP bound is found. For HPMPC, "
 								"the bounds should be either both finite or [-inf, inf]");
 					}
@@ -350,7 +401,7 @@ namespace tmpc
 		template <typename InputIterator>
 		explicit HpmpcWorkspace(InputIterator size_first, InputIterator size_last, int max_iter = 100)
 		:	stat_(max_iter)
-		,	infNormRes_(sNaN())
+		,	infNormRes_(sNaN<Real>())
 		{
 			auto const n_stages = std::distance(size_first, size_last);
 
@@ -393,12 +444,45 @@ namespace tmpc
 		HpmpcWorkspace& operator= (HpmpcWorkspace const&) = delete;
 		HpmpcWorkspace& operator= (HpmpcWorkspace &&) = delete;
 
-		void solve();
+		void solve()
+		{
+			if (stage_.size() > 0)
+			{
+				// Recalculate bounds indices of each stage, at the bounds might have changed.				
+				// Update the nb_ array.
+				std::transform(stage_.begin(), stage_.end(), nb_.begin(), [] (Stage& s) -> int
+				{
+					s.adjustBoundsIndex();
+					return s.nb();
+				});
+	
+				// Number of QP steps for HPMPC
+				auto const N = stage_.size() - 1;
+	
+				// What is a good value for mu0?
+				Real mu0 = 1.;
+	
+				// Call HPMPC
+				auto const ret = Hpmpc<Real>::c_order_ip_ocp_hard_tv(&numIter_, maxIter(), mu0, muTol_, N,
+						nx_.data(), nu_.data(), nb_.data(), hidxb_.data(), ng_.data(), N, _warmStart ? 1 : 0, A_.data(), B_.data(), b_.data(),
+						Q_.data(), S_.data(), R_.data(), q_.data(), r_.data(), lb_.data(), ub_.data(), C_.data(), D_.data(),
+						lg_.data(), ug_.data(), x_.data(), u_.data(), pi_.data(), lam_.data(), infNormRes_.data(),
+						solverWorkspace_.data(), stat_[0].data());
+	
+				if (ret != 0)
+				{
+					throw HpmpcException(ret);
+				}
+			}
+		}
 
 		std::size_t maxIter() const noexcept { return stat_.size(); }
 
 		/// \brief Set max number of iterations
-		void maxIter(size_t val);
+		void maxIter(size_t val)
+		{
+			stat_.resize(val);
+		}
 
 		Real muTol() const noexcept { return muTol_; }
 
@@ -414,70 +498,32 @@ namespace tmpc
 		unsigned numIter() const { return numIter_; }
 		
 	private:
+		// Stores stage data
+		std::vector<Stage> stage_;
+
 		// --------------------------------
 		//
 		// HPMPC QP problem data
 		//
 		// --------------------------------
-
-		// Stores stage data
-		std::vector<Stage> stage_;
-
-		// "A" data array for HPMPC
 		std::vector<Real const *> A_;
-
-		// "B" data array for HPMPC
 		std::vector<Real const *> B_;
-
-		// "b" data array for HPMPC
 		std::vector<Real const *> b_;
-
-		// "Q" data array for HPMPC
 		std::vector<Real const *> Q_;
-
-		// "S" data array for HPMPC
 		std::vector<Real const *> S_;
-
-		// "R" data array for HPMPC
 		std::vector<Real const *> R_;
-
-		// "q" data array for HPMPC
 		std::vector<Real const *> q_;
-
-		// "r" data array for HPMPC
 		std::vector<Real const *> r_;
-
-		// "lb" data array for HPMPC
 		std::vector<Real const *> lb_;
-
-		// "ub" data array for HPMPC
 		std::vector<Real const *> ub_;
-
-		// "C" data array for HPMPC
 		std::vector<Real const *> C_;
-
-		// "D" data array for HPMPC
 		std::vector<Real const *> D_;
-
-		// "lg" data array for HPMPC
 		std::vector<Real const *> lg_;
-
-		// "ug" data array for HPMPC
 		std::vector<Real const *> ug_;
-
-		// Array of NX sizes
 		std::vector<int> nx_;
-
-		// Array of NU sizes
 		std::vector<int> nu_;
-
-		// Array of NB (bound constraints) sizes
 		std::vector<int> nb_;
-
-		// Array of NG (path constraints) sizes
 		std::vector<int> ng_;
-
-		// Additional data for new hpmpc interface
 		std::vector<int const *> hidxb_;
 
 		// --------------------------------
@@ -485,7 +531,6 @@ namespace tmpc
 		// HPMPC QP solution data
 		//
 		// --------------------------------
-
 		std::vector<Real *> x_;
 		std::vector<Real *> u_;
 		std::vector<Real *> pi_;
@@ -514,18 +559,82 @@ namespace tmpc
 		// FASTER (9ms vs 14ms per time step) than with warmstarting. I am curious why.
 		bool _warmStart = false;
 
-		static Real constexpr sNaN()
+		// Preallocate arrays holding QP stage data.
+		void preallocateStages(size_t nt)
 		{
-			return std::numeric_limits<Real>::signaling_NaN();
+			stage_.reserve(nt);
+	
+			nx_.reserve(nt);
+			nu_.reserve(nt);
+			nb_.reserve(nt);
+			ng_.reserve(nt);
+			hidxb_.reserve(nt);
+	
+			A_ .reserve(nt);
+			B_ .reserve(nt);
+			b_ .reserve(nt);
+			Q_ .reserve(nt);
+			S_ .reserve(nt);
+			R_ .reserve(nt);
+			q_ .reserve(nt);
+			r_ .reserve(nt);
+			lb_.reserve(nt);
+			ub_.reserve(nt);
+			C_ .reserve(nt);
+			D_ .reserve(nt);
+			lg_.reserve(nt);
+			ug_.reserve(nt);
+			
+			x_.reserve(nt);
+			u_.reserve(nt);
+			pi_.reserve(nt);
+			lam_.reserve(nt);
 		}
 
-		// Preallocate arrays holding QP stage data.
-		void preallocateStages(size_t nt);
-
 		// Add one stage with specified sizes at the end of the stage sequence.
-		void addStage(QpSize const& sz, size_t nx_next);
+		void addStage(QpSize const& sz, size_t nx_next)
+		{
+			stage_.emplace_back(sz, nx_next);
+			auto& st = stage_.back();
+
+			nx_.push_back(sz.nx());
+			nu_.push_back(sz.nu());
+			nb_.push_back(st.nb());
+			ng_.push_back(sz.nc());
+			
+			hidxb_.push_back(st.hidxb_data());
+
+			A_.push_back(st.A_data());
+			B_.push_back(st.B_data());
+			b_.push_back(st.b_data());
+
+			Q_.push_back(st.Q_data());
+			S_.push_back(st.S_data());
+			R_.push_back(st.R_data());
+			q_.push_back(st.q_data());
+			r_.push_back(st.r_data());
+			lb_.push_back(st.lb_data());
+			ub_.push_back(st.ub_data());
+
+			C_ .push_back(st.C_data());
+			D_ .push_back(st.D_data());
+			lg_.push_back(st.lg_data());
+			ug_.push_back(st.ug_data());
+
+			x_.push_back(st.x_data());
+			u_.push_back(st.u_data());
+			pi_.push_back(st.pi_data());
+			lam_.push_back(st.lam_data());
+		}
 
 		// Allocate soverWorkspace_ according to nx, nu, nb, ng etc.
-		void allocateSolverWorkspace();
+		void allocateSolverWorkspace()
+		{
+			// Number of QP steps for HPMPC
+			auto const N = stage_.size() - 1;
+	
+			solverWorkspace_.resize(Hpmpc<Real>::ip_ocp_hard_tv_work_space_size_bytes(
+				static_cast<int>(N), nx_.data(), nu_.data(), nb_.data(), hidxb_.data(), ng_.data(), static_cast<int>(N)));
+		}
 	};
 }

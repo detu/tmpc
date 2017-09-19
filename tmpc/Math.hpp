@@ -7,8 +7,14 @@
 namespace tmpc
 {
     template <typename T>
-    inline T constexpr infinity()
+    inline T constexpr inf()
     {
         return std::numeric_limits<T>::infinity();
+    }
+
+    template <typename T>
+    inline T constexpr sNaN()
+    {
+        return std::numeric_limits<T>::signaling_NaN();
     }
 }

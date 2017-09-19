@@ -22,7 +22,7 @@ int main(int, char **)
 		IdentityMatrix<double> {3u},
 		DynamicMatrix<double> {3u, 0u}
 	);
-	stage0.bounds(-infinity<double>(), -infinity<double>(), infinity<double>(), infinity<double>());
+	stage0.bounds(-inf<double>(), -inf<double>(), inf<double>(), inf<double>());
 
 	workspace.solve();
 

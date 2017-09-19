@@ -386,10 +386,10 @@ namespace tmpc :: testing
 		problem[0].A(StaticMatrix<Real, 0, 3>(0.));
 		problem[0].B(StaticMatrix<Real, 0, 2>(0.));
 		problem[0].b(StaticVector<Real, 0>(0.));
-		problem[0].lbx(-infinity<Real>());
-		problem[0].ubx(infinity<Real>());
-		problem[0].lbu(-infinity<Real>());
-		problem[0].ubu(infinity<Real>());
+		problem[0].lbx(-inf<Real>());
+		problem[0].ubx(inf<Real>());
+		problem[0].lbu(-inf<Real>());
+		problem[0].ubu(inf<Real>());
 
 		try
 		{
@@ -469,10 +469,10 @@ namespace tmpc :: testing
 		 problem[0].b(StaticVector<Real, 0>(0.));
 
 		 // TODO: can we make lbx() etc. accept initializer lists?
-		 problem[0].lbx(DynamicVector<Real> {-10000., -infinity<Real>(), -10000.});
-		 problem[0].ubx(DynamicVector<Real> {10000., infinity<Real>(), 10000.});
-		 problem[0].lbu(DynamicVector<Real> {-infinity<Real>(), -10000.});
-		 problem[0].ubu(DynamicVector<Real> {infinity<Real>(), 10000.});
+		 problem[0].lbx(DynamicVector<Real> {-10000., -inf<Real>(), -10000.});
+		 problem[0].ubx(DynamicVector<Real> {10000., inf<Real>(), 10000.});
+		 problem[0].lbu(DynamicVector<Real> {-inf<Real>(), -10000.});
+		 problem[0].ubu(DynamicVector<Real> {inf<Real>(), 10000.});
  
 		 try
 		 {

@@ -204,7 +204,7 @@ namespace tmpc
 					else 
 					{
 						// Otherwise, check that the values are [-inf, inf]
-						if (!(lb_[i] == -infinity<Real>() && ub_[i] == infinity<Real>()))
+						if (!(lb_[i] == -inf<Real>() && ub_[i] == inf<Real>()))
 							throw std::invalid_argument("And invalid QP bound is found. For HPMPC, "
 								"the bounds should be either both finite or [-inf, inf]");
 					}
