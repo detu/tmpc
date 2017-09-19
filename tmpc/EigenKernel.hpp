@@ -1,6 +1,7 @@
 #pragma once
 
-#include <tmpc/matrix/EigenAdaptor.hpp>
+#include <tmpc/matrix/StorageOrder.hpp>
+#include <tmpc/matrix/TransposeFlag.hpp>
 
 namespace tmpc
 {

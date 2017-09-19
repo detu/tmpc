@@ -1,26 +1,26 @@
 #pragma once
 
-#include "TransposeFlag.hpp"
-#include "StorageOrder.hpp"
+#include <tmpc/matrix/TransposeFlag.hpp>
+#include <tmpc/matrix/StorageOrder.hpp>
 #include "Types.hpp"
 
 namespace tmpc :: eigen_adaptor
 {
-    template <typename Type, size_t N, bool TF>
+    template <typename Type, size_t N, TransposeFlag TF>
     struct StaticVector;
 
-    template <typename Type, bool TF>
+    template <typename Type, TransposeFlag TF>
     struct DynamicVector;
 
-    template <typename VT, bool AF, bool TF>
+    template <typename VT, AlignmentFlag AF, TransposeFlag TF>
     struct Subvector;
 
-    template <typename Type, size_t M, size_t N, bool SO>
+    template <typename Type, size_t M, size_t N, StorageOrder SO>
     struct StaticMatrix;
 
-    template <typename Type, bool SO>
+    template <typename Type, StorageOrder SO>
     struct DynamicMatrix;
 
-    template <typename MT, bool AF>
+    template <typename MT, AlignmentFlag AF>
     struct Submatrix;
 }

@@ -10,7 +10,7 @@
 
 using namespace tmpc;
 
-template <typename MT, bool SO>
+template <typename MT, StorageOrder SO>
 std::istream& operator>>(std::istream& is, Matrix<MT, SO>& m)
 {
 	for (size_t i = 0; i < rows(m); ++i)
@@ -20,7 +20,7 @@ std::istream& operator>>(std::istream& is, Matrix<MT, SO>& m)
 	return is;
 }
 
-template <typename VT, bool TF>
+template <typename VT, TransposeFlag TF>
 std::istream& operator>>(std::istream& is, Vector<VT, TF>& v)
 {
 	for (size_t i = 0; i < size(v); ++i)

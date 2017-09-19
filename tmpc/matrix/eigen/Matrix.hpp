@@ -1,6 +1,6 @@
 #pragma once
 
-#include "StorageOrder.hpp"
+#include <tmpc/matrix/StorageOrder.hpp>
 #include "EigenType.hpp"
 #include "InitializerList.hpp"
 #include "MatrixAssign.hpp"
@@ -11,7 +11,7 @@ namespace tmpc :: eigen_adaptor
 {
     struct MatrixTag {};
 
-    template <typename MT, bool SO>
+    template <typename MT, StorageOrder SO>
     struct Matrix : MatrixTag
     {
         MT& operator~()
@@ -31,7 +31,7 @@ namespace tmpc :: eigen_adaptor
         return m.rows();
     }
 
-    template <typename MT, bool SO>
+    template <typename MT, StorageOrder SO>
     size_t rows(Matrix<MT, SO> const& m)
     {
         return (~m).rows();
@@ -43,7 +43,7 @@ namespace tmpc :: eigen_adaptor
         return m.cols();
     }
 
-    template <typename MT, bool SO>
+    template <typename MT, StorageOrder SO>
     size_t columns(Matrix<MT, SO> const& m)
     {
         return (~m).cols();

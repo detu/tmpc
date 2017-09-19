@@ -1,6 +1,6 @@
 #pragma once 
 
-#include "TransposeFlag.hpp"
+#include <tmpc/matrix/TransposeFlag.hpp>
 //#include "EigenType.hpp"
 #include "Vector.hpp"
 #include "EigenBase.hpp"
@@ -8,10 +8,10 @@
 
 namespace tmpc :: eigen_adaptor 
 {
-    template <typename Type, bool TF>
+    template <typename Type, TransposeFlag TF>
     struct DynamicVector;
 
-    template <typename Type, bool TF>
+    template <typename Type, TransposeFlag TF>
     struct EigenBaseSelector<DynamicVector<Type, TF>>
     {
         using type = Eigen::Matrix<
@@ -21,7 +21,7 @@ namespace tmpc :: eigen_adaptor
         >;
     };
 
-    template <typename Type, bool TF = defaultTransposeFlag>
+    template <typename Type, TransposeFlag TF = defaultTransposeFlag>
     struct DynamicVector
     :   EigenBase<DynamicVector<Type, TF>>
     ,   Vector<DynamicVector<Type, TF>, TF>
@@ -77,7 +77,7 @@ namespace tmpc :: eigen_adaptor
         }
     };
 
-    template <typename VT, bool TF>
+    template <typename VT, TransposeFlag TF>
     struct Rand<DynamicVector<VT, TF>>
     {
         decltype(auto) generate(size_t N)
@@ -88,7 +88,7 @@ namespace tmpc :: eigen_adaptor
 
     // GET RID OF
     /*
-    template <typename Type, bool TF>
+    template <typename Type, TransposeFlag TF>
     struct EigenType<DynamicVector<Type, TF>>
     {
         typedef typename DynamicVector<Type, TF>::Base type;

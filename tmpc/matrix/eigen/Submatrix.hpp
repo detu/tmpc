@@ -1,6 +1,6 @@
 #pragma once
 
-#include "AlignmentFlag.hpp"
+#include <tmpc/matrix/AlignmentFlag.hpp>
 #include "EigenType.hpp"
 #include "Matrix.hpp"
 #include "EigenBase.hpp"
@@ -15,19 +15,19 @@ namespace tmpc :: eigen_adaptor
     * Submatrices
     *
     -------------------------------------------------------*/
-    template <typename MT, bool AF>
+    template <typename MT, AlignmentFlag AF>
     struct Submatrix;
 	
-	template <typename MT, bool AF>
+	template <typename MT, AlignmentFlag AF>
     struct EigenBaseSelector<Submatrix<MT, AF>>
     {
         using type = Eigen::Block<EigenBase<MT>, Eigen::Dynamic, Eigen::Dynamic>;
     };
 
-    template <typename MT, bool AF>
+    template <typename MT, AlignmentFlag AF>
     using SubmatrixBase = Matrix<Submatrix<MT, AF>, MT::IsRowMajor ? rowMajor : columnMajor>;
 
-    template <typename MT, bool AF = unaligned>
+    template <typename MT, AlignmentFlag AF = unaligned>
     struct Submatrix
     :   SubmatrixBase<MT, AF>
     ,   EigenBase<Submatrix<MT, AF>>
@@ -75,7 +75,7 @@ namespace tmpc :: eigen_adaptor
     }
 
     /*
-    template <typename MT, bool AF = unaligned>
+    template <typename MT, AlignmentFlag AF = unaligned>
     struct Submatrix;
 
     template <typename MT>

@@ -5,17 +5,18 @@
 #include "QpStageSolutionBase.hpp"
 #include "QpStageBase.hpp"
 
-#include <tmpc/Matrix.hpp>
 #include <tmpc/Math.hpp>
+#include <tmpc/matrix/StorageOrder.hpp>
+#include <tmpc/matrix/TransposeFlag.hpp>
 
 #include <boost/range/iterator_range_core.hpp>
 #include <boost/iterator/iterator_adaptor.hpp>
 
-#include <limits>
 #include <stdexcept>
 #include <algorithm>
-#include <cmath>
 #include <vector>
+#include <array>
+#include <cmath>
 
 namespace tmpc
 {
@@ -58,10 +59,11 @@ namespace tmpc
 	 *
 	 * \tparam <Kernel> the math kernel type
 	 */
-	template <typename Kernel>
+	template <typename Kernel_>
 	class HpmpcWorkspace
 	{
 	public:
+		using Kernel = Kernel_;
 		using Real = typename Kernel::Real;
 		
 		// Iteration statistics. HPMPC returns 5 Real numbers per iteration:
@@ -75,8 +77,8 @@ namespace tmpc
 		{
 		public:
 			static auto constexpr storageOrder = rowMajor;
-			using Matrix = DynamicMatrix<Real, storageOrder>;
-			using Vector = DynamicVector<Real, columnVector>;
+			using Matrix = typename Kernel::DynamicMatrix;
+			using Vector = typename Kernel::DynamicVector;
 
 			Stage(QpSize const& sz, size_t nx_next)
 			:	size_(sz)
@@ -314,10 +316,10 @@ namespace tmpc
 			std::vector<Real> lb_internal_;
 			std::vector<Real> ub_internal_;
 
-			DynamicVector<Real> x_;
-			DynamicVector<Real> u_;
-			DynamicVector<Real> pi_;
-			DynamicVector<Real> lam_;
+			Vector x_;
+			Vector u_;
+			Vector pi_;
+			Vector lam_;
 		};
 
 		class ProblemIterator
@@ -534,7 +536,7 @@ namespace tmpc
 		std::vector<Real *> u_;
 		std::vector<Real *> pi_;
 		std::vector<Real *> lam_;
-		StaticVector<Real, 4> infNormRes_;
+		typename Kernel::template StaticVector<4> infNormRes_;
 
 		/// \brief Number of iterations performed by the QP solver.
 		int numIter_ = 0;

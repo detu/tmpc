@@ -2,6 +2,9 @@
 
 #include <blaze/Blaze.h>
 
+#include <tmpc/matrix/StorageOrder.hpp>
+#include <tmpc/matrix/TransposeFlag.hpp>
+
 namespace tmpc
 {
     template <typename Real_>
@@ -19,19 +22,22 @@ namespace tmpc
         using StaticMatrix = blaze::StaticMatrix<Real, M, N>;
         
         using DynamicMatrix = blaze::DynamicMatrix<Real>;
+
+        template <typename T>
+        using Rand = blaze::Rand<T>;
     };
 }
 
-namespace blaze
+namespace tmpc
 {
     template <typename V, bool SO>
-    inline decltype(auto) full(Vector<V, SO>& v)
+    inline decltype(auto) full(blaze::Vector<V, SO>& v)
     {
         return subvector(v, 0, size(v));
     }
 
     template <typename M, bool SO>
-    inline decltype(auto) full(Matrix<M, SO>& m)
+    inline decltype(auto) full(blaze::Matrix<M, SO>& m)
     {
         return submatrix(m, 0, 0, rows(m), columns(m));
     }
