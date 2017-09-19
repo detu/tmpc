@@ -56,13 +56,13 @@ namespace tmpc
 	/**
 	 * \brief Multistage QP solver using HPMPC
 	 *
-	 * \tparam <Real_> real number type
+	 * \tparam <Kernel> the math kernel type
 	 */
-	template <typename Real_>
+	template <typename Kernel>
 	class HpmpcWorkspace
 	{
 	public:
-		using Real = Real_;
+		using Real = typename Kernel::Real;
 		
 		// Iteration statistics. HPMPC returns 5 Real numbers per iteration:
 		// step length for predictor and corrector, 
@@ -75,9 +75,8 @@ namespace tmpc
 		{
 		public:
 			static auto constexpr storageOrder = rowMajor;
-			using Real = HpmpcWorkspace::Real;
-			typedef DynamicMatrix<Real, storageOrder> Matrix;
-			typedef DynamicVector<Real, columnVector> Vector;
+			using Matrix = DynamicMatrix<Real, storageOrder>;
+			using Vector = DynamicVector<Real, columnVector>;
 
 			Stage(QpSize const& sz, size_t nx_next)
 			:	size_(sz)

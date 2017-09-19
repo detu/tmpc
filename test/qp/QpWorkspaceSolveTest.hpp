@@ -226,31 +226,6 @@ namespace tmpc :: testing
 		problem[1].ubx(100.);
 
 		ws.solve();
-
-		/*
-		try
-		{
-			ws.solve();
-		}
-		catch (HpmpcException const&)
-		{
-			auto const& hpmpc_ws = reinterpret_cast<HpmpcWorkspace<double> const&>(ws);
-			for (auto const& stat : hpmpc_ws.stat())
-			{
-				for (auto val : stat)
-					std::cout << val << "\t";
-				std::cout << std::endl;
-			}
-
-			{
-				std::ofstream failed_qp("failed_qp.m");
-				PrintMultistageQpMatlab(failed_qp, ws.problem(), "qp");
-			}
-
-			throw;
-		}
-		*/
-
 		auto solution = ws.solution();
 
 		using Vector = DynamicVector<Real>;

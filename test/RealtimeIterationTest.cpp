@@ -6,6 +6,7 @@
 #include <tmpc/qp/HpmpcWorkspace.hpp>
 #include <tmpc/integrator/rk4.hpp>
 #include <tmpc/Matrix.hpp>
+#include <tmpc/BlazeKernel.hpp>
 #include <tmpc/util/problem_specific.hpp>
 
 #include "gtest_tools_eigen.hpp"
@@ -211,7 +212,7 @@ protected:
 
 typedef ::testing::Types<
 		tmpc::MpcRealtimeIteration<double, OCP, tmpc::QpOasesWorkspace>
-		,	tmpc::MpcRealtimeIteration<double, OCP, tmpc::HpmpcWorkspace<double>>
+		,	tmpc::MpcRealtimeIteration<double, OCP, tmpc::HpmpcWorkspace<BlazeKernel<double>>>
 	> RTITypes;
 
 TYPED_TEST_CASE(RealtimeIterationTest, RTITypes);

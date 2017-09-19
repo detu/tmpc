@@ -12,7 +12,7 @@ int main(int, char **)
 	using namespace tmpc;
 
 	using Kernel = BlazeKernel<double>;
-	using Workspace = HpmpcWorkspace<double>;
+	using Workspace = HpmpcWorkspace<Kernel>;
 
 	Workspace workspace {QpSize {3, 0, 0}, QpSize {0, 0, 0}};
 	
