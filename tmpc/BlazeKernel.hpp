@@ -47,14 +47,25 @@ namespace tmpc
 namespace blaze
 {
     template <typename V, bool SO>
-    inline decltype(auto) full(Vector<V, SO>& v)
+    inline decltype(auto) noresize(Vector<V, SO>& v)
     {
         return subvector(v, 0, size(v));
     }
 
     template <typename M, bool SO>
-    inline decltype(auto) full(Matrix<M, SO>& m)
+    inline decltype(auto) noresize(Matrix<M, SO>& m)
     {
         return submatrix(m, 0, 0, rows(m), columns(m));
+    }
+
+    template <typename VT, bool TF>
+    inline decltype(auto) l1Norm( const DenseVector<VT,TF>& vec )
+    {
+       ElementType_<VT> norm{};
+    
+       for( const auto& element : ~vec )
+          norm += abs( element );
+    
+       return norm;
     }
 }

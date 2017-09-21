@@ -79,7 +79,7 @@ namespace tmpc
 
 		template <typename T>
 		void A(const T& a) {
-			full(A_) = a;
+			noresize(A_) = a;
 		}
 
 		const Matrix& B() const {
@@ -88,7 +88,7 @@ namespace tmpc
 
 		template <typename T>
 		void B(const T& b) {
-			full(B_) = b;
+			noresize(B_) = b;
 		}
 
 		Vector const& b() const {
@@ -97,7 +97,7 @@ namespace tmpc
 
 		template <typename T>
 		void b(const T& b) {
-			full(b_) = b;
+			noresize(b_) = b;
 		}
 
 		const Matrix& C() const {
@@ -106,7 +106,7 @@ namespace tmpc
 
 		template <typename T>
 		void C(const T& c) {
-			full(C_) = c;
+			noresize(C_) = c;
 		}
 
 		const Matrix& D() const {
@@ -115,7 +115,7 @@ namespace tmpc
 
 		template <typename T>
 		void D(const T& d) {
-			full(D_) = d;
+			noresize(D_) = d;
 		}
 
 		const Vector& lbd() const {
@@ -124,7 +124,7 @@ namespace tmpc
 
 		template <typename T>
 		void lbd(const T& lbd) {
-			full(lbd_) = lbd;
+			noresize(lbd_) = lbd;
 		}
 
 		const Vector& lbu() const {
@@ -133,7 +133,7 @@ namespace tmpc
 
 		template <typename T>
 		void lbu(const T& lbu) {
-			full(lbu_) = lbu;
+			noresize(lbu_) = lbu;
 		}
 
 		const Vector& lbx() const {
@@ -142,7 +142,7 @@ namespace tmpc
 
 		template <typename T>
 		void lbx(const T& lbx) {
-			full(lbx_) = lbx;
+			noresize(lbx_) = lbx;
 		}
 
 		const Matrix& Q() const {
@@ -151,13 +151,13 @@ namespace tmpc
 
 		template <typename T>
 		void Q(const T& q) {
-			full(Q_) = q;
+			noresize(Q_) = q;
 		}
 
 		template <typename T>
 		auto& Q(std::initializer_list<std::initializer_list<T>> q) 
 		{
-			full(Q_) = q;
+			noresize(Q_) = q;
 			return *this;
 		}
 
@@ -167,13 +167,13 @@ namespace tmpc
 
 		template <typename T>
 		void R(const T& r) {
-			full(R_) = r;
+			noresize(R_) = r;
 		}
 
 		template <typename T>
 		auto& R(std::initializer_list<std::initializer_list<T>> val) 
 		{
-			full(R_) = val;
+			noresize(R_) = val;
 			return *this;
 		}
 
@@ -183,13 +183,13 @@ namespace tmpc
 
 		template <typename T>
 		void S(const T& s) {
-			full(S_) = s;
+			noresize(S_) = s;
 		}
 
 		template <typename T>
 		auto& S(std::initializer_list<std::initializer_list<T>> val) 
 		{
-			full(S_) = val;
+			noresize(S_) = val;
 			return *this;
 		}
 
@@ -199,13 +199,13 @@ namespace tmpc
 
 		template <typename T>
 		void q(const T& q) {
-			full(q_) = q;
+			noresize(q_) = q;
 		}
 
 		template <typename T>
 		auto& q(std::initializer_list<T> val) 
 		{
-			full(q_) = val;
+			noresize(q_) = val;
 			return *this;
 		}
 
@@ -215,13 +215,13 @@ namespace tmpc
 
 		template <typename T>
 		void r(const T& r) {
-			full(r_) = r;
+			noresize(r_) = r;
 		}
 
 		template <typename T>
 		auto& r(std::initializer_list<T> val) 
 		{
-			full(r_) = val;
+			noresize(r_) = val;
 			return *this;
 		}
 
@@ -231,7 +231,7 @@ namespace tmpc
 
 		template <typename T>
 		void ubd(const T& ubd) {
-			full(ubd_) = ubd;
+			noresize(ubd_) = ubd;
 		}
 
 		const Vector& ubu() const {
@@ -240,7 +240,7 @@ namespace tmpc
 
 		template <typename T>
 		void ubu(const T& ubu) {
-			full(ubu_) = ubu;
+			noresize(ubu_) = ubu;
 		}
 
 		const Vector& ubx() const {
@@ -249,7 +249,7 @@ namespace tmpc
 
 		template <typename T>
 		void ubx(const T& ubx) {
-			full(ubx_) = ubx;
+			noresize(ubx_) = ubx;
 		}
 
 		QpSize const& size() const

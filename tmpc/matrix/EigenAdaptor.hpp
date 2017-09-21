@@ -26,4 +26,4 @@
 #include "eigen/Eval.hpp"
 #include "eigen/Norm.hpp"
 #include "eigen/Rand.hpp"
-#include "eigen/Full.hpp"
+#include "eigen/NoResize.hpp"

@@ -98,22 +98,22 @@ namespace tmpc
 			}
 
 			const Matrix& A() const { return A_; }
-			template <typename T> void A(const T& a) { full(A_) = a; }
+			template <typename T> void A(const T& a) { noresize(A_) = a; }
 
 			const Matrix& B() const { return B_; }
-			template <typename T> void B(const T& b) { full(B_) = b; }
+			template <typename T> void B(const T& b) { noresize(B_) = b; }
 
 			Vector const& b() const { return b_; }
-			template <typename T> void b(const T& b) { full(b_) = b; }
+			template <typename T> void b(const T& b) { noresize(b_) = b; }
 
 			const Matrix& C() const { return C_; }
-			template <typename T> void C(const T& c) { full(C_) = c; }
+			template <typename T> void C(const T& c) { noresize(C_) = c; }
 
 			const Matrix& D() const { return D_; }
-			template <typename T> void D(const T& d) { full(D_) = d; }
+			template <typename T> void D(const T& d) { noresize(D_) = d; }
 
 			const Vector& lbd() const {	return lbd_; }
-			template <typename T> void lbd(const T& lbd) { full(lbd_) = lbd; }
+			template <typename T> void lbd(const T& lbd) { noresize(lbd_) = lbd; }
 
 			auto lbu() const { return subvector(lb_, 0, size_.nu());	}			
 			template <typename T> void lbu(const T& lbu) { subvector(lb_, 0, size_.nu()) = lbu; }
@@ -122,23 +122,23 @@ namespace tmpc
 			template <typename T> void lbx(const T& lbx) { subvector(lb_, size_.nu(), size_.nx()) = lbx; }
 
 			const Matrix& Q() const { return Q_; }
-			template <typename T> void Q(const T& q) { full(Q_) = q; }
+			template <typename T> void Q(const T& q) { noresize(Q_) = q; }
 
 			const Matrix& R() const { return R_; }
-			template <typename T> void R(const T& r) { full(R_) = r; }
+			template <typename T> void R(const T& r) { noresize(R_) = r; }
 
 			// HPIPM convention for S is [nu, nx], therefore the trans().
 			decltype(auto) S() const { return trans(S_); }
-			template <typename T> void S(const T& s) { full(S_) = trans(s); }
+			template <typename T> void S(const T& s) { noresize(S_) = trans(s); }
 
 			const Vector& q() const { return q_; }
-			template <typename T> void q(const T& q) { full(q_) = q; }
+			template <typename T> void q(const T& q) { noresize(q_) = q; }
 
 			const Vector& r() const { return r_; }
-			template <typename T> void r(const T& r) { full(r_) = r; }
+			template <typename T> void r(const T& r) { noresize(r_) = r; }
 
 			const Vector& ubd() const { return ubd_; }
-			template <typename T> void ubd(const T& ubd) { full(ubd_) = ubd; }
+			template <typename T> void ubd(const T& ubd) { noresize(ubd_) = ubd; }
 
 			auto ubu() const { return subvector(ub_, 0, size_.nu()); }
 			template <typename T> void ubu(const T& ubu) { subvector(ub_, 0, size_.nu()) = ubu; }

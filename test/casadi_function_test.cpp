@@ -1,12 +1,12 @@
 #include <tmpc/casadi_interface/GeneratedFunction.hpp>
 #include <tmpc/EigenKernel.hpp>
+#include <tmpc/test_tools.hpp>
 
 #include "casadi_function_test_generated.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-#include "gtest_tools_eigen.hpp"
 
 #include <tuple>
 #include <stdexcept>

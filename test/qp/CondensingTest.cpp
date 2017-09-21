@@ -4,7 +4,7 @@
 
 #include <tmpc/BlazeKernel.hpp>
 
-#include "../gtest_tools_eigen.hpp"
+#include <tmpc/test_tools.hpp>
 
 #include <gtest/gtest.h>
 

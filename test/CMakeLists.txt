@@ -55,7 +55,6 @@ add_executable(tmpc_test
     #rk4_test.cpp
     #mhe_test.cpp
     casadi_function_test.cpp
-    gtest_tools_eigen.hpp
 
     ${CMAKE_CURRENT_BINARY_DIR}/pendulum_ode_generated.h
     ${CMAKE_CURRENT_BINARY_DIR}/pendulum_ode_generated.c

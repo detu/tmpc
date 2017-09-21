@@ -12,13 +12,13 @@ namespace tmpc :: eigen_adaptor
     std::enable_if_t<
         IsVector<VT>::value, 
         Subvector<VT, unaligned>
-    > full(VT& v)
+    > noresize(VT& v)
     {
         return subvector(v, 0, size(v));
     }
 
     template <typename MT>
-    Submatrix<MT, unaligned> full(Eigen::MatrixBase<MT>& m)
+    Submatrix<MT, unaligned> noresize(Eigen::MatrixBase<MT>& m)
     {
         return submatrix(m, 0, 0, m.rows(), m.cols());
     }

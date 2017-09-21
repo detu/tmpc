@@ -4,12 +4,11 @@
 
 #pragma once
 
-#include "../gtest_tools_eigen.hpp"
-
 #include <tmpc/qp/QpSize.hpp>
 #include <tmpc/qp/Printing.hpp>
 #include <tmpc/Matrix.hpp>
 
+#include <tmpc/test_tools.hpp>
 #include <gtest/gtest.h>
 
 #include <iostream>

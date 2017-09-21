@@ -1,12 +1,12 @@
 #include <tmpc/integrator/rk4.hpp>
 #include <tmpc/casadi_interface/GeneratedFunction.hpp>
+#include <tmpc/test_tools.hpp>
 
 #include "pendulum_ode_generated.h"
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
 #include <fstream>
-#include "gtest_tools_eigen.hpp"
 
 using namespace tmpc;
 
