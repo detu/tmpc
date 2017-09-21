@@ -1,23 +1,23 @@
 #pragma once
 
 #include "Types.hpp"
-#include "TransposeFlag.hpp"
+#include <tmpc/matrix/TransposeFlag.hpp>
 #include "VectorAssign.hpp"
 //#include "EigenType.hpp"
 #include "EigenBase.hpp"
 
 namespace tmpc :: eigen_adaptor 
 {
-	template <typename Type, size_t N, bool TF>
+	template <typename Type, size_t N, TransposeFlag TF>
     struct StaticVector;
 	
-    template <typename Type, size_t N, bool TF>
+    template <typename Type, size_t N, TransposeFlag TF>
     struct EigenBaseSelector<StaticVector<Type, N, TF>>
     {
         using type = Eigen::Matrix<Type, TF == columnVector ? N : 1, TF == rowVector ? N : 1>;
     };
 
-    template <typename Type, size_t N, bool TF = defaultTransposeFlag>
+    template <typename Type, size_t N, TransposeFlag TF = defaultTransposeFlag>
     struct StaticVector
     :   EigenBase<StaticVector<Type, N, TF>>
     ,   Vector<StaticVector<Type, N, TF>, TF>
@@ -67,7 +67,7 @@ namespace tmpc :: eigen_adaptor
     };
 
     /*
-    template <typename Type, size_t N, bool TF>
+    template <typename Type, size_t N, TransposeFlag TF>
     struct EigenType<StaticVector<Type, N, TF>>
     {
         typedef typename StaticVector<Type, N, TF>::Base type;

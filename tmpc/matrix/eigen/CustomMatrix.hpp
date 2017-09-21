@@ -1,21 +1,21 @@
 #pragma once
 
-#include "AlignmentFlag.hpp"
 #include "PaddingFlag.hpp"
-#include "StorageOrder.hpp"
+#include <tmpc/matrix/StorageOrder.hpp>
+#include <tmpc/matrix/AlignmentFlag.hpp>
 
 #include "Eigen.hpp"
 
 namespace tmpc :: eigen_adaptor {
 
-template <typename Type, bool SO>
+template <typename Type, StorageOrder SO>
 using CustomMatrixBaseUnalignedUnpadded =
     Eigen::Map<Eigen::Matrix<Type, Eigen::Dynamic, Eigen::Dynamic, SO == rowMajor ? Eigen::RowMajor : Eigen::ColMajor>>;
 
-template <typename Type, bool AF, bool PF, bool SO = defaultStorageOrder>
+template <typename Type, AlignmentFlag AF, bool PF, StorageOrder SO = defaultStorageOrder>
 struct CustomMatrix;
 
-template <typename Type, bool SO>
+template <typename Type, StorageOrder SO>
 struct CustomMatrix<Type, unaligned, unpadded, SO> : 
     CustomMatrixBaseUnalignedUnpadded<Type, SO>
 {

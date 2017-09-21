@@ -8,6 +8,7 @@
 
 #include <tmpc/qp/QpSize.hpp>
 #include <tmpc/qp/Printing.hpp>
+#include <tmpc/Matrix.hpp>
 
 #include <gtest/gtest.h>
 
@@ -24,9 +25,10 @@ namespace tmpc :: testing
         using Workspace = WS;
 
     protected:
+        using Kernel = typename Workspace::Kernel;
         using Real = typename Workspace::Real;
-        using Vector = DynamicVector<Real>;
-        using Matrix = DynamicMatrix<Real>;
+        using Vector = DynamicVector<Kernel>;
+        using Matrix = DynamicMatrix<Kernel>;
 
         QpWorkspaceTest()
         :	size_{
@@ -63,8 +65,8 @@ namespace tmpc :: testing
         std::vector<typename TestFixture::Vector> d_min(N), d_max(N);
 
         // Writing random data
-        Rand<typename TestFixture::Matrix> rand_matrix;
-        Rand<typename TestFixture::Vector> rand_vector;
+        Rand<typename TestFixture::Kernel, typename TestFixture::Matrix> rand_matrix;
+        Rand<typename TestFixture::Kernel, typename TestFixture::Vector> rand_vector;
 
         for (std::size_t i = 0; i < N; ++i)
         {

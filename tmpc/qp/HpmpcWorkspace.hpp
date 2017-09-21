@@ -11,11 +11,11 @@
 #include <boost/range/iterator_range_core.hpp>
 #include <boost/iterator/iterator_adaptor.hpp>
 
-#include <limits>
 #include <stdexcept>
 #include <algorithm>
 #include <cmath>
 #include <vector>
+#include <array>
 
 namespace tmpc
 {
@@ -75,8 +75,8 @@ namespace tmpc
 		{
 		public:
 			static auto constexpr storageOrder = rowMajor;
-			using Matrix = DynamicMatrix<Real, storageOrder>;
-			using Vector = DynamicVector<Real, columnVector>;
+			using Matrix = DynamicMatrix<Kernel, storageOrder>;
+			using Vector = DynamicVector<Kernel, columnVector>;
 
 			Stage(QpSize const& sz, size_t nx_next)
 			:	size_(sz)

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "AlignmentFlag.hpp"
+#include <tmpc/matrix/AlignmentFlag.hpp>
 #include "IsVector.hpp"
 #include "EigenType.hpp"
 #include "IsRowVector.hpp"
@@ -10,10 +10,10 @@
 
 namespace tmpc :: eigen_adaptor 
 {
-    template <typename VT, bool AF, bool TF>
+    template <typename VT, AlignmentFlag AF, TransposeFlag TF>
     struct Subvector;
 
-    template <typename VT, bool AF, bool TF>
+    template <typename VT, AlignmentFlag AF, TransposeFlag TF>
     struct EigenBaseSelector<Subvector<VT, AF, TF>>
     {
         using type = Eigen::VectorBlock<
@@ -29,8 +29,8 @@ namespace tmpc :: eigen_adaptor
     -------------------------------------------------------*/
     template <
         typename VT, 
-        bool AF = unaligned,
-        bool TF = IsRowVector<VT>::value
+        AlignmentFlag AF = unaligned,
+        TransposeFlag TF = IsRowVector<VT>::value ? rowVector : columnVector
     >
     struct Subvector
     :   Vector<Subvector<VT, AF, TF>, TF>

@@ -1,6 +1,6 @@
 #pragma once 
 
-#include "StorageOrder.hpp"
+#include <tmpc/matrix/StorageOrder.hpp>
 //#include "EigenType.hpp"
 #include "InitializerList.hpp"
 #include "MatrixAssign.hpp"
@@ -11,17 +11,17 @@
 
 namespace tmpc :: eigen_adaptor 
 {
-    template <typename Type, bool SO>
+    template <typename Type, StorageOrder SO>
     struct DynamicMatrix;
 
-    template <typename Type, bool SO>
+    template <typename Type, StorageOrder SO>
     struct EigenBaseSelector<DynamicMatrix<Type, SO>>
     {
         using type = Eigen::Matrix<Type, Eigen::Dynamic, Eigen::Dynamic, 
             SO == rowMajor ? Eigen::RowMajor : Eigen::ColMajor>;
     };
 
-    template <typename Type, bool SO = defaultStorageOrder>
+    template <typename Type, StorageOrder SO = defaultStorageOrder>
     struct DynamicMatrix
     :   Matrix<DynamicMatrix<Type, SO>, SO>
 	,	EigenBase<DynamicMatrix<Type, SO>>
@@ -64,7 +64,7 @@ namespace tmpc :: eigen_adaptor
         }
     };
 
-    template <typename MT, bool SO>
+    template <typename MT, StorageOrder SO>
     struct Rand<DynamicMatrix<MT, SO>>
     {
         decltype(auto) generate(size_t M, size_t N)

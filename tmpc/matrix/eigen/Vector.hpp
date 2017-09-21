@@ -1,6 +1,6 @@
 #pragma once
 
-#include "TransposeFlag.hpp"
+#include <tmpc/matrix/TransposeFlag.hpp>
 #include "IsVector.hpp"
 #include "IsEigenMatrix.hpp"
 
@@ -11,7 +11,7 @@
 namespace tmpc :: eigen_adaptor 
 {
 
-    template <typename VT, bool TF>
+    template <typename VT, TransposeFlag TF>
     struct Vector
     {
         VT& operator~()
@@ -25,16 +25,21 @@ namespace tmpc :: eigen_adaptor
         }
     };
 
-    template <typename VT>
-    std::enable_if_t<IsEigenMatrix<VT>::value, size_t> size(VT const& v)
-    {
-        return v.size();
-    }
+    
 
-    template <typename VT, bool TF>
+    template <typename VT, TransposeFlag TF>
     inline size_t size(Vector<VT, TF> const& v)
     {
         return (~v).size();
     }
 
+}
+
+namespace Eigen
+{
+    template <typename VT>
+    inline std::enable_if_t<::tmpc::eigen_adaptor::IsEigenMatrix<VT>::value, size_t> size(VT const& v)
+    {
+        return v.size();
+    }
 }

@@ -13,6 +13,7 @@
 #include <boost/iterator/iterator_adaptor.hpp>
 
 #include <ostream>
+#include <vector>
 
 namespace tmpc {
 
@@ -36,6 +37,7 @@ qpOASES::Options qpOASES_DefaultOptions();
 /**
  * \brief QP workspace using qpOASES
  */
+template <typename Kernel_>
 class QpOasesWorkspace
 {
 	struct Workspace;
@@ -43,24 +45,55 @@ class QpOasesWorkspace
 public:
 	// Real data type.
 	using Real = double;
+	
+	// Kernel type
+	using Kernel = Kernel_;
 
 	// Matrix storage option -- important!
 	// Must be rowMajor, because qpOASES expects input matrices in row-major format.
 	static auto constexpr storageOrder = rowMajor;
 
 	typedef unsigned int size_type;
-	typedef DynamicMatrix<Real, storageOrder> Matrix;
-	typedef DynamicVector<Real, columnVector> Vector;
+	typedef DynamicMatrix<Kernel, storageOrder> Matrix;
+	typedef DynamicVector<Kernel, columnVector> Vector;
 
 	class Stage
 	:	public QpStageSolutionBase<Stage>
 	,	public QpStageBase<Stage>
 	{
-		typedef Submatrix<Matrix> SubM;
-		typedef Subvector<Vector> SubV;
+		typedef Submatrix<Kernel, Matrix> SubM;
+		typedef Subvector<Kernel, Vector> SubV;
 
 	public:
-		Stage(Workspace& ws, QpSize const& sz, size_t n, size_t na, size_t nx_next);
+		Stage(Workspace& ws, QpSize const& sz, size_t n, size_t na, size_t nx_next)
+		:	size_(sz)
+		,	Q_ (submatrix(ws.H, n          , n          , sz.nx(), sz.nx()))
+		,	R_ (submatrix(ws.H, n + sz.nx(), n + sz.nx(), sz.nu(), sz.nu()))
+		,	S_ (submatrix(ws.H, n          , n + sz.nx(), sz.nx(), sz.nu()))
+		,	ST_(submatrix(ws.H, n + sz.nx(), n          , sz.nu(), sz.nx()))
+		,	q_  (subvector(ws.g , n          , sz.nx()))
+		,	r_  (subvector(ws.g , n + sz.nx(), sz.nu()))
+		,	lbx_(subvector(ws.lb, n          , sz.nx()))
+		,	ubx_(subvector(ws.ub, n          , sz.nx()))
+		,	lbu_(subvector(ws.lb, n + sz.nx(), sz.nu()))
+		,	ubu_(subvector(ws.ub, n + sz.nx(), sz.nu()))
+		,	A_(submatrix(ws.A, na          , n          , nx_next, sz.nx()))
+		,	B_(submatrix(ws.A, na          , n + sz.nx(), nx_next, sz.nu()))
+		,	lbb_(subvector(ws.lbA, na, nx_next))
+		,	ubb_(subvector(ws.ubA, na, nx_next))
+		,	C_(submatrix(ws.A, na + nx_next, n          , sz.nc(), sz.nx()))
+		,	D_(submatrix(ws.A, na + nx_next, n + sz.nx(), sz.nc(), sz.nu()))
+		,	lbd_(subvector(ws.lbA, na + nx_next, sz.nc()))
+		,	ubd_(subvector(ws.ubA, na + nx_next, sz.nc()))
+		,	x_(subvector(ws.primalSolution, n          , sz.nx()))
+		,	u_(subvector(ws.primalSolution, n + sz.nx(), sz.nu()))
+		,	lamX_(subvector(ws.dualSolution, n          , sz.nx()))
+		,	lamU_(subvector(ws.dualSolution, n + sz.nx(), sz.nu()))
+		,	lam_(subvector(ws.dualSolution, ws.primalSolution.size() + na          , sz.nc()))
+		,	pi_ (subvector(ws.dualSolution, ws.primalSolution.size() + na + sz.nc(), nx_next))
+		{
+		}
+
 		Stage(Stage const&) = delete;
 		Stage(Stage && s) = default;
 
@@ -170,6 +203,11 @@ public:
 		problem_.setOptions(detail::qpOASES_DefaultOptions());
 	}
 
+	explicit QpOasesWorkspace(std::initializer_list<QpSize> sz)
+	:	QpOasesWorkspace(sz.begin(), sz.end())
+	{
+	}
+
 	template <typename IteratorRange>
 	explicit QpOasesWorkspace(IteratorRange sz)
 	:	QpOasesWorkspace(sz.begin(), sz.end())
@@ -196,7 +234,7 @@ public:
 	class ProblemIterator
 	:	public boost::iterator_adaptor<
 			ProblemIterator	// derived
-		,	std::vector<Stage>::iterator	// base
+		,	typename std::vector<Stage>::iterator	// base
 		,	QpStageBase<Stage>&	// value
 		,	boost::random_access_traversal_tag	// category of traversal
 		,	QpStageBase<Stage>&	// reference
@@ -205,8 +243,8 @@ public:
 	public:
 		ProblemIterator() = default;
 		
-		ProblemIterator(base_type const& p)
-		:	iterator_adaptor_(p)
+		ProblemIterator(typename ProblemIterator::base_type const& p)
+		:	ProblemIterator::iterator_adaptor_(p)
 		{			
 		}
 	};
@@ -214,7 +252,7 @@ public:
 	class ConstProblemIterator
 	:	public boost::iterator_adaptor<
 			ConstProblemIterator	// derived
-		,	std::vector<Stage>::const_iterator	// base
+		,	typename std::vector<Stage>::const_iterator	// base
 		,	QpStageBase<Stage> const&	// value
 		,	boost::random_access_traversal_tag	// category of traversal
 		,	QpStageBase<Stage> const&	// reference
@@ -223,8 +261,8 @@ public:
 	public:
 		ConstProblemIterator() = default;
 		
-		ConstProblemIterator(base_type const& p)
-		:	iterator_adaptor_(p)
+		ConstProblemIterator(typename ConstProblemIterator::base_type const& p)
+		:	ConstProblemIterator::iterator_adaptor_(p)
 		{			
 		}
 	};
@@ -232,7 +270,7 @@ public:
 	class ConstSolutionIterator
 	:	public boost::iterator_adaptor<
 			ConstSolutionIterator	// derived
-		,	std::vector<Stage>::const_iterator	// base
+		,	typename std::vector<Stage>::const_iterator	// base
 		,	QpStageSolutionBase<Stage> const&	// value
 		,	boost::random_access_traversal_tag	// category of traversal
 		,	QpStageSolutionBase<Stage> const&	// reference
@@ -241,8 +279,8 @@ public:
 	public:
 		ConstSolutionIterator() = default;
 		
-		ConstSolutionIterator(base_type const& p)
-		:	iterator_adaptor_(p)
+		ConstSolutionIterator(typename ConstSolutionIterator::base_type const& p)
+		:	ConstSolutionIterator::iterator_adaptor_(p)
 		{			
 		}
 	};
@@ -300,7 +338,26 @@ public:
 	/// \brief Number of working set recalculations during last solve().
 	unsigned numIter() const { return numIter_; }
 
-	void solve();
+	void solve()
+	{
+		/* Solve the QP. */
+		int nWSR = static_cast<int>(_maxWorkingSetRecalculations);
+		const auto res = _hotStart ?
+			problem_.hotstart(ws_.H.data(), ws_.g.data(), ws_.A.data(),
+					ws_.lb.data(), ws_.ub.data(), ws_.lbA.data(), ws_.ubA.data(), nWSR) :
+			problem_.init    (ws_.H.data(), ws_.g.data(), ws_.A.data(),
+					ws_.lb.data(), ws_.ub.data(), ws_.lbA.data(), ws_.ubA.data(), nWSR);
+	
+		if (res != qpOASES::SUCCESSFUL_RETURN)
+			throw QpOasesException(res);
+	
+		numIter_ = nWSR;
+		_hotStart = true;
+	
+		/* Get solution data. */
+		problem_.getPrimalSolution(ws_.primalSolution.data());
+		problem_.getDualSolution(ws_.dualSolution.data());
+	}
 
 private:
 	bool _hotStart = false;
@@ -313,7 +370,18 @@ private:
 	
 	struct Workspace
 	{
-		Workspace(size_t nx, size_t nc);
+		Workspace(size_t nx, size_t nc)
+		:	H(nx, nx, Real{0})
+		,	g(nx, std::numeric_limits<Real>::signaling_NaN())
+		, 	lb(nx, std::numeric_limits<Real>::signaling_NaN())
+		, 	ub(nx, std::numeric_limits<Real>::signaling_NaN())
+		, 	A(nc, nx, Real{0})
+		, 	lbA(nc, std::numeric_limits<Real>::signaling_NaN())
+		, 	ubA(nc, std::numeric_limits<Real>::signaling_NaN())
+		,	primalSolution(nx)
+		,	dualSolution(nx + nc)
+		{		
+		}
 
 		//
 		// Init the -I blocks in the A matrix and 0 blocks in lbA and ubA
@@ -335,7 +403,7 @@ private:
 				auto const nx_next = (sz + 1)->nx();
 
 				// Assign the -I block in A
-				submatrix(A, i, j, nx_next, nx_next) = -IdentityMatrix<Real>(nx_next);
+				submatrix(A, i, j, nx_next, nx_next) = -IdentityMatrix<Kernel>(nx_next);
 
 				// Assign the 0 blocks in lbA and ubA
 				subvector(lbA, i, nx_next) = 0.;

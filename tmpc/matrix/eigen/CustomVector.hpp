@@ -1,18 +1,19 @@
 #pragma once
 
-#include "AlignmentFlag.hpp"
 #include "PaddingFlag.hpp"
-#include "TransposeFlag.hpp"
+
+#include <tmpc/matrix/TransposeFlag.hpp>
+#include <tmpc/matrix/AlignmentFlag.hpp>
 
 #include "Eigen.hpp"
 
 namespace tmpc :: eigen_adaptor {
 
-template <typename Type, bool AF, bool PF, bool TF>
+template <typename Type, AlignmentFlag AF, bool PF, TransposeFlag TF>
 using CustomVectorBase =
     Eigen::Map<Eigen::Matrix<Type, TF == columnVector ? Eigen::Dynamic : 1, TF == rowVector ? Eigen::Dynamic : 1>>;
 
-template <typename Type, bool AF, bool PF, bool TF = defaultTransposeFlag>
+template <typename Type, AlignmentFlag AF, bool PF, TransposeFlag TF = defaultTransposeFlag>
 struct CustomVector
 :   CustomVectorBase<Type, AF, PF, TF>
 {

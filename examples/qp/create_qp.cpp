@@ -30,37 +30,37 @@ int main(int, char **)
 	Stage stage1 {QpSize {2, 1, 0}, 0};
 
 	stage1.gaussNewtonCostApproximation(
-		Kernel::DynamicVector {0.1, 0.2},
-		Kernel::DynamicMatrix {
+		DynamicVector<Kernel> {0.1, 0.2},
+		DynamicMatrix<Kernel> {
 			{0.3, 0.4},
 			{0.5, 0.6}
 		},
-		Kernel::DynamicMatrix {
+		DynamicMatrix<Kernel> {
 			{0.7},
 			{0.8}
 		}
 	);
 
 	stage0.linearizedShootingEquality(
-		Kernel::DynamicVector {0.9, 1.0},
-		Kernel::DynamicMatrix {
+		DynamicVector<Kernel> {0.9, 1.0},
+		DynamicMatrix<Kernel> {
 			{1.1, 1.2, 1.3},
 			{1.4, 1.5, 1.6}
 		},
-		Kernel::DynamicMatrix {
+		DynamicMatrix<Kernel> {
 			{1.7, 1.8},
 			{1.9, 2.0}
 		},
-		Kernel::DynamicVector {2.1, 2.2}
+		DynamicVector<Kernel> {2.1, 2.2}
 	);
 
 	stage0.relativeBounds(
-		Kernel::DynamicVector {0.1, 0.2, 0.3},	// x
-		Kernel::DynamicVector {0.4, 0.5},	// u
-		Kernel::DynamicVector {-1., -2., -3.},	// lx
-		Kernel::DynamicVector {-4., -5.},	// lu
-		Kernel::DynamicVector {1., 2., 3.},	// ux
-		Kernel::DynamicVector {4., 5.}	// uu
+		DynamicVector<Kernel> {0.1, 0.2, 0.3},	// x
+		DynamicVector<Kernel> {0.4, 0.5},	// u
+		DynamicVector<Kernel> {-1., -2., -3.},	// lx
+		DynamicVector<Kernel> {-4., -5.},	// lu
+		DynamicVector<Kernel> {1., 2., 3.},	// ux
+		DynamicVector<Kernel> {4., 5.}	// uu
 	);
 
 	/*
