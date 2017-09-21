@@ -3,19 +3,14 @@
 
 #include <tmpc/qp/QpOasesWorkspace.hpp>
 #include <tmpc/qp/Printing.hpp>
-#include <tmpc/EigenKernel.hpp>
-#include <tmpc/BlazeKernel.hpp>
+#include <test/Kernels.hpp>
 
 #include <tmpc/test_tools.hpp>
-
-#include <gtest/gtest.h>
 
 #include <array>
 
 namespace tmpc :: testing
 {
-	//using Kernel = EigenKernel<double>;
-
 	template <typename Kernel_>
 	class QpOasesWorkspaceTest
 	: 	public ::testing::Test
@@ -23,11 +18,6 @@ namespace tmpc :: testing
 	protected:
 		using Kernel = Kernel_;
 	};
-
-	using Kernels = ::testing::Types<
-		EigenKernel<double>,
-		BlazeKernel<double>
-	>;
 
 	TYPED_TEST_CASE(QpOasesWorkspaceTest, Kernels);
 

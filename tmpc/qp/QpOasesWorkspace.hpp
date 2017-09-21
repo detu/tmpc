@@ -14,6 +14,7 @@
 
 #include <ostream>
 #include <vector>
+#include <memory>
 
 namespace tmpc {
 
@@ -49,147 +50,287 @@ public:
 	// Kernel type
 	using Kernel = Kernel_;
 
-	// Matrix storage option -- important!
-	// Must be rowMajor, because qpOASES expects input matrices in row-major format.
-	static auto constexpr storageOrder = rowMajor;
-
 	typedef unsigned int size_type;
-	typedef DynamicMatrix<Kernel, storageOrder> Matrix;
-	typedef DynamicVector<Kernel, columnVector> Vector;
 
 	class Stage
 	:	public QpStageSolutionBase<Stage>
 	,	public QpStageBase<Stage>
 	{
-		typedef Submatrix<Kernel, Matrix> SubM;
-		typedef Subvector<Kernel, Vector> SubV;
-
 	public:
 		Stage(Workspace& ws, QpSize const& sz, size_t n, size_t na, size_t nx_next)
-		:	size_(sz)
-		,	Q_ (submatrix(ws.H, n          , n          , sz.nx(), sz.nx()))
-		,	R_ (submatrix(ws.H, n + sz.nx(), n + sz.nx(), sz.nu(), sz.nu()))
-		,	S_ (submatrix(ws.H, n          , n + sz.nx(), sz.nx(), sz.nu()))
-		,	ST_(submatrix(ws.H, n + sz.nx(), n          , sz.nu(), sz.nx()))
-		,	q_  (subvector(ws.g , n          , sz.nx()))
-		,	r_  (subvector(ws.g , n + sz.nx(), sz.nu()))
-		,	lbx_(subvector(ws.lb, n          , sz.nx()))
-		,	ubx_(subvector(ws.ub, n          , sz.nx()))
-		,	lbu_(subvector(ws.lb, n + sz.nx(), sz.nu()))
-		,	ubu_(subvector(ws.ub, n + sz.nx(), sz.nu()))
-		,	A_(submatrix(ws.A, na          , n          , nx_next, sz.nx()))
-		,	B_(submatrix(ws.A, na          , n + sz.nx(), nx_next, sz.nu()))
-		,	lbb_(subvector(ws.lbA, na, nx_next))
-		,	ubb_(subvector(ws.ubA, na, nx_next))
-		,	C_(submatrix(ws.A, na + nx_next, n          , sz.nc(), sz.nx()))
-		,	D_(submatrix(ws.A, na + nx_next, n + sz.nx(), sz.nc(), sz.nu()))
-		,	lbd_(subvector(ws.lbA, na + nx_next, sz.nc()))
-		,	ubd_(subvector(ws.ubA, na + nx_next, sz.nc()))
-		,	x_(subvector(ws.primalSolution, n          , sz.nx()))
-		,	u_(subvector(ws.primalSolution, n + sz.nx(), sz.nu()))
-		,	lamX_(subvector(ws.dualSolution, n          , sz.nx()))
-		,	lamU_(subvector(ws.dualSolution, n + sz.nx(), sz.nu()))
-		,	lam_(subvector(ws.dualSolution, ws.primalSolution.size() + na          , sz.nc()))
-		,	pi_ (subvector(ws.dualSolution, ws.primalSolution.size() + na + sz.nc(), nx_next))
+		:	ws_(&ws)
+		,	n_(n)
+		,	na_(na)
+		,	size_(sz)
+		,	nxNext_(nx_next)
 		{
 		}
 
 		Stage(Stage const&) = delete;
 		Stage(Stage && s) = default;
 
-		template <typename Expr>
-		Stage& operator=(Expr const& rhs)
+		// Set new workspace.
+		void workspace(Workspace& ws)
 		{
-			assign(*this, rhs);
-			return *this;
+			ws_ = &ws;
 		}
 
-		const SubM& Q() const {	return Q_; }
-		template <typename T> void Q(const T& q) { Q_ = q; }
+		auto Q() const 
+		{	
+			return submatrix(ws_->H, n_, n_, size_.nx(), size_.nx());
+		}
+		
+		template <typename T> 
+		void Q(const T& q) 
+		{ 
+			submatrix(ws_->H, n_, n_, size_.nx(), size_.nx()) = q; 
+		}
 
-		const SubM& R() const {	return R_; }
-		template <typename T> void R(const T& r) { R_ = r; }
+		auto R() const 
+		{	
+			return submatrix(ws_->H, n_ + size_.nx(), n_ + size_.nx(), size_.nu(), size_.nu()); 
+		}
 
-		const SubM& S() const {	return S_; }
-		template <typename T> void S(const T& s) { ST_ = trans(S_ = s); }
+		template <typename T> 
+		void R(const T& r) 
+		{ 
+			submatrix(ws_->H, n_ + size_.nx(), n_ + size_.nx(), size_.nu(), size_.nu()) = r; 
+		}
 
-		const SubV& q() const {	return q_; }
-		template <typename T> void q(const T& q) { q_ = q; }
+		auto S() const 
+		{	
+			return submatrix(ws_->H, n_, n_ + size_.nx(), size_.nx(), size_.nu()); 
+		}
 
-		const SubV& r() const {	return r_; }
-		template <typename T> void r(const T& r) { r_ = r; }
+		template <typename T> 
+		void S(const T& s) 
+		{
+			// Set both S and S^T in H
+			submatrix(ws_->H, n_ + size_.nx(), n_, size_.nu(), size_.nx()) = trans(
+				submatrix(ws_->H, n_, n_ + size_.nx(), size_.nx(), size_.nu()) = s); 
+		}
 
-		const SubM& A() const {	return A_; }
-		template <typename T> void A(const T& a) { A_ = a; }
+		auto q() const 
+		{	
+			return subvector(ws_->g, n_, size_.nx());
+		}
 
-		const SubM& B() const {	return B_; }
-		template <typename T> void B(const T& b) { B_ = b; }
+		template <typename T> 
+		void q(const T& q) 
+		{ 
+			subvector(ws_->g, n_, size_.nx()) = q; 
+		}
 
-		decltype(auto) b() const { return -lbb_; }
-		template <typename T> void b(const T& b) { lbb_ = ubb_ = -b; }
+		auto r() const 
+		{	
+			return subvector(ws_->g , n_ + size_.nx(), size_.nu());
+		}
 
-		const SubM& C() const {	return C_; }
-		template <typename T> void C(const T& c) { C_ = c; }
+		template <typename T> 
+		void r(const T& r) 
+		{ 
+			subvector(ws_->g , n_ + size_.nx(), size_.nu()) = r;
+		}
 
-		const SubM& D() const {	return D_; }
-		template <typename T> void D(const T& d) { D_ = d; }
+		auto A() const 
+		{	
+			return submatrix(ws_->A, na_, n_, nxNext_, size_.nx()); 
+		}
 
-		const SubV& lbd() const { return lbd_; }
-		template <typename T> void lbd(const T& lbd) { lbd_ = lbd; }
+		template <typename T> 
+		void A(const T& a) 
+		{ 
+			submatrix(ws_->A, na_, n_, nxNext_, size_.nx()) = a; 
+		}
 
-		const SubV& ubd() const { return ubd_; }
-		template <typename T> void ubd(const T& ubd) { ubd_ = ubd; }
+		auto B() const 
+		{	
+			return submatrix(ws_->A, na_, n_ + size_.nx(), nxNext_, size_.nu()); 
+		}
 
-		const SubV& lbu() const { return lbu_; }
-		template <typename T> void lbu(const T& lbu) { lbu_ = lbu; }
+		template <typename T> 
+		void B(const T& b) 
+		{ 
+			submatrix(ws_->A, na_, n_ + size_.nx(), nxNext_, size_.nu()) = b; 
+		}
 
-		const SubV& ubu() const { return ubu_; }
-		template <typename T> void ubu(const T& ubu) { ubu_ = ubu; }
+		auto b() const 
+		{ 
+			return -subvector(ws_->lbA, na_, nxNext_); 
+		}
 
-		const SubV& lbx() const { return lbx_; }
-		template <typename T> void lbx(const T& lbx) { lbx_ = lbx; }		
+		template <typename T> 
+		void b(const T& b) 
+		{
+			// Set lbA = ubA = -b
+			subvector(ws_->lbA, na_, nxNext_) = subvector(ws_->ubA, na_, nxNext_) = -b; 
+		}
 
-		const SubV& ubx() const { return ubx_; }
-		template <typename T> void ubx(const T& ubx) { ubx_ = ubx; }
+		auto C() const 
+		{	
+			return submatrix(ws_->A, na_ + nxNext_, n_, size_.nc(), size_.nx()); 
+		}
 
-		SubV const& x() const { return x_;	}
-		SubV const& u() const { return u_;	}
-		SubV const& pi() const	{ return pi_; }
-		decltype(auto) lam_lbu() const { return subvector(lamU_, 0, size_.nu()); }
-		decltype(auto) lam_ubu() const { return subvector(lamU_, size_.nu(), size_.nu()); }
-		decltype(auto) lam_lbx() const { return subvector(lamX_, 0, size_.nx()); }
-		decltype(auto) lam_ubx() const { return subvector(lamX_, size_.nx(), size_.nx()); }
-		decltype(auto) lam_lbd() const { return subvector(lam_, 0, size_.nc()); }
-		decltype(auto) lam_ubd() const { return subvector(lam_, size_.nc(), size_.nc()); }
+		template <typename T> 
+		void C(const T& c) 
+		{ 
+			submatrix(ws_->A, na_ + nxNext_, n_, size_.nc(), size_.nx()) = c; 
+		}
+
+		auto D() const 
+		{	
+			return submatrix(ws_->A, na_ + nxNext_, n_ + size_.nx(), size_.nc(), size_.nu()); 
+		}
+
+		template <typename T> 
+		void D(const T& d) 
+		{ 
+			submatrix(ws_->A, na_ + nxNext_, n_ + size_.nx(), size_.nc(), size_.nu()) = d;
+		}
+
+		auto lbd() const 
+		{ 
+			return subvector(ws_->lbA, na_ + nxNext_, size_.nc()); 
+		}
+
+		template <typename T> 
+		void lbd(const T& lbd) 
+		{ 
+			subvector(ws_->lbA, na_ + nxNext_, size_.nc()) = lbd;
+		}
+
+		auto ubd() const 
+		{ 
+			return subvector(ws_->ubA, na_ + nxNext_, size_.nc()); 
+		}
+
+		template <typename T> 
+		void ubd(const T& ubd) 
+		{ 
+			subvector(ws_->ubA, na_ + nxNext_, size_.nc()) = ubd; 
+		}
+
+		auto lbu() const 
+		{ 
+			return subvector(ws_->lb, n_ + size_.nx(), size_.nu()); 
+		}
+
+		template <typename T> 
+		void lbu(const T& lbu) 
+		{ 
+			subvector(ws_->lb, n_ + size_.nx(), size_.nu()) = lbu; 
+		}
+
+		auto ubu() const 
+		{ 
+			return subvector(ws_->ub, n_ + size_.nx(), size_.nu()); 
+		}
+
+		template <typename T> 
+		void ubu(const T& ubu) 
+		{ 
+			subvector(ws_->ub, n_ + size_.nx(), size_.nu()) = ubu; 
+		}
+
+		auto lbx() const 
+		{ 
+			return subvector(ws_->lb, n_, size_.nx()); 
+		}
+
+		template <typename T> 
+		void lbx(const T& lbx) 
+		{ 
+			subvector(ws_->lb, n_, size_.nx()) = lbx; 
+		}		
+
+		auto ubx() const 
+		{ 
+			return subvector(ws_->ub, n_, size_.nx()); 
+		}
+
+		template <typename T> 
+		void ubx(const T& ubx) 
+		{ 
+			subvector(ws_->ub, n_, size_.nx()) = ubx; 
+		}
+
+		auto x() const 
+		{ 
+			return subvector(ws_->primalSolution, n_, size_.nx());	
+		}
+
+		auto u() const 
+		{ 
+			return subvector(ws_->primalSolution, n_ + size_.nx(), size_.nu());	
+		}
+
+		auto pi() const	
+		{ 
+			return subvector(ws_->dualSolution, ws_->primalSolution.size() + na_ + size_.nc(), nxNext_);
+		}
+
+		auto lam_lbu() const 
+		{ 
+			// lamU_(subvector(ws_->dualSolution, n + size_.nx(), size_.nu()))
+
+			// TODO: this must be fixed, since qpOASES returns both lower an upper bound 
+			// Lagrange multipliers in one vector of size NU.
+			return subvector(ws_->dualSolution, n_ + size_.nx(), size_.nu());
+		}
+
+		auto lam_ubu() const 
+		{ 
+			// lamU_(subvector(ws_->dualSolution, n + size_.nx(), size_.nu()))
+
+			// TODO: this must be fixed, since qpOASES returns both lower an upper bound 
+			// Lagrange multipliers in one vector of size NU.
+			return subvector(ws_->dualSolution, n_ + size_.nx(), size_.nu()); 
+		}
+
+		auto lam_lbx() const 
+		{ 
+			// lamX_(subvector(ws_->dualSolution, n          , size_.nx()))
+
+			// TODO: this must be fixed, since qpOASES returns both lower an upper bound 
+			// Lagrange multipliers in one vector of size NX.
+			return subvector(ws_->dualSolution, n_, size_.nx()); 
+		}
+
+		auto lam_ubx() const 
+		{ 
+			// lamX_(subvector(ws_->dualSolution, n          , size_.nx()))
+
+			// TODO: this must be fixed, since qpOASES returns both lower an upper bound 
+			// Lagrange multipliers in one vector of size NX.
+			return subvector(ws_->dualSolution, n_, size_.nx()); 
+		}
+
+		auto lam_lbd() const 
+		{ 
+			// lam_(subvector(ws_->dualSolution, ws_->primalSolution.size() + na, size_.nc()))
+
+			// TODO: this must be fixed, since qpOASES returns both lower an upper bound 
+			// Lagrange multipliers in one vector of size NC.
+			return subvector(ws_->dualSolution, ws_->primalSolution.size() + na_, size_.nc()); 
+		}
+
+		auto lam_ubd() const 
+		{ 
+			// lam_(subvector(ws_->dualSolution, ws_->primalSolution.size() + na, size_.nc()))
+
+			// TODO: this must be fixed, since qpOASES returns both lower an upper bound 
+			// Lagrange multipliers in one vector of size NC.
+			return subvector(ws_->dualSolution, ws_->primalSolution.size() + na_, size_.nc()); 
+		}
 
 		QpSize const& size() const { return size_; }
 
 	private:
-		QpSize size_;
-		SubM Q_;
-		SubM R_;
-		SubM S_;
-		SubM ST_;
-		SubV q_;
-		SubV r_;
-		SubV lbx_;
-		SubV ubx_;
-		SubV lbu_;
-		SubV ubu_;
-		SubM A_;
-		SubM B_;
-		SubV lbb_;
-		SubV ubb_;
-		SubM C_;
-		SubM D_;
-		SubV lbd_;
-		SubV ubd_;
-		SubV x_;
-		SubV u_;
-		SubV lamX_;
-		SubV lamU_;
-		SubV lam_;
-		SubV pi_;
+		Workspace * ws_;
+		size_t const n_;
+		size_t const na_;
+		QpSize const size_;
+		size_t const nxNext_;
 	};
 
 	template <typename InputIt>
@@ -223,10 +364,19 @@ public:
 
 	/**
 	 * \brief Move constructor.
-	 *
-	 * Move-construction is ok.
 	 */
-	QpOasesWorkspace(QpOasesWorkspace &&) = default;
+	QpOasesWorkspace(QpOasesWorkspace && rhs)
+	:	_hotStart(rhs._hotStart)
+	,	problem_(std::move(rhs.problem_))
+	,	_maxWorkingSetRecalculations(rhs._maxWorkingSetRecalculations)
+	,	ws_(std::move(rhs.ws_))
+	,	numIter_(rhs.numIter_)
+	,	stage_(std::move(rhs.stage_))
+	{
+		// Set workspace pointers for the stages.
+		for (auto& s : stage_)
+			s.workspace(ws_);
+	}
 
 	QpOasesWorkspace& operator=(QpOasesWorkspace const&) = delete;
 	QpOasesWorkspace& operator=(QpOasesWorkspace &&) = delete;
@@ -306,26 +456,26 @@ public:
 	//
 	// Full matrix and vector access functions.
 	//
-	Matrix& H() { return ws_.H; }
-	const Matrix& H() const { return ws_.H; }
+	auto& H() { return ws_.H; }
+	const auto& H() const { return ws_.H; }
 
-	Vector& g() { return ws_.g; }
-	const Vector& g() const { return ws_.g; }
+	auto& g() { return ws_.g; }
+	const auto& g() const { return ws_.g; }
 
-	Matrix& A() { return ws_.A; }
-	const Matrix& A() const { return ws_.A; }
+	auto& A() { return ws_.A; }
+	const auto& A() const { return ws_.A; }
 
-	Vector& lbA() { return ws_.lbA; }
-	const Vector& lbA() const { return ws_.lbA; }
+	auto& lbA() { return ws_.lbA; }
+	const auto& lbA() const { return ws_.lbA; }
 
-	Vector& ubA() { return ws_.ubA; }
-	const Vector& ubA() const { return ws_.ubA; }
+	auto& ubA() { return ws_.ubA; }
+	const auto& ubA() const { return ws_.ubA; }
 
-	Vector& lb() { return ws_.lb; }
-	const Vector& lb() const { return ws_.lb; }
+	auto& lb() { return ws_.lb; }
+	const auto& lb() const { return ws_.lb; }
 
-	Vector& ub() { return ws_.ub; }
-	const Vector& ub() const { return ws_.ub; }
+	auto& ub() { return ws_.ub; }
+	const auto& ub() const { return ws_.ub; }
 
 	bool hotStart() const noexcept { return _hotStart; }
 
@@ -360,27 +510,35 @@ public:
 	}
 
 private:
+	// Matrix storage option -- important!
+	// Must be rowMajor, because qpOASES expects input matrices in row-major format.
+	static auto constexpr storageOrder = rowMajor;
+
 	bool _hotStart = false;
 
-	// TODO: wrap problem_ into a pImpl to
+	// TODO (??): wrap problem_ into a pImpl to
 	// a) Reduce dependencies
-	// b) Avoid deep-copy of qpOASES::SQProblem object on move-construction of CondensingSolver.
+	// b) Avoid deep-copy of qpOASES::SQProblem object on move-construction.
 	qpOASES::SQProblem problem_;
 	unsigned _maxWorkingSetRecalculations = 1000;
 	
 	struct Workspace
 	{
 		Workspace(size_t nx, size_t nc)
-		:	H(nx, nx, Real{0})
+		:	memH_(new Real[nx * nx])
+		,	H {memH_.get(), nx, nx}
 		,	g(nx, std::numeric_limits<Real>::signaling_NaN())
 		, 	lb(nx, std::numeric_limits<Real>::signaling_NaN())
 		, 	ub(nx, std::numeric_limits<Real>::signaling_NaN())
-		, 	A(nc, nx, Real{0})
+		,	memA_(new Real[nc * nx])
+		, 	A {memA_.get(), nc, nx}
 		, 	lbA(nc, std::numeric_limits<Real>::signaling_NaN())
 		, 	ubA(nc, std::numeric_limits<Real>::signaling_NaN())
 		,	primalSolution(nx)
 		,	dualSolution(nx + nc)
 		{		
+			H = Real{0};
+			A = Real{0};
 		}
 
 		//
@@ -414,25 +572,31 @@ private:
 			}
 		}
 		
-		Matrix H;
-		Vector g;
+		// Memory array for H.
+		std::unique_ptr<Real[]> memH_;
+
+		CustomMatrix<Kernel, unaligned, unpadded, storageOrder> H;
+		DynamicVector<Kernel> g;
 
 		// The layout of lb is [lbx, lbu, ...]
-		Vector lb;
+		DynamicVector<Kernel> lb;
 
 		// The layout of ub is [ubx, ubu, ...]
-		Vector ub;
+		DynamicVector<Kernel> ub;
 
-		Matrix A;
+		// Memory array for A.
+		std::unique_ptr<Real[]> memA_;
+
+		CustomMatrix<Kernel, unaligned, unpadded, storageOrder> A;
 
 		// The layout of lbA is [lbb, lbd, ...]
-		Vector lbA;
+		DynamicVector<Kernel> lbA;
 
 		// The layout of ubA_ is [ubb, ubd, ...]
-		Vector ubA;
+		DynamicVector<Kernel> ubA;
 
-		Vector primalSolution;
-		Vector dualSolution;
+		DynamicVector<Kernel> primalSolution;
+		DynamicVector<Kernel> dualSolution;
 	};
 
 	Workspace ws_;

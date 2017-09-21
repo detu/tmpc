@@ -10,7 +10,7 @@ namespace tmpc
     template <typename Real_>
     struct EigenKernel
     {
-        using size_t = std::size_t;
+        using size_t = eigen_adaptor::size_t;
         using Real = Real_;
 
         template <size_t M, TransposeFlag TF>
@@ -24,6 +24,9 @@ namespace tmpc
         
         template <StorageOrder SO>
         using DynamicMatrix = eigen_adaptor::DynamicMatrix<Real, SO>;
+
+        template <AlignmentFlag AF, PaddingFlag PF, StorageOrder SO>
+        using CustomMatrix = eigen_adaptor::CustomMatrix<Real, AF, PF, SO>;
 
         using IdentityMatrix = eigen_adaptor::IdentityMatrix<Real>;
 

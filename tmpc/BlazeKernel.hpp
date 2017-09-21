@@ -25,6 +25,14 @@ namespace tmpc
         template <StorageOrder SO>
         using DynamicMatrix = blaze::DynamicMatrix<Real, SO == rowMajor ? blaze::rowMajor : blaze::columnMajor>;
 
+        template <AlignmentFlag AF, PaddingFlag PF, StorageOrder SO>
+        using CustomMatrix = blaze::CustomMatrix<
+            Real,
+            AF == aligned ? blaze::aligned : blaze::unaligned, 
+            PF == padded ? blaze::padded : blaze::unpadded,
+            SO == columnMajor ? blaze::columnMajor : blaze::rowMajor
+        >;
+
         using IdentityMatrix = blaze::IdentityMatrix<Real>;
 
         template <typename MT, AlignmentFlag AF>

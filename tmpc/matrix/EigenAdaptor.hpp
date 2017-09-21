@@ -2,6 +2,8 @@
 
 #include <Eigen/Dense>
 
+#include "eigen/Types.hpp"
+
 #include "eigen/Vector.hpp"
 #include "eigen/StaticVector.hpp"
 #include "eigen/DynamicVector.hpp"

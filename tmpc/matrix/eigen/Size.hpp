@@ -17,6 +17,6 @@ namespace tmpc :: eigen_adaptor
         std::enable_if_t<IsVector<T>::value>
     >
     {
-        static size_t constexpr value = T::SizeAtCompileTime;
+        static auto constexpr value = T::SizeAtCompileTime;
     };
 }

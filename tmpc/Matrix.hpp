@@ -4,6 +4,7 @@
 #include "matrix/StorageOrder.hpp"
 #include "matrix/TransposeFlag.hpp"
 #include "matrix/AlignmentFlag.hpp"
+#include "matrix/PaddingFlag.hpp"
 
 namespace tmpc
 {
@@ -23,6 +24,9 @@ namespace tmpc
 
     template <typename Kernel, StorageOrder SO = defaultStorageOrder>
     using DynamicMatrix = typename Kernel::template DynamicMatrix<SO>;
+
+    template <typename Kernel, AlignmentFlag AF, PaddingFlag PF, StorageOrder SO = defaultStorageOrder>
+    using CustomMatrix = typename Kernel::template CustomMatrix<AF, PF, SO>;
 
     template <typename Kernel>
     using IdentityMatrix = typename Kernel::IdentityMatrix;
