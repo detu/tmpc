@@ -4,6 +4,7 @@
 #include <tmpc/qp/QpOasesWorkspace.hpp>
 #include <tmpc/qp/Printing.hpp>
 #include <tmpc/EigenKernel.hpp>
+#include <tmpc/BlazeKernel.hpp>
 
 #include "../gtest_tools_eigen.hpp"
 
@@ -13,10 +14,27 @@
 
 namespace tmpc :: testing
 {
-	using Kernel = EigenKernel<double>;
+	//using Kernel = EigenKernel<double>;
 
-	TEST(QpOasesWorkspaceTest, testMatricesCorrect)
+	template <typename Kernel_>
+	class QpOasesWorkspaceTest
+	: 	public ::testing::Test
 	{
+	protected:
+		using Kernel = Kernel_;
+	};
+
+	using Kernels = ::testing::Types<
+		EigenKernel<double>,
+		BlazeKernel<double>
+	>;
+
+	TYPED_TEST_CASE(QpOasesWorkspaceTest, Kernels);
+
+	TYPED_TEST(QpOasesWorkspaceTest, testMatricesCorrect)
+	{
+		using Kernel = typename TestFixture::Kernel;
+
 		QpOasesWorkspace<Kernel> ws(std::array<QpSize, 1> {QpSize{2, 1, 0}});
 		auto p = ws.problem();
 
@@ -34,14 +52,16 @@ namespace tmpc :: testing
 		}));
 
 		// Test g = [q; r]
-		p[0].q(DynamicMatrix<Kernel> {{6.}, {7.}});
-		p[0].r(DynamicMatrix<Kernel> {{8.}});
+		p[0].q(DynamicVector<Kernel> {6., 7.});
+		p[0].r(DynamicVector<Kernel> {8.});
 
-		EXPECT_EQ(ws.g(), (DynamicMatrix<Kernel> {{6.}, {7.}, {8.}}));
+		EXPECT_EQ(ws.g(), (DynamicVector<Kernel> {6., 7., 8.}));
 	}
 
-	TEST(QpOasesWorkspaceTest, testMatricesCorrect1)
+	TYPED_TEST(QpOasesWorkspaceTest, testMatricesCorrect1)
 	{
+		using Kernel = typename TestFixture::Kernel;
+
 		std::array<QpSize, 3> sz = {QpSize(2, 1, 2), QpSize(2, 2, 1), QpSize(3, 1, 3)};
 		auto const total_nx = numVariables(sz.begin(), sz.end());
 		auto const total_nc = numEqualities(sz.begin(), sz.end()) + numInequalities(sz.begin(), sz.end());
@@ -144,6 +164,8 @@ namespace tmpc :: testing
 		EXPECT_EQ(print_wrap(ws.ubA()), print_wrap(ubA_expected));
 	}
 
-	INSTANTIATE_TYPED_TEST_CASE_P(QpOases, QpWorkspaceTest, QpOasesWorkspace<Kernel>);
-	INSTANTIATE_TYPED_TEST_CASE_P(QpOases, QpWorkspaceSolveTest, QpOasesWorkspace<Kernel>);
+	INSTANTIATE_TYPED_TEST_CASE_P(QpOases_Eigen_double, QpWorkspaceTest, QpOasesWorkspace<EigenKernel<double>>);
+	INSTANTIATE_TYPED_TEST_CASE_P(QpOases_Blaze_double, QpWorkspaceTest, QpOasesWorkspace<BlazeKernel<double>>);
+	INSTANTIATE_TYPED_TEST_CASE_P(QpOases_Eigen_double, QpWorkspaceSolveTest, QpOasesWorkspace<EigenKernel<double>>);
+	INSTANTIATE_TYPED_TEST_CASE_P(QpOases_Blaze_double, QpWorkspaceSolveTest, QpOasesWorkspace<BlazeKernel<double>>);
 }

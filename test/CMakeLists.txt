@@ -66,11 +66,11 @@ add_executable(tmpc_test
 target_compile_definitions(tmpc_test
     PRIVATE TEST_DATA_PATH="${TEST_DATA_PATH}")
 
-if (WITH_QPOASES)
-    target_sources(tmpc_test
-        PRIVATE RealtimeIterationTest.cpp
-    )
-endif()
+#if (WITH_QPOASES)
+#    target_sources(tmpc_test
+#        PRIVATE RealtimeIterationTest.cpp
+#    )
+#endif()
 
 target_include_directories(tmpc_test
     PRIVATE "${CMAKE_CURRENT_BINARY_DIR}"

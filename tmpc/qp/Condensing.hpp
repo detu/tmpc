@@ -42,15 +42,12 @@ namespace tmpc
 	template <typename Kernel>
 	class Condensing
 	{
-		using DynamicMatrix = DynamicMatrix<Kernel>;
-		using DynamicVector = DynamicVector<Kernel>;
-
 	public:
 		class CondensedStage
 		{
 			using size_type = typename Kernel::size_t;
-			using Matrix = DynamicMatrix;
-			using Vector = DynamicVector;
+			using Matrix = DynamicMatrix<Kernel>;
+			using Vector = DynamicVector<Kernel>;
 
 		public:
 			CondensedStage(CondensedStage const&) = delete;
@@ -260,7 +257,7 @@ namespace tmpc
 
 				// Update B
 				{
-					DynamicMatrix B_next(nx_next, nu + sz.nu());
+					DynamicMatrix<Kernel> B_next(nx_next, nu + sz.nu());
 					submatrix(B_next, 0,  0, nx_next,      nu) = stage->A() * B_;
 					submatrix(B_next, 0, nu, nx_next, sz.nu()) = stage->B();
 					B_ = std::move(B_next);
@@ -285,24 +282,24 @@ namespace tmpc
 	private:
 		QpSize const cs_;
 
-		DynamicMatrix Qc_;
-		DynamicMatrix Rc_;
-		DynamicMatrix Sc_;
-		DynamicVector qc_;
-		DynamicVector rc_;
+		DynamicMatrix<Kernel> Qc_;
+		DynamicMatrix<Kernel> Rc_;
+		DynamicMatrix<Kernel> Sc_;
+		DynamicVector<Kernel> qc_;
+		DynamicVector<Kernel> rc_;
 
-		DynamicMatrix Cc_;
-		DynamicMatrix Dc_;
-		DynamicVector lbd_;
-		DynamicVector ubd_;
+		DynamicMatrix<Kernel> Cc_;
+		DynamicMatrix<Kernel> Dc_;
+		DynamicVector<Kernel> lbd_;
+		DynamicVector<Kernel> ubd_;
 
-		DynamicVector lbx_;
-		DynamicVector ubx_;
-		DynamicVector lbu_;
-		DynamicVector ubu_;
+		DynamicVector<Kernel> lbx_;
+		DynamicVector<Kernel> ubx_;
+		DynamicVector<Kernel> lbu_;
+		DynamicVector<Kernel> ubu_;
 
-		DynamicMatrix A_;
-		DynamicMatrix B_;
-		DynamicVector b_;
+		DynamicMatrix<Kernel> A_;
+		DynamicMatrix<Kernel> B_;
+		DynamicVector<Kernel> b_;
 	};
 }

@@ -111,7 +111,7 @@ public:
 		template <typename T> void R(const T& r) { R_ = r; }
 
 		const SubM& S() const {	return S_; }
-		template <typename T> void S(const T& s) { ST_ = (S_ = s).transpose(); }
+		template <typename T> void S(const T& s) { ST_ = trans(S_ = s); }
 
 		const SubV& q() const {	return q_; }
 		template <typename T> void q(const T& q) { q_ = q; }

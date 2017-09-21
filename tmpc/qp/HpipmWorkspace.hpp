@@ -115,10 +115,10 @@ namespace tmpc
 			const Vector& lbd() const {	return lbd_; }
 			template <typename T> void lbd(const T& lbd) { full(lbd_) = lbd; }
 
-			Subvector<Vector const> lbu() const { return subvector(lb_, 0, size_.nu());	}			
+			auto lbu() const { return subvector(lb_, 0, size_.nu());	}			
 			template <typename T> void lbu(const T& lbu) { subvector(lb_, 0, size_.nu()) = lbu; }
 
-			Subvector<Vector const> lbx() const { return subvector(lb_, size_.nu(), size_.nx()); }
+			auto lbx() const { return subvector(lb_, size_.nu(), size_.nx()); }
 			template <typename T> void lbx(const T& lbx) { subvector(lb_, size_.nu(), size_.nx()) = lbx; }
 
 			const Matrix& Q() const { return Q_; }
@@ -140,10 +140,10 @@ namespace tmpc
 			const Vector& ubd() const { return ubd_; }
 			template <typename T> void ubd(const T& ubd) { full(ubd_) = ubd; }
 
-			Subvector<Vector const> ubu() const { return subvector(ub_, 0, size_.nu()); }
+			auto ubu() const { return subvector(ub_, 0, size_.nu()); }
 			template <typename T> void ubu(const T& ubu) { subvector(ub_, 0, size_.nu()) = ubu; }
 
-			Subvector<Vector const> ubx() const { return subvector(ub_, size_.nu(), size_.nx()); }
+			auto ubx() const { return subvector(ub_, size_.nu(), size_.nx()); }
 			template <typename T> void ubx(const T& ubx) { subvector(ub_, size_.nu(), size_.nx()) = ubx; }
 
 			DynamicVector<Real> const& x() const { return x_; }

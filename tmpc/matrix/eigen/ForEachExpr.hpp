@@ -27,45 +27,48 @@ namespace tmpc :: eigen_adaptor
     };
 }
 
-template <typename MT, typename OP>
-struct ::Eigen::internal::traits<tmpc::eigen_adaptor::ForEachExpr<MT, OP>>
+namespace Eigen :: internal
 {
-    typedef Eigen::Dense StorageKind;
-    typedef Eigen::MatrixXpr XprKind;
-    typedef typename MT::StorageIndex StorageIndex;
-    typedef typename MT::Scalar Scalar;
-    enum { 
-        Flags = MT::Flags,
-        RowsAtCompileTime = MT::RowsAtCompileTime,
-        ColsAtCompileTime = MT::RowsAtCompileTime,
-        MaxRowsAtCompileTime = MT::MaxRowsAtCompileTime,
-        MaxColsAtCompileTime = MT::MaxRowsAtCompileTime,
-        InnerStrideAtCompileTime = MT::InnerStrideAtCompileTime,
-        OuterStrideAtCompileTime = MT::OuterStrideAtCompileTime
-    };
-};
-
-template <typename MT, typename OP>
-struct ::Eigen::internal::evaluator<tmpc::eigen_adaptor::ForEachExpr<MT, OP>>
-:   evaluator_base<tmpc::eigen_adaptor::ForEachExpr<MT, OP>>
-{
-    typedef tmpc::eigen_adaptor::ForEachExpr<MT, OP> XprType;
-    typedef typename nested_eval<MT, XprType::ColsAtCompileTime>::type ArgTypeNested;
-    typedef typename remove_all<ArgTypeNested>::type ArgTypeNestedCleaned;
-    typedef typename XprType::CoeffReturnType CoeffReturnType;
-    enum { 
-        CoeffReadCost = evaluator<ArgTypeNestedCleaned>::CoeffReadCost,
-        Flags = MT::Flags
-    };
-    
-    evaluator(const XprType& xpr)
-        : argImpl_(xpr.arg_)
-    { }
-
-    CoeffReturnType coeff(Index row, Index col) const
+    template <typename MT, typename OP>
+    struct traits<tmpc::eigen_adaptor::ForEachExpr<MT, OP>>
     {
-        return argImpl_.op_(argImpl_.arg_(row, col));
-    }
+        typedef Eigen::Dense StorageKind;
+        typedef Eigen::MatrixXpr XprKind;
+        typedef typename MT::StorageIndex StorageIndex;
+        typedef typename MT::Scalar Scalar;
+        enum { 
+            Flags = MT::Flags,
+            RowsAtCompileTime = MT::RowsAtCompileTime,
+            ColsAtCompileTime = MT::RowsAtCompileTime,
+            MaxRowsAtCompileTime = MT::MaxRowsAtCompileTime,
+            MaxColsAtCompileTime = MT::MaxRowsAtCompileTime,
+            InnerStrideAtCompileTime = MT::InnerStrideAtCompileTime,
+            OuterStrideAtCompileTime = MT::OuterStrideAtCompileTime
+        };
+    };
 
-    evaluator<ArgTypeNestedCleaned> argImpl_;
-};
+    template <typename MT, typename OP>
+    struct evaluator<tmpc::eigen_adaptor::ForEachExpr<MT, OP>>
+    :   evaluator_base<tmpc::eigen_adaptor::ForEachExpr<MT, OP>>
+    {
+        typedef tmpc::eigen_adaptor::ForEachExpr<MT, OP> XprType;
+        typedef typename nested_eval<MT, XprType::ColsAtCompileTime>::type ArgTypeNested;
+        typedef typename remove_all<ArgTypeNested>::type ArgTypeNestedCleaned;
+        typedef typename XprType::CoeffReturnType CoeffReturnType;
+        enum { 
+            CoeffReadCost = evaluator<ArgTypeNestedCleaned>::CoeffReadCost,
+            Flags = MT::Flags
+        };
+        
+        evaluator(const XprType& xpr)
+            : argImpl_(xpr.arg_)
+        { }
+
+        CoeffReturnType coeff(Index row, Index col) const
+        {
+            return argImpl_.op_(argImpl_.arg_(row, col));
+        }
+
+        evaluator<ArgTypeNestedCleaned> argImpl_;
+    };
+}

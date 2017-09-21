@@ -2,6 +2,7 @@
 #include <tmpc/qp/Printing.hpp>
 
 #include <tmpc/BlazeKernel.hpp>
+#include <tmpc/EigenKernel.hpp>
 #include <tmpc/Math.hpp>
 
 #include <vector>
@@ -23,6 +24,9 @@ int main(int, char **)
 		DynamicMatrix<Kernel> {3u, 0u}
 	);
 	stage0.bounds(-inf<double>(), -inf<double>(), inf<double>(), inf<double>());
+
+	for (auto const& s : workspace.problem())
+		std::cout << s << std::endl;
 
 	workspace.solve();
 

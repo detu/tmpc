@@ -18,7 +18,8 @@
 namespace tmpc :: testing
 {
 	template <typename WS>
-	class QpWorkspaceSolveTest : public ::testing::Test
+		class QpWorkspaceSolveTest 
+		: 	public ::testing::Test
 	{
 	protected:
 		using Workspace = WS;

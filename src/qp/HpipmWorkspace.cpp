@@ -6,6 +6,7 @@
 #include <limits>
 #include <iomanip>
 #include <vector>
+#include <algorithm>
 
 namespace tmpc
 {
