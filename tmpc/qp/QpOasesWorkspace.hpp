@@ -3,6 +3,7 @@
 #include "QpSolverException.hpp"
 
 #include <tmpc/Matrix.hpp>
+#include <tmpc/Math.hpp>
 #include <tmpc/qp/QpSize.hpp>
 #include <tmpc/qp/QpStageSolutionBase.hpp>
 #include <tmpc/qp/QpStageBase.hpp>
@@ -50,7 +51,9 @@ public:
 	// Kernel type
 	using Kernel = Kernel_;
 
-	typedef unsigned int size_type;
+private:
+
+	using size_t = typename Kernel::size_t;
 
 	class Stage
 	:	public QpStageSolutionBase<Stage>
@@ -333,6 +336,7 @@ public:
 		size_t const nxNext_;
 	};
 
+public:
 	template <typename InputIt>
 	QpOasesWorkspace(InputIt sz_begin, InputIt sz_end)
 	:	problem_(numVariables(sz_begin, sz_end), numEqualities(sz_begin, sz_end) + numInequalities(sz_begin, sz_end))
@@ -527,13 +531,13 @@ private:
 		Workspace(size_t nx, size_t nc)
 		:	memH_(new Real[nx * nx])
 		,	H {memH_.get(), nx, nx}
-		,	g(nx, std::numeric_limits<Real>::signaling_NaN())
-		, 	lb(nx, std::numeric_limits<Real>::signaling_NaN())
-		, 	ub(nx, std::numeric_limits<Real>::signaling_NaN())
+		,	g(nx, sNaN<Real>())
+		, 	lb(nx, sNaN<Real>())
+		, 	ub(nx, sNaN<Real>())
 		,	memA_(new Real[nc * nx])
 		, 	A {memA_.get(), nc, nx}
-		, 	lbA(nc, std::numeric_limits<Real>::signaling_NaN())
-		, 	ubA(nc, std::numeric_limits<Real>::signaling_NaN())
+		, 	lbA(nc, sNaN<Real>())
+		, 	ubA(nc, sNaN<Real>())
 		,	primalSolution(nx)
 		,	dualSolution(nx + nc)
 		{		
@@ -548,8 +552,8 @@ private:
 		void initABlocks(InputIt sz_begin, InputIt sz_end)
 		{
 			// (i, j) = top left corner of the current AB block
-			size_type i = 0;
-			size_type j = 0;
+			size_t i = 0;
+			size_t j = 0;
 
 			for (auto sz = sz_begin; sz + 1 < sz_end; ++sz)
 			{
