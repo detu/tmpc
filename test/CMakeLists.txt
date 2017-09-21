@@ -52,7 +52,7 @@ add_custom_command(
 
 # ~~~~~~~~~~ Our tests ~~~~~~~~~~~~~~
 add_executable(tmpc_test
-    rk4_test.cpp
+    #rk4_test.cpp
     #mhe_test.cpp
     casadi_function_test.cpp
     gtest_tools_eigen.hpp

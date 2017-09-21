@@ -3,6 +3,8 @@
 #include "QpSize.hpp"
 #include "QpStageBase.hpp"
 
+#include <tmpc/Matrix.hpp>
+
 #include <vector>
 #include <initializer_list>
 
@@ -15,8 +17,8 @@ namespace tmpc
 	public:
 		using size_type = typename Kernel::size_t;
 		using Real = typename Kernel::Real;
-		using Matrix = typename Kernel::DynamicMatrix;
-		using Vector = typename Kernel::DynamicVector;
+		using Matrix = DynamicMatrix<Kernel>;
+		using Vector = DynamicVector<Kernel>;
 
 		QuadraticProblemStage(QpSize const& sz, size_type nx_next)
 		:	size_(sz)
@@ -309,8 +311,8 @@ namespace tmpc
 	public:
 		using size_type = typename Kernel::size_t;
 		using Real = typename Kernel::Real;
-		using Matrix = typename Kernel::DynamicMatrix;
-		using Vector = typename Kernel::DynamicVector;
+		using Matrix = DynamicMatrix<Kernel>;
+		using Vector = DynamicVector<Kernel>;
 		using Stage = QuadraticProblemStage<Kernel>;
 
 		Stage& operator[](std::size_t i)

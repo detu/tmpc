@@ -1,5 +1,5 @@
 add_executable(test_matrix
-    MatrixTest.cpp
+    #EigenAdaptorTest.cpp
     DynamicSubmatrixTest.cpp
     DynamicSubvectorTest.cpp
 )

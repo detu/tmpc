@@ -3,7 +3,7 @@
 
 #include <tmpc/qp/QpOasesWorkspace.hpp>
 #include <tmpc/qp/Printing.hpp>
-#include <tmpc/Matrix.hpp>
+#include <tmpc/EigenKernel.hpp>
 
 #include "../gtest_tools_eigen.hpp"
 
@@ -13,29 +13,31 @@
 
 namespace tmpc :: testing
 {
+	using Kernel = EigenKernel<double>;
+
 	TEST(QpOasesWorkspaceTest, testMatricesCorrect)
 	{
-		QpOasesWorkspace ws(std::array<QpSize, 1> {QpSize{2, 1, 0}});
+		QpOasesWorkspace<Kernel> ws(std::array<QpSize, 1> {QpSize{2, 1, 0}});
 		auto p = ws.problem();
 
-		StaticMatrix<double, 3, 2, columnMajor> x;
+		StaticMatrix<Kernel, 3, 2, columnMajor> x;
 
 		// Test H = [Q, S; S', R]
-		p[0].Q(DynamicMatrix<double>({{1., 2.}, {2., 1.}}));
-		p[0].R(DynamicMatrix<double>({{3}}));
-		p[0].S(DynamicMatrix<double>({{4.}, {5.}}));
+		p[0].Q(DynamicMatrix<Kernel> {{1., 2.}, {2., 1.}});
+		p[0].R(DynamicMatrix<Kernel> {{3}});
+		p[0].S(DynamicMatrix<Kernel> {{4.}, {5.}});
 
-		EXPECT_EQ(ws.H(), DynamicMatrix<double>({
+		EXPECT_EQ(ws.H(), (DynamicMatrix<Kernel> {
 			{1., 2., 4.},
 			{2., 1., 5.},
 			{4., 5., 3.}
 		}));
 
 		// Test g = [q; r]
-		p[0].q(DynamicMatrix<double>({{6.}, {7.}}));
-		p[0].r(DynamicMatrix<double>({{8.}}));
+		p[0].q(DynamicMatrix<Kernel> {{6.}, {7.}});
+		p[0].r(DynamicMatrix<Kernel> {{8.}});
 
-		EXPECT_EQ(ws.g(), DynamicMatrix<double>({{6.}, {7.}, {8.}}));
+		EXPECT_EQ(ws.g(), (DynamicMatrix<Kernel> {{6.}, {7.}, {8.}}));
 	}
 
 	TEST(QpOasesWorkspaceTest, testMatricesCorrect1)
@@ -44,14 +46,14 @@ namespace tmpc :: testing
 		auto const total_nx = numVariables(sz.begin(), sz.end());
 		auto const total_nc = numEqualities(sz.begin(), sz.end()) + numInequalities(sz.begin(), sz.end());
 
-		QpOasesWorkspace ws(sz.begin(), sz.end());
+		QpOasesWorkspace<Kernel> ws(sz.begin(), sz.end());
 		auto p = ws.problem();
 
 		//---------------
 		// Test H, g
 		//---------------
-		Rand<DynamicMatrix<double>> rand_matrix;
-		Rand<DynamicVector<double>> rand_vector;
+		Rand<Kernel, DynamicMatrix<Kernel>> rand_matrix;
+		Rand<Kernel, DynamicVector<Kernel>> rand_vector;
 
 		for (auto stage = p.begin(); stage != p.end(); ++stage)
 		{
@@ -98,13 +100,13 @@ namespace tmpc :: testing
 		*/
 
 		auto constexpr nan = std::numeric_limits<double>::signaling_NaN();
-		DynamicMatrix<double> H_expected(total_nx, total_nx, 0.);
-		DynamicVector<double> g_expected(total_nx, nan);
-		DynamicVector<double> lb_expected(total_nx, nan);
-		DynamicVector<double> ub_expected(total_nx, nan);
-		DynamicMatrix<double> A_expected(total_nc, total_nx, 0.);
-		DynamicVector<double> lbA_expected(total_nc, nan);
-		DynamicVector<double> ubA_expected(total_nc, nan);
+		DynamicMatrix<Kernel> H_expected(total_nx, total_nx, 0.);
+		DynamicVector<Kernel> g_expected(total_nx, nan);
+		DynamicVector<Kernel> lb_expected(total_nx, nan);
+		DynamicVector<Kernel> ub_expected(total_nx, nan);
+		DynamicMatrix<Kernel> A_expected(total_nc, total_nx, 0.);
+		DynamicVector<Kernel> lbA_expected(total_nc, nan);
+		DynamicVector<Kernel> ubA_expected(total_nc, nan);
 
 		size_t i = 0, ia = 0;
 		for (auto stage = p.begin(); stage != p.end(); ++stage)
@@ -121,7 +123,7 @@ namespace tmpc :: testing
 			subvector(lb_expected, i, nx) = stage->lbx();	subvector(lb_expected, i + nx, nu) = stage->lbu();
 			subvector(ub_expected, i, nx) = stage->ubx();	subvector(ub_expected, i + nx, nu) = stage->ubu();
 
-			submatrix(A_expected, ia      , i, nx1, nx) = stage->A();	submatrix(A_expected, ia      , i + nx, nx1, nu) = stage->B();	submatrix(A_expected, ia, i + nx + nu, nx1, nx1) = -IdentityMatrix<double>(nx1);
+			submatrix(A_expected, ia      , i, nx1, nx) = stage->A();	submatrix(A_expected, ia      , i + nx, nx1, nu) = stage->B();	submatrix(A_expected, ia, i + nx + nu, nx1, nx1) = -IdentityMatrix<Kernel>(nx1);
 			submatrix(A_expected, ia + nx1, i, nc , nx) = stage->C();	submatrix(A_expected, ia + nx1, i + nx, nc , nu) = stage->D();
 
 			subvector(lbA_expected, ia, nx1) = 0.;	subvector(lbA_expected, ia + nx1, nc) = stage->lbd();
@@ -142,6 +144,6 @@ namespace tmpc :: testing
 		EXPECT_EQ(print_wrap(ws.ubA()), print_wrap(ubA_expected));
 	}
 
-	INSTANTIATE_TYPED_TEST_CASE_P(QpOases, QpWorkspaceTest, QpOasesWorkspace);
-	INSTANTIATE_TYPED_TEST_CASE_P(QpOases, QpWorkspaceSolveTest, QpOasesWorkspace);
+	INSTANTIATE_TYPED_TEST_CASE_P(QpOases, QpWorkspaceTest, QpOasesWorkspace<Kernel>);
+	INSTANTIATE_TYPED_TEST_CASE_P(QpOases, QpWorkspaceSolveTest, QpOasesWorkspace<Kernel>);
 }

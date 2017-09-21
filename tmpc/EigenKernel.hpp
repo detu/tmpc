@@ -1,7 +1,9 @@
 #pragma once
 
-#include <tmpc/matrix/StorageOrder.hpp>
-#include <tmpc/matrix/TransposeFlag.hpp>
+#include <tmpc/matrix/EigenAdaptor.hpp>
+#include <tmpc/Matrix.hpp>
+
+#include <type_traits>
 
 namespace tmpc
 {
@@ -11,14 +13,30 @@ namespace tmpc
         using size_t = std::size_t;
         using Real = Real_;
 
-        template <size_t M>
-        using StaticVector = eigen_adaptor::StaticVector<Real, M>;
+        template <size_t M, TransposeFlag TF>
+        using StaticVector = eigen_adaptor::StaticVector<Real, M, TF>;
         
-        using DynamicVector = eigen_adaptor::DynamicVector<Real>;
+        template <TransposeFlag TF>
+        using DynamicVector = eigen_adaptor::DynamicVector<Real, TF>;
 
-        template <size_t M, size_t N>
-        using StaticMatrix = eigen_adaptor::StaticMatrix<Real, M, N>;
+        template <size_t M, size_t N, StorageOrder SO>
+        using StaticMatrix = eigen_adaptor::StaticMatrix<Real, M, N, SO>;
         
-        using DynamicMatrix = eigen_adaptor::DynamicMatrix<Real>;
+        template <StorageOrder SO>
+        using DynamicMatrix = eigen_adaptor::DynamicMatrix<Real, SO>;
+
+        using IdentityMatrix = eigen_adaptor::IdentityMatrix<Real>;
+
+        template <typename MT, AlignmentFlag AF>
+        using Submatrix = eigen_adaptor::Submatrix<MT, AF>;
+
+        template <typename VT, AlignmentFlag AF, TransposeFlag TF>
+        using Subvector = eigen_adaptor::Subvector<VT, AF, TF>;
+
+        template <typename T>
+        using Rand = eigen_adaptor::Rand<T>;
     };
+
+    template <typename T>
+    using KernelOf = std::enable_if_t<std::is_base_of<Eigen::EigenBase<T>, T>::value, EigenKernel<typename T::Scalar>>;
 }

@@ -4,6 +4,7 @@
 #include <tmpc/matrix/StorageOrder.hpp>
 #include "MatrixAssign.hpp"
 #include "Matrix.hpp"
+#include "InitializerList.hpp"
 #include "EigenBase.hpp"
 
 #include "Eigen.hpp"

@@ -51,10 +51,10 @@ namespace tmpc :: testing
 		using Real = double;
 		using Kernel = BlazeKernel<Real>;
 		using Problem = QuadraticProblem<Kernel>;
-		using StateVector = Kernel::StaticVector<NX>;
-		using InputVector = Kernel::StaticVector<NU>;
-		using StateStateMatrix = Kernel::StaticMatrix<NX, NX>;
-		using StateInputMatrix = Kernel::StaticMatrix<NX, NU>;
+		using StateVector = StaticVector<Kernel, NX>;
+		using InputVector = StaticVector<Kernel, NU>;
+		using StateStateMatrix = StaticMatrix<Kernel, NX, NX>;
+		using StateInputMatrix = StaticMatrix<Kernel, NX, NU>;
 
 		CondensingTest()
 		:	size_(tmpc::mpcQpSize(NT, NX, NU, NC, NCT))
@@ -73,7 +73,7 @@ namespace tmpc :: testing
 			qp[2].lbx(StateVector(-1.));	qp[2].ubx(StateVector(1.));
 
 			// Stage 0
-			Kernel::StaticMatrix<NZ, NZ> H0 {
+			StaticMatrix<Kernel, NZ, NZ> H0 {
 				{1, 2, 3},
 				{4, 5, 6},
 				{7, 8, 9}
@@ -99,7 +99,7 @@ namespace tmpc :: testing
 			StateVector a0 {1, 2};
 
 			// Stage 1
-			Kernel::StaticMatrix<NZ, NZ> H1 {
+			StaticMatrix<Kernel, NZ, NZ> H1 {
 				{1, 2, 3},
 				{4, 5, 6},
 				{7, 8, 9}
@@ -161,15 +161,15 @@ namespace tmpc :: testing
 
 		std::vector<tmpc::QpSize> size_;
 		Problem qp;
-		Kernel::StaticMatrix<NX, NX> Qc_expected;
-		Kernel::StaticMatrix<NT * NU, NT * NU> Rc_expected;
-		Kernel::StaticMatrix<NX, NT * NU> Sc_expected;
-		Kernel::StaticVector<NX> qc_expected;
-		Kernel::StaticVector<NT * NU> rc_expected;
-		Kernel::StaticVector<NX> lbx_expected;
-		Kernel::StaticVector<NX> ubx_expected;
-		Kernel::StaticVector<NT * NU> lbu_expected;
-		Kernel::StaticVector<NT * NU> ubu_expected;
+		StaticMatrix<Kernel, NX, NX> Qc_expected;
+		StaticMatrix<Kernel, NT * NU, NT * NU> Rc_expected;
+		StaticMatrix<Kernel, NX, NT * NU> Sc_expected;
+		StaticVector<Kernel, NX> qc_expected;
+		StaticVector<Kernel, NT * NU> rc_expected;
+		StaticVector<Kernel, NX> lbx_expected;
+		StaticVector<Kernel, NX> ubx_expected;
+		StaticVector<Kernel, NT * NU> lbu_expected;
+		StaticVector<Kernel, NT * NU> ubu_expected;
 	};
 
 	unsigned constexpr CondensingTest::NX;

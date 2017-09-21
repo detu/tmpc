@@ -6,6 +6,7 @@
 
 namespace tmpc :: eigen_adaptor
 {
+    // TODO: move to tmpc :: eigen_adaptor_ :: detail
     template <typename T>
     using IsEigenMatrix = std::is_base_of<
         Eigen::MatrixBase<

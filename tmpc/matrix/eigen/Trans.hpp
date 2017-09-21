@@ -4,8 +4,13 @@
 
 namespace tmpc :: eigen_adaptor
 {
+   
+}
+
+namespace Eigen
+{
     template <typename T>
-    decltype(auto) trans(Eigen::MatrixBase<T> const& m)
+    decltype(auto) trans(MatrixBase<T> const& m)
     {
         return m.transpose();
     }

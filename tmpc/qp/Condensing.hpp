@@ -1,6 +1,7 @@
 #pragma once
 
 #include <tmpc/qp/QpSize.hpp>
+#include <tmpc/Matrix.hpp>
 
 #include <vector>
 #include <sstream>
@@ -41,15 +42,15 @@ namespace tmpc
 	template <typename Kernel>
 	class Condensing
 	{
-		using DynamicMatrix = typename Kernel::DynamicMatrix;
-		using DynamicVector = typename Kernel::DynamicVector;
+		using DynamicMatrix = DynamicMatrix<Kernel>;
+		using DynamicVector = DynamicVector<Kernel>;
 
 	public:
 		class CondensedStage
 		{
 			using size_type = typename Kernel::size_t;
-			using Matrix = typename Kernel::DynamicMatrix;
-			using Vector = typename Kernel::DynamicVector;
+			using Matrix = DynamicMatrix;
+			using Vector = DynamicVector;
 
 		public:
 			CondensedStage(CondensedStage const&) = delete;
