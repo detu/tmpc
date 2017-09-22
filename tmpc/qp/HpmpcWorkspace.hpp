@@ -16,6 +16,7 @@
 #include <cmath>
 #include <vector>
 #include <array>
+#include <memory>
 
 namespace tmpc
 {
@@ -58,10 +59,11 @@ namespace tmpc
 	 *
 	 * \tparam <Kernel> the math kernel type
 	 */
-	template <typename Kernel>
+	template <typename Kernel_>
 	class HpmpcWorkspace
 	{
 	public:
+		using Kernel = Kernel_;
 		using Real = typename Kernel::Real;
 		
 		// Iteration statistics. HPMPC returns 5 Real numbers per iteration:
@@ -74,36 +76,43 @@ namespace tmpc
 		,	public QpStageBase<Stage>
 		{
 		public:
-			static auto constexpr storageOrder = rowMajor;
-			using Matrix = DynamicMatrix<Kernel, storageOrder>;
-			using Vector = DynamicVector<Kernel, columnVector>;
+			using Kernel = HpmpcWorkspace::Kernel;
 
 			Stage(QpSize const& sz, size_t nx_next)
 			:	size_(sz)
 			,	hidxb_(sz.nu() + sz.nx())
 			// Initialize all numeric data to NaN so that if an uninitialized object
 			// by mistake used in calculations is easier to detect.
-			,	Q_(sz.nx(), sz.nx(), sNaN<Real>())
-			,	R_(sz.nu(), sz.nu(), sNaN<Real>())
-			,	S_(sz.nu(), sz.nx(), sNaN<Real>())	// <-- HPMPC convention for S is [nu, nx] (the corresponding cost term is u' * S_{hpmpc} * x)
-			,	q_(sz.nx(), sNaN<Real>())
-			,	r_(sz.nu(), sNaN<Real>())
-			,	A_(nx_next, sz.nx(), sNaN<Real>())
-			,	B_(nx_next, sz.nu(), sNaN<Real>())
-			,	b_(nx_next, sNaN<Real>())
-			,	C_(sz.nc(), sz.nx(), sNaN<Real>())
-			,	D_(sz.nc(), sz.nu(), sNaN<Real>())
-			,	lb_(sz.nu() + sz.nx(), sNaN<Real>())
-			,	ub_(sz.nu() + sz.nx(), sNaN<Real>())
-			,	lb_internal_(sz.nu() + sz.nx(), sNaN<Real>())
-			,	ub_internal_(sz.nu() + sz.nx(), sNaN<Real>())
-			,	lbd_(sz.nc(), sNaN<Real>())
-			,	ubd_(sz.nc(), sNaN<Real>())
-			,	x_(sz.nx(), sNaN<Real>())
-			,	u_(sz.nu(), sNaN<Real>())
-			,	pi_(nx_next, sNaN<Real>())
-			,	lam_(2 * sz.nc() + 2 * (sz.nx() + sz.nu()), sNaN<Real>())
+			,	memQ_ {new Real[sz.nx() * sz.nx()]}
+			,	memR_ {new Real[sz.nu() * sz.nu()]}
+			,	memS_ {new Real[sz.nu() * sz.nx()]}
+			,	Q_ {memQ_.get(), sz.nx(), sz.nx()}
+			,	R_ {memR_.get(), sz.nu(), sz.nu()}
+			,	S_ {memS_.get(), sz.nu(), sz.nx()}	// <-- HPMPC convention for S is [nu, nx] (the corresponding cost term is u' * S_{hpmpc} * x)
+			,	q_(sz.nx())
+			,	r_(sz.nu())
+			,	memA_ {new Real[nx_next * sz.nx()]}
+			,	memB_ {new Real[nx_next * sz.nu()]}
+			,	A_ {memA_.get(), nx_next, sz.nx()}
+			,	B_ {memB_.get(), nx_next, sz.nu()}
+			,	b_(nx_next)
+			,	memC_ {new Real[sz.nc() * sz.nx()]}
+			,	memD_ {new Real[sz.nc() * sz.nu()]}
+			,	C_ {memC_.get(), sz.nc(), sz.nx()}
+			,	D_ {memD_.get(), sz.nc(), sz.nu()}
+			,	lb_(sz.nu() + sz.nx())
+			,	ub_(sz.nu() + sz.nx())
+			,	lb_internal_(sz.nu() + sz.nx())
+			,	ub_internal_(sz.nu() + sz.nx())
+			,	lbd_(sz.nc())
+			,	ubd_(sz.nc())
+			,	x_(sz.nx())
+			,	u_(sz.nu())
+			,	pi_(nx_next)
+			,	lam_(2 * sz.nc() + 2 * (sz.nx() + sz.nu()))
 			{
+				this->setNaN();
+
 				// hidxb is initialized to its maximum size, s.t. nb == nx + nu.
 				// This is necessary so that the solver workspace memory is calculated as its maximum when allocated.
 				int n = 0;
@@ -279,35 +288,44 @@ namespace tmpc
 			Real * lam_data() { return lam_.data(); }
 
 		private:
+			static auto constexpr storageOrder = rowMajor;
+
 			QpSize size_;
 
 			// Some magic data for HPMPC
 			std::vector<int> hidxb_;
 
 			// Hessian = [R, S; S', Q]
-			Matrix R_;
-			Matrix S_;
-			Matrix Q_;
+			std::unique_ptr<Real[]> memQ_;
+			std::unique_ptr<Real[]> memR_;
+			std::unique_ptr<Real[]> memS_;
+			CustomMatrix<Kernel, unaligned, unpadded, storageOrder> Q_;
+			CustomMatrix<Kernel, unaligned, unpadded, storageOrder> R_;
+			CustomMatrix<Kernel, unaligned, unpadded, storageOrder> S_;			
 
 			// Gradient = [r; q]
-			Vector r_;
-			Vector q_;
+			DynamicVector<Kernel> r_;
+			DynamicVector<Kernel> q_;
 
 			// Inter-stage equalities x_{k+1} = A x_k + B u_k + c_k
-			Matrix A_;
-			Matrix B_;
-			Vector b_;
+			std::unique_ptr<Real[]> memA_;
+			std::unique_ptr<Real[]> memB_;
+			CustomMatrix<Kernel, unaligned, unpadded, storageOrder> A_;
+			CustomMatrix<Kernel, unaligned, unpadded, storageOrder> B_;
+			DynamicVector<Kernel> b_;
 
 			// Inequality constraints d_{min} <= C x_k + D u_k <= d_{max}
-			Matrix C_;
-			Matrix D_;
-			Vector lbd_;
-			Vector ubd_;
+			std::unique_ptr<Real[]> memC_;
+			std::unique_ptr<Real[]> memD_;
+			CustomMatrix<Kernel, unaligned, unpadded, storageOrder> C_;
+			CustomMatrix<Kernel, unaligned, unpadded, storageOrder> D_;
+			DynamicVector<Kernel> lbd_;
+			DynamicVector<Kernel> ubd_;
 
 			// Bound constraints:
 			// lb <= [u; x] <= ub
-			Vector lb_;
-			Vector ub_;
+			DynamicVector<Kernel> lb_;
+			DynamicVector<Kernel> ub_;
 
 			// Lower and upper bound arrays for HPMPC,
 			// containing finite values only.
@@ -398,10 +416,11 @@ namespace tmpc
 		 * \brief Takes QP problem size to preallocate workspace.
 		 */
 		template <typename InputIterator>
-		explicit HpmpcWorkspace(InputIterator size_first, InputIterator size_last, int max_iter = 100)
-		:	stat_(max_iter)
-		,	infNormRes_(sNaN<Real>())
+		explicit HpmpcWorkspace(InputIterator size_first, InputIterator size_last, unsigned max_iter = 100)
+		:	stat_ {max_iter}
 		{
+			std::fill(infNormRes_.begin(), infNormRes_.end(), sNaN<Real>());
+
 			auto const n_stages = std::distance(size_first, size_last);
 
 			if (n_stages < 2)
@@ -534,7 +553,7 @@ namespace tmpc
 		std::vector<Real *> u_;
 		std::vector<Real *> pi_;
 		std::vector<Real *> lam_;
-		typename Kernel::template StaticVector<4> infNormRes_;
+		std::array<Real, 4> infNormRes_;
 
 		/// \brief Number of iterations performed by the QP solver.
 		int numIter_ = 0;

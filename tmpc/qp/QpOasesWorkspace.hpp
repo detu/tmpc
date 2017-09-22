@@ -60,6 +60,8 @@ private:
 	,	public QpStageBase<Stage>
 	{
 	public:
+		using Kernel = QpOasesWorkspace::Kernel;
+
 		Stage(Workspace& ws, QpSize const& sz, size_t n, size_t na, size_t nx_next)
 		:	ws_(&ws)
 		,	n_(n)
@@ -67,6 +69,7 @@ private:
 		,	size_(sz)
 		,	nxNext_(nx_next)
 		{
+			this->setNaN();
 		}
 
 		Stage(Stage const&) = delete;
@@ -109,8 +112,15 @@ private:
 		void S(const T& s) 
 		{
 			// Set both S and S^T in H
-			submatrix(ws_->H, n_ + size_.nx(), n_, size_.nu(), size_.nx()) = trans(
-				submatrix(ws_->H, n_, n_ + size_.nx(), size_.nx(), size_.nu()) = s); 
+			submatrix(ws_->H, n_, n_ + size_.nx(), size_.nx(), size_.nu()) = s;
+			submatrix(ws_->H, n_ + size_.nx(), n_, size_.nu(), size_.nx()) = trans(s); 
+		}
+
+		void S(Real val) 
+		{
+			// Set both S and S^T in H
+			submatrix(ws_->H, n_, n_ + size_.nx(), size_.nx(), size_.nu()) = val;
+			submatrix(ws_->H, n_ + size_.nx(), n_, size_.nu(), size_.nx()) = val; 
 		}
 
 		auto q() const 
@@ -536,13 +546,13 @@ private:
 		, 	ub(nx, sNaN<Real>())
 		,	memA_(new Real[nc * nx])
 		, 	A {memA_.get(), nc, nx}
-		, 	lbA(nc, sNaN<Real>())
-		, 	ubA(nc, sNaN<Real>())
+		, 	lbA(nc, Real {})
+		, 	ubA(nc, Real {})
 		,	primalSolution(nx)
 		,	dualSolution(nx + nc)
 		{		
-			H = Real{0};
-			A = Real{0};
+			H = Real {0};
+			A = Real {0};
 		}
 
 		//

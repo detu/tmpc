@@ -2,10 +2,10 @@
 
 #include "Eigen.hpp"
 
-namespace tmpc :: eigen_adaptor
+namespace Eigen
 {
     template <typename T>
-    decltype(auto) eval(Eigen::DenseBase<T> const& expr)
+    decltype(auto) eval(DenseBase<T> const& expr)
     {
         return expr.eval();
     }

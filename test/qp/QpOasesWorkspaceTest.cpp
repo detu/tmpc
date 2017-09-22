@@ -70,16 +70,17 @@ namespace tmpc :: testing
 			QpSize const sz = stage->size();
 
 			{
-				auto tmp = rand_matrix.generate(sz.nx(), sz.nx());
+				auto const tmp = eval(rand_matrix.generate(sz.nx(), sz.nx()));
 				stage->Q(trans(tmp) * tmp);
 			}
 
 			{
-				auto tmp = rand_matrix.generate(sz.nu(), sz.nu());
+				auto const tmp = eval(rand_matrix.generate(sz.nu(), sz.nu()));
 				stage->R(trans(tmp) * tmp);
 			}
 
-			stage->S(rand_matrix.generate(sz.nx(), sz.nu()));
+			stage->S(eval(rand_matrix.generate(sz.nx(), sz.nu())));
+
 			stage->q(rand_vector.generate(sz.nx()));
 			stage->r(rand_vector.generate(sz.nu()));
 			stage->lbx(rand_vector.generate(sz.nx()));
@@ -91,6 +92,7 @@ namespace tmpc :: testing
 			{
 				stage->A(rand_matrix.generate((stage + 1)->size().nx(), sz.nx()));
 				stage->B(rand_matrix.generate((stage + 1)->size().nx(), sz.nu()));
+				stage->b(rand_vector.generate((stage + 1)->size().nx()));
 			}
 
 			stage->C(rand_matrix.generate(sz.nc(), sz.nx()));
@@ -136,8 +138,8 @@ namespace tmpc :: testing
 			submatrix(A_expected, ia      , i, nx1, nx) = stage->A();	submatrix(A_expected, ia      , i + nx, nx1, nu) = stage->B();	submatrix(A_expected, ia, i + nx + nu, nx1, nx1) = -IdentityMatrix<Kernel>(nx1);
 			submatrix(A_expected, ia + nx1, i, nc , nx) = stage->C();	submatrix(A_expected, ia + nx1, i + nx, nc , nu) = stage->D();
 
-			subvector(lbA_expected, ia, nx1) = 0.;	subvector(lbA_expected, ia + nx1, nc) = stage->lbd();
-			subvector(ubA_expected, ia, nx1) = 0.;	subvector(ubA_expected, ia + nx1, nc) = stage->ubd();
+			subvector(lbA_expected, ia, nx1) = -stage->b();	subvector(lbA_expected, ia + nx1, nc) = stage->lbd();
+			subvector(ubA_expected, ia, nx1) = -stage->b();	subvector(ubA_expected, ia + nx1, nc) = stage->ubd();
 
 			i += nx + nu;
 			ia += nx1 + nc;

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <tmpc/Math.hpp>
+
 namespace tmpc
 {
     ///
@@ -70,6 +72,30 @@ namespace tmpc
         decltype(auto) size() const
         {
             return derived().size();
+		}
+
+		// Set all data to sNaN
+		void setNaN()
+		{
+			using Kernel = typename Derived::Kernel;
+			using Real = typename Kernel::Real;
+	
+			Q(sNaN<Real>());
+			R(sNaN<Real>());
+			S(sNaN<Real>());
+			q(sNaN<Real>());
+			r(sNaN<Real>());
+			A(sNaN<Real>());
+			B(sNaN<Real>());
+			b(sNaN<Real>());
+			C(sNaN<Real>());
+			D(sNaN<Real>());
+			lbd(sNaN<Real>());
+			ubd(sNaN<Real>());
+			lbu(sNaN<Real>());
+			ubu(sNaN<Real>());
+			lbx(sNaN<Real>());
+			ubx(sNaN<Real>());
 		}
 		
 		// Set the Gauss-Newton approximation of the hessian Hessian and the gradient.
