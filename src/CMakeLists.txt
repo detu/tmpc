@@ -7,11 +7,7 @@ set(TMPC_INCLUDE_DIR ${PROJECT_INCLUDE_DIR}/tmpc)
 
 set (SRC
     ${TMPC_INCLUDE_DIR}/Matrix.hpp
-    
-    ${TMPC_INCLUDE_DIR}/util/problem_specific.hpp
-
     ${TMPC_INCLUDE_DIR}/casadi_interface/GeneratedFunction.hpp
-
 	${TMPC_INCLUDE_DIR}/integrator/rk4.hpp
 
     ocp/OcpSize.cpp
@@ -23,7 +19,6 @@ set (SRC
 
     mpc/MpcOcpSize.cpp
     ${TMPC_INCLUDE_DIR}/mpc/MpcRealtimeIteration.hpp
-    ${TMPC_INCLUDE_DIR}/mpc/MpcTrajectoryPoint.hpp
 )
 
 add_library(tmpc STATIC ${SRC})
@@ -68,8 +63,6 @@ if (WITH_HPMPC)
     target_sources(tmpc PRIVATE 
         ${TMPC_INCLUDE_DIR}/qp/HpmpcWorkspace.hpp
         qp/HpmpcWorkspace.cpp
-        qp/HPMPCProblemExport.hpp
-        qp/HPMPCProblemExport.cpp
     )
 
     target_include_directories(tmpc

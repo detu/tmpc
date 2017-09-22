@@ -7,8 +7,6 @@
 
 #include <tmpc/qp/HpmpcWorkspace.hpp>
 
-#include "HPMPCProblemExport.hpp"
-
 #include <c_interface.h>
 
 #include <stdexcept>
