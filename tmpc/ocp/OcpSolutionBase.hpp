@@ -10,16 +10,6 @@ namespace tmpc
 	class OcpSolutionBase
 	{
 	public:
-		Derived& derived()
-		{
-			return static_cast<Derived&>(*this);
-		}
-
-		Derived const& derived() const
-		{
-			return static_cast<Derived const&>(*this);	
-		}
-
 		decltype(auto) x() const { return derived().x();	}
 		decltype(auto) u() const { return derived().u();	}
 		decltype(auto) pi() const	{ return derived().pi(); }
@@ -36,5 +26,16 @@ namespace tmpc
 		// and therefore calling its methods will cause undefined behavior.
 		OcpSolutionBase() = default;
 		OcpSolutionBase(OcpSolutionBase const&) = default;
+
+	private:
+		Derived& derived()
+		{
+			return static_cast<Derived&>(*this);
+		}
+
+		Derived const& derived() const
+		{
+			return static_cast<Derived const&>(*this);	
+		}
 	};
 }

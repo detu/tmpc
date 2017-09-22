@@ -13,16 +13,6 @@ namespace tmpc
 	class OcpQpBase
 	{
 	public:
-		Derived& derived()
-		{
-			return static_cast<Derived&>(*this);
-		}
-
-		Derived const& derived() const
-		{
-			return static_cast<Derived const&>(*this);	
-        }
-        
         decltype(auto) Q() const { return derived().Q(); }
 		template <typename T> void Q(const T& q) { derived().Q(q); }
 
@@ -182,5 +172,16 @@ namespace tmpc
 		// and therefore calling its methods will cause undefined behavior.
 		OcpQpBase() = default;
 		OcpQpBase(OcpQpBase const&) = default;
+
+	private:
+		Derived& derived()
+		{
+			return static_cast<Derived&>(*this);
+		}
+
+		Derived const& derived() const
+		{
+			return static_cast<Derived const&>(*this);	
+        }
     };
 }
