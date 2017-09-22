@@ -1,7 +1,7 @@
 #pragma once
 
 #include <tmpc/qp/diagnostics.hpp>
-#include <tmpc/qp/QpStageBase.hpp>
+#include <tmpc/qp/OcpQpBase.hpp>
 #include <tmpc/mpc/MpcTrajectoryPoint.hpp>
 #include <tmpc/mpc/MpcSize.hpp>
 
@@ -319,7 +319,7 @@ namespace tmpc
 		private:
 			std::size_t const i_;
 			MpcRealtimeIteration& rti_;
-			QpStageBase<typename QpWorkspace::Stage>& qp_;
+			OcpQpBase<typename QpWorkspace::Stage>& qp_;
 
 			/// \brief The working point (linearization point).
 			TrajectoryPoint& workingPoint_;

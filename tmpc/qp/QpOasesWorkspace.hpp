@@ -6,7 +6,7 @@
 #include <tmpc/Math.hpp>
 #include <tmpc/ocp/OcpSize.hpp>
 #include <tmpc/ocp/OcpSolutionBase.hpp>
-#include <tmpc/qp/QpStageBase.hpp>
+#include <tmpc/qp/OcpQpBase.hpp>
 
 #include <qpOASES.hpp>
 
@@ -57,7 +57,7 @@ private:
 
 	class Stage
 	:	public OcpSolutionBase<Stage>
-	,	public QpStageBase<Stage>
+	,	public OcpQpBase<Stage>
 	{
 	public:
 		using Kernel = QpOasesWorkspace::Kernel;
@@ -399,9 +399,9 @@ public:
 	:	public boost::iterator_adaptor<
 			ProblemIterator	// derived
 		,	typename std::vector<Stage>::iterator	// base
-		,	QpStageBase<Stage>&	// value
+		,	OcpQpBase<Stage>&	// value
 		,	boost::random_access_traversal_tag	// category of traversal
-		,	QpStageBase<Stage>&	// reference
+		,	OcpQpBase<Stage>&	// reference
 		>
 	{
 	public:
@@ -417,9 +417,9 @@ public:
 	:	public boost::iterator_adaptor<
 			ConstProblemIterator	// derived
 		,	typename std::vector<Stage>::const_iterator	// base
-		,	QpStageBase<Stage> const&	// value
+		,	OcpQpBase<Stage> const&	// value
 		,	boost::random_access_traversal_tag	// category of traversal
-		,	QpStageBase<Stage> const&	// reference
+		,	OcpQpBase<Stage> const&	// reference
 		>
 	{
 	public:

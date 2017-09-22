@@ -1,7 +1,7 @@
 #pragma once
 
 #include <tmpc/ocp/OcpSolutionBase.hpp>
-#include "QpStageBase.hpp"
+#include <tmpc/qp/OcpQpBase.hpp>
 
 #include <ostream>
 
@@ -119,7 +119,7 @@ namespace tmpc
 	 * \brief Print a QP stage in a human-readable format.
 	 */
 	template <typename Stage>
-	inline std::ostream& operator<<(std::ostream& os, QpStageBase<Stage> const& stage)
+	inline std::ostream& operator<<(std::ostream& os, OcpQpBase<Stage> const& stage)
 	{
 		using std::endl;
 

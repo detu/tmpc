@@ -1,7 +1,7 @@
 #pragma once
 
 #include <tmpc/ocp/OcpSize.hpp>
-#include "QpStageBase.hpp"
+#include <tmpc/qp/OcpQpBase.hpp>
 
 #include <tmpc/Matrix.hpp>
 
@@ -12,7 +12,7 @@ namespace tmpc
 {
 	template <typename Kernel>
 	class QuadraticProblemStage
-	:	public QpStageBase<QuadraticProblemStage<Kernel>>
+	:	public OcpQpBase<QuadraticProblemStage<Kernel>>
 	{
 	public:
 		using size_type = typename Kernel::size_t;

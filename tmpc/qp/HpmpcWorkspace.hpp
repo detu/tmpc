@@ -3,7 +3,7 @@
 #include "QpSolverException.hpp"
 #include <tmpc/ocp/OcpSize.hpp>
 #include <tmpc/ocp/OcpSolutionBase.hpp>
-#include "QpStageBase.hpp"
+#include <tmpc/qp/OcpQpBase.hpp>
 
 #include <tmpc/Matrix.hpp>
 #include <tmpc/Math.hpp>
@@ -73,7 +73,7 @@ namespace tmpc
 
 		class Stage
 		:	public OcpSolutionBase<Stage>
-		,	public QpStageBase<Stage>
+		,	public OcpQpBase<Stage>
 		{
 		public:
 			using Kernel = HpmpcWorkspace::Kernel;
@@ -342,9 +342,9 @@ namespace tmpc
 		:	public boost::iterator_adaptor<
 				ProblemIterator	// derived
 			,	typename std::vector<Stage>::iterator	// base
-			,	QpStageBase<Stage>&	// value
+			,	OcpQpBase<Stage>&	// value
 			,	boost::random_access_traversal_tag	// category of traversal
-			,	QpStageBase<Stage>&	// reference
+			,	OcpQpBase<Stage>&	// reference
 			>
 		{
 		public:
@@ -360,9 +360,9 @@ namespace tmpc
 		:	public boost::iterator_adaptor<
 				ConstProblemIterator	// derived
 			,	typename std::vector<Stage>::const_iterator	// base
-			,	QpStageBase<Stage> const&	// value
+			,	OcpQpBase<Stage> const&	// value
 			,	boost::random_access_traversal_tag	// category of traversal
-			,	QpStageBase<Stage> const&	// reference
+			,	OcpQpBase<Stage> const&	// reference
 			>
 		{
 		public:
