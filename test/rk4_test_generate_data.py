@@ -1,4 +1,4 @@
-# Generates test data for RK4 integrator test.
+# Generates test data for ExplicitRungeKutta4 integrator test.
 # The test system is a pendulum with friction.
 # The dynamic equations and parameters are taken from ACADO pendulum example:
 # https://github.com/acado/acado/blob/master/examples/integrator/pendulum.cpp 
@@ -32,7 +32,7 @@ def Gauss_Newton_approximation(r, C, D):
     
     return Q, R, S
         
-# Gauss-Newton RK4 integrator
+# Gauss-Newton ExplicitRungeKutta4 integrator
 def rk4gn(name, ode, options):
     t = cs.MX.sym('t')
     h = options['tf']

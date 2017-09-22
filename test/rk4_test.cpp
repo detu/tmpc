@@ -118,7 +118,7 @@ class rk4_test : public ::testing::Test
 {
 protected:
 	typedef PendulumODEBase ODE;
-	typedef RK4 Integrator;
+	typedef ExplicitRungeKutta4 Integrator;
 
 	PendulumODE ode_;
 	PendulumODE_r ode_r_;

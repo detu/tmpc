@@ -8,7 +8,6 @@ set(TMPC_INCLUDE_DIR ${PROJECT_INCLUDE_DIR}/tmpc)
 set (SRC
     ${TMPC_INCLUDE_DIR}/Matrix.hpp
     ${TMPC_INCLUDE_DIR}/casadi_interface/GeneratedFunction.hpp
-	${TMPC_INCLUDE_DIR}/integrator/rk4.hpp
 
     ocp/OcpSize.cpp
 	${TMPC_INCLUDE_DIR}/qp/Condensing.hpp    qp/Condensing.cpp
