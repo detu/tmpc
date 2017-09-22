@@ -5,34 +5,34 @@
 namespace tmpc
 {
 	/**
-	 * \brief Point as a minimization variable of an optimization problem.
+	 * \brief A minimization variable of an OCP problem stage.
 	 */
-	template <typename Real_>
+	template <typename Kernel>
 	class OcpPoint
 	{
 	public:
-		using Real = Real_;
+		using Real = typename Kernel::Real;
 
-		OcpPoint(size_t NX, size_t NU)
-		:	x_(NX)
-		,	u_(NU)
+		OcpPoint(size_t nx, size_t nu)
+		:	x_ {nx}
+		,	u_ {nu}
 		{
 		}
 
 		template <typename VectorX, typename VectorU>
 		OcpPoint(VectorX const& x, VectorU const& u)
-		:	x_(x)
-		,	u_(u)
+		:	x_ {x}
+		,	u_ {u}
 		{
 		}
 
 		template <typename T>
 		void x(T const& val)
 		{
-			x_ = val;
+			noresize(x_) = val;
 		}
 
-		DynamicVector<Real> const& x() const
+		auto const& x() const
 		{
 			return x_;
 		}
@@ -40,21 +40,21 @@ namespace tmpc
 		template <typename T>
 		void u(T const& val)
 		{
-			u_ = val;
+			noresize(u_) = val;
 		}
 
-		DynamicVector<Real> const& u() const
+		auto const& u() const
 		{
 			return u_;
 		}
 
 	private:
-		DynamicVector<Real> x_;
-		DynamicVector<Real> u_;
+		DynamicVector<Kernel> x_;
+		DynamicVector<Kernel> u_;
 	};
 
-	template <typename Real>
-	inline std::ostream& operator<<(std::ostream& os, OcpPoint<Real> const& p)
+	template <typename Kernel>
+	inline std::ostream& operator<<(std::ostream& os, OcpPoint<Kernel> const& p)
 	{
 		os << "x=" << trans(p.x()) << "\tu=" << trans(p.u());
 	}
