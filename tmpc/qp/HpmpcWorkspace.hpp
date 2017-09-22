@@ -122,13 +122,6 @@ namespace tmpc
 			Stage(Stage const&) = default;
 			Stage(Stage &&) = default;
 
-			template <typename Expr>
-			Stage& operator=(Expr const& rhs)
-			{
-				assign(*this, rhs);
-				return *this;
-			}
-
 			auto const& A() const { return A_; }
 			template <typename T> void A(const T& a) { noresize(A_) = a; }
 

@@ -41,8 +41,8 @@ namespace tmpc
 		{
 		}
 
-		template <typename Expr>
-		OcpQp(Expr const& rhs)
+		template <typename Other>
+		OcpQp(OcpQpBase<Other> const& rhs)
 		:	size_(rhs.size())
 		,	Q_(rhs.Q())
 		,	R_(rhs.R())
@@ -66,10 +66,28 @@ namespace tmpc
 		OcpQp(OcpQp const&) = default; //delete;
 		OcpQp(OcpQp &&) = default;
 
-		template <typename Expr>
-		OcpQp& operator=(Expr const& rhs)
+		template <typename Other>
+		OcpQp& operator=(OcpQpBase<Other> const& rhs)
 		{
-			assign(*this, rhs);
+			size_ = rhs.size();
+
+			Q_(rhs.Q());
+			R_(rhs.R());
+			S_(rhs.S());
+			q_(rhs.q());
+			r_(rhs.r());
+			A_(rhs.A());
+			B_(rhs.B());
+			b_(rhs.b());
+			C_(rhs.C());
+			D_(rhs.D());
+			lbx_(rhs.lbx());
+			ubx_(rhs.ubx());
+			lbu_(rhs.lbu());
+			ubu_(rhs.ubu());
+			lbd_(rhs.lbd());
+			ubd_(rhs.ubd());
+
 			return *this;
 		}
 

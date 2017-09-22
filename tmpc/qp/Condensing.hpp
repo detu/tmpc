@@ -1,6 +1,7 @@
 #pragma once
 
 #include <tmpc/ocp/OcpSize.hpp>
+#include <tmpc/qp/OcpQpBase.hpp>
 #include <tmpc/Matrix.hpp>
 
 #include <vector>
@@ -44,6 +45,7 @@ namespace tmpc
 	{
 	public:
 		class CondensedStage
+		:	public OcpQpBase<CondensedStage>
 		{
 			using size_type = typename Kernel::size_t;
 			using Matrix = DynamicMatrix<Kernel>;
@@ -58,67 +60,67 @@ namespace tmpc
 			{
 			}
 	
-			const Matrix& A() const {
+			auto const& A() const {
 				return c_.A_;
 			}
 	
-			const Matrix& B() const {
+			auto const& B() const {
 				return c_.B_;
 			}
 	
-			Vector const& b() const {
+			auto const& b() const {
 				return c_.b_;
 			}
 	
-			const Matrix& C() const {
+			auto const& C() const {
 				return c_.Cc_;
 			}
 	
-			const Matrix& D() const {
+			auto const& D() const {
 				return c_.Dc_;
 			}
 		
-			const Vector& lbd() const {
+			auto const& lbd() const {
 				return c_.lbd_;
 			}
 	
-			const Vector& lbu() const {
+			auto const& lbu() const {
 				return c_.lbu_;
 			}
 	
-			const Vector& lbx() const {
+			auto const& lbx() const {
 				return c_.lbx_;
 			}
 	
-			const Matrix& Q() const {
+			auto const& Q() const {
 				return c_.Qc_;
 			}
 	
-			const Matrix& R() const {
+			auto const& R() const {
 				return c_.Rc_;
 			}
 	
-			const Matrix& S() const {
+			auto const& S() const {
 				return c_.Sc_;
 			}
 		
-			const Vector& q() const {
+			auto const& q() const {
 				return c_.qc_;
 			}
 	
-			const Vector& r() const {
+			auto const& r() const {
 				return c_.rc_;
 			}
 	
-			const Vector& ubd() const {
+			auto const& ubd() const {
 				return c_.ubd_;
 			}
 		
-			const Vector& ubu() const {
+			auto const& ubu() const {
 				return c_.ubu_;
 			}
 		
-			const Vector& ubx() const {
+			auto const& ubx() const {
 				return c_.ubx_;
 			}
 	
