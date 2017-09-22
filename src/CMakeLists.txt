@@ -16,7 +16,7 @@ set (SRC
 
     ocp/OcpSize.cpp
 	${TMPC_INCLUDE_DIR}/qp/Condensing.hpp    qp/Condensing.cpp
-	${TMPC_INCLUDE_DIR}/qp/QuadraticProblem.hpp
+	${TMPC_INCLUDE_DIR}/qp/OcpQp.hpp
 
 	${TMPC_INCLUDE_DIR}/qp/diagnostics.hpp
 	${TMPC_INCLUDE_DIR}/qp/QpSolverException.hpp

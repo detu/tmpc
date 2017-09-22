@@ -11,8 +11,8 @@
 namespace tmpc 
 {
 	template <typename Kernel>
-	class QuadraticProblemStage
-	:	public OcpQpBase<QuadraticProblemStage<Kernel>>
+	class OcpQp
+	:	public OcpQpBase<OcpQp<Kernel>>
 	{
 	public:
 		using size_type = typename Kernel::size_t;
@@ -20,7 +20,7 @@ namespace tmpc
 		using Matrix = DynamicMatrix<Kernel>;
 		using Vector = DynamicVector<Kernel>;
 
-		QuadraticProblemStage(OcpSize const& sz, size_type nx_next)
+		OcpQp(OcpSize const& sz, size_type nx_next)
 		:	size_(sz)
 		,	Q_(sz.nx(), sz.nx())
 		,	R_(sz.nu(), sz.nu())
@@ -42,7 +42,7 @@ namespace tmpc
 		}
 
 		template <typename Expr>
-		QuadraticProblemStage(Expr const& rhs)
+		OcpQp(Expr const& rhs)
 		:	size_(rhs.size())
 		,	Q_(rhs.Q())
 		,	R_(rhs.R())
@@ -63,11 +63,11 @@ namespace tmpc
 		{
 		}
 
-		QuadraticProblemStage(QuadraticProblemStage const&) = default; //delete;
-		QuadraticProblemStage(QuadraticProblemStage &&) = default;
+		OcpQp(OcpQp const&) = default; //delete;
+		OcpQp(OcpQp &&) = default;
 
 		template <typename Expr>
-		QuadraticProblemStage& operator=(Expr const& rhs)
+		OcpQp& operator=(Expr const& rhs)
 		{
 			assign(*this, rhs);
 			return *this;
@@ -280,136 +280,5 @@ namespace tmpc
 		Vector ubu_;
 		Vector lbd_;
 		Vector ubd_;
-	};
-
-
-	/** \brief Stores data for a multistage QP problem.
-	*
-	* Storage format is not explicitly defined and no access to raw data is provided..
-	*
-	*	TODO: Update problem statement.
-	*
-	*  The problem is stated as following:
-	*
-	*	min  sum_{ k = 0..nI } z_k'*H_k*z_k + g_k'*z_k
-	*	s.t. x_{ k + 1 } = C_k * z_k + c_k				for k = 0..nI - 1
-	*            dLow_k <= D_k * z_k <= dUpp_k			for k = 0..nI
-	*            zMin_k <= z_k <= zMax_k                for k = 0..nI
-	*
-	*	where x_k is implicitly defined by z_k = [x_k  u_k] as the first nX variables of z_k
-	*
-	*	It holds
-	*	z_k  \in R^nZ  for k = 0..nI - 1
-	*   z_nI \in R*nX
-	*
-	*	nX < nZ
-	*	nU = nZ - nX
-	*/
-	template <typename Kernel>
-	class QuadraticProblem
-	{
-	public:
-		using size_type = typename Kernel::size_t;
-		using Real = typename Kernel::Real;
-		using Matrix = DynamicMatrix<Kernel>;
-		using Vector = DynamicVector<Kernel>;
-		using Stage = QuadraticProblemStage<Kernel>;
-
-		Stage& operator[](std::size_t i)
-		{
-			return stage_.at(i);
-		}
-
-		Stage const& operator[](std::size_t i) const
-		{
-			return stage_.at(i);
-		}
-
-		Stage& stage(std::size_t i)
-		{
-			return stage_.at(i);
-		}
-
-		Stage const& stage(std::size_t i) const
-		{
-			return stage_.at(i);
-		}
-
-		std::size_t size() const
-		{
-			return stage_.size();
-		}
-
-		typedef typename std::vector<Stage>::iterator iterator;
-		typedef typename std::vector<Stage>::const_iterator const_iterator;
-		typedef typename std::vector<Stage>::reference reference;
-		typedef typename std::vector<Stage>::const_reference const_reference;
-
-		iterator begin()
-		{
-			return stage_.begin();
-		}
-
-		iterator end()
-		{
-			return stage_.end();
-		}
-
-		const_iterator begin() const
-		{
-			return stage_.begin();
-		}
-
-		const_iterator end() const
-		{
-			return stage_.end();
-		}
-
-		reference front()
-		{
-			return stage_.front();
-		}
-
-		reference back()
-		{
-			return stage_.back();
-		}
-
-		const_reference front() const
-		{
-			return stage_.front();
-		}
-
-		const_reference back() const
-		{
-			return stage_.back();
-		}
-
-		QuadraticProblem(std::initializer_list<OcpSize> sz)
-		:	QuadraticProblem(sz.begin(), sz.end())
-		{
-		}
-
-		template <typename InIter>
-		QuadraticProblem(InIter sz_begin, InIter sz_end)
-		{
-			stage_.reserve(std::distance(sz_begin, sz_end));
-
-			for (auto sz = sz_begin; sz != sz_end; ++sz)
-			{
-				auto const nx_next = sz + 1 != sz_end ? (sz + 1)->nx() : 0;
-				stage_.emplace_back(*sz, nx_next);
-			}
-		}
-
-		// Default copy constructor is ok.
-		QuadraticProblem(QuadraticProblem const&) = default;
-
-	private:
-		// Private data members.
-		//
-
-		// Stores stage data
-		std::vector<Stage> stage_;
 	};
 }

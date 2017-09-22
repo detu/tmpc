@@ -1,4 +1,4 @@
-#include <tmpc/qp/QuadraticProblem.hpp>
+#include <tmpc/qp/OcpQp.hpp>
 #include <tmpc/qp/Printing.hpp>
 
 #include <tmpc/BlazeKernel.hpp>
@@ -11,7 +11,7 @@ int main(int, char **)
 	using namespace tmpc;
 
 	using Kernel = BlazeKernel<double>;
-	using Stage = QuadraticProblemStage<Kernel>;
+	using Stage = OcpQp<Kernel>;
 
 	Stage stage0 {OcpSize {3, 2, 0}, 2};
 	
