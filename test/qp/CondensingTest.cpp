@@ -2,11 +2,9 @@
 #include <tmpc/qp/OcpQp.hpp>
 #include <tmpc/mpc/MpcOcpSize.hpp>
 
-#include <tmpc/BlazeKernel.hpp>
-
+#include <test/Kernels.hpp>
 #include <tmpc/test_tools.hpp>
 
-#include <gtest/gtest.h>
 
 namespace tmpc :: testing
 {
