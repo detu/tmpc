@@ -5,7 +5,6 @@
 #pragma once
 
 #include <tmpc/ocp/OcpSize.hpp>
-#include <tmpc/qp/Printing.hpp>
 #include <tmpc/Matrix.hpp>
 
 #include <tmpc/test_tools.hpp>

@@ -1,12 +1,9 @@
 #pragma once
 
 #include <tmpc/mpc/MpcOcpSize.hpp>	// for mpcOcpSize()
-#include <tmpc/qp/Printing.hpp>
 
 #include <tmpc/Matrix.hpp>
 #include <tmpc/Math.hpp>
-
-#include <tmpc/qp/Printing.hpp>
 
 #include <tmpc/test_tools.hpp>
 
@@ -279,37 +276,22 @@ namespace tmpc :: testing
 		problem[0].lbu(-10000.);
 		problem[0].ubu(10000.);
 
-		try
-		{
-			ws.solve();
-			auto solution = ws.solution();
+		ws.solve();
+		auto solution = ws.solution();
 
-			EXPECT_PRED2(MatrixApproxEquality(1e-6), solution[0].x(), (DynamicVector<typename TestFixture::Kernel> {
-				146.566682434017,
-				-427.218558989821,
-				-345.347969700289
-			}));
+		EXPECT_PRED2(MatrixApproxEquality(1e-6), solution[0].x(), (DynamicVector<typename TestFixture::Kernel> {
+			146.566682434017,
+			-427.218558989821,
+			-345.347969700289
+		}));
 
-			EXPECT_PRED2(MatrixApproxEquality(1e-6), solution[0].u(), (DynamicVector<typename TestFixture::Kernel> {
-				769.663140469139,
-				-191.122524763114
-			}));
+		EXPECT_PRED2(MatrixApproxEquality(1e-6), solution[0].u(), (DynamicVector<typename TestFixture::Kernel> {
+			769.663140469139,
+			-191.122524763114
+		}));
 
-			EXPECT_PRED2(MatrixApproxEquality(1e-6), solution[1].x(), (DynamicVector<typename TestFixture::Kernel> {}));
-			EXPECT_PRED2(MatrixApproxEquality(1e-6), solution[1].u(), (DynamicVector<typename TestFixture::Kernel> {}));
-		}
-		catch (std::runtime_error const&)
-		{
-			std::cout << "------ PROBLEM ------" << std::endl;
-			for (auto const& p : ws.problem())
-				std::cout << p << std::endl;
-
-			std::cout << "------ SOLUTION ------" << std::endl;
-			for (auto const& s : ws.solution())
-				std::cout << s << std::endl;
-
-			throw;
-		}
+		EXPECT_PRED2(MatrixApproxEquality(1e-6), solution[1].x(), (DynamicVector<typename TestFixture::Kernel> {}));
+		EXPECT_PRED2(MatrixApproxEquality(1e-6), solution[1].u(), (DynamicVector<typename TestFixture::Kernel> {}));
 	}
 
 	/**
@@ -358,39 +340,24 @@ namespace tmpc :: testing
 		problem[0].lbu(-inf<Real>());
 		problem[0].ubu(inf<Real>());
 
-		try
-		{
-			ws.solve();
-			auto solution = ws.solution();
+		ws.solve();
+		auto solution = ws.solution();
 
-			using Vector = DynamicVector<typename TestFixture::Kernel>;
+		using Vector = DynamicVector<typename TestFixture::Kernel>;
 
-			EXPECT_PRED2(MatrixApproxEquality(1e-6), solution[0].x(), (Vector {
-				146.566682434017,
-				-427.218558989821,
-				-345.347969700289
-			}));
+		EXPECT_PRED2(MatrixApproxEquality(1e-6), solution[0].x(), (Vector {
+			146.566682434017,
+			-427.218558989821,
+			-345.347969700289
+		}));
 
-			EXPECT_PRED2(MatrixApproxEquality(1e-6), solution[0].u(), (Vector {
-				769.663140469139,
-				-191.122524763114
-			}));
+		EXPECT_PRED2(MatrixApproxEquality(1e-6), solution[0].u(), (Vector {
+			769.663140469139,
+			-191.122524763114
+		}));
 
-			EXPECT_PRED2(MatrixApproxEquality(1e-6), solution[1].x(), (Vector {}));
-			EXPECT_PRED2(MatrixApproxEquality(1e-6), solution[1].u(), (Vector {}));
-		}
-		catch (std::runtime_error const&)
-		{
-			std::cout << "------ PROBLEM ------" << std::endl;
-			for (auto const& p : ws.problem())
-				std::cout << p << std::endl;
-
-			std::cout << "------ SOLUTION ------" << std::endl;
-			for (auto const& s : ws.solution())
-				std::cout << s << std::endl;
-
-			throw;
-		}
+		EXPECT_PRED2(MatrixApproxEquality(1e-6), solution[1].x(), (Vector {}));
+		EXPECT_PRED2(MatrixApproxEquality(1e-6), solution[1].u(), (Vector {}));
 	}
 
 	/**
@@ -441,39 +408,24 @@ namespace tmpc :: testing
 		problem[0].lbu(DynamicVector<typename TestFixture::Kernel> {-inf<Real>(), -10000.});
 		problem[0].ubu(DynamicVector<typename TestFixture::Kernel> {inf<Real>(), 10000.});
 
-		try
-		{
-			ws.solve();
-			auto solution = ws.solution();
+		ws.solve();
+		auto solution = ws.solution();
 
-			using Vector = DynamicVector<typename TestFixture::Kernel>;
+		using Vector = DynamicVector<typename TestFixture::Kernel>;
 
-			EXPECT_PRED2(MatrixApproxEquality(1e-6), solution[0].x(), (Vector {
-				146.566682434017,
-				-427.218558989821,
-				-345.347969700289
-			}));
+		EXPECT_PRED2(MatrixApproxEquality(1e-6), solution[0].x(), (Vector {
+			146.566682434017,
+			-427.218558989821,
+			-345.347969700289
+		}));
 
-			EXPECT_PRED2(MatrixApproxEquality(1e-6), solution[0].u(), (Vector {
-				769.663140469139,
-				-191.122524763114
-			}));
+		EXPECT_PRED2(MatrixApproxEquality(1e-6), solution[0].u(), (Vector {
+			769.663140469139,
+			-191.122524763114
+		}));
 
-			EXPECT_PRED2(MatrixApproxEquality(1e-6), solution[1].x(), (Vector {}));
-			EXPECT_PRED2(MatrixApproxEquality(1e-6), solution[1].u(), (Vector {}));
-		}
-		catch (std::runtime_error const&)
-		{
-			std::cout << "------ PROBLEM ------" << std::endl;
-			for (auto const& p : ws.problem())
-				std::cout << p << std::endl;
-
-			std::cout << "------ SOLUTION ------" << std::endl;
-			for (auto const& s : ws.solution())
-				std::cout << s << std::endl;
-
-			throw;
-		}
+		EXPECT_PRED2(MatrixApproxEquality(1e-6), solution[1].x(), (Vector {}));
+		EXPECT_PRED2(MatrixApproxEquality(1e-6), solution[1].u(), (Vector {}));
 	}
 
 	TYPED_TEST_P(QpWorkspaceSolveTest, testSolve2)

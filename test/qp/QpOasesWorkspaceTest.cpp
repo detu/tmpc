@@ -2,7 +2,6 @@
 #include "QpWorkspaceSolveTest.hpp"
 
 #include <tmpc/qp/QpOasesWorkspace.hpp>
-#include <tmpc/qp/Printing.hpp>
 #include <test/Kernels.hpp>
 
 #include <tmpc/test_tools.hpp>

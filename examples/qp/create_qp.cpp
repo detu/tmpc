@@ -1,5 +1,5 @@
 #include <tmpc/qp/OcpQp.hpp>
-#include <tmpc/qp/Printing.hpp>
+#include <tmpc/print/qp/OcpQp.hpp>
 
 #include <tmpc/BlazeKernel.hpp>
 

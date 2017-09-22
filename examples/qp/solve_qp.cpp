@@ -1,5 +1,6 @@
 #include <tmpc/qp/QpOasesWorkspace.hpp>
-#include <tmpc/qp/Printing.hpp>
+#include <tmpc/print/qp/OcpQp.hpp>
+#include <tmpc/print/qp/OcpSolution.hpp>
 
 #include <tmpc/BlazeKernel.hpp>
 #include <tmpc/EigenKernel.hpp>
