@@ -6,6 +6,7 @@
 
 #include "Eigen.hpp"
 #include "Types.hpp"
+#include "Matrix.hpp"
 
 namespace tmpc :: eigen_adaptor {
 
@@ -17,14 +18,15 @@ template <typename Type, AlignmentFlag AF, PaddingFlag PF, StorageOrder SO = def
 struct CustomMatrix;
 
 template <typename Type, StorageOrder SO>
-struct CustomMatrix<Type, unaligned, unpadded, SO> : 
-    CustomMatrixBaseUnalignedUnpadded<Type, SO>
+struct CustomMatrix<Type, unaligned, unpadded, SO> 
+:   Matrix<CustomMatrix<Type, unaligned, unpadded, SO>, SO>
+,   CustomMatrixBaseUnalignedUnpadded<Type, SO>
 {
-    typedef CustomMatrixBaseUnalignedUnpadded<Type, SO> Base;
-    typedef Type ElementType;
+    using EigenBase = CustomMatrixBaseUnalignedUnpadded<Type, SO>;
+    using ElementType = Type;
 
     CustomMatrix(ElementType * ptr, size_t m, size_t n)
-    :   Base {ptr, static_cast<Eigen::Index>(m), static_cast<Eigen::Index>(n)}
+    :   EigenBase {ptr, static_cast<Eigen::Index>(m), static_cast<Eigen::Index>(n)}
     {        
     }
 

@@ -9,10 +9,8 @@
 
 namespace tmpc :: eigen_adaptor 
 {
-    struct MatrixTag {};
-
     template <typename MT, StorageOrder SO>
-    struct Matrix : MatrixTag
+    struct Matrix
     {
         MT& operator~()
         {
@@ -24,28 +22,19 @@ namespace tmpc :: eigen_adaptor
             return static_cast<MT const&>(*this);
         }
     };
+}
 
+namespace Eigen
+{
     template <typename MT>
-    std::enable_if_t<IsEigenMatrix<MT>::value, size_t> rows(MT const& m)
+    inline size_t rows(MatrixBase<MT> const& m)
     {
         return m.rows();
     }
 
-    template <typename MT, StorageOrder SO>
-    size_t rows(Matrix<MT, SO> const& m)
-    {
-        return (~m).rows();
-    }
-
     template <typename MT>
-    std::enable_if_t<IsEigenMatrix<MT>::value, size_t> columns(MT const& m)
+    inline size_t columns(MatrixBase<MT> const& m)
     {
         return m.cols();
-    }
-
-    template <typename MT, StorageOrder SO>
-    size_t columns(Matrix<MT, SO> const& m)
-    {
-        return (~m).cols();
     }
 }
