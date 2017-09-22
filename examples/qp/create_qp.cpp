@@ -13,7 +13,7 @@ int main(int, char **)
 	using Kernel = BlazeKernel<double>;
 	using Stage = QuadraticProblemStage<Kernel>;
 
-	Stage stage0 {QpSize {3, 2, 0}, 2};
+	Stage stage0 {OcpSize {3, 2, 0}, 2};
 	
 	stage0
 	.Q({{1., 0., 0.},
@@ -27,7 +27,7 @@ int main(int, char **)
 	.q({13., 14., 15.})
 	.r({16., 17.});
 
-	Stage stage1 {QpSize {2, 1, 0}, 0};
+	Stage stage1 {OcpSize {2, 1, 0}, 0};
 
 	stage1.gaussNewtonCostApproximation(
 		DynamicVector<Kernel> {0.1, 0.2},

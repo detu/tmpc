@@ -1,7 +1,7 @@
 #pragma once
 
 #include "QpSolverException.hpp"
-#include "QpSize.hpp"
+#include <tmpc/ocp/OcpSize.hpp>
 #include "QpStageSolutionBase.hpp"
 #include "QpStageBase.hpp"
 
@@ -78,7 +78,7 @@ namespace tmpc
 		public:
 			using Kernel = HpmpcWorkspace::Kernel;
 
-			Stage(QpSize const& sz, size_t nx_next)
+			Stage(OcpSize const& sz, size_t nx_next)
 			:	size_(sz)
 			,	hidxb_(sz.nu() + sz.nx())
 			// Initialize all numeric data to NaN so that if an uninitialized object
@@ -228,7 +228,7 @@ namespace tmpc
 				return subvector(lam_, size_.nc(), size_.nc()); 
 			}
 
-			QpSize const& size() const { return size_; }
+			OcpSize const& size() const { return size_; }
 
 			// Adjust hidxb so to account for infs in state and input bounds.
 			void adjustBoundsIndex()
@@ -290,7 +290,7 @@ namespace tmpc
 		private:
 			static auto constexpr storageOrder = rowMajor;
 
-			QpSize size_;
+			OcpSize size_;
 
 			// Some magic data for HPMPC
 			std::vector<int> hidxb_;
@@ -440,7 +440,7 @@ namespace tmpc
 		{
 		}
 
-		explicit HpmpcWorkspace(std::initializer_list<QpSize> sz, int max_iter = 100)
+		explicit HpmpcWorkspace(std::initializer_list<OcpSize> sz, int max_iter = 100)
 		:	HpmpcWorkspace(sz.begin(), sz.end(), max_iter)
 		{
 		}
@@ -610,7 +610,7 @@ namespace tmpc
 		}
 
 		// Add one stage with specified sizes at the end of the stage sequence.
-		void addStage(QpSize const& sz, size_t nx_next)
+		void addStage(OcpSize const& sz, size_t nx_next)
 		{
 			stage_.emplace_back(sz, nx_next);
 			auto& st = stage_.back();

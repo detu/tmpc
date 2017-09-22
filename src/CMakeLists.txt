@@ -14,14 +14,14 @@ set (SRC
 
 	${TMPC_INCLUDE_DIR}/integrator/rk4.hpp
 
-    ${TMPC_INCLUDE_DIR}/qp/QpSize.hpp    qp/QpSize.cpp
+    ocp/OcpSize.cpp
 	${TMPC_INCLUDE_DIR}/qp/Condensing.hpp    qp/Condensing.cpp
 	${TMPC_INCLUDE_DIR}/qp/QuadraticProblem.hpp
 
 	${TMPC_INCLUDE_DIR}/qp/diagnostics.hpp
 	${TMPC_INCLUDE_DIR}/qp/QpSolverException.hpp
 
-    ${TMPC_INCLUDE_DIR}/mpc/MpcQpSize.hpp mpc/MpcQpSize.cpp
+    mpc/MpcOcpSize.cpp
     ${TMPC_INCLUDE_DIR}/mpc/MpcRealtimeIteration.hpp
     ${TMPC_INCLUDE_DIR}/mpc/MpcTrajectoryPoint.hpp
 )

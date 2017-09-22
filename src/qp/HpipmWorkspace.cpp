@@ -146,7 +146,7 @@ namespace tmpc
 	}
 
 	template <typename Real_>
-	HpipmWorkspace<Real_>::Stage::Stage(QpSize const& sz, size_t nx_next)
+	HpipmWorkspace<Real_>::Stage::Stage(OcpSize const& sz, size_t nx_next)
 	:	size_(sz)
 	,	hidxb_(sz.nu() + sz.nx())
 	// Initialize all numeric data to NaN so that if an uninitialized object
@@ -177,7 +177,7 @@ namespace tmpc
 	}
 
 	template <typename Real_>
-	void HpipmWorkspace<Real_>::addStage(QpSize const& sz, size_t nx_next)
+	void HpipmWorkspace<Real_>::addStage(OcpSize const& sz, size_t nx_next)
 	{
 		stage_.emplace_back(sz, nx_next);
 		auto& st = stage_.back();

@@ -1,5 +1,5 @@
 #include <tmpc/mpc/MpcRealtimeIteration.hpp>
-#include <tmpc/mpc/MpcQpSize.hpp>
+#include <tmpc/mpc/MpcOcpSize.hpp>
 #include <tmpc/mpc/MpcTrajectory.hpp>
 
 #include <tmpc/qp/QpOasesWorkspace.hpp>
@@ -54,8 +54,8 @@ public:
 	:	nt_(nt)
 	{
 		dimensions_.reserve(nt + 1);
-		std::fill_n(std::back_inserter(dimensions_), nt, QpSize(NX, NU, NC));
-		dimensions_.push_back(QpSize(NX, 0, NCT));
+		std::fill_n(std::back_inserter(dimensions_), nt, OcpSize(NX, NU, NC));
+		dimensions_.push_back(OcpSize(NX, 0, NCT));
 
 		A = {{1.,  1.},
 			 {0.,  1.}};
@@ -160,14 +160,14 @@ public:
 		// Nothing to update.
 	}
 
-	boost::iterator_range<std::vector<QpSize>::const_iterator> dimensions() const
+	boost::iterator_range<std::vector<OcpSize>::const_iterator> dimensions() const
 	{
 		return {dimensions_.begin(), dimensions_.end()};
 	}
 
 private:
 	std::size_t nt_;
-	std::vector<QpSize> dimensions_;
+	std::vector<OcpSize> dimensions_;
 
 	StateVector _x_min;
 	StateVector _x_max;
@@ -271,6 +271,6 @@ TEST(QpSizeTest, test_RtiQpSize)
 	auto const nct = 4u;
 	auto const nt = 2u;
 
-	EXPECT_THAT(tmpc::mpcQpSize(nt, nx, nu, nc, nct),
-			::testing::ElementsAre(tmpc::QpSize(nx, nu, nc), tmpc::QpSize(nx, nu, nc), tmpc::QpSize(nx, 0, nct)));
+	EXPECT_THAT(tmpc::mpcOcpSize(nt, nx, nu, nc, nct),
+			::testing::ElementsAre(tmpc::OcpSize(nx, nu, nc), tmpc::OcpSize(nx, nu, nc), tmpc::OcpSize(nx, 0, nct)));
 }

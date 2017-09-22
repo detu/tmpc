@@ -4,7 +4,7 @@
 
 #include <tmpc/Matrix.hpp>
 #include <tmpc/Math.hpp>
-#include <tmpc/qp/QpSize.hpp>
+#include <tmpc/ocp/OcpSize.hpp>
 #include <tmpc/qp/QpStageSolutionBase.hpp>
 #include <tmpc/qp/QpStageBase.hpp>
 
@@ -62,7 +62,7 @@ private:
 	public:
 		using Kernel = QpOasesWorkspace::Kernel;
 
-		Stage(Workspace& ws, QpSize const& sz, size_t n, size_t na, size_t nx_next)
+		Stage(Workspace& ws, OcpSize const& sz, size_t n, size_t na, size_t nx_next)
 		:	ws_(&ws)
 		,	n_(n)
 		,	na_(na)
@@ -336,13 +336,13 @@ private:
 			return subvector(ws_->dualSolution, ws_->primalSolution.size() + na_, size_.nc()); 
 		}
 
-		QpSize const& size() const { return size_; }
+		OcpSize const& size() const { return size_; }
 
 	private:
 		Workspace * ws_;
 		size_t const n_;
 		size_t const na_;
-		QpSize const size_;
+		OcpSize const size_;
 		size_t const nxNext_;
 	};
 
@@ -358,7 +358,7 @@ public:
 		problem_.setOptions(detail::qpOASES_DefaultOptions());
 	}
 
-	explicit QpOasesWorkspace(std::initializer_list<QpSize> sz)
+	explicit QpOasesWorkspace(std::initializer_list<OcpSize> sz)
 	:	QpOasesWorkspace(sz.begin(), sz.end())
 	{
 	}

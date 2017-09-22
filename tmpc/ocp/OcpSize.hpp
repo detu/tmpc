@@ -7,14 +7,14 @@
 namespace tmpc {
 
 /**
- * \brief Defines sizes of a 1-stage optimization problem.
+ * \brief Defines sizes of an OCP stage.
  */
-class OpSize
+class OcpSize
 {
 public:
 	typedef std::size_t size_type;
 
-	OpSize(size_type const nx, size_type const nu, size_type const nc)
+	OcpSize(size_type const nx, size_type const nu, size_type const nc)
 	:	nx_(nx)
 	,	nu_(nu)
 	,	nc_(nc)
@@ -51,32 +51,32 @@ private:
 	size_type const nc_;
 };
 
-inline bool operator==(OpSize const& a, OpSize const& b)
+inline bool operator==(OcpSize const& a, OcpSize const& b)
 {
 	return a.nx() == b.nx() && a.nu() == b.nu() && a.nc() == b.nc();
 }
 
-inline bool operator!=(OpSize const& a, OpSize const& b)
+inline bool operator!=(OcpSize const& a, OcpSize const& b)
 {
 	return !(a == b);
 }
 
-std::size_t numVariables(std::vector<OpSize> const& sz);
-std::size_t numEqualities(std::vector<OpSize> const& sz);
-std::size_t numInequalities(std::vector<OpSize> const& sz);
+std::size_t numVariables(std::vector<OcpSize> const& sz);
+std::size_t numEqualities(std::vector<OcpSize> const& sz);
+std::size_t numInequalities(std::vector<OcpSize> const& sz);
 
 template <typename InputIt>
 std::size_t numVariables(InputIt sz_begin, InputIt sz_end)
 {
 	return std::accumulate(sz_begin, sz_end, std::size_t{0},
-		[] (std::size_t n, OpSize const& s) { return n + s.nx() + s.nu(); });
+		[] (std::size_t n, OcpSize const& s) { return n + s.nx() + s.nu(); });
 }
 
 template <typename InputIt>
 std::size_t numEqualities(InputIt sz_begin, InputIt sz_end)
 {
 	return sz_begin == sz_end ? 0 : std::accumulate(sz_begin + 1, sz_end, std::size_t{0},
-		[] (std::size_t n, OpSize const& s) { return n + s.nx(); });
+		[] (std::size_t n, OcpSize const& s) { return n + s.nx(); });
 }
 
 /**
@@ -86,11 +86,11 @@ template <typename InputIt>
 std::size_t numInequalities(InputIt sz_begin, InputIt sz_end)
 {
 	return std::accumulate(sz_begin, sz_end, std::size_t{0},
-		[] (std::size_t n, OpSize const& s) { return n + s.nc(); });
+		[] (std::size_t n, OcpSize const& s) { return n + s.nc(); });
 }
 
 /**
- * \brief An iterator through QP stages returning stage's OpSize.
+ * \brief An iterator through QP stages returning stage's OcpSize.
  */
 template <typename StageIterator>
 class QpSizeIterator
@@ -98,9 +98,9 @@ class QpSizeIterator
 public:
 	// iterator traits
 	using difference_type = typename StageIterator::difference_type;
-	using value_type = OpSize const;
-	using pointer = OpSize const *;
-	using reference = OpSize const &;
+	using value_type = OcpSize const;
+	using pointer = OcpSize const *;
+	using reference = OcpSize const &;
 	using iterator_category = typename StageIterator::iterator_category;
 
 	explicit QpSizeIterator(StageIterator const& it)

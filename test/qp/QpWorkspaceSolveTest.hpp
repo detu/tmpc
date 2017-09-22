@@ -1,6 +1,6 @@
 #pragma once
 
-#include <tmpc/mpc/MpcQpSize.hpp>	// for mpcQpSize()
+#include <tmpc/mpc/MpcOcpSize.hpp>	// for mpcOcpSize()
 #include <tmpc/qp/Printing.hpp>
 
 #include <tmpc/Matrix.hpp>
@@ -39,7 +39,7 @@ namespace tmpc :: testing
 
 			typedef StaticMatrix<Kernel, NZ, NZ> StageHessianMatrix;
 
-			const auto sz = mpcQpSize(NT, NX, NU, NC, NCT);
+			const auto sz = mpcOcpSize(NT, NX, NU, NC, NCT);
 			Workspace ws(sz.begin(), sz.end());
 			auto qp = ws.problem();
 			
@@ -180,7 +180,7 @@ namespace tmpc :: testing
 
 	TYPED_TEST_P(QpWorkspaceSolveTest, DISABLED_testSolve1stage1d)
 	{
-		typename TestFixture::Workspace ws { std::array<OpSize, 1> { OpSize(1, 0, 0) } };
+		typename TestFixture::Workspace ws { std::array<OcpSize, 1> { OcpSize(1, 0, 0) } };
 
 		auto problem = ws.problem();
 		problem[0].Q(2.);
@@ -206,7 +206,7 @@ namespace tmpc :: testing
 
 		Real const Q0 = 2., q0 = -1., Q1 = 1., q1 = 0., A0 = 0.2, b0 = 1.;
 
-		typename TestFixture::Workspace ws {std::array<OpSize, 2> { OpSize(1, 0, 0), OpSize(1, 0, 0) } };
+		typename TestFixture::Workspace ws {std::array<OcpSize, 2> { OcpSize(1, 0, 0), OcpSize(1, 0, 0) } };
 
 		auto problem = ws.problem();
 		problem[0].Q(Q0);
@@ -240,7 +240,7 @@ namespace tmpc :: testing
 	{
 		using Real = typename TestFixture::Real;
 
-		typename TestFixture::Workspace ws {std::array<OpSize, 2> { OpSize(3, 2, 0), OpSize(0, 0, 0) } };
+		typename TestFixture::Workspace ws {std::array<OcpSize, 2> { OcpSize(3, 2, 0), OcpSize(0, 0, 0) } };
 
 		auto problem = ws.problem();
 		problem[0].Q(DynamicMatrix<typename TestFixture::Kernel>({
@@ -319,7 +319,7 @@ namespace tmpc :: testing
 	{
 		using Real = typename TestFixture::Real;
 
-		typename TestFixture::Workspace ws {std::array<OpSize, 2> { OpSize(3, 2, 0), OpSize(0, 0, 0) } };
+		typename TestFixture::Workspace ws {std::array<OcpSize, 2> { OcpSize(3, 2, 0), OcpSize(0, 0, 0) } };
 
 		auto problem = ws.problem();
 		problem[0].Q(DynamicMatrix<typename TestFixture::Kernel>({
@@ -400,7 +400,7 @@ namespace tmpc :: testing
 	{
 		using Real = typename TestFixture::Real;
 
-		typename TestFixture::Workspace ws {std::array<OpSize, 2> { OpSize(3, 2, 0), OpSize(0, 0, 0) } };
+		typename TestFixture::Workspace ws {std::array<OcpSize, 2> { OcpSize(3, 2, 0), OcpSize(0, 0, 0) } };
 
 		auto problem = ws.problem();
 		problem[0].Q(DynamicMatrix<typename TestFixture::Kernel>({
@@ -481,7 +481,7 @@ namespace tmpc :: testing
 		using Real = typename TestFixture::Real;
 		using Kernel = typename TestFixture::Kernel;
 		
-		typename TestFixture::Workspace workspace {QpSize {3, 0, 0}, QpSize {0, 0, 0}};
+		typename TestFixture::Workspace workspace {OcpSize {3, 0, 0}, OcpSize {0, 0, 0}};
 		
 		auto& stage0 = workspace.problem()[0];
 		stage0.gaussNewtonCostApproximation(

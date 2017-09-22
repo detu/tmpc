@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include <tmpc/qp/QpSize.hpp>
+#include <tmpc/ocp/OcpSize.hpp>
 #include <tmpc/qp/Printing.hpp>
 #include <tmpc/Matrix.hpp>
 
@@ -31,15 +31,15 @@ namespace tmpc :: testing
 
         QpWorkspaceTest()
         :	size_{
-                QpSize(2, 3, 4),
-                QpSize(5, 6, 7),
-                QpSize(8, 9, 10)
+                OcpSize(2, 3, 4),
+                OcpSize(5, 6, 7),
+                OcpSize(8, 9, 10)
             }
         ,	ws_(size_.begin(), size_.end())
         {
         }
 
-        std::array<QpSize, 3> const size_;
+        std::array<OcpSize, 3> const size_;
         Workspace ws_;
     };
 
@@ -124,7 +124,7 @@ namespace tmpc :: testing
         unsigned constexpr NCT = 0;
         unsigned constexpr NT = 2;
 
-        std::vector<QpSize> sz;
+        std::vector<OcpSize> sz;
         sz.reserve(NT + 1);
         
         for (size_t i = 0; i < NT; ++i)

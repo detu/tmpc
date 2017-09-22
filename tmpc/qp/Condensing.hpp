@@ -1,6 +1,6 @@
 #pragma once
 
-#include <tmpc/qp/QpSize.hpp>
+#include <tmpc/ocp/OcpSize.hpp>
 #include <tmpc/Matrix.hpp>
 
 #include <vector>
@@ -13,22 +13,22 @@ namespace tmpc
 	/**
 	 * Resulting QP size after full condensing.
 	 */
-	QpSize condensedQpSize(std::vector<QpSize> const& sz);
+	OcpSize condensedQpSize(std::vector<OcpSize> const& sz);
 
 	template <typename InIter>
-	QpSize condensedQpSize(InIter sz_begin, InIter sz_end)
+	OcpSize condensedQpSize(InIter sz_begin, InIter sz_end)
 	{
 		if (sz_begin == sz_end)
-			throw std::invalid_argument("condensedQpSize(): QpSize range must be not empty");
+			throw std::invalid_argument("condensedQpSize(): OcpSize range must be not empty");
 
-		return QpSize(
+		return OcpSize(
 			sz_begin->nx(),
 			std::accumulate(sz_begin, sz_end, std::size_t{0},
-				[] (std::size_t n, QpSize const& s) { return n + s.nu(); }),
+				[] (std::size_t n, OcpSize const& s) { return n + s.nu(); }),
 			std::accumulate(sz_begin, sz_end, std::size_t{0},
-				[] (std::size_t n, QpSize const& s) { return n + s.nc(); })
+				[] (std::size_t n, OcpSize const& s) { return n + s.nc(); })
 			+ std::accumulate(sz_begin + 1, sz_end, std::size_t{0},
-					[] (std::size_t n, QpSize const& s) { return n + s.nx(); })
+					[] (std::size_t n, OcpSize const& s) { return n + s.nx(); })
 			);
 	}
 
@@ -122,7 +122,7 @@ namespace tmpc
 				return c_.ubx_;
 			}
 	
-			QpSize const& size() const
+			OcpSize const& size() const
 			{
 				return c_.cs_;
 			}
@@ -195,7 +195,7 @@ namespace tmpc
 			for (auto stage = first + 1; stage != last; ++stage)
 			{
 				auto const& sz = stage->size();
-				// TODO: add nx1() to QpSize
+				// TODO: add nx1() to OcpSize
 				auto const nx_next = stage->B().rows();
 
 				// Update Q
@@ -280,7 +280,7 @@ namespace tmpc
 		}
 
 	private:
-		QpSize const cs_;
+		OcpSize const cs_;
 
 		DynamicMatrix<Kernel> Qc_;
 		DynamicMatrix<Kernel> Rc_;

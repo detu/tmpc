@@ -1,7 +1,7 @@
 #pragma once
 
 #include "QpSolverException.hpp"
-#include "QpSize.hpp"
+#include <tmpc/ocp/OcpSize.hpp>
 #include "QpStageSolutionBase.hpp"
 #include "QpStageBase.hpp"
 
@@ -86,7 +86,7 @@ namespace tmpc
 			typedef DynamicMatrix<Real, storageOrder> Matrix;
 			typedef DynamicVector<Real, columnVector> Vector;
 
-			Stage(QpSize const& sz, size_t nx_next);
+			Stage(OcpSize const& sz, size_t nx_next);
 			Stage(Stage const&) = default;
 			Stage(Stage &&) = default;
 
@@ -180,7 +180,7 @@ namespace tmpc
 				return subvector(lam_, 2 * size_.nu() + 2 * size_.nx() + size_.nc(), size_.nc()); 
 			}
 
-			QpSize const& size() const { return size_; }
+			OcpSize const& size() const { return size_; }
 
 			// Adjust hidxb so to account for infs in state and input bounds.
 			void adjustBoundsIndex()
@@ -243,7 +243,7 @@ namespace tmpc
 			Real * lam_ug_data() { return lam_lg_data() + size_.nc(); }
 
 		private:
-			QpSize size_;
+			OcpSize size_;
 
 			// Some magic data for HPIPM
 			std::vector<int> hidxb_;
@@ -562,6 +562,6 @@ namespace tmpc
 		void preallocateStages(size_t nt);
 
 		// Add one stage with specified sizes at the end of the stage sequence.
-		void addStage(QpSize const& sz, size_t nx_next);
+		void addStage(OcpSize const& sz, size_t nx_next);
 	};
 }

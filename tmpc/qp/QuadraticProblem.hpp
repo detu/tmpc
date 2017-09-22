@@ -1,6 +1,6 @@
 #pragma once
 
-#include "QpSize.hpp"
+#include <tmpc/ocp/OcpSize.hpp>
 #include "QpStageBase.hpp"
 
 #include <tmpc/Matrix.hpp>
@@ -20,7 +20,7 @@ namespace tmpc
 		using Matrix = DynamicMatrix<Kernel>;
 		using Vector = DynamicVector<Kernel>;
 
-		QuadraticProblemStage(QpSize const& sz, size_type nx_next)
+		QuadraticProblemStage(OcpSize const& sz, size_type nx_next)
 		:	size_(sz)
 		,	Q_(sz.nx(), sz.nx())
 		,	R_(sz.nu(), sz.nu())
@@ -252,7 +252,7 @@ namespace tmpc
 			noresize(ubx_) = ubx;
 		}
 
-		QpSize const& size() const
+		OcpSize const& size() const
 		{
 			return size_;
 		}
@@ -263,7 +263,7 @@ namespace tmpc
 		}
 
 	private:
-		QpSize size_;
+		OcpSize size_;
 		Matrix Q_;
 		Matrix R_;
 		Matrix S_;
@@ -385,7 +385,7 @@ namespace tmpc
 			return stage_.back();
 		}
 
-		QuadraticProblem(std::initializer_list<QpSize> sz)
+		QuadraticProblem(std::initializer_list<OcpSize> sz)
 		:	QuadraticProblem(sz.begin(), sz.end())
 		{
 		}

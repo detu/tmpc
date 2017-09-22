@@ -1,6 +1,6 @@
 #include <tmpc/qp/Condensing.hpp>
 #include <tmpc/qp/QuadraticProblem.hpp>
-#include <tmpc/mpc/MpcQpSize.hpp>
+#include <tmpc/mpc/MpcOcpSize.hpp>
 
 #include <tmpc/BlazeKernel.hpp>
 
@@ -13,23 +13,23 @@ namespace tmpc :: testing
 	TEST(QpSizeTest, testCondensedQpSize)
 	{
 		EXPECT_EQ(tmpc::condensedQpSize({
-			tmpc::QpSize(2, 1, 3),
-			tmpc::QpSize(4, 5, 6),
-			tmpc::QpSize(2, 1, 1)
+			tmpc::OcpSize(2, 1, 3),
+			tmpc::OcpSize(4, 5, 6),
+			tmpc::OcpSize(2, 1, 1)
 			}),
-			tmpc::QpSize(2, 1 + 5 + 1, (3 + 6 + 1) + (4 + 2)));
+			tmpc::OcpSize(2, 1 + 5 + 1, (3 + 6 + 1) + (4 + 2)));
 	}
 
 	TEST(QpSizeTest, testCondensedQpSizeIteratorRange)
 	{
-		std::array<tmpc::QpSize, 3> sz = {
-			tmpc::QpSize(2, 1, 3),
-			tmpc::QpSize(4, 5, 6),
-			tmpc::QpSize(2, 1, 1)
+		std::array<tmpc::OcpSize, 3> sz = {
+			tmpc::OcpSize(2, 1, 3),
+			tmpc::OcpSize(4, 5, 6),
+			tmpc::OcpSize(2, 1, 1)
 			};
 
 		EXPECT_EQ(tmpc::condensedQpSize(sz.begin(), sz.end()),
-			tmpc::QpSize(2, 1 + 5 + 1, (3 + 6 + 1) + (4 + 2)));
+			tmpc::OcpSize(2, 1 + 5 + 1, (3 + 6 + 1) + (4 + 2)));
 	}
 
 	class CondensingTest : public ::testing::Test
@@ -57,7 +57,7 @@ namespace tmpc :: testing
 		using StateInputMatrix = StaticMatrix<Kernel, NX, NU>;
 
 		CondensingTest()
-		:	size_(tmpc::mpcQpSize(NT, NX, NU, NC, NCT))
+		:	size_(tmpc::mpcOcpSize(NT, NX, NU, NC, NCT))
 		,	qp(size_.begin(), size_.end())
 		{
 		}
@@ -159,7 +159,7 @@ namespace tmpc :: testing
 			subvector(lbu_expected, 1 * NU, NU) = qp[1].lbu();	subvector(ubu_expected, 1 * NU, NU) = qp[1].ubu();
 		}
 
-		std::vector<tmpc::QpSize> size_;
+		std::vector<tmpc::OcpSize> size_;
 		Problem qp;
 		StaticMatrix<Kernel, NX, NX> Qc_expected;
 		StaticMatrix<Kernel, NT * NU, NT * NU> Rc_expected;
