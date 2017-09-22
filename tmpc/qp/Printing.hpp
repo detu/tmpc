@@ -1,6 +1,6 @@
 #pragma once
 
-#include "QpStageSolutionBase.hpp"
+#include <tmpc/ocp/OcpSolutionBase.hpp>
 #include "QpStageBase.hpp"
 
 #include <ostream>
@@ -150,7 +150,7 @@ namespace tmpc
 	 * \brief Print a QP stage solution in a human-readable form.
 	 */
 	template <typename StageSolution>
-	inline std::ostream& operator<<(std::ostream& os, QpStageSolutionBase<StageSolution> const& solution)
+	inline std::ostream& operator<<(std::ostream& os, OcpSolutionBase<StageSolution> const& solution)
 	{
 		os << "x = " << trans(solution.x()) << std::endl;
 		os << "u = " << trans(solution.u()) << std::endl;

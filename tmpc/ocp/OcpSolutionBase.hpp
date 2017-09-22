@@ -7,7 +7,7 @@ namespace tmpc
 	/// \brief CRTP base for QP stage solution classes.
 	///
 	template <typename Derived>
-	class QpStageSolutionBase
+	class OcpSolutionBase
 	{
 	public:
 		Derived& derived()
@@ -34,7 +34,7 @@ namespace tmpc
 		// Allow default construction and copying only as a part of a derived class;
 		// otherwise, and object might be created which is not a part of Derived, 
 		// and therefore calling its methods will cause undefined behavior.
-		QpStageSolutionBase() = default;
-		QpStageSolutionBase(QpStageSolutionBase const&) = default;
+		OcpSolutionBase() = default;
+		OcpSolutionBase(OcpSolutionBase const&) = default;
 	};
 }

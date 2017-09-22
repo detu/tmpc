@@ -2,7 +2,7 @@
 
 #include "QpSolverException.hpp"
 #include <tmpc/ocp/OcpSize.hpp>
-#include "QpStageSolutionBase.hpp"
+#include <tmpc/ocp/OcpSolutionBase.hpp>
 #include "QpStageBase.hpp"
 
 #include <tmpc/Matrix.hpp>
@@ -72,7 +72,7 @@ namespace tmpc
 		using IterStat = std::array<Real, 5>;
 
 		class Stage
-		:	public QpStageSolutionBase<Stage>
+		:	public OcpSolutionBase<Stage>
 		,	public QpStageBase<Stage>
 		{
 		public:
@@ -378,9 +378,9 @@ namespace tmpc
 		:	public boost::iterator_adaptor<
 				ConstSolutionIterator	// derived
 			,	typename std::vector<Stage>::const_iterator	// base
-			,	QpStageSolutionBase<Stage> const&	// value
+			,	OcpSolutionBase<Stage> const&	// value
 			,	boost::random_access_traversal_tag	// category of traversal
-			,	QpStageSolutionBase<Stage> const&	// reference
+			,	OcpSolutionBase<Stage> const&	// reference
 			>
 		{
 		public:

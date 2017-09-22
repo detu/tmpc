@@ -5,7 +5,7 @@
 #include <tmpc/Matrix.hpp>
 #include <tmpc/Math.hpp>
 #include <tmpc/ocp/OcpSize.hpp>
-#include <tmpc/qp/QpStageSolutionBase.hpp>
+#include <tmpc/ocp/OcpSolutionBase.hpp>
 #include <tmpc/qp/QpStageBase.hpp>
 
 #include <qpOASES.hpp>
@@ -56,7 +56,7 @@ private:
 	using size_t = typename Kernel::size_t;
 
 	class Stage
-	:	public QpStageSolutionBase<Stage>
+	:	public OcpSolutionBase<Stage>
 	,	public QpStageBase<Stage>
 	{
 	public:
@@ -435,9 +435,9 @@ public:
 	:	public boost::iterator_adaptor<
 			ConstSolutionIterator	// derived
 		,	typename std::vector<Stage>::const_iterator	// base
-		,	QpStageSolutionBase<Stage> const&	// value
+		,	OcpSolutionBase<Stage> const&	// value
 		,	boost::random_access_traversal_tag	// category of traversal
-		,	QpStageSolutionBase<Stage> const&	// reference
+		,	OcpSolutionBase<Stage> const&	// reference
 		>
 	{
 	public:
