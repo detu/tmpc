@@ -20,7 +20,7 @@ namespace tmpc
 		using Matrix = DynamicMatrix<Kernel>;
 		using Vector = DynamicVector<Kernel>;
 
-		OcpQp(OcpSize const& sz, size_type nx_next)
+		OcpQp(OcpSize const& sz, size_type nx_next = 0)
 		:	size_(sz)
 		,	Q_(sz.nx(), sz.nx())
 		,	R_(sz.nu(), sz.nu())
@@ -61,34 +61,6 @@ namespace tmpc
 		,	lbd_(rhs.lbd())
 		,	ubd_(rhs.ubd())
 		{
-		}
-
-		OcpQp(OcpQp const&) = default; //delete;
-		OcpQp(OcpQp &&) = default;
-
-		template <typename Other>
-		OcpQp& operator=(OcpQpBase<Other> const& rhs)
-		{
-			size_ = rhs.size();
-
-			Q_(rhs.Q());
-			R_(rhs.R());
-			S_(rhs.S());
-			q_(rhs.q());
-			r_(rhs.r());
-			A_(rhs.A());
-			B_(rhs.B());
-			b_(rhs.b());
-			C_(rhs.C());
-			D_(rhs.D());
-			lbx_(rhs.lbx());
-			ubx_(rhs.ubx());
-			lbu_(rhs.lbu());
-			ubu_(rhs.ubu());
-			lbd_(rhs.lbd());
-			ubd_(rhs.ubd());
-
-			return *this;
 		}
 
 		const Matrix& A() const {

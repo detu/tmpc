@@ -2,6 +2,8 @@
 
 #include <tmpc/Math.hpp>
 
+#include <stdexcept>
+
 namespace tmpc
 {
     ///
@@ -72,6 +74,32 @@ namespace tmpc
         decltype(auto) size() const
         {
             return derived().size();
+		}
+
+		template <typename Other>
+		OcpQpBase& operator=(OcpQpBase<Other> const& rhs)
+		{
+			if (size() != rhs.size())
+				throw std::invalid_argument("OcpQp assignment size mismatch");
+
+			Q(rhs.Q());
+			R(rhs.R());
+			S(rhs.S());
+			q(rhs.q());
+			r(rhs.r());
+			A(rhs.A());
+			B(rhs.B());
+			b(rhs.b());
+			C(rhs.C());
+			D(rhs.D());
+			lbx(rhs.lbx());
+			ubx(rhs.ubx());
+			lbu(rhs.lbu());
+			ubu(rhs.ubu());
+			lbd(rhs.lbd());
+			ubd(rhs.ubd());
+
+			return *this;
 		}
 
 		// Set all data to sNaN
