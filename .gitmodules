@@ -1,3 +1,6 @@
 [submodule "examples/json"]
 	path = examples/json
 	url = git@github.com:nlohmann/json.git
+[submodule "examples/benchmark"]
+	path = examples/benchmark
+	url = git@github.com:google/benchmark.git
