@@ -8,12 +8,12 @@ template <typename Derived>
 class ExpressionBase
 {
 public:
-    Derived& derived()
+    constexpr Derived& derived()
     {
         return static_cast<Derived&>(*this);
     }
 
-    Derived const& derived() const
+    constexpr Derived const& derived() const
     {
         return static_cast<Derived const&>(*this);
     }
@@ -38,7 +38,7 @@ public:
     using Arg = A;
     using Op = OP;
 
-    UnaryOp(Arg const& arg)
+    constexpr UnaryOp(Arg const& arg)
     :   arg_(arg)
     {        
     }
@@ -62,7 +62,7 @@ public:
     using Right = R;
     using Op = OP;
 
-    BinaryOp(Left const& left, Right const& right)
+    constexpr BinaryOp(Left const& left, Right const& right)
     :   left_(left)
     ,   right_(right)
     {        
@@ -140,43 +140,43 @@ struct Pow
 };
 
 template <typename Expr>
-decltype(auto) sin(ExpressionBase<Expr> const& x)
+decltype(auto) constexpr sin(ExpressionBase<Expr> const& x)
 {
     return UnaryOp<Sin, Expr>(x.derived());
 }
 
 template <typename Expr>
-decltype(auto) cos(ExpressionBase<Expr> const& x)
+decltype(auto) constexpr cos(ExpressionBase<Expr> const& x)
 {
     return UnaryOp<Cos, Expr>(x.derived());
 }
 
 template <typename T, typename Expr>
-decltype(auto) operator*(T const& a, ExpressionBase<Expr> const& b)
+decltype(auto) constexpr operator*(T const& a, ExpressionBase<Expr> const& b)
 {
     return BinaryOp<Times, T, Expr>(a, b.derived());
 }
 
 template <typename Expr, typename T>
-decltype(auto) pow(ExpressionBase<Expr> const& a, T const& b)
+decltype(auto) constexpr pow(ExpressionBase<Expr> const& a, T const& b)
 {
     return BinaryOp<Pow, Expr, T>(a.derived(), b);
 }
 
 template <typename ExprA, typename ExprB>
-decltype(auto) operator+(ExpressionBase<ExprA> const& a, ExpressionBase<ExprB> const& b)
+decltype(auto) constexpr operator+(ExpressionBase<ExprA> const& a, ExpressionBase<ExprB> const& b)
 {
     return BinaryOp<Plus, ExprA, ExprB>(a.derived(), b.derived());
 }
 
 template <typename T, typename Expr>
-decltype(auto) operator-(T const& a, ExpressionBase<Expr> const& b)
+decltype(auto) constexpr operator-(T const& a, ExpressionBase<Expr> const& b)
 {
     return BinaryOp<Minus, T, Expr>(a, b.derived());
 }
 
 template <typename ExprA, typename ExprB>
-decltype(auto) operator/(ExpressionBase<ExprA> const& a, ExpressionBase<ExprB> const& b)
+decltype(auto) constexpr operator/(ExpressionBase<ExprA> const& a, ExpressionBase<ExprB> const& b)
 {
     return BinaryOp<Div, ExprA, ExprB>(a.derived(), b.derived());
 }
@@ -225,21 +225,21 @@ int main(int, char **)
                       (- l*m*cos(theta)*sin(theta)*omega**2 + F*cos(theta) + g*m*sin(theta) + M*g*sin(theta))/(l*(M + m - m*cos(theta)**2)))
     */
     
-    Real const M = 1.;      // mass of the cart [kg]
-    Real const m = 0.1;     // mass of the ball [kg]
-    Real const g = 9.81;    // gravity constant [m/s^2]
-    Real const l = 0.8;     // length of the rod [m]
+    Real constexpr M = 1.;      // mass of the cart [kg]
+    Real constexpr m = 0.1;     // mass of the ball [kg]
+    Real constexpr g = 9.81;    // gravity constant [m/s^2]
+    Real constexpr l = 0.8;     // length of the rod [m]
 
-    Variable<0> p;      // horizontal displacement [m]
-    Variable<1> theta;  // angle with the vertical [rad]
-    Variable<2> v;      // horizontal velocity [m/s]
-    Variable<3> omega;  // angular velocity [rad/s]
-    Variable<4> F;      // horizontal force [N]
+    Variable<0> constexpr p;      // horizontal displacement [m]
+    Variable<1> constexpr theta;  // angle with the vertical [rad]
+    Variable<2> constexpr v;      // horizontal velocity [m/s]
+    Variable<3> constexpr omega;  // angular velocity [rad/s]
+    Variable<4> constexpr F;      // horizontal force [N]
     
-    auto p_dot = v;
-    auto theta_dot = omega;
-    auto v_dot = (-l * m * sin(theta) * pow(omega, 2) + F + g * m * cos(theta) * sin(theta)) / (M + m - m * pow(cos(theta), 2));
-    auto omega_dot = (-l * m * cos(theta) * sin(theta) * pow(omega, 2) + F * cos(theta) + g * m * sin(theta) + M * g * sin(theta)) 
+    auto constexpr p_dot = v;
+    auto constexpr theta_dot = omega;
+    auto constexpr v_dot = (-l * m * sin(theta) * pow(omega, 2) + F + g * m * cos(theta) * sin(theta)) / (M + m - m * pow(cos(theta), 2));
+    auto constexpr omega_dot = (-l * m * cos(theta) * sin(theta) * pow(omega, 2) + F * cos(theta) + g * m * sin(theta) + M * g * sin(theta)) 
         / (l * (M + m - m * pow(cos(theta), 2)));
 
     json j = omega_dot;
