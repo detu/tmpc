@@ -14,9 +14,15 @@ namespace tmpc
         }
     
         template <typename T>
-        static decltype(auto) eval(T const& val)
+        static decltype(auto) eval(T const& arg)
         {
-            return std::sin(val);
+            return std::sin(arg);
+        }
+
+        template <typename T1, typename T2>
+        static decltype(auto) diff(T1 const& arg, T2 const& sens)
+        {
+            return std::cos(arg) * sens;
         }
     };
 

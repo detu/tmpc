@@ -18,6 +18,12 @@ namespace tmpc
         {
             return std::cos(val);
         }
+
+        template <typename T1, typename T2>
+        static decltype(auto) diff(T1 const& arg, T2 const& sens)
+        {
+            return -std::sin(arg) * sens;
+        }
     };
 
     template <typename Expr>

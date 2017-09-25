@@ -1,8 +1,9 @@
 #pragma once
 
 #include "ExpressionBase.hpp"
+#include "Eval.hpp"
+#include "Diff.hpp"
 
-#include <tuple>
 
 namespace tmpc
 {
@@ -19,5 +20,19 @@ namespace tmpc
     decltype(auto) eval(Variable<N> const&, std::tuple<Types...> const& arg)
     {
         return std::get<N>(arg);
+    }
+
+
+    template <std::size_t N1, std::size_t N2, typename S, class... Types>
+    decltype(auto) constexpr diff(Variable<N1> const& v, Variable<N2> const& u, std::tuple<Types...> const& arg, S const& sens)
+    {
+        return S {};
+    }
+
+
+    template <std::size_t N, typename S, class... Types>
+    decltype(auto) constexpr diff(Variable<N> const& v, Variable<N> const& u, std::tuple<Types...> const& arg, S const& sens)
+    {
+        return sens;
     }
 }

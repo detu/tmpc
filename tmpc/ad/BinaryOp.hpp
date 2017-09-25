@@ -41,4 +41,16 @@ namespace tmpc
     {
         return OP::eval(eval(expr.left(), arg), eval(expr.right(), arg));
     }
+
+
+    template <typename OP, typename L, typename R, std::size_t N, typename S, class... Types>
+    decltype(auto) constexpr diff(BinaryOp<OP, L, R> const& expr, Variable<N> const& u, std::tuple<Types...> const& arg, S const& sens)
+    {
+        return OP::diff(
+            eval(expr.left(), arg), 
+            eval(expr.right(), arg), 
+            diff(expr.left(), u, arg, sens), 
+            diff(expr.right(), u, arg, sens)
+        );
+    }
 }

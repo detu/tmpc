@@ -33,4 +33,11 @@ namespace tmpc
     {
         return OP::eval(eval(expr.arg(), arg));
     }
+
+    
+    template <typename OP, typename A, std::size_t N, typename S, class... Types>
+    decltype(auto) constexpr diff(UnaryOp<OP, A> const& expr, Variable<N> const& u, std::tuple<Types...> const& arg, S const& sens)
+    {
+        return OP::diff(eval(expr.arg(), arg), sens);
+    }
 }
