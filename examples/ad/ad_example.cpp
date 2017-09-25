@@ -1,212 +1,84 @@
+#include <tmpc/ad/ad.hpp>
+
+
 #include <json.hpp>
 
 #include <iostream>
+#include <tuple>
 
 using nlohmann::json;
 
-template <typename Derived>
-class ExpressionBase
+using Real = double;
+
+Real constexpr M = 1.;      // mass of the cart [kg]
+Real constexpr m = 0.1;     // mass of the ball [kg]
+Real constexpr g = 9.81;    // gravity constant [m/s^2]
+Real constexpr l = 0.8;     // length of the rod [m]
+
+namespace tmpc
 {
-public:
-    constexpr Derived& derived()
+    template <typename OP, typename L, typename R>
+    void to_json(json& j, const BinaryOp<OP, L, R>& expr) 
     {
-        return static_cast<Derived&>(*this);
+        j = json {{OP::name(), {expr.left(), expr.right()}}};
     }
 
-    constexpr Derived const& derived() const
+
+    template <typename OP, typename A>
+    void to_json(json& j, const UnaryOp<OP, A>& expr) 
     {
-        return static_cast<Derived const&>(*this);
-    }
-};
-
-
-template <std::size_t N_>
-class Variable
-:   public ExpressionBase<Variable<N_>>
-{
-public:
-    static auto constexpr N = N_;
-
-};
-
-
-template <typename OP, typename A>
-class UnaryOp
-:   public ExpressionBase<UnaryOp<OP, A>>
-{
-public:
-    using Arg = A;
-    using Op = OP;
-
-    constexpr UnaryOp(Arg const& arg)
-    :   arg_(arg)
-    {        
+        j = json {{OP::name(), expr.arg()}};
     }
 
-    auto const& arg() const
+
+    template <std::size_t N>
+    void to_json(json& j, const Variable<N>& var) 
     {
-        return arg_;
+        j = "@" + std::to_string(N);
     }
-
-private:
-    Arg arg_;
-};
-
-
-template <typename OP, typename L, typename R>
-class BinaryOp
-:   public ExpressionBase<BinaryOp<OP, L, R>>
-{
-public:
-    using Left = L;
-    using Right = R;
-    using Op = OP;
-
-    constexpr BinaryOp(Left const& left, Right const& right)
-    :   left_(left)
-    ,   right_(right)
-    {        
-    }
-
-    auto const& left() const
-    {
-        return left_;
-    }
-
-    auto const& right() const
-    {
-        return right_;
-    }
-
-private:
-    Left left_;
-    Right right_;
-};
-
-struct Sin
-{
-    static std::string name()
-    {
-        return "sin";
-    }
-};
-
-struct Cos
-{
-    static std::string name()
-    {
-        return "cos";
-    }
-};
-
-struct Times
-{
-    static std::string name()
-    {
-        return "times";
-    }
-};
-
-struct Div
-{
-    static std::string name()
-    {
-        return "Div";
-    }
-};
-
-struct Plus
-{
-    static std::string name()
-    {
-        return "plus";
-    }
-};
-
-struct Minus
-{
-    static std::string name()
-    {
-        return "minus";
-    }
-};
-
-struct Pow
-{
-    static std::string name()
-    {
-        return "pow";
-    }
-};
-
-template <typename Expr>
-decltype(auto) constexpr sin(ExpressionBase<Expr> const& x)
-{
-    return UnaryOp<Sin, Expr>(x.derived());
 }
 
-template <typename Expr>
-decltype(auto) constexpr cos(ExpressionBase<Expr> const& x)
+void f1(Real const x[4], Real const u[1], Real dx[4])
 {
-    return UnaryOp<Cos, Expr>(x.derived());
+    auto const p = x[0];
+    auto const theta = x[1];
+    auto const v = x[2];
+    auto const omega = x[3];
+    auto const F = u[0];
+
+    dx[0] = v;
+    dx[1] = omega;
+    dx[2] = (-l * m * sin(theta) * pow(omega, 2) + F + g * m * cos(theta) * sin(theta)) / (M + m - m * pow(cos(theta), 2));
+    dx[3] = (-l * m * cos(theta) * sin(theta) * pow(omega, 2) + F * cos(theta) + g * m * sin(theta) + M * g * sin(theta)) 
+        / (l * (M + m - m * pow(cos(theta), 2)));
 }
 
-template <typename T, typename Expr>
-decltype(auto) constexpr operator*(T const& a, ExpressionBase<Expr> const& b)
+void f2(Real const x[4], Real const u[1], Real dx[4])
 {
-    return BinaryOp<Times, T, Expr>(a, b.derived());
+    using tmpc::Variable;
+
+    Variable<0> p;      // horizontal displacement [m]
+    Variable<1> theta;  // angle with the vertical [rad]
+    Variable<2> v;      // horizontal velocity [m/s]
+    Variable<3> omega;  // angular velocity [rad/s]
+    Variable<4> F;      // horizontal force [N]
+    
+    auto p_dot = v;
+    auto theta_dot = omega;
+    auto v_dot = (-l * m * sin(theta) * pow(omega, 2) + F + g * m * cos(theta) * sin(theta)) / (M + m - m * pow(cos(theta), 2));
+    auto omega_dot = (-l * m * cos(theta) * sin(theta) * pow(omega, 2) + F * cos(theta) + g * m * sin(theta) + M * g * sin(theta)) 
+        / (l * (M + m - m * pow(cos(theta), 2)));
+
+    auto arg = std::make_tuple(x[0], x[1], x[2], x[3], u[0]);
+
+    dx[0] = eval(p_dot, arg);
+    dx[1] = eval(theta_dot, arg);
+    dx[2] = eval(v_dot, arg);
+    dx[3] = eval(omega_dot, arg);
 }
-
-template <typename Expr, typename T>
-decltype(auto) constexpr pow(ExpressionBase<Expr> const& a, T const& b)
-{
-    return BinaryOp<Pow, Expr, T>(a.derived(), b);
-}
-
-template <typename ExprA, typename ExprB>
-decltype(auto) constexpr operator+(ExpressionBase<ExprA> const& a, ExpressionBase<ExprB> const& b)
-{
-    return BinaryOp<Plus, ExprA, ExprB>(a.derived(), b.derived());
-}
-
-template <typename T, typename Expr>
-decltype(auto) constexpr operator-(T const& a, ExpressionBase<Expr> const& b)
-{
-    return BinaryOp<Minus, T, Expr>(a, b.derived());
-}
-
-template <typename ExprA, typename ExprB>
-decltype(auto) constexpr operator/(ExpressionBase<ExprA> const& a, ExpressionBase<ExprB> const& b)
-{
-    return BinaryOp<Div, ExprA, ExprB>(a.derived(), b.derived());
-}
-
-
-template <typename OP, typename L, typename R>
-void to_json(json& j, const BinaryOp<OP, L, R>& expr) 
-{
-    j = json {{OP::name(), {expr.left(), expr.right()}}};
-}
-
-
-template <typename OP, typename A>
-void to_json(json& j, const UnaryOp<OP, A>& expr) 
-{
-    j = json {{OP::name(), expr.arg()}};
-}
-
-
-template <std::size_t N>
-void to_json(json& j, const Variable<N>& var) 
-{
-    j = "@" + std::to_string(N);
-}
-
 
 int main(int, char **)
 {
-    using Real = double;
-    
     /*
     M = 1    # mass of the cart [kg]
     m = 0.1  # mass of the ball [kg]
@@ -224,28 +96,28 @@ int main(int, char **)
                       (- l*m*sin(theta)*omega**2 + F + g*m*cos(theta)*sin(theta))/(M + m - m*cos(theta)**2),
                       (- l*m*cos(theta)*sin(theta)*omega**2 + F*cos(theta) + g*m*sin(theta) + M*g*sin(theta))/(l*(M + m - m*cos(theta)**2)))
     */
+
+    Real const x[4] = {0.1, 0.2, 0.3, 0.4};
+    Real const u[1] = {0.5};
+    Real dx[4];
+
+    std::cout << "x: " << std::endl;
+    std::copy_n(x, 4, std::ostream_iterator<Real>(std::cout, ", "));
+    std::cout << std::endl;
+
+    std::cout << "u: ";
+    std::copy_n(u, 1, std::ostream_iterator<Real>(std::cout, ", "));
+    std::cout << std::endl;
+
+    f1(x, u, dx);
+    std::cout << "f1(x, u): ";
+    std::copy_n(dx, 4, std::ostream_iterator<Real>(std::cout, ", "));
+    std::cout << std::endl;
+
+    f2(x, u, dx);
+    std::cout << "f2(x, u): ";
+    std::copy_n(dx, 4, std::ostream_iterator<Real>(std::cout, ", "));
+    std::cout << std::endl;    
     
-    Real constexpr M = 1.;      // mass of the cart [kg]
-    Real constexpr m = 0.1;     // mass of the ball [kg]
-    Real constexpr g = 9.81;    // gravity constant [m/s^2]
-    Real constexpr l = 0.8;     // length of the rod [m]
-
-    Variable<0> constexpr p;      // horizontal displacement [m]
-    Variable<1> constexpr theta;  // angle with the vertical [rad]
-    Variable<2> constexpr v;      // horizontal velocity [m/s]
-    Variable<3> constexpr omega;  // angular velocity [rad/s]
-    Variable<4> constexpr F;      // horizontal force [N]
-    
-    auto constexpr p_dot = v;
-    auto constexpr theta_dot = omega;
-    auto constexpr v_dot = (-l * m * sin(theta) * pow(omega, 2) + F + g * m * cos(theta) * sin(theta)) / (M + m - m * pow(cos(theta), 2));
-    auto constexpr omega_dot = (-l * m * cos(theta) * sin(theta) * pow(omega, 2) + F * cos(theta) + g * m * sin(theta) + M * g * sin(theta)) 
-        / (l * (M + m - m * pow(cos(theta), 2)));
-
-    json j = omega_dot;
-    //json j = {{"a", 10}};
-
-    std::cout << j.dump(4) << std::endl;
-
-	return 0;
+    return 0;
 }
