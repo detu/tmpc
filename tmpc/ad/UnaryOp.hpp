@@ -23,6 +23,11 @@ namespace tmpc
             return arg_;
         }
 
+        size_t implOperationCount() const
+        {
+            return operationCount(arg_) + 1;
+        }
+
     private:
         Arg arg_;
     };
@@ -35,9 +40,10 @@ namespace tmpc
     }
 
     
-    template <typename OP, typename A, std::size_t N, typename S, class... Types>
-    decltype(auto) constexpr diff(UnaryOp<OP, A> const& expr, Variable<N> const& u, std::tuple<Types...> const& arg, S const& sens)
+    template <typename OP, typename A, std::size_t N>
+    decltype(auto) constexpr diff(UnaryOp<OP, A> const& expr, Variable<N> const& u)
     {
-        return OP::diff(eval(expr.arg(), arg), sens);
+        // Chain rule: d_OP(arg)/d_arg * d_arg/d_u
+        return OP::diff(expr.arg()) * diff(expr.arg(), u);
     }
 }

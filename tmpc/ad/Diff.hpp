@@ -1,13 +1,14 @@
 #pragma once
 
 #include "Forward.hpp"
+#include "Zero.hpp"
 
 
 namespace tmpc
 {
-    template <typename T, std::size_t N, typename S, class... Types>
-    decltype(auto) constexpr diff(T const& x, Variable<N> const& var, std::tuple<Types...> const& arg, S const& sens)
+    template <typename T, std::size_t N>
+    decltype(auto) constexpr diff(T const& x, Variable<N> const& var)
     {
-        return S {};
+        return Zero {};
     }
 }

@@ -19,10 +19,10 @@ namespace tmpc
             return std::sin(arg);
         }
 
-        template <typename T1, typename T2>
-        static decltype(auto) diff(T1 const& arg, T2 const& sens)
+        template <typename T1>
+        static decltype(auto) diff(T1 const& x)
         {
-            return std::cos(arg) * sens;
+            return cos(x);
         }
     };
 

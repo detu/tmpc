@@ -17,10 +17,21 @@ namespace tmpc
             return a / b;
         }
 
-        template <typename T1, typename T2, typename S1, typename S2>
-        static decltype(auto) diff(T1 const& a, T2 const& b, S1 const& sa, S2 const& sb)
+        static double eval(Identity const&, double b)
         {
-            return (sa * b - a * sb) / (b * b);
+            return 1. / b;
+        }
+
+        template <typename T1, typename T2>
+        static decltype(auto) diffL(T1 const& a, T2 const& b)
+        {
+            return Identity {} / b;
+        }
+
+        template <typename T1, typename T2>
+        static decltype(auto) diffR(T1 const& a, T2 const& b)
+        {
+            return -a / (b * b);
         }
     };
     

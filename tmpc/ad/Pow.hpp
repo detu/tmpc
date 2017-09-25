@@ -1,6 +1,7 @@
 #pragma once
 
 #include "UnaryOp.hpp"
+#include "Log.hpp"
 
 #include <cmath>
 
@@ -19,10 +20,16 @@ namespace tmpc
             return std::pow(a, b);
         }
 
-        template <typename T1, typename T2, typename S1, typename S2>
-        static decltype(auto) diff(T1 const& a, T2 const& b, S1 const& sa, S2 const& sb)
+        template <typename T1, typename T2>
+        static decltype(auto) diffL(T1 const& a, T2 const& b)
         {
-            return b * std::pow(a, b - 1.) * sa + std::log(a) * std::pow(a, b) * sb;
+            return b * pow(a, b - 1);
+        }
+
+        template <typename T1, typename T2>
+        static decltype(auto) diffR(T1 const& a, T2 const& b)
+        {
+            return log(a) * pow(a, b);
         }
     };
 

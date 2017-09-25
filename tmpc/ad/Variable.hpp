@@ -3,15 +3,30 @@
 #include "ExpressionBase.hpp"
 #include "Eval.hpp"
 #include "Diff.hpp"
+#include "Zero.hpp"
+#include "Identity.hpp"
 
 
 namespace tmpc
 {
     template <std::size_t N_>
-    class Variable
+    class Variable final
     :   public ExpressionBase<Variable<N_>>
     {
     public:
+        constexpr Variable()
+        {
+        }
+
+        constexpr Variable(Variable const&)
+        {
+        }
+
+        size_t implOperationCount() const
+        {
+            return 0;
+        }
+
         static auto constexpr N = N_;
     };
     
@@ -23,16 +38,16 @@ namespace tmpc
     }
 
 
-    template <std::size_t N1, std::size_t N2, typename S, class... Types>
-    decltype(auto) constexpr diff(Variable<N1> const& v, Variable<N2> const& u, std::tuple<Types...> const& arg, S const& sens)
+    template <std::size_t N1, std::size_t N2>
+    decltype(auto) constexpr diff(Variable<N1> const& v, Variable<N2> const& u)
     {
-        return S {};
+        return Zero {};
     }
 
 
-    template <std::size_t N, typename S, class... Types>
-    decltype(auto) constexpr diff(Variable<N> const& v, Variable<N> const& u, std::tuple<Types...> const& arg, S const& sens)
+    template <std::size_t N>
+    decltype(auto) constexpr diff(Variable<N> const& v, Variable<N> const& u)
     {
-        return sens;
+        return Identity {};
     }
 }

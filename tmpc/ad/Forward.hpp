@@ -7,4 +7,8 @@ namespace tmpc
 {
     template <std::size_t N>
     class Variable;
+
+    class Zero;
+
+    class Identity;
 }

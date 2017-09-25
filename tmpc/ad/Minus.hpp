@@ -17,10 +17,16 @@ namespace tmpc
             return a - b;
         }
 
-        template <typename T1, typename T2, typename S1, typename S2>
-        static decltype(auto) diff(T1 const& a, T2 const& b, S1 const& sa, S2 const& sb)
+        template <typename T1, typename T2>
+        static decltype(auto) diffL(T1 const& a, T2 const& b)
         {
-            return sa - sb;
+            return Identity {};
+        }
+
+        template <typename T1, typename T2>
+        static decltype(auto) diffR(T1 const& a, T2 const& b)
+        {
+            return -Identity {};
         }
     };
     

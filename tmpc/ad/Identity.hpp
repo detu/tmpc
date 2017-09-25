@@ -2,13 +2,14 @@
 
 #include "ExpressionBase.hpp"
 
+
 namespace tmpc
 {
-    class Zero final
-    :   public ExpressionBase<Zero>
+    class Identity
+    :   public ExpressionBase<Identity>
     {
     public:
-        constexpr Zero() 
+        constexpr Identity()
         {            
         }
 

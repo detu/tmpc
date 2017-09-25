@@ -29,6 +29,11 @@ namespace tmpc
         {
             return right_;
         }
+
+        size_t implOperationCount() const
+        {
+            return tmpc::operationCount(left_) + tmpc::operationCount(right_) + 1;
+        }
         
     private:
         Left left_;
@@ -43,14 +48,11 @@ namespace tmpc
     }
 
 
-    template <typename OP, typename L, typename R, std::size_t N, typename S, class... Types>
-    decltype(auto) constexpr diff(BinaryOp<OP, L, R> const& expr, Variable<N> const& u, std::tuple<Types...> const& arg, S const& sens)
+    template <typename OP, typename L, typename R, std::size_t N>
+    auto constexpr diff(BinaryOp<OP, L, R> const& expr, Variable<N> const& u)
     {
-        return OP::diff(
-            eval(expr.left(), arg), 
-            eval(expr.right(), arg), 
-            diff(expr.left(), u, arg, sens), 
-            diff(expr.right(), u, arg, sens)
-        );
+        // Chain rule: d_OP(left, right)/d_left * d_left/d_u + d_OP(left, right)/d_right * d_right/d_u
+        return OP::diffL(expr.left(), expr.right()) * diff(expr.left(), u)
+            + OP::diffR(expr.left(), expr.right()) * diff(expr.right(), u);
     }
 }

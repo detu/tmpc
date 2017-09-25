@@ -31,7 +31,8 @@ namespace tmpc
     template <typename OP, typename A>
     void to_json(json& j, const UnaryOp<OP, A>& expr) 
     {
-        j = json {{OP::name(), expr.arg()}};
+        j = json {};
+        j[OP::name()] = expr.arg();
     }
 
 
@@ -40,7 +41,28 @@ namespace tmpc
     {
         j = "@" + std::to_string(N);
     }
+
+
+    void to_json(json& j, const Zero& expr) 
+    {
+        j = "ZERO";
+    }
+
+
+    void to_json(json& j, const Identity& expr) 
+    {
+        j = "IDENTITY";
+    }
 }
+
+
+template <typename T>
+std::ostream& operator<<(std::ostream& os, tmpc::ExpressionBase<T> const& expr)
+{
+    json j = expr.derived();
+    return os << j.dump(4);
+}
+
 
 void f1(Real const x[4], Real const u[1], Real dx[4])
 {
@@ -71,8 +93,8 @@ void f2(Real const x[4], Real const u[1], Real dx[4])
     
     auto constexpr p_dot = v;
     auto constexpr theta_dot = omega;
-    auto constexpr v_dot = (-l * m * sin(theta) * pow(omega, 2) + F + g * m * cos(theta) * sin(theta)) / (M + m - m * pow(cos(theta), 2));
-    auto constexpr omega_dot = (-l * m * cos(theta) * sin(theta) * pow(omega, 2) + F * cos(theta) + g * m * sin(theta) + M * g * sin(theta)) 
+    auto const v_dot = (-l * m * sin(theta) * pow(omega, 2) + F + g * m * cos(theta) * sin(theta)) / (M + m - m * pow(cos(theta), 2));
+    auto const omega_dot = (-l * m * cos(theta) * sin(theta) * pow(omega, 2) + F * cos(theta) + g * m * sin(theta) + M * g * sin(theta)) 
         / (l * (M + m - m * pow(cos(theta), 2)));
 
     auto arg = std::make_tuple(x[0], x[1], x[2], x[3], u[0]);
@@ -114,19 +136,25 @@ double f2_dot_31(Real const x[4], Real const u[1])
 
     ++vv;
     
-    Variable<0> constexpr p {};      // horizontal displacement [m]
-    Variable<1> constexpr theta {};  // angle with the vertical [rad]
-    Variable<2> constexpr v {};      // horizontal velocity [m/s]
-    Variable<3> constexpr omega {};  // angular velocity [rad/s]
-    Variable<4> constexpr F {};      // horizontal force [N]
+    Variable<0> p {};      // horizontal displacement [m]
+    Variable<1> theta {};  // angle with the vertical [rad]
+    Variable<2> v {};      // horizontal velocity [m/s]
+    Variable<3> omega {};  // angular velocity [rad/s]
+    Variable<4> F {};      // horizontal force [N]
     
-    auto constexpr omega_dot = (-l * m * cos(theta) * sin(theta) * pow(omega, 2) + F * cos(theta) + g * m * sin(theta) + M * g * sin(theta)) 
+    auto omega_dot = (-l * m * cos(theta) * sin(theta) * pow(omega, 2) + F * cos(theta) + g * m * sin(theta) + M * g * sin(theta)) 
         / (l * (M + m - m * pow(cos(theta), 2)));
 
-    //auto constexpr domega_dot_dtheta = diff(omega_dot, theta, 1.);
+    auto domega_dot_dtheta = diff(omega_dot, theta);
     auto arg = std::make_tuple(x[0], x[1], x[2], x[3], u[0]);
 
-    return diff(omega_dot, theta, arg, 1.);
+    /*
+    std::cout << "omega_dot = " << std::endl << omega_dot << std::endl;
+    std::cout << "d(omega_dot)/d(theta) = " << std::endl << domega_dot_dtheta << std::endl;
+    std::cout << "opCount = " << domega_dot_dtheta.operationCount() << std::endl;
+    */
+
+    return eval(domega_dot_dtheta, arg);
 }
 
 
@@ -178,8 +206,9 @@ int main(int, char **)
     std::cout << "f1_dot_31(x, u): " << f1_dot_31(x, u) << std::endl;
     std::cout << "f2_dot_31(x, u): " << f2_dot_31(x, u) << std::endl;
 
-    std::size_t N = 10000000;
+    std::size_t N = 100000000;
 
+    /*
     {
         std::cout << "Benchmarking f1()..." << std::endl;
         auto const f1_start = clock::now();
@@ -197,6 +226,7 @@ int main(int, char **)
         auto const t2 = clock::now() - f2_start;
         std::cout << "f2() time per evaluation: " << nanoseconds(t2).count() / N << " ns" << std::endl;
     }
+    */
 
     {
         std::cout << "Benchmarking f1_dot_31()..." << std::endl;
@@ -213,7 +243,7 @@ int main(int, char **)
         for (std::size_t i = 0; i < N; ++i)
             result = f2_dot_31(x, u);
         auto const t2 = clock::now() - f2_start;
-        std::cout << "f2() time per evaluation: " << nanoseconds(t2).count() / N << " ns" << std::endl;
+        std::cout << "f2_dot_31() time per evaluation: " << nanoseconds(t2).count() / N << " ns" << std::endl;
     }
 
     {
@@ -224,10 +254,54 @@ int main(int, char **)
 
         auto arg = std::make_tuple(3., 4.);
 
-        std::cout << diff(x, y, arg, 1.) << std::endl;
-        std::cout << diff(x, x, arg, 1.) << std::endl;
-        std::cout << diff(sin(x), x, arg, 1.) << std::endl;
-        std::cout << diff(x + y, x, arg, 42.) << std::endl;
+        Variable<0> p {};      // horizontal displacement [m]
+        Variable<1> theta {};  // angle with the vertical [rad]
+        Variable<2> v {};      // horizontal velocity [m/s]
+        Variable<3> omega {};  // angular velocity [rad/s]
+        Variable<4> F {};      // horizontal force [N]
+        
+        /*
+        auto omega_dot = (-l * m * cos(theta) * sin(theta) * pow(omega, 2) + F * cos(theta) + g * m * sin(theta) + M * g * sin(theta)) 
+            / (l * (M + m - m * pow(cos(theta), 2)));
+        */
+        auto omega_dot = log(theta);
+
+        /*
+        std::cout << "dx/dy = " << std::endl << diff(x, y) << std::endl;
+        std::cout << "dx/dx = " << std::endl << diff(x, x) << std::endl;
+        std::cout << "d(x+y)/dx = " << std::endl << diff(x + y, x) << std::endl;
+        std::cout << "d(sin(x))/dx = " << std::endl << diff(sin(x), x) << std::endl;
+        std::cout << "d(sin(x))/dy = " << std::endl << diff(sin(x), y) << std::endl;
+        std::cout << "d(sin(x)+sin(y))/dy = " << std::endl << diff(sin(x) + sin(y), y) << std::endl;
+        std::cout << "d(sin(x*y))/dx = " << std::endl << diff(sin(x*y), x) << std::endl;
+        std::cout << "d(-x)/dx = " << std::endl << diff(-x, x) << std::endl;
+        std::cout << "d(x/y)/dx = " << std::endl << diff(x / y, x) << std::endl;
+        std::cout << "d(x/y)/dy = " << std::endl << diff(x / y, y) << std::endl;
+        std::cout << "d(42*x)/dx = " << std::endl << diff(42 * x, x) << std::endl;
+        std::cout << "d(pow(x,2))/dx = " << std::endl << diff(pow(x, 2), x) << std::endl;
+        std::cout << "d(log(x))/dx = " << std::endl << diff(log(x), x) << std::endl;
+        */
+
+        /*
+        {
+            using tmpc::Pow;
+
+            auto p = pow(x, 2);
+            std::cout << "p = " << p << std::endl;
+
+            auto a = Pow::diffL(p.left(), p.right()) * diff(p.left(), x);
+            std::cout << "Pow::diffL(p.left(), p.right()) * diff(p.left(), x) = " 
+                << a << std::endl;
+
+            auto b = Pow::diffR(p.left(), p.right()) * diff(p.right(), x);
+            std::cout << "Pow::diffR(p.left(), p.right()) * diff(p.right(), x) = "
+                << b << std::endl;
+
+            std::cout << "a + b = " << a + b << std::endl;
+
+            std::cout << "diff(p,x) = " << diff(p, x) << std::endl;
+        }
+        */
     }
     
     return 0;
