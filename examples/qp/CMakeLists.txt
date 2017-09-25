@@ -1,15 +1,8 @@
-add_executable(create_qp
-    create_qp.cpp
-)
+file(GLOB examples "*.cpp")
 
-target_link_libraries(create_qp
-    PRIVATE tmpc
-)
+foreach(example ${examples})
+    get_filename_component(project_name ${example} NAME_WE)
 
-add_executable(solve_qp
-    solve_qp.cpp
-)
-
-target_link_libraries(solve_qp
-    PRIVATE tmpc
-)
+    add_executable(${project_name} ${example})
+    target_link_libraries(${project_name} PRIVATE tmpc)
+endforeach()
