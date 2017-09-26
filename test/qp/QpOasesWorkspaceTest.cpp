@@ -69,12 +69,14 @@ namespace tmpc :: testing
 			OcpSize const sz = stage->size();
 
 			{
-				auto const tmp = eval(rand_matrix.generate(sz.nx(), sz.nx()));
+				// Don't use auto until this is fixed: https://bitbucket.org/blaze-lib/blaze/issues/133
+				DynamicMatrix<Kernel> const tmp = eval(rand_matrix.generate(sz.nx(), sz.nx()));
 				stage->Q(trans(tmp) * tmp);
 			}
 
 			{
-				auto const tmp = eval(rand_matrix.generate(sz.nu(), sz.nu()));
+				// Don't use auto until this is fixed: https://bitbucket.org/blaze-lib/blaze/issues/133
+				DynamicMatrix<Kernel> const tmp = eval(rand_matrix.generate(sz.nu(), sz.nu()));
 				stage->R(trans(tmp) * tmp);
 			}
 
