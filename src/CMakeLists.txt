@@ -7,26 +7,18 @@ set(TMPC_INCLUDE_DIR ${PROJECT_INCLUDE_DIR}/tmpc)
 
 set (SRC
     ${TMPC_INCLUDE_DIR}/Matrix.hpp
-    
-    ${TMPC_INCLUDE_DIR}/util/TrajectoryPoint.hpp
-    ${TMPC_INCLUDE_DIR}/util/gauss_newton.hpp
-    ${TMPC_INCLUDE_DIR}/util/problem_specific.hpp
-
     ${TMPC_INCLUDE_DIR}/casadi_interface/GeneratedFunction.hpp
-
 	${TMPC_INCLUDE_DIR}/integrator/rk4.hpp
 
-    ${TMPC_INCLUDE_DIR}/qp/QpSize.hpp    qp/QpSize.cpp
+    ocp/OcpSize.cpp
 	${TMPC_INCLUDE_DIR}/qp/Condensing.hpp    qp/Condensing.cpp
-	${TMPC_INCLUDE_DIR}/qp/MultiStageQPSolution.hpp
-	${TMPC_INCLUDE_DIR}/qp/QuadraticProblem.hpp
+	${TMPC_INCLUDE_DIR}/qp/OcpQp.hpp
 
 	${TMPC_INCLUDE_DIR}/qp/diagnostics.hpp
 	${TMPC_INCLUDE_DIR}/qp/QpSolverException.hpp
 
-    ${TMPC_INCLUDE_DIR}/mpc/MpcQpSize.hpp mpc/MpcQpSize.cpp
+    mpc/MpcOcpSize.cpp
     ${TMPC_INCLUDE_DIR}/mpc/MpcRealtimeIteration.hpp
-    ${TMPC_INCLUDE_DIR}/mpc/MpcTrajectoryPoint.hpp
 )
 
 add_library(tmpc STATIC ${SRC})
@@ -46,15 +38,10 @@ target_include_directories(tmpc
     PUBLIC ${PROJECT_INCLUDE_DIR}
 )
 
-if (BLAZE_DIR)
-    target_include_directories(tmpc PUBLIC ${BLAZE_DIR})
-    message(STATUS "BLAZE_DIR=${BLAZE_DIR}")
-endif()
-
 #
 # Add qpOASES interface
 #
-if (qpOASES_FOUND)
+if (WITH_qpOASES)
     target_sources(tmpc
         PRIVATE ${TMPC_INCLUDE_DIR}/qp/QpOasesWorkspace.hpp
         PRIVATE qp/QpOasesWorkspace.cpp
@@ -72,12 +59,10 @@ endif()
 #
 # Add HPMPC interface
 #
-if (HPMPC_FOUND)
+if (WITH_HPMPC)
     target_sources(tmpc PRIVATE 
         ${TMPC_INCLUDE_DIR}/qp/HpmpcWorkspace.hpp
         qp/HpmpcWorkspace.cpp
-        qp/HPMPCProblemExport.hpp
-        qp/HPMPCProblemExport.cpp
     )
 
     target_include_directories(tmpc
@@ -86,5 +71,36 @@ if (HPMPC_FOUND)
 
     target_link_libraries(tmpc
         PUBLIC ${HPMPC_STATIC_LIB}
+    )
+endif()
+
+#
+# Add HPIPM interface
+#
+if (WITH_HPIPM)
+    target_sources(tmpc PRIVATE 
+        ${TMPC_INCLUDE_DIR}/qp/HpipmWorkspace.hpp
+        qp/HpipmWorkspace.cpp
+    )
+
+    target_include_directories(tmpc
+        PUBLIC ${HPIPM_INCLUDE_DIR}
+    )
+
+    target_link_libraries(tmpc
+        PUBLIC ${HPIPM_STATIC_LIB}
+    )
+endif()
+
+#
+# Link to BLASFEO
+#
+if (WITH_BLASFEO)
+    target_include_directories(tmpc
+        PUBLIC ${BLASFEO_INCLUDE_DIR}
+    )
+
+    target_link_libraries(tmpc
+        PUBLIC ${BLASFEO_STATIC_LIB}
     )
 endif()

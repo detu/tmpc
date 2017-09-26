@@ -12,19 +12,19 @@
 
 namespace tmpc {
 
-QpSize condensedQpSize(std::vector<QpSize> const& sz)
+OcpSize condensedQpSize(std::vector<OcpSize> const& sz)
 {
 	if (sz.empty())
-		throw std::invalid_argument("CondensedSize(): vector of QpSize must be not empty");
+		throw std::invalid_argument("CondensedSize(): vector of OcpSize must be not empty");
 
-	return QpSize(
+	return OcpSize(
 		sz[0].nx(),
 		std::accumulate(sz.begin(), sz.end(), std::size_t{0},
-			[] (std::size_t n, QpSize const& s) { return n + s.nu(); }),
+			[] (std::size_t n, OcpSize const& s) { return n + s.nu(); }),
 		std::accumulate(sz.begin(), sz.end(), std::size_t{0},
-			[] (std::size_t n, QpSize const& s) { return n + s.nc(); })
+			[] (std::size_t n, OcpSize const& s) { return n + s.nc(); })
 		+ std::accumulate(sz.begin() + 1, sz.end(), std::size_t{0},
-				[] (std::size_t n, QpSize const& s) { return n + s.nx(); })
+				[] (std::size_t n, OcpSize const& s) { return n + s.nx(); })
 		);
 }
 

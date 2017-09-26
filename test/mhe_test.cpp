@@ -104,10 +104,10 @@ public:
 		StateVector const& x, InputVector const& u, DisturbanceVector const& w, OutputVector const& y,
 		QMatrix& Q, RMatrix& R, SMatrix& S,	StateGradientVector& q, DisturbanceGradientVector& r) const
 	{
-		Q = ode_.C().transpose() * invSigmaY_ * ode_.C();
+		Q = trans(ode_.C()) * invSigmaY_ * ode_.C();
 		R = invSigmaW_;
-		S = ode_.C().transpose() * invSigmaY_ * ode_.D();
-		q = ode_.C().transpose() * invSigmaY_ * (ode_.C() * x + ode_.D() * u - y);
+		S = trans(ode_.C()) * invSigmaY_ * ode_.D();
+		q = trans(ode_.C()) * invSigmaY_ * (ode_.C() * x + ode_.D() * u - y);
 		r = invSigmaW_ * w;
 	}
 

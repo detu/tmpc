@@ -1,17 +1,19 @@
 #include <tmpc/casadi_interface/GeneratedFunction.hpp>
-#include <tmpc/Matrix.hpp>
+#include <tmpc/EigenKernel.hpp>
+#include <tmpc/test_tools.hpp>
 
 #include "casadi_function_test_generated.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-#include "gtest_tools_eigen.hpp"
 
 #include <tuple>
 #include <stdexcept>
 
 using namespace tmpc;
+
+using Kernel = EigenKernel<double>;
 
 class CasADiFunctionTest : public ::testing::Test
 {
@@ -21,13 +23,13 @@ protected:
 
 TEST_F(CasADiFunctionTest, incorrect_n_inputs_throws)
 {
-	double x = 0.;
+	Kernel::Real x = 0.;
 	ASSERT_THROW(fun_({&x, &x, &x, &x}, {&x, &x}), std::invalid_argument);
 }
 
 TEST_F(CasADiFunctionTest, incorrect_n_outputs_throws)
 {
-	double x = 0.;
+	Kernel::Real x = 0.;
 	ASSERT_THROW(fun_({&x, &x, &x}, {&x, &x, &x}), std::invalid_argument);
 }
 
@@ -69,12 +71,12 @@ TEST_F(CasADiFunctionTest, n_col_out_correct)
 
 TEST_F(CasADiFunctionTest, pointer_argument_call_correct)
 {
-	StaticMatrix<double, 3, 2> const A {0.};
-	StaticMatrix<double, 2, 2> const B {0.};
-	double const x = 0.;
+	StaticMatrix<Kernel, 3, 2> const A {0.};
+	StaticMatrix<Kernel, 2, 2> const B {0.};
+	Kernel::Real const x = 0.;
 
-	StaticMatrix<double, 3, 2> X;
-	StaticMatrix<double, 1, 2> Y;
+	StaticMatrix<Kernel, 3, 2> X;
+	StaticMatrix<Kernel, 1, 2> Y;
 
 	fun_({A.data(), B.data(), &x}, {X.data(), Y.data()});
 }
@@ -88,12 +90,12 @@ void call(Function const& f, TupleIn&& in, TupleOut&& out)
 
 TEST_F(CasADiFunctionTest, DISABLED_matrix_argument_call_correct)
 {
-	StaticMatrix<double, 3, 2> const A {0.};
-	StaticMatrix<double, 2, 2> const B {0.};
-	StaticMatrix<double, 1, 1> const x {0.};
+	StaticMatrix<Kernel, 3, 2> const A {0.};
+	StaticMatrix<Kernel, 2, 2> const B {0.};
+	StaticMatrix<Kernel, 1, 1> const x {0.};
 
-	StaticMatrix<double, 3, 2> X;
-	StaticMatrix<double, 1, 2> Y;
+	StaticMatrix<Kernel, 3, 2> X;
+	StaticMatrix<Kernel, 1, 2> Y;
 
 	call(fun_, std::forward_as_tuple(A, B, x), std::forward_as_tuple(X, Y));
 }

@@ -52,15 +52,9 @@ add_custom_command(
 
 # ~~~~~~~~~~ Our tests ~~~~~~~~~~~~~~
 add_executable(tmpc_test
-    #condensing_test.cpp
-    rk4_test.cpp
-    #realtime_iteration_test.cpp
+    #rk4_test.cpp
     #mhe_test.cpp
-    QpWorkspaceTest.cpp
-    QpOasesWorkspaceTest.cpp
-    QpWorkspaceSolveTest.cpp
     casadi_function_test.cpp
-    gtest_tools_eigen.hpp
 
     ${CMAKE_CURRENT_BINARY_DIR}/pendulum_ode_generated.h
     ${CMAKE_CURRENT_BINARY_DIR}/pendulum_ode_generated.c
@@ -68,16 +62,14 @@ add_executable(tmpc_test
     ${CMAKE_CURRENT_BINARY_DIR}/casadi_function_test_generated.c
 )
 
-add_dependencies(tmpc_test googletest)
-
 target_compile_definitions(tmpc_test
     PRIVATE TEST_DATA_PATH="${TEST_DATA_PATH}")
 
-if (HPMPC_FOUND)
-    #target_sources(tmpc_test
-    #    PRIVATE hpmpc_test.cpp
-    #)
-endif()
+#if (WITH_QPOASES)
+#    target_sources(tmpc_test
+#        PRIVATE RealtimeIterationTest.cpp
+#    )
+#endif()
 
 target_include_directories(tmpc_test
     PRIVATE "${CMAKE_CURRENT_BINARY_DIR}"
@@ -92,6 +84,7 @@ target_link_libraries(tmpc_test
 )
 
 add_subdirectory(matrix)
+add_subdirectory(qp)
 
 #enable_testing()
 #add_test(AllTests tmpc_test)
