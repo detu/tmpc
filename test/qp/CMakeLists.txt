@@ -1,16 +1,16 @@
-if (WITH_qpOASES)
+if (TMPC_WITH_qpOASES)
     target_sources(tmpc_test
         PRIVATE qp/QpOasesWorkspaceTest.cpp
     )
 endif ()
 
-if (WITH_HPMPC)
+if (TMPC_WITH_HPMPC)
     target_sources(tmpc_test
         PRIVATE qp/HpmpcWorkspaceTest.cpp
     )
 endif ()
 
-if (WITH_HPIPM)
+if (TMPC_WITH_HPIPM)
     target_sources(tmpc_test
         PRIVATE qp/HpipmWorkspaceTest.cpp
     )

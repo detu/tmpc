@@ -65,7 +65,7 @@ add_executable(tmpc_test
 target_compile_definitions(tmpc_test
     PRIVATE TEST_DATA_PATH="${TEST_DATA_PATH}")
 
-#if (WITH_QPOASES)
+#if (TMPC_WITH_QPOASES)
 #    target_sources(tmpc_test
 #        PRIVATE RealtimeIterationTest.cpp
 #    )

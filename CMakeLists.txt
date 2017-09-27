@@ -19,19 +19,19 @@ set(qp_solvers "qpOASES" "HPMPC" "HPIPM")
 # List of selectable extern libs
 set(extern_libs ${qp_solvers} "BLASFEO")
 
-# Create WITH_${lib} cached variables and find selected packages
+# Create TMPC_WITH_${lib} cached variables and find selected packages
 foreach (lib ${extern_libs})
-    set(WITH_${lib} OFF CACHE BOOL "Link to ${lib}")
+    set(TMPC_WITH_${lib} OFF CACHE BOOL "Link to ${lib}")
 
-    if (WITH_${lib})
+    if (TMPC_WITH_${lib})
         find_package(${lib} REQUIRED)
     endif ()
 
-    message(STATUS "WITH_${lib}=${WITH_${lib}}")
+    message(STATUS "TMPC_WITH_${lib}=${TMPC_WITH_${lib}}")
 endforeach ()
 
-if (WITH_HPIPM AND NOT WITH_BLASFEO)
-    message(SEND_ERROR "If you choose WITH_HPIPM, you have to choose WITH_BLASFEO as well.")
+if (TMPC_WITH_HPIPM AND NOT TMPC_WITH_BLASFEO)
+    message(SEND_ERROR "If you choose TMPC_WITH_HPIPM, you have to choose TMPC_WITH_BLASFEO as well.")
 endif ()
 
 find_package(Eigen3 3.2.10)
@@ -49,5 +49,18 @@ if (BLAZE_DIR)
 endif()
 
 add_subdirectory(src)
-add_subdirectory(test)
 add_subdirectory(examples)
+
+# TMPC_WITH_TEST
+set(TMPC_WITH_TEST ON CACHE BOOL "Build tmpc tests")
+
+if (TMPC_WITH_TEST)
+    add_subdirectory(test)
+endif()
+
+# TMPC_WITH_BENCH
+set(TMPC_WITH_BENCH ON CACHE BOOL "Build tmpc benchmarks")
+
+if (TMPC_WITH_BENCH)
+    add_subdirectory(bench)
+endif()
