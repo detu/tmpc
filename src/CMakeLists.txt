@@ -8,7 +8,6 @@ set(TMPC_INCLUDE_DIR ${PROJECT_INCLUDE_DIR}/tmpc)
 set (SRC
     ${TMPC_INCLUDE_DIR}/Matrix.hpp
     ${TMPC_INCLUDE_DIR}/casadi_interface/GeneratedFunction.hpp
-	${TMPC_INCLUDE_DIR}/integrator/rk4.hpp
 
     ocp/OcpSize.cpp
 	${TMPC_INCLUDE_DIR}/qp/Condensing.hpp    qp/Condensing.cpp
@@ -41,7 +40,7 @@ target_include_directories(tmpc
 #
 # Add qpOASES interface
 #
-if (WITH_qpOASES)
+if (TMPC_WITH_qpOASES)
     target_sources(tmpc
         PRIVATE ${TMPC_INCLUDE_DIR}/qp/QpOasesWorkspace.hpp
         PRIVATE qp/QpOasesWorkspace.cpp
@@ -59,7 +58,7 @@ endif()
 #
 # Add HPMPC interface
 #
-if (WITH_HPMPC)
+if (TMPC_WITH_HPMPC)
     target_sources(tmpc PRIVATE 
         ${TMPC_INCLUDE_DIR}/qp/HpmpcWorkspace.hpp
         qp/HpmpcWorkspace.cpp
@@ -77,7 +76,7 @@ endif()
 #
 # Add HPIPM interface
 #
-if (WITH_HPIPM)
+if (TMPC_WITH_HPIPM)
     target_sources(tmpc PRIVATE 
         ${TMPC_INCLUDE_DIR}/qp/HpipmWorkspace.hpp
         qp/HpipmWorkspace.cpp
@@ -95,7 +94,7 @@ endif()
 #
 # Link to BLASFEO
 #
-if (WITH_BLASFEO)
+if (TMPC_WITH_BLASFEO)
     target_include_directories(tmpc
         PUBLIC ${BLASFEO_INCLUDE_DIR}
     )
