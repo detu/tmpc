@@ -4,7 +4,7 @@ add_custom_command(
         ${CMAKE_CURRENT_BINARY_DIR}/casadi_function_test_generated.h
         ${CMAKE_CURRENT_BINARY_DIR}/casadi_function_test_generated.c
     COMMAND
-        python
+        ${PYTHON_EXECUTABLE}
     ARGS
         ${CMAKE_CURRENT_SOURCE_DIR}/casadi_function_test_generate_code.py casadi_function_test_generated.c
     #[COMMAND command2 [ARGS] [args2...] ...]
@@ -34,3 +34,6 @@ target_link_libraries(tmpc_test_casadi
     GTest::GTest
     GTest::Main
 )
+
+#GTEST_ADD_TESTS(tmpc_test_casadi "" AUTO)
+add_test(NAME tmpc_test_casadi COMMAND tmpc_test_casadi)

@@ -1,21 +1,28 @@
+set(src
+    CondensingTest.cpp
+)
+
 if (TMPC_WITH_qpOASES)
-    target_sources(tmpc_test
-        PRIVATE qp/QpOasesWorkspaceTest.cpp
-    )
+    list(APPEND src QpOasesWorkspaceTest.cpp)
 endif ()
 
 if (TMPC_WITH_HPMPC)
-    target_sources(tmpc_test
-        PRIVATE qp/HpmpcWorkspaceTest.cpp
-    )
+    list(APPEND src HpmpcWorkspaceTest.cpp)
 endif ()
 
 if (TMPC_WITH_HPIPM)
-    target_sources(tmpc_test
-        PRIVATE qp/HpipmWorkspaceTest.cpp
-    )
+    list(APPEND src HpipmWorkspaceTest.cpp)
 endif ()
 
-target_sources(tmpc_test
-    PRIVATE qp/CondensingTest.cpp
+message("src=${src}")
+
+add_executable(tmpc_test_qp ${src})
+
+target_link_libraries(tmpc_test_qp
+    tmpc
+    GTest::GTest
+    GTest::Main
 )
+
+#GTEST_ADD_TESTS(tmpc_test_qp "" AUTO)
+add_test(NAME tmpc_test_qp COMMAND tmpc_test_qp)

@@ -81,6 +81,7 @@ TEST_F(CasADiFunctionTest, pointer_argument_call_correct)
 	fun_({A.data(), B.data(), &x}, {X.data(), Y.data()});
 }
 
+/*
 // Some interesting ideas here: https://habrahabr.ru/post/228031/
 template <typename Function, typename TupleIn, typename TupleOut>
 void call(Function const& f, TupleIn&& in, TupleOut&& out)
@@ -99,3 +100,4 @@ TEST_F(CasADiFunctionTest, DISABLED_matrix_argument_call_correct)
 
 	call(fun_, std::forward_as_tuple(A, B, x), std::forward_as_tuple(X, Y));
 }
+*/

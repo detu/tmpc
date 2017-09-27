@@ -55,6 +55,7 @@ add_subdirectory(examples)
 set(TMPC_WITH_TEST ON CACHE BOOL "Build tmpc tests")
 
 if (TMPC_WITH_TEST)
+    enable_testing()
     add_subdirectory(test)
 endif()
 
