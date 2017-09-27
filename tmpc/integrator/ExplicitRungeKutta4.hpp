@@ -44,8 +44,8 @@ namespace tmpc
 	
 			// Calculating sensitivities
 			auto const& A1_bar =      A1;							auto const& B1_bar =      B1;
-			auto const  A2_bar = eval(A2 + (h / 2.) * A2 * A1_bar);	auto const  B2_bar = eval(B2 + (h / 2.) * A2 * B1_bar);
-			auto const  A3_bar = eval(A3 + (h / 2.) * A3 * A2_bar);	auto const  B3_bar = eval(B3 + (h / 2.) * A3 * B2_bar);
+			auto const  A2_bar = evaluate(A2 + (h / 2.) * A2 * A1_bar);	auto const  B2_bar = evaluate(B2 + (h / 2.) * A2 * B1_bar);
+			auto const  A3_bar = evaluate(A3 + (h / 2.) * A3 * A2_bar);	auto const  B3_bar = evaluate(B3 + (h / 2.) * A3 * B2_bar);
 			auto const  A4_bar =      A4 +  h       * A4 * A3_bar ;	auto const  B4_bar =      B4 +  h       * A4 * B3_bar ;
 	
 			A = IdentityMatrix<Kernel>(NX) + (h / 6.) * (A1_bar + 2. * A2_bar + 2. * A3_bar + A4_bar);
@@ -86,12 +86,12 @@ namespace tmpc
 		auto const h = integrator.timeStep();
 
 		// Calculating next state
-		auto const k1 = eval(ode(t0,          x0                , u));
-		auto const k2 = eval(ode(t0 + h / 2., x0 + k1 * (h / 2.), u));
-		auto const k3 = eval(ode(t0 + h / 2., x0 + k2 * (h / 2.), u));
-		auto const k4 = eval(ode(t0 + h,      x0 + k3 * h       , u));
+		auto const k1 = evaluate(ode(t0,          x0                , u));
+		auto const k2 = evaluate(ode(t0 + h / 2., x0 + k1 * (h / 2.), u));
+		auto const k3 = evaluate(ode(t0 + h / 2., x0 + k2 * (h / 2.), u));
+		auto const k4 = evaluate(ode(t0 + h,      x0 + k3 * h       , u));
 
-		return eval(x0 + (k1 + 2. * k2 + 2. * k3 + k4) * (h / 6.));
+		return evaluate(x0 + (k1 + 2. * k2 + 2. * k3 + k4) * (h / 6.));
 	}
 
 	/**
@@ -161,16 +161,16 @@ namespace tmpc
 
 		// Calculating sensitivities
 		auto const& A1_bar =      A1;							auto const& B1_bar =      B1;
-		auto const  A2_bar = eval(A2 + (h / 2.) * A2 * A1_bar);	auto const  B2_bar = eval(B2 + (h / 2.) * A2 * B1_bar);
-		auto const  A3_bar = eval(A3 + (h / 2.) * A3 * A2_bar);	auto const  B3_bar = eval(B3 + (h / 2.) * A3 * B2_bar);
+		auto const  A2_bar = evaluate(A2 + (h / 2.) * A2 * A1_bar);	auto const  B2_bar = evaluate(B2 + (h / 2.) * A2 * B1_bar);
+		auto const  A3_bar = evaluate(A3 + (h / 2.) * A3 * A2_bar);	auto const  B3_bar = evaluate(B3 + (h / 2.) * A3 * B2_bar);
 		auto const  A4_bar =      A4 +  h       * A4 * A3_bar ;	auto const  B4_bar =      B4 +  h       * A4 * B3_bar ;
 
 		A = IdentityMatrix<double>(NX) + (h / 6.) * (A1_bar + 2. * A2_bar + 2. * A3_bar + A4_bar);
 		B = 					                 (h / 6.) * (B1_bar + 2. * B2_bar + 2. * B3_bar + B4_bar);
 
 		auto const& qA1_bar =      qA1;							    auto const& qB1_bar =      qB1;
-		auto const  qA2_bar = eval(qA2 + (h / 2.) * qA2 * A1_bar);	auto const  qB2_bar = eval(qB2 + (h / 2.) * qA2 * B1_bar);
-		auto const  qA3_bar = eval(qA3 + (h / 2.) * qA3 * A2_bar);	auto const  qB3_bar = eval(qB3 + (h / 2.) * qA3 * B2_bar);
+		auto const  qA2_bar = evaluate(qA2 + (h / 2.) * qA2 * A1_bar);	auto const  qB2_bar = evaluate(qB2 + (h / 2.) * qA2 * B1_bar);
+		auto const  qA3_bar = evaluate(qA3 + (h / 2.) * qA3 * A2_bar);	auto const  qB3_bar = evaluate(qB3 + (h / 2.) * qA3 * B2_bar);
 		auto const  qA4_bar =      qA4 +  h       * qA4 * A3_bar ;	auto const  qB4_bar =      qB4 +  h       * qA4 * B3_bar ;
 
 		qA = (h / 6.) * (qA1_bar + 2. * qA2_bar + 2. * qA3_bar + qA4_bar);
@@ -250,17 +250,17 @@ namespace tmpc
 
 		// Calculating sensitivities
 		auto const& A1_bar =      A1;							auto const& B1_bar =      B1;
-		auto const  A2_bar = eval(A2 + (h / 2.) * A2 * A1_bar);	auto const  B2_bar = eval(B2 + (h / 2.) * A2 * B1_bar);
-		auto const  A3_bar = eval(A3 + (h / 2.) * A3 * A2_bar);	auto const  B3_bar = eval(B3 + (h / 2.) * A3 * B2_bar);
+		auto const  A2_bar = evaluate(A2 + (h / 2.) * A2 * A1_bar);	auto const  B2_bar = evaluate(B2 + (h / 2.) * A2 * B1_bar);
+		auto const  A3_bar = evaluate(A3 + (h / 2.) * A3 * A2_bar);	auto const  B3_bar = evaluate(B3 + (h / 2.) * A3 * B2_bar);
 		auto const  A4_bar =      A4 +  h       * A4 * A3_bar ;	auto const  B4_bar =      B4 +  h       * A4 * B3_bar ;
 
 		A = IdentityMatrix<double>(NX) + (h / 6.) * (A1_bar + 2. * A2_bar + 2. * A3_bar + A4_bar);
 		B = 					                 (h / 6.) * (B1_bar + 2. * B2_bar + 2. * B3_bar + B4_bar);
 
 		auto const& rA1_bar =      rA1;							    auto const& rB1_bar =      rB1;
-		auto const  rA2_bar = eval(rA2 + (h / 2.) * rA2 * A1_bar);	auto const  rB2_bar = eval(rB2 + (h / 2.) * rA2 * B1_bar);
-		auto const  rA3_bar = eval(rA3 + (h / 2.) * rA3 * A2_bar);	auto const  rB3_bar = eval(rB3 + (h / 2.) * rA3 * B2_bar);
-		auto const  rA4_bar = eval(rA4 +  h       * rA4 * A3_bar);	auto const  rB4_bar = eval(rB4 +  h       * rA4 * B3_bar);
+		auto const  rA2_bar = evaluate(rA2 + (h / 2.) * rA2 * A1_bar);	auto const  rB2_bar = evaluate(rB2 + (h / 2.) * rA2 * B1_bar);
+		auto const  rA3_bar = evaluate(rA3 + (h / 2.) * rA3 * A2_bar);	auto const  rB3_bar = evaluate(rB3 + (h / 2.) * rA3 * B2_bar);
+		auto const  rA4_bar = evaluate(rA4 +  h       * rA4 * A3_bar);	auto const  rB4_bar = evaluate(rB4 +  h       * rA4 * B3_bar);
 
 		cA = (h / 6.) * (trans(r1) * rA1_bar + 2. * trans(r2) * rA2_bar + 2. * trans(r3) * rA3_bar + trans(r4) * rA4_bar);
 		cB = (h / 6.) * (trans(r1) * rB1_bar + 2. * trans(r2) * rB2_bar + 2. * trans(r3) * rB3_bar + trans(r4) * rB4_bar);
@@ -370,25 +370,25 @@ namespace tmpc
 
 		// Calculating sensitivities
 		auto const& A1_bar =      A1;							auto const& B1_bar =      B1;
-		auto const  A2_bar = eval(A2 + (h / 2.) * A2 * A1_bar);	auto const  B2_bar = eval(B2 + (h / 2.) * A2 * B1_bar);
-		auto const  A3_bar = eval(A3 + (h / 2.) * A3 * A2_bar);	auto const  B3_bar = eval(B3 + (h / 2.) * A3 * B2_bar);
+		auto const  A2_bar = evaluate(A2 + (h / 2.) * A2 * A1_bar);	auto const  B2_bar = evaluate(B2 + (h / 2.) * A2 * B1_bar);
+		auto const  A3_bar = evaluate(A3 + (h / 2.) * A3 * A2_bar);	auto const  B3_bar = evaluate(B3 + (h / 2.) * A3 * B2_bar);
 		auto const  A4_bar =      A4 +  h       * A4 * A3_bar ;	auto const  B4_bar =      B4 +  h       * A4 * B3_bar ;
 
 		A = IdentityMatrix<double>(NX) + (h / 6.) * (A1_bar + 2. * A2_bar + 2. * A3_bar + A4_bar);
 		B = 					                 (h / 6.) * (B1_bar + 2. * B2_bar + 2. * B3_bar + B4_bar);
 
 		auto const& qA1_bar =      qA1;							    auto const& qB1_bar =      qB1;
-		auto const  qA2_bar = eval(qA2 + (h / 2.) * qA2 * A1_bar);	auto const  qB2_bar = eval(qB2 + (h / 2.) * qA2 * B1_bar);
-		auto const  qA3_bar = eval(qA3 + (h / 2.) * qA3 * A2_bar);	auto const  qB3_bar = eval(qB3 + (h / 2.) * qA3 * B2_bar);
+		auto const  qA2_bar = evaluate(qA2 + (h / 2.) * qA2 * A1_bar);	auto const  qB2_bar = evaluate(qB2 + (h / 2.) * qA2 * B1_bar);
+		auto const  qA3_bar = evaluate(qA3 + (h / 2.) * qA3 * A2_bar);	auto const  qB3_bar = evaluate(qB3 + (h / 2.) * qA3 * B2_bar);
 		auto const  qA4_bar =      qA4 +  h       * qA4 * A3_bar ;	auto const  qB4_bar =      qB4 +  h       * qA4 * B3_bar ;
 
 		qA = (h / 6.) * (qA1_bar + 2. * qA2_bar + 2. * qA3_bar + qA4_bar);
 		qB = (h / 6.) * (qB1_bar + 2. * qB2_bar + 2. * qB3_bar + qB4_bar);
 
 		auto const& rA1_bar =      rA1;							    auto const& rB1_bar =      rB1;
-		auto const  rA2_bar = eval(rA2 + (h / 2.) * rA2 * A1_bar);	auto const  rB2_bar = eval(rB2 + (h / 2.) * rA2 * B1_bar);
-		auto const  rA3_bar = eval(rA3 + (h / 2.) * rA3 * A2_bar);	auto const  rB3_bar = eval(rB3 + (h / 2.) * rA3 * B2_bar);
-		auto const  rA4_bar = eval(rA4 +  h       * rA4 * A3_bar);	auto const  rB4_bar = eval(rB4 +  h       * rA4 * B3_bar);
+		auto const  rA2_bar = evaluate(rA2 + (h / 2.) * rA2 * A1_bar);	auto const  rB2_bar = evaluate(rB2 + (h / 2.) * rA2 * B1_bar);
+		auto const  rA3_bar = evaluate(rA3 + (h / 2.) * rA3 * A2_bar);	auto const  rB3_bar = evaluate(rB3 + (h / 2.) * rA3 * B2_bar);
+		auto const  rA4_bar = evaluate(rA4 +  h       * rA4 * A3_bar);	auto const  rB4_bar = evaluate(rB4 +  h       * rA4 * B3_bar);
 
 		cA = (h / 6.) * (trans(r1) * rA1_bar + 2. * trans(r2) * rA2_bar + 2. * trans(r3) * rA3_bar + trans(r4) * rA4_bar);
 		cB = (h / 6.) * (trans(r1) * rB1_bar + 2. * trans(r2) * rB2_bar + 2. * trans(r3) * rB3_bar + trans(r4) * rB4_bar);
