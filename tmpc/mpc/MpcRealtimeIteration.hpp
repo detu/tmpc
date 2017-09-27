@@ -67,7 +67,7 @@ namespace tmpc
 				throw std::logic_error("MpcRealtimeIteration::Feedback(): RTI is not prepared.");
 
 			/** embed current initial value */
-			auto const w0 = eval(x0 - workingPoint_[0].x());
+			auto const w0 = evaluate(x0 - workingPoint_[0].x());
 			qp_.problem()[0].lbx(w0);
 			qp_.problem()[0].ubx(w0);
 
