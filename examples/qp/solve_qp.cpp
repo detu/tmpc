@@ -1,6 +1,6 @@
 #include <tmpc/qp/QpOasesWorkspace.hpp>
 #include <tmpc/print/qp/OcpQp.hpp>
-#include <tmpc/print/qp/OcpSolution.hpp>
+#include <tmpc/print/ocp/OcpSolution.hpp>
 
 #include <tmpc/BlazeKernel.hpp>
 #include <tmpc/EigenKernel.hpp>
@@ -31,7 +31,7 @@ int main(int, char **)
 
 	workspace.solve();
 
-	std::cout << workspace.solution()[0].x() << std::endl;
+	std::cout << workspace.solution()[0] << std::endl;
 
 	return 0;
 }

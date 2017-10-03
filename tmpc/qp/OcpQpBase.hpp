@@ -146,6 +146,15 @@ namespace tmpc
 			b(f - x_plus);
 		}
 
+		template <typename Vector1, typename Matrix1, typename Matrix2, typename Vector2, typename Vector3>
+		void linearizedGeneralConstraints(Vector1 const& g, Matrix1 const& Jx, Matrix2 const& Ju, Vector2 const& lbg, Vector3 const& ubg)
+		{
+			C(Jx);
+			D(Ju);
+			lbd(lbg - g);
+			ubd(ubg - g);
+		}
+
 		// Set upper and lower bounds relative to a point.
 		template <typename Vector1, typename Vector2, typename Vector3, typename Vector4, typename Vector5, typename Vector6>
 		void relativeBounds(Vector1 const& x, Vector2 const& u, Vector3 const& lx, Vector4 const& lu, Vector5 const& ux, Vector6 const& uu)

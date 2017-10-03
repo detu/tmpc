@@ -26,6 +26,12 @@ namespace tmpc
 		{
 		}
 
+		OcpPoint(std::initializer_list<Real> x, std::initializer_list<Real> u)
+		:	x_ {x}
+		,	u_ {u}
+		{
+		}
+
 		template <typename T>
 		void x(T const& val)
 		{
@@ -52,10 +58,4 @@ namespace tmpc
 		DynamicVector<Kernel> x_;
 		DynamicVector<Kernel> u_;
 	};
-
-	template <typename Kernel>
-	inline std::ostream& operator<<(std::ostream& os, OcpPoint<Kernel> const& p)
-	{
-		os << "x=" << trans(p.x()) << "\tu=" << trans(p.u());
-	}
 }
