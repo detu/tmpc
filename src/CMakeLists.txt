@@ -17,7 +17,6 @@ set (SRC
 	${TMPC_INCLUDE_DIR}/qp/QpSolverException.hpp
 
     mpc/MpcOcpSize.cpp
-    ${TMPC_INCLUDE_DIR}/mpc/MpcRealtimeIteration.hpp
 )
 
 add_library(tmpc STATIC ${SRC})
