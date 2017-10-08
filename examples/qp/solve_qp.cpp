@@ -24,7 +24,8 @@ int main(int, char **)
 		IdentityMatrix<Kernel> {3u},
 		DynamicMatrix<Kernel> {3u, 0u}
 	);
-	stage0.bounds(-inf<double>(), -inf<double>(), inf<double>(), inf<double>());
+	stage0.stateBounds(-inf<double>(), inf<double>());
+	stage0.inputBounds(-inf<double>(), inf<double>());
 
 	for (auto const& s : workspace.problem())
 		std::cout << s << std::endl;

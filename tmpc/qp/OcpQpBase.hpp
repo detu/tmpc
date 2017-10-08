@@ -146,24 +146,36 @@ namespace tmpc
 			b(f - x_plus);
 		}
 
-		// Set upper and lower bounds relative to a point.
-		template <typename Vector1, typename Vector2, typename Vector3, typename Vector4, typename Vector5, typename Vector6>
-		void relativeBounds(Vector1 const& x, Vector2 const& u, Vector3 const& lx, Vector4 const& lu, Vector5 const& ux, Vector6 const& uu)
+		// Set upper and lower input bounds relative to a point.
+		template <typename Vector1, typename Vector2, typename Vector3>
+		void relativeInputBounds(Vector1 const& u, Vector2 const& lu, Vector3 const& uu)
 		{
-			lbx(lx - x);
-			ubx(ux - x);
 			lbu(lu - u);
 			ubu(uu - u);
 		}
 
-		// Set upper and lower bounds.
-		template <typename Vector1, typename Vector2, typename Vector3, typename Vector4>
-		void bounds(Vector1 const& lx, Vector2 const& lu, Vector3 const& ux, Vector4 const& uu)
+		// Set upper and lower state bounds relative to a point.
+		template <typename Vector1, typename Vector2, typename Vector3>
+		void relativeStateBounds(Vector1 const& x, Vector2 const& lx, Vector3 const& ux)
+		{
+			lbx(lx - x);
+			ubx(ux - x);
+		}
+
+		// Set upper and lower input bounds.
+		template <typename Vector1, typename Vector2>
+		void inputBounds(Vector1 const& lu, Vector2 const& uu)
+		{
+			lbu(lu);
+			ubu(uu);
+		}
+
+		// Set upper and lower state bounds.
+		template <typename Vector1, typename Vector2>
+		void stateBounds(Vector1 const& lx, Vector2 const& ux)
 		{
 			lbx(lx);
 			ubx(ux);
-			lbu(lu);
-			ubu(uu);
 		}
 
     protected:

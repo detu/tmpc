@@ -100,6 +100,7 @@ public:
 	template <typename MatrixA, typename MatrixB>
 	bool operator()(MatrixA const& lhs, MatrixB const& rhs)
 	{
+		// TODO: should be lInfNorm
 		return l1Norm(lhs - rhs) <= tolerance_;
 	}
 
