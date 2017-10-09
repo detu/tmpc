@@ -48,6 +48,14 @@ if (BLAZE_DIR)
     message(STATUS "BLAZE_DIR=${BLAZE_DIR}")
 endif()
 
+# TMPC_WITH_CASADI_INTERFACE
+set(TMPC_WITH_CASADI_INTERFACE ON CACHE BOOL "Build tmpc with CasADi generated function support classes")
+
+if (TMPC_WITH_CASADI_INTERFACE)
+    find_package(CasADi 3.2.0 REQUIRED)
+    message(STATUS "CASADI_INCLUDE_DIRS=${CASADI_INCLUDE_DIRS}")
+endif ()
+
 add_subdirectory(src)
 add_subdirectory(examples)
 

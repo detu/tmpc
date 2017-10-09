@@ -95,7 +95,10 @@ add_subdirectory(matrix)
 add_subdirectory(ocp)
 add_subdirectory(qp)
 add_subdirectory(integrator)
-add_subdirectory(casadi_interface)
+
+if (TMPC_WITH_CASADI_INTERFACE)
+    add_subdirectory(casadi_interface)
+endif ()
 
 #GTEST_ADD_TESTS(tmpc_test "" AUTO)
 add_test(NAME tmpc_test COMMAND tmpc_test)

@@ -37,6 +37,15 @@ target_include_directories(tmpc
 )
 
 #
+# Add CasADi interface
+#
+if (TMPC_WITH_CASADI_INTERFACE)
+    target_include_directories(tmpc
+        PUBLIC ${CASADI_INCLUDE_DIRS}
+    )
+endif ()
+
+#
 # Add qpOASES interface
 #
 if (TMPC_WITH_qpOASES)
