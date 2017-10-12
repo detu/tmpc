@@ -8,6 +8,8 @@
 #include <tmpc/Matrix.hpp>
 #include <tmpc/Math.hpp>
 
+#include "detail/HpxxxStage.hpp"
+
 #include <hpipm_d_ocp_qp.h>
 #include <hpipm_d_ocp_qp_sol.h>
 #include <hpipm_d_ocp_qp_ipm_hard.h>
@@ -20,6 +22,8 @@
 #include <algorithm>
 #include <cmath>
 #include <vector>
+#include <array>
+
 
 namespace tmpc
 {
@@ -67,215 +71,17 @@ namespace tmpc
 	};
 
 	/**
-	 * \brief Multistage QP solver using qpOASES
+	 * \brief Multistage QP solver using HPIPM
 	 *
-	 * \tparam <Real_> real number type
+	 * \tparam <Kernel_> matrix kernel type
 	 */
-	template <typename Real_>
+	template <typename Kernel_>
 	class HpipmWorkspace
 	{
 	public:
-		using Real = Real_;
-
-		class Stage
-		:	public OcpSolutionBase<Stage>
-		,	public OcpQpBase<Stage>
-		{
-		public:
-			static auto constexpr storageOrder = columnMajor;
-			typedef DynamicMatrix<Real, storageOrder> Matrix;
-			typedef DynamicVector<Real, columnVector> Vector;
-
-			Stage(OcpSize const& sz, size_t nx_next);
-			Stage(Stage const&) = default;
-			Stage(Stage &&) = default;
-
-			const Matrix& A() const { return A_; }
-			template <typename T> void A(const T& a) { noresize(A_) = a; }
-
-			const Matrix& B() const { return B_; }
-			template <typename T> void B(const T& b) { noresize(B_) = b; }
-
-			Vector const& b() const { return b_; }
-			template <typename T> void b(const T& b) { noresize(b_) = b; }
-
-			const Matrix& C() const { return C_; }
-			template <typename T> void C(const T& c) { noresize(C_) = c; }
-
-			const Matrix& D() const { return D_; }
-			template <typename T> void D(const T& d) { noresize(D_) = d; }
-
-			const Vector& lbd() const {	return lbd_; }
-			template <typename T> void lbd(const T& lbd) { noresize(lbd_) = lbd; }
-
-			auto lbu() const { return subvector(lb_, 0, size_.nu());	}			
-			template <typename T> void lbu(const T& lbu) { subvector(lb_, 0, size_.nu()) = lbu; }
-
-			auto lbx() const { return subvector(lb_, size_.nu(), size_.nx()); }
-			template <typename T> void lbx(const T& lbx) { subvector(lb_, size_.nu(), size_.nx()) = lbx; }
-
-			const Matrix& Q() const { return Q_; }
-			template <typename T> void Q(const T& q) { noresize(Q_) = q; }
-
-			const Matrix& R() const { return R_; }
-			template <typename T> void R(const T& r) { noresize(R_) = r; }
-
-			// HPIPM convention for S is [nu, nx], therefore the trans().
-			decltype(auto) S() const { return trans(S_); }
-			template <typename T> void S(const T& s) { noresize(S_) = trans(s); }
-
-			const Vector& q() const { return q_; }
-			template <typename T> void q(const T& q) { noresize(q_) = q; }
-
-			const Vector& r() const { return r_; }
-			template <typename T> void r(const T& r) { noresize(r_) = r; }
-
-			const Vector& ubd() const { return ubd_; }
-			template <typename T> void ubd(const T& ubd) { noresize(ubd_) = ubd; }
-
-			auto ubu() const { return subvector(ub_, 0, size_.nu()); }
-			template <typename T> void ubu(const T& ubu) { subvector(ub_, 0, size_.nu()) = ubu; }
-
-			auto ubx() const { return subvector(ub_, size_.nu(), size_.nx()); }
-			template <typename T> void ubx(const T& ubx) { subvector(ub_, size_.nu(), size_.nx()) = ubx; }
-
-			DynamicVector<Real> const& x() const { return x_; }
-			DynamicVector<Real> const& u() const { return u_;	}
-			DynamicVector<Real> const& pi() const	{ return pi_; }
-			
-			decltype(auto) lam_lbu() const 
-			{ 
-				return subvector(lam_, 0, size_.nu()); 
-			}
-
-			decltype(auto) lam_ubu() const 
-			{ 
-				return subvector(lam_, size_.nu(), size_.nu()); 
-			}
-
-			decltype(auto) lam_lbx() const 
-			{ 
-				return subvector(lam_, 2 * size_.nu(), size_.nx()); 
-			}
-
-			decltype(auto) lam_ubx() const 
-			{ 
-				return subvector(lam_, 2 * size_.nu() + size_.nx(), size_.nx()); 
-			}
-
-			decltype(auto) lam_lbd() const 
-			{ 
-				return subvector(lam_, 2 * size_.nu() + 2 * size_.nx(), size_.nc()); 
-			}
-
-			decltype(auto) lam_ubd() const 
-			{ 
-				return subvector(lam_, 2 * size_.nu() + 2 * size_.nx() + size_.nc(), size_.nc()); 
-			}
-
-			OcpSize const& size() const { return size_; }
-
-			// Adjust hidxb so to account for infs in state and input bounds.
-			void adjustBoundsIndex()
-			{
-				// this will not change the capacity and the data() pointers should stay the same.
-				hidxb_.clear();
-				lb_internal_.clear();
-				ub_internal_.clear();
-
-				// Cycle through the bounds and check for infinities
-				for (size_t i = 0; i < size_.nu() + size_.nx(); ++i)
-				{
-					if (std::isfinite(lb_[i]) && std::isfinite(ub_[i]))
-					{
-						// If both bounds are finite, add i to the bounds index,
-						// and copy values to the lb_internal_ and ub_internal_.
-						hidxb_.push_back(i);
-						lb_internal_.push_back(lb_[i]);
-						ub_internal_.push_back(ub_[i]);
-					}
-					else 
-					{
-						// Otherwise, check that the values are [-inf, inf]
-						if (!(lb_[i] == -inf<Real>() && ub_[i] == inf<Real>()))
-							throw std::invalid_argument("And invalid QP bound is found. For HPMPC, "
-								"the bounds should be either both finite or [-inf, inf]");
-					}
-				}
-			}
-
-			// ******************************************************
-			//                HPIPM raw data interface.
-			//
-			// The prefixes before _data() correspond to the names of
-			// the argument to c_order_d_ip_ocp_hard_tv().
-			// ******************************************************
-			Real const * A_data () const { return A_.data(); }
-			Real const * B_data () const { return B_.data(); }
-			Real const * b_data () const { return b_.data();	}
-			Real const * Q_data () const { return Q_.data(); }
-			Real const * S_data () const { return S_.data(); }
-			Real const * R_data () const { return R_.data(); }
-			Real const * q_data () const { return q_.data(); }
-			Real const * r_data () const { return r_.data();	}
-			Real const * lb_data() const { return lb_internal_.data(); }
-			Real const * ub_data() const { return ub_internal_.data(); }
-			Real const * C_data () const { return C_.data(); }
-			Real const * D_data () const { return D_.data(); }
-			Real const * lg_data() const { return lbd_.data(); }
-			Real const * ug_data() const { return ubd_.data(); }
-			int const * hidxb_data() const { return hidxb_.data(); }
-			int nb() const { return hidxb_.size(); }
-
-			Real * x_data() { return x_.data(); }
-			Real * u_data() { return u_.data(); }
-			Real * pi_data() { return pi_.data(); }
-			Real * lam_lb_data() { return lam_.data(); }
-			Real * lam_ub_data() { return lam_lb_data() + size_.nx() + size_.nu(); }
-			Real * lam_lg_data() { return lam_ub_data() + size_.nx() + size_.nu(); }
-			Real * lam_ug_data() { return lam_lg_data() + size_.nc(); }
-
-		private:
-			OcpSize size_;
-
-			// Some magic data for HPIPM
-			std::vector<int> hidxb_;
-
-			// Hessian = [R, S; S', Q]
-			Matrix R_;
-			Matrix S_;
-			Matrix Q_;
-
-			// Gradient = [r; q]
-			Vector r_;
-			Vector q_;
-
-			// Inter-stage equalities x_{k+1} = A x_k + B u_k + c_k
-			Matrix A_;
-			Matrix B_;
-			Vector b_;
-
-			// Inequality constraints d_{min} <= C x_k + D u_k <= d_{max}
-			Matrix C_;
-			Matrix D_;
-			Vector lbd_;
-			Vector ubd_;
-
-			// Bound constraints:
-			// lb <= [u; x] <= ub
-			Vector lb_;
-			Vector ub_;
-
-			// Lower and upper bound arrays for HPIPM,
-			// containing finite values only.
-			std::vector<Real> lb_internal_;
-			std::vector<Real> ub_internal_;
-
-			DynamicVector<Real> x_;
-			DynamicVector<Real> u_;
-			DynamicVector<Real> pi_;
-			DynamicVector<Real> lam_;
-		};
+		using Kernel = Kernel_;
+		using Real = typename Kernel::Real;
+		using Stage = detail::HpxxxStage<Kernel, StorageOrder::columnMajor>;
 
 		class ProblemIterator
 		:	public boost::iterator_adaptor<
@@ -351,9 +157,10 @@ namespace tmpc
 		 */
 		template <typename InputIterator>
 		HpipmWorkspace(InputIterator size_first, InputIterator size_last, int max_iter = 100)
-		:	infNormRes_(sNaN())
-		,	solverArg_ {}
+		:	solverArg_ {}
 		{
+			std::fill(infNormRes_.begin(), infNormRes_.end(), sNaN());
+
 			solverArg_.alpha_min = 1e-8;
 			solverArg_.mu_max = 1e-12;
 			solverArg_.iter_max = max_iter;
@@ -387,6 +194,11 @@ namespace tmpc
 		{
 		}
 
+		explicit HpipmWorkspace(std::initializer_list<OcpSize> sz, int max_iter = 100)
+		:	HpipmWorkspace(sz.begin(), sz.end(), max_iter)
+		{
+		}
+
 		/**
 		 * \brief Copy constructor
 		 *
@@ -404,7 +216,53 @@ namespace tmpc
 		HpipmWorkspace& operator= (HpipmWorkspace const&) = delete;
 		HpipmWorkspace& operator= (HpipmWorkspace &&) = delete;
 
-		void solve();
+		void solve()
+		{
+			if (stage_.size() > 1)
+			{
+				// Recalculate bounds indices of each stage, at the bounds might have changed.				
+				// Update the nb_ array.
+				std::transform(stage_.begin(), stage_.end(), nb_.begin(), [] (Stage& s) -> int
+				{
+					s.adjustBoundsIndex();
+					return s.nb();
+				});
+	
+				// Number of QP steps for HPIPM
+				auto const N = stage_.size() - 1;
+	
+				// Init HPIPM structures. Since the nb_ might change if the bounds change, we need to do it every time, sorry.
+				// Hopefully these operations are not expensive compared to actual solving.
+				typename HPIPM::ocp_qp qp;
+				HPIPM::create_ocp_qp(N, nx_.data(), nu_.data(), nb_.data(), ng_.data(), &qp, ocpQpMem_.data());
+	
+				typename HPIPM::ocp_qp_sol sol;
+				HPIPM::create_ocp_qp_sol(N, nx_.data(), nu_.data(), nb_.data(), ng_.data(), &sol, ocpQpSolMem_.data());
+	
+				typename HPIPM::ipm_hard_ocp_qp_workspace solver_workspace;
+				HPIPM::create_ipm_hard_ocp_qp(&qp, &solverArg_, &solver_workspace, solverWorkspaceMem_.data());
+	
+				// Convert the problem
+				HPIPM::cvt_colmaj_to_ocp_qp(
+					A_.data(), B_.data(), b_.data(), 
+					Q_.data(), S_.data(), R_.data(), q_.data(), r_.data(), 
+					hidxb_.data(), lb_.data(), ub_.data(), 
+					C_.data(), D_.data(), lg_.data(), ug_.data(), &qp);
+	
+				// Call HPIPM
+				auto const ret = 0;
+				HPIPM::solve_ipm_hard_ocp_qp(&qp, &sol, &solver_workspace);
+	
+				if (ret != 0)
+				{
+					throw HpipmException(ret);
+				}
+	
+				// Convert the solution
+				HPIPM::cvt_ocp_qp_sol_to_colmaj(&qp, &sol, 
+					u_.data(), x_.data(), pi_.data(), lam_lb_.data(), lam_ub_.data(), lam_lg_.data(), lam_ug_.data());
+			}
+		}
 
 		std::size_t maxIter() const noexcept { return solverArg_.iter_max; }
 
@@ -524,7 +382,7 @@ namespace tmpc
 		std::vector<Real *> lam_ub_;
 		std::vector<Real *> lam_lg_;
 		std::vector<Real *> lam_ug_;
-		StaticVector<Real, 4> infNormRes_;
+		std::array<Real, 4> infNormRes_;
 
 		/// \brief Number of iterations performed by the QP solver.
 		int numIter_ = 0;
@@ -552,9 +410,77 @@ namespace tmpc
 		}
 
 		// Preallocate arrays holding QP stage data.
-		void preallocateStages(size_t nt);
+		void preallocateStages(size_t nt)
+		{
+			stage_.reserve(nt);
+	
+			nx_.reserve(nt);
+			nu_.reserve(nt);
+			nb_.reserve(nt);
+			ng_.reserve(nt);
+			hidxb_.reserve(nt);
+	
+			A_ .reserve(nt);
+			B_ .reserve(nt);
+			b_ .reserve(nt);
+			Q_ .reserve(nt);
+			S_ .reserve(nt);
+			R_ .reserve(nt);
+			q_ .reserve(nt);
+			r_ .reserve(nt);
+			lb_.reserve(nt);
+			ub_.reserve(nt);
+			C_ .reserve(nt);
+			D_ .reserve(nt);
+			lg_.reserve(nt);
+			ug_.reserve(nt);
+			
+			x_.reserve(nt);
+			u_.reserve(nt);
+			pi_.reserve(nt);
+			lam_lb_.reserve(nt);
+			lam_ub_.reserve(nt);
+			lam_lg_.reserve(nt);
+			lam_ug_.reserve(nt);
+		}
 
 		// Add one stage with specified sizes at the end of the stage sequence.
-		void addStage(OcpSize const& sz, size_t nx_next);
+		void addStage(OcpSize const& sz, size_t nx_next)
+		{
+			stage_.emplace_back(sz, nx_next);
+			auto& st = stage_.back();
+	
+			nx_.push_back(sz.nx());
+			nu_.push_back(sz.nu());
+			nb_.push_back(st.nb());
+			ng_.push_back(sz.nc());
+			
+			hidxb_.push_back(st.hidxb_data());
+	
+			A_.push_back(st.A_data());
+			B_.push_back(st.B_data());
+			b_.push_back(st.b_data());
+	
+			Q_.push_back(st.Q_data());
+			S_.push_back(st.S_data());
+			R_.push_back(st.R_data());
+			q_.push_back(st.q_data());
+			r_.push_back(st.r_data());
+			lb_.push_back(st.lb_data());
+			ub_.push_back(st.ub_data());
+	
+			C_ .push_back(st.C_data());
+			D_ .push_back(st.D_data());
+			lg_.push_back(st.lg_data());
+			ug_.push_back(st.ug_data());
+	
+			x_.push_back(st.x_data());
+			u_.push_back(st.u_data());
+			pi_.push_back(st.pi_data());
+			lam_lb_.push_back(st.lam_lb_data());
+			lam_ub_.push_back(st.lam_ub_data());
+			lam_lg_.push_back(st.lam_lg_data());
+			lam_ug_.push_back(st.lam_ug_data());
+		}
 	};
 }
