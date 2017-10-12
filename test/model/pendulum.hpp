@@ -17,7 +17,7 @@ namespace tmpc :: testing :: model_pendulum
         void operator()(double t, DynamicVector<Kernel> const& x0, DynamicVector<Kernel> const& u0,	DynamicVector<Kernel>& xdot, 
             DynamicMatrix<Kernel>& A, DynamicMatrix<Kernel>& B) const
         {
-            ode_({x0.data(), u0.data()}, {xdot.data(), A.data(), B.data(), nullptr, nullptr, nullptr, nullptr, nullptr, nullptr});
+            ode_({x0.data(), u0.data()}, {xdot.data(), A.data(), B.data()});
         }
     
         /*

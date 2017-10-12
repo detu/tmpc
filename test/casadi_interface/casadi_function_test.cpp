@@ -1,4 +1,5 @@
 #include <tmpc/casadi_interface/GeneratedFunction.hpp>
+#include <tmpc/BlazeKernel.hpp>
 #include <tmpc/EigenKernel.hpp>
 #include <tmpc/test_tools.hpp>
 
@@ -69,17 +70,59 @@ TEST_F(CasADiFunctionTest, n_col_out_correct)
 	EXPECT_EQ(fun_.n_col_out(1), 2);
 }
 
-TEST_F(CasADiFunctionTest, pointer_argument_call_correct)
+TEST_F(CasADiFunctionTest, testPointerArgumentCall)
 {
-	StaticMatrix<Kernel, 3, 2> const A {0.};
-	StaticMatrix<Kernel, 2, 2> const B {0.};
-	Kernel::Real const x = 0.;
+	StaticMatrix<Kernel, 3, 2, columnMajor> A {
+		{1., 2.},
+		{3., 4.},
+		{5., 6.}
+	};
+	StaticMatrix<Kernel, 2, 2, columnMajor> B {
+		{7., 8.},
+		{9., 10.}
+	};
+	Kernel::Real x = 0.1;
+
+	//randomize(A);
+	//randomize(B);
+	//blaze::randomize(x);
 
 	StaticMatrix<Kernel, 3, 2> X;
-	StaticMatrix<Kernel, 1, 2> Y;
+	StaticVector<Kernel, 2, rowVector> Y;
 
 	fun_({A.data(), B.data(), &x}, {X.data(), Y.data()});
+
+	EXPECT_EQ(print_wrap(X), print_wrap((A * x) * B));
+	EXPECT_EQ(Y, (StaticVector<Kernel, 3, rowVector> {1., 1., 1.} * (A * B)));
 }
+
+/*
+TEST_F(CasADiFunctionTest, testMatrixArgumentCall)
+{
+	StaticMatrix<Kernel, 3, 2, columnMajor> A {
+		{1., 2.},
+		{3., 4.},
+		{5., 6.}
+	};
+	StaticMatrix<Kernel, 2, 2, columnMajor> B {
+		{7., 8.},
+		{9., 10.}
+	};
+	Kernel::Real x = 0.1;
+
+	//randomize(A);
+	//randomize(B);
+	//blaze::randomize(x);
+
+	StaticMatrix<Kernel, 3, 2> X;
+	StaticVector<Kernel, 2, rowVector> Y;
+
+	fun_({A, B, x}, {X, Y});
+
+	EXPECT_EQ(print_wrap(X), print_wrap((A * x) * B));
+	EXPECT_EQ(Y, (StaticVector<Kernel, 3, rowVector> {1., 1., 1.} * (A * B)));
+}
+*/
 
 /*
 // Some interesting ideas here: https://habrahabr.ru/post/228031/
