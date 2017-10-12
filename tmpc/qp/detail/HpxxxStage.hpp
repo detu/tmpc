@@ -7,12 +7,14 @@
 #include <tmpc/Matrix.hpp>
 #include <tmpc/Math.hpp>
 
+#include "UnpaddedMatrix.hpp"
+
 #include <stdexcept>
 #include <algorithm>
 #include <cmath>
 #include <vector>
 #include <array>
-#include <memory>
+
 
 namespace tmpc :: detail
 {
@@ -31,23 +33,16 @@ namespace tmpc :: detail
 		HpxxxStage(OcpSize const& sz, size_t nx_next)
 		:	size_(sz)
 		,	hidxb_(sz.nu() + sz.nx())
-		,	memQ_ {new Real[sz.nx() * sz.nx()]}
-		,	memR_ {new Real[sz.nu() * sz.nu()]}
-		,	memS_ {new Real[sz.nu() * sz.nx()]}
-		,	Q_ {memQ_.get(), sz.nx(), sz.nx()}
-		,	R_ {memR_.get(), sz.nu(), sz.nu()}
-		,	S_ {memS_.get(), sz.nu(), sz.nx()}	// <-- HPMPC convention for S is [nu, nx] (the corresponding cost term is u' * S_{hpmpc} * x)
+		,	Q_ {sz.nx(), sz.nx()}
+		,	R_ {sz.nu(), sz.nu()}
+		,	S_ {sz.nu(), sz.nx()}	// <-- HPMPC convention for S is [nu, nx] (the corresponding cost term is u' * S_{hpmpc} * x)
 		,	q_(sz.nx())
 		,	r_(sz.nu())
-		,	memA_ {new Real[nx_next * sz.nx()]}
-		,	memB_ {new Real[nx_next * sz.nu()]}
-		,	A_ {memA_.get(), nx_next, sz.nx()}
-		,	B_ {memB_.get(), nx_next, sz.nu()}
+		,	A_ {nx_next, sz.nx()}
+		,	B_ {nx_next, sz.nu()}
 		,	b_(nx_next)
-		,	memC_ {new Real[sz.nc() * sz.nx()]}
-		,	memD_ {new Real[sz.nc() * sz.nu()]}
-		,	C_ {memC_.get(), sz.nc(), sz.nx()}
-		,	D_ {memD_.get(), sz.nc(), sz.nu()}
+		,	C_ {sz.nc(), sz.nx()}
+		,	D_ {sz.nc(), sz.nu()}
 		,	lb_(sz.nu() + sz.nx())
 		,	ub_(sz.nu() + sz.nx())
 		,	lb_internal_(sz.nu() + sz.nx())
@@ -241,29 +236,22 @@ namespace tmpc :: detail
 		std::vector<int> hidxb_;
 
 		// Hessian = [R, S; S', Q]
-		std::unique_ptr<Real[]> memQ_;
-		std::unique_ptr<Real[]> memR_;
-		std::unique_ptr<Real[]> memS_;
-		CustomMatrix<Kernel, unaligned, unpadded, SO> Q_;
-		CustomMatrix<Kernel, unaligned, unpadded, SO> R_;
-		CustomMatrix<Kernel, unaligned, unpadded, SO> S_;			
+		UnpaddedMatrix<Kernel, SO> Q_;
+		UnpaddedMatrix<Kernel, SO> R_;
+		UnpaddedMatrix<Kernel, SO> S_;			
 
 		// Gradient = [r; q]
 		DynamicVector<Kernel> r_;
 		DynamicVector<Kernel> q_;
 
 		// Inter-stage equalities x_{k+1} = A x_k + B u_k + c_k
-		std::unique_ptr<Real[]> memA_;
-		std::unique_ptr<Real[]> memB_;
-		CustomMatrix<Kernel, unaligned, unpadded, SO> A_;
-		CustomMatrix<Kernel, unaligned, unpadded, SO> B_;
+		UnpaddedMatrix<Kernel, SO> A_;
+		UnpaddedMatrix<Kernel, SO> B_;
 		DynamicVector<Kernel> b_;
 
 		// Inequality constraints d_{min} <= C x_k + D u_k <= d_{max}
-		std::unique_ptr<Real[]> memC_;
-		std::unique_ptr<Real[]> memD_;
-		CustomMatrix<Kernel, unaligned, unpadded, SO> C_;
-		CustomMatrix<Kernel, unaligned, unpadded, SO> D_;
+		UnpaddedMatrix<Kernel, SO> C_;
+		UnpaddedMatrix<Kernel, SO> D_;
 		DynamicVector<Kernel> lbd_;
 		DynamicVector<Kernel> ubd_;
 
