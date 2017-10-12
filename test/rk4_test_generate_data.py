@@ -4,7 +4,6 @@
 # https://github.com/acado/acado/blob/master/examples/integrator/pendulum.cpp 
 
 import casadi as cs
-import matplotlib.pyplot as plt
 import numpy as np
 import os
 import sys
@@ -184,10 +183,3 @@ if __name__ == '__main__':
             for key in keys:
                 np.array(data[key][k]).tofile(file, sep)        
                 file.write('\n')
-
-    if False:            
-        plt.subplot(2, 1, 1)
-        plt.step(cs.vertcat(data['t']), cs.transpose(cs.horzcat(*data['u' ]))      )
-        plt.subplot(2, 1, 2)
-        plt.plot(cs.vertcat(data['t']), cs.transpose(cs.horzcat(*data['x0'])), '.-')
-        plt.show()

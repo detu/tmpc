@@ -54,12 +54,15 @@ int main(int, char **)
 		DynamicVector<Kernel> {2.1, 2.2}
 	);
 
-	stage0.relativeBounds(
+	stage0.relativeStateBounds(
 		DynamicVector<Kernel> {0.1, 0.2, 0.3},	// x
-		DynamicVector<Kernel> {0.4, 0.5},	// u
 		DynamicVector<Kernel> {-1., -2., -3.},	// lx
+		DynamicVector<Kernel> {1., 2., 3.}		// ux
+	);
+
+	stage0.relativeInputBounds(
+		DynamicVector<Kernel> {0.4, 0.5},	// u
 		DynamicVector<Kernel> {-4., -5.},	// lu
-		DynamicVector<Kernel> {1., 2., 3.},	// ux
 		DynamicVector<Kernel> {4., 5.}	// uu
 	);
 

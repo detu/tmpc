@@ -441,7 +441,8 @@ namespace tmpc :: testing
 			IdentityMatrix<Kernel> {3u},
 			DynamicMatrix<Kernel> {3u, 0u}
 		);
-		stage0.bounds(-inf<Real>(), -inf<Real>(), inf<Real>(), inf<Real>());
+		stage0.stateBounds(-inf<Real>(), inf<Real>());
+		stage0.inputBounds(-inf<Real>(), inf<Real>());
 
 		workspace.solve();
 	

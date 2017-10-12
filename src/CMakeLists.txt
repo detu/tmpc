@@ -17,7 +17,6 @@ set (SRC
 	${TMPC_INCLUDE_DIR}/qp/QpSolverException.hpp
 
     mpc/MpcOcpSize.cpp
-    ${TMPC_INCLUDE_DIR}/mpc/MpcRealtimeIteration.hpp
 )
 
 add_library(tmpc STATIC ${SRC})
@@ -36,6 +35,15 @@ set_property(TARGET tmpc PROPERTY POSITION_INDEPENDENT_CODE True)
 target_include_directories(tmpc
     PUBLIC ${PROJECT_INCLUDE_DIR}
 )
+
+#
+# Add CasADi interface
+#
+if (TMPC_WITH_CASADI_INTERFACE)
+    target_include_directories(tmpc
+        PUBLIC ${CASADI_INCLUDE_DIRS}
+    )
+endif ()
 
 #
 # Add qpOASES interface
