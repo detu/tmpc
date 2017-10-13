@@ -5,20 +5,29 @@
 #include <cstdlib>
 #include <vector>
 #include <numeric>
+#include <stdexcept>
 
 namespace tmpc 
 {
 	/**
-	* \brief Defines sizes of an OCP stage.
+	 * \brief Defines sizes of an OCP stage.
+	 *
+	 * \param nx number of states
+	 * \param nu number of inputs
+	 * \param nc number of linear inequality constraints
+	 * \param ns number of soft constraints
 	*/
 	class OcpSize
 	{
 	public:
-		OcpSize(size_t const nx, size_t const nu, size_t const nc)
-		:	nx_(nx)
-		,	nu_(nu)
-		,	nc_(nc)
+		OcpSize(size_t const nx, size_t const nu, size_t const nc, size_t ns = 0)
+		:	nx_ {nx}
+		,	nu_ {nu}
+		,	nc_ {nc}
+		,	ns_ {ns}
 		{
+			if (ns > nx + nu + nc)
+				throw std::invalid_argument("Number of slack variables is bigger than nx + nu + nc");
 		}
 
 		/**
@@ -45,39 +54,66 @@ namespace tmpc
 			return nc_;
 		}
 
+		/**
+		* \brief Number of soft constraints.
+		*/
+		size_t ns() const
+		{
+			return ns_;
+		}
+
 	private:
 		size_t nx_;
 		size_t nu_;
 		size_t nc_;
+		size_t ns_;
 	};
 
+	
 	inline bool operator==(OcpSize const& a, OcpSize const& b)
 	{
-		return a.nx() == b.nx() && a.nu() == b.nu() && a.nc() == b.nc();
+		return a.nx() == b.nx() 
+			&& a.nu() == b.nu() 
+			&& a.nc() == b.nc() 
+			&& a.ns() == b.ns();
 	}
 
+	
 	inline bool operator!=(OcpSize const& a, OcpSize const& b)
 	{
 		return !(a == b);
 	}
 
-	size_t numVariables(std::vector<OcpSize> const& sz);
-	size_t numEqualities(std::vector<OcpSize> const& sz);
-	size_t numInequalities(std::vector<OcpSize> const& sz);
 
 	template <typename InputIt>
 	size_t numVariables(InputIt sz_begin, InputIt sz_end)
 	{
-		return std::accumulate(sz_begin, sz_end, size_t{0},
-			[] (size_t n, OcpSize const& s) { return n + s.nx() + s.nu(); });
+		return std::accumulate(sz_begin, sz_end, size_t {0},
+			[] (size_t n, OcpSize const& s) { return n + s.nx() + s.nu() + 2 * s.ns(); });
 	}
+
+
+	template <typename IteratorRange>
+	inline std::size_t numVariables(IteratorRange const& sz)
+	{
+		return numVariables(sz.begin(), sz.end());
+	}
+
 
 	template <typename InputIt>
 	size_t numEqualities(InputIt sz_begin, InputIt sz_end)
 	{
-		return sz_begin == sz_end ? 0 : std::accumulate(sz_begin + 1, sz_end, size_t{0},
+		return sz_begin == sz_end ? 0 : std::accumulate(sz_begin + 1, sz_end, size_t {0},
 			[] (size_t n, OcpSize const& s) { return n + s.nx(); });
 	}
+
+
+	template <typename IteratorRange>
+	inline std::size_t numEqualities(IteratorRange const& sz)
+	{
+		return numEqualities(sz.begin(), sz.end());
+	}
+	
 
 	/**
 	* \brief Total number of rows in all inequalities like lbg[k] <= C[k]*x[k] + D[k]*u[k] <= ubg[k]
@@ -87,10 +123,20 @@ namespace tmpc
 	{
 		return std::accumulate(sz_begin, sz_end, size_t{0},
 			[] (size_t n, OcpSize const& s) { return n + s.nc(); });
+	}	
+	
+
+	template <typename IteratorRange>
+	inline std::size_t numInequalities(IteratorRange const& sz)
+	{
+		return numInequalities(sz.begin(), sz.end());
 	}
 
+
 	/**
-	* \brief An iterator through QP stages returning stage's OcpSize.
+	 * \brief An iterator through QP stages returning stage's OcpSize.
+	 * 
+	 * TODO: Deprecate?
 	*/
 	template <typename StageIterator>
 	class QpSizeIterator

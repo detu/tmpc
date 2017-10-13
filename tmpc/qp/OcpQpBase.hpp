@@ -2,7 +2,10 @@
 
 #include <tmpc/Math.hpp>
 
+#include <boost/range/iterator_range_core.hpp>
+
 #include <stdexcept>
+
 
 namespace tmpc
 {
@@ -13,6 +16,9 @@ namespace tmpc
 	class OcpQpBase
 	{
 	public:
+		// -----------------------------------------------------------
+		// Cost
+		// -----------------------------------------------------------
         decltype(auto) Q() const { return derived().Q(); }
 		template <typename T> void Q(const T& q) { derived().Q(q); }
 
@@ -28,6 +34,24 @@ namespace tmpc
 		decltype(auto) r() const {	return derived().r(); }
 		template <typename T> void r(const T& r) { derived().r(r); }
 
+		// -----------------------------------------------------------
+		// Soft constraints cost
+		// -----------------------------------------------------------
+		decltype(auto) Zl() const { return derived().Zl(); }
+		template <typename T> void Zl(const T& q) { derived().impl_Zl(q); }
+
+		decltype(auto) Zu() const {	return derived().Zu(); }
+		template <typename T> void Zu(const T& r) { derived().impl_Zu(r); }
+
+		decltype(auto) zl() const { return derived().zl(); }
+		template <typename T> void zl(const T& q) { derived().impl_zl(q); }
+
+		decltype(auto) zu() const {	return derived().zu(); }
+		template <typename T> void zu(const T& r) { derived().impl_zu(r); }
+
+		// -----------------------------------------------------------
+		// Shooting equalities
+		// -----------------------------------------------------------
 		decltype(auto) A() const {	return derived().A(); }
 		template <typename T> void A(const T& a) { derived().A(a); }
 
@@ -37,6 +61,9 @@ namespace tmpc
 		decltype(auto) b() const { return derived().b(); }
 		template <typename T> void b(const T& b) { derived().b(b); }
 
+		// -----------------------------------------------------------
+		// Linear constraints
+		// -----------------------------------------------------------
 		decltype(auto) C() const {	return derived().C(); }
 		template <typename T> void C(const T& c) { derived().C(c); }
 
@@ -49,6 +76,23 @@ namespace tmpc
 		decltype(auto) ubd() const { return derived().ubd(); }
 		template <typename T> void ubd(const T& ubd) { derived().ubd(ubd); }
 
+		// -----------------------------------------------------------
+		// Soft linear constraints
+		// -----------------------------------------------------------
+		decltype(auto) idxs() const 
+		{ 
+			return derived().impl_idxs(); 
+		}
+		
+		template <typename T> 
+		void idxs(const T& val) 
+		{ 
+			derived().impl_idxs(val);
+		}
+
+		// -----------------------------------------------------------
+		// Bound constraints
+		// -----------------------------------------------------------
 		decltype(auto) lbu() const { return derived().lbu(); }
 		template <typename T> void lbu(const T& lbu) { derived().lbu(lbu); }
 
@@ -60,7 +104,8 @@ namespace tmpc
 
 		decltype(auto) ubx() const { return derived().ubx(); }
         template <typename T> void ubx(const T& ubx) { derived().ubx(ubx); }
-        
+		
+		/// Problem size
         decltype(auto) size() const
         {
             return derived().size();
@@ -77,6 +122,10 @@ namespace tmpc
 			S(rhs.S());
 			q(rhs.q());
 			r(rhs.r());
+			Zl(rhs.Zl());
+			Zu(rhs.Zu());
+			zl(rhs.zl());
+			zu(rhs.zu());
 			A(rhs.A());
 			B(rhs.B());
 			b(rhs.b());
@@ -88,6 +137,7 @@ namespace tmpc
 			ubu(rhs.ubu());
 			lbd(rhs.lbd());
 			ubd(rhs.ubd());
+			idxs(rhs.idxs());
 
 			return *this;
 		}
@@ -103,6 +153,10 @@ namespace tmpc
 			S(sNaN<Real>());
 			q(sNaN<Real>());
 			r(sNaN<Real>());
+			Zl(sNaN<Real>());
+			Zu(sNaN<Real>());
+			zl(sNaN<Real>());
+			zu(sNaN<Real>());
 			A(sNaN<Real>());
 			B(sNaN<Real>());
 			b(sNaN<Real>());

@@ -86,7 +86,11 @@ namespace tmpc
 	public:
 		using Kernel = Kernel_;
 		using Real = typename Kernel::Real;
+		
+	private:
 		using Stage = detail::HpxxxStage<Kernel, StorageOrder::columnMajor>;
+
+	public:
 
 		class ProblemIterator
 		:	public boost::iterator_adaptor<
@@ -173,11 +177,96 @@ namespace tmpc
 			solverArg_.iter_max = max_iter;
 			solverArg_.stat_max = 100;
 			solverArg_.pred_corr = 1;
+
+			auto const nt = std::distance(size_first, size_last);
 			
-			preallocateStages(std::distance(size_first, size_last));
+			// Preallocate arrays holding QP stage data.
+			stage_.reserve(nt);
+	
+			nx_.reserve(nt);
+			nu_.reserve(nt);
+			nb_.reserve(nt);
+			ng_.reserve(nt);
+			ns_.reserve(nt);
+			hidxb_.reserve(nt);
+			idxs_.reserve(nt);
+	
+			A_ .reserve(nt);
+			B_ .reserve(nt);
+			b_ .reserve(nt);
+			Q_ .reserve(nt);
+			S_ .reserve(nt);
+			R_ .reserve(nt);
+			q_ .reserve(nt);
+			r_ .reserve(nt);
+			Zl_.reserve(nt);
+			Zu_.reserve(nt);
+			zl_.reserve(nt);
+			zu_.reserve(nt);
+			lb_.reserve(nt);
+			ub_.reserve(nt);
+			C_ .reserve(nt);
+			D_ .reserve(nt);
+			lg_.reserve(nt);
+			ug_.reserve(nt);
+			
+			x_.reserve(nt);
+			u_.reserve(nt);
+			pi_.reserve(nt);
+			lam_lb_.reserve(nt);
+			lam_ub_.reserve(nt);
+			lam_lg_.reserve(nt);
+			lam_ug_.reserve(nt);
 
 			for (auto sz = size_first; sz != size_last; ++sz)
-				addStage(*sz, sz + 1 != size_last ? sz[1].nx() : 0);
+			{
+				auto const nx_next = sz + 1 != size_last ? sz[1].nx() : 0;
+
+				stage_.emplace_back(*sz, nx_next);
+				auto& st = stage_.back();
+		
+				nx_.push_back(sz->nx());
+				nu_.push_back(sz->nu());
+				nb_.push_back(st.nb());
+				ng_.push_back(sz->nc());
+				ns_.push_back(sz->ns());
+				
+				hidxb_.push_back(st.hidxb_data());
+				idxs_.push_back(st.idxs_data());
+		
+				A_.push_back(st.A_data());
+				B_.push_back(st.B_data());
+				b_.push_back(st.b_data());
+		
+				Q_.push_back(st.Q_data());
+				S_.push_back(st.S_data());
+				R_.push_back(st.R_data());
+				q_.push_back(st.q_data());
+				r_.push_back(st.r_data());
+				Zl_.push_back(st.Zl_data());
+				Zu_.push_back(st.Zu_data());
+				zl_.push_back(st.zl_data());
+				zu_.push_back(st.zu_data());
+				lb_.push_back(st.lb_data());
+				ub_.push_back(st.ub_data());
+		
+				C_ .push_back(st.C_data());
+				D_ .push_back(st.D_data());
+				lg_.push_back(st.lg_data());
+				ug_.push_back(st.ug_data());
+		
+				x_.push_back(st.x_data());
+				u_.push_back(st.u_data());
+				ls_.push_back(st.ls_data());
+				us_.push_back(st.us_data());
+				pi_.push_back(st.pi_data());
+				lam_lb_.push_back(st.lam_lb_data());
+				lam_ub_.push_back(st.lam_ub_data());
+				lam_lg_.push_back(st.lam_lg_data());
+				lam_ug_.push_back(st.lam_ug_data());
+				lam_ls_.push_back(st.lam_ls_data());
+				lam_us_.push_back(st.lam_us_data());
+			}
 				
 			if (stage_.size() > 1)
 			{
@@ -403,96 +492,6 @@ namespace tmpc
 		static Real constexpr sNaN()
 		{
 			return std::numeric_limits<Real>::signaling_NaN();
-		}
-
-		// Preallocate arrays holding QP stage data.
-		void preallocateStages(size_t nt)
-		{
-			stage_.reserve(nt);
-	
-			nx_.reserve(nt);
-			nu_.reserve(nt);
-			nb_.reserve(nt);
-			ng_.reserve(nt);
-			ns_.reserve(nt);
-			hidxb_.reserve(nt);
-			idxs_.reserve(nt);
-	
-			A_ .reserve(nt);
-			B_ .reserve(nt);
-			b_ .reserve(nt);
-			Q_ .reserve(nt);
-			S_ .reserve(nt);
-			R_ .reserve(nt);
-			q_ .reserve(nt);
-			r_ .reserve(nt);
-			Zl_.reserve(nt);
-			Zu_.reserve(nt);
-			zl_.reserve(nt);
-			zu_.reserve(nt);
-			lb_.reserve(nt);
-			ub_.reserve(nt);
-			C_ .reserve(nt);
-			D_ .reserve(nt);
-			lg_.reserve(nt);
-			ug_.reserve(nt);
-			
-			x_.reserve(nt);
-			u_.reserve(nt);
-			pi_.reserve(nt);
-			lam_lb_.reserve(nt);
-			lam_ub_.reserve(nt);
-			lam_lg_.reserve(nt);
-			lam_ug_.reserve(nt);
-		}
-
-		// Add one stage with specified sizes at the end of the stage sequence.
-		void addStage(OcpSize const& sz, size_t nx_next)
-		{
-			stage_.emplace_back(sz, nx_next);
-			auto& st = stage_.back();
-	
-			nx_.push_back(sz.nx());
-			nu_.push_back(sz.nu());
-			nb_.push_back(st.nb());
-			ng_.push_back(sz.nc());
-			ns_.push_back(0);
-			
-			hidxb_.push_back(st.hidxb_data());
-			idxs_.push_back(nullptr);
-	
-			A_.push_back(st.A_data());
-			B_.push_back(st.B_data());
-			b_.push_back(st.b_data());
-	
-			Q_.push_back(st.Q_data());
-			S_.push_back(st.S_data());
-			R_.push_back(st.R_data());
-			q_.push_back(st.q_data());
-			r_.push_back(st.r_data());
-			Zl_.push_back(nullptr);
-			Zu_.push_back(nullptr);
-			zl_.push_back(nullptr);
-			zu_.push_back(nullptr);
-			lb_.push_back(st.lb_data());
-			ub_.push_back(st.ub_data());
-	
-			C_ .push_back(st.C_data());
-			D_ .push_back(st.D_data());
-			lg_.push_back(st.lg_data());
-			ug_.push_back(st.ug_data());
-	
-			x_.push_back(st.x_data());
-			u_.push_back(st.u_data());
-			ls_.push_back(nullptr);
-			us_.push_back(nullptr);
-			pi_.push_back(st.pi_data());
-			lam_lb_.push_back(st.lam_lb_data());
-			lam_ub_.push_back(st.lam_ub_data());
-			lam_lg_.push_back(st.lam_lg_data());
-			lam_ug_.push_back(st.lam_ug_data());
-			lam_ls_.push_back(nullptr);
-			lam_us_.push_back(nullptr);
 		}
 	};
 }

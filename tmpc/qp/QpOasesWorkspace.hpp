@@ -145,6 +145,39 @@ private:
 			subvector(ws_->g , n_ + size_.nx(), size_.nu()) = r;
 		}
 
+		// -----------------------------------------------------------
+		// Soft constraints cost
+		// -----------------------------------------------------------
+		//decltype(auto) Zl() const { return derived().Zl(); }
+		template <typename T> void impl_Zl(const T& val) 
+		{ 
+			if (size_.ns() > 0)
+				throw std::runtime_error("Soft constraints are not implemented in QpOasesWorkspace");
+		}
+
+		//decltype(auto) Zu() const {	return derived().Zu(); }
+		template <typename T> void impl_Zu(const T& val) 
+		{ 
+			if (size_.ns() > 0)
+				throw std::runtime_error("Soft constraints are not implemented in QpOasesWorkspace");
+		}
+
+		//decltype(auto) zl() const { return derived().zl(); }
+		template <typename T> void impl_zl(const T& val) 
+		{ 
+			if (size_.ns() > 0)
+				throw std::runtime_error("Soft constraints are not implemented in QpOasesWorkspace");
+		}
+
+		//decltype(auto) zu() const {	return derived().zu(); }
+		template <typename T> void impl_zu(const T& val) 
+		{ 
+			if (size_.ns() > 0)
+				throw std::runtime_error("Soft constraints are not implemented in QpOasesWorkspace");
+		}
+
+
+		// -----------------------------------------------------------
 		auto A() const 
 		{	
 			return submatrix(ws_->A, na_, n_, nxNext_, size_.nx()); 
