@@ -349,8 +349,7 @@ namespace tmpc
 					&qp);
 	
 				// Call HPIPM
-				auto const ret = 0;
-				HPIPM::solve_ocp_qp_ipm(&qp, &sol, &solverArg_, &solver_workspace);
+				auto const ret = HPIPM::solve_ocp_qp_ipm(&qp, &sol, &solverArg_, &solver_workspace);
 	
 				if (ret != 0)
 				{
