@@ -20,6 +20,14 @@ namespace tmpc
 	class OcpSize
 	{
 	public:
+		OcpSize()
+		:	nx_ {0}
+		,	nu_ {0}
+		,	nc_ {0}
+		,	ns_ {0}
+		{
+		}
+
 		OcpSize(size_t const nx, size_t const nu, size_t const nc, size_t ns = 0)
 		:	nx_ {nx}
 		,	nu_ {nu}

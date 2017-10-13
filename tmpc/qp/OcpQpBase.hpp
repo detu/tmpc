@@ -20,61 +20,71 @@ namespace tmpc
 		// Cost
 		// -----------------------------------------------------------
         decltype(auto) Q() const { return derived().Q(); }
-		template <typename T> void Q(const T& q) { derived().Q(q); }
+		
+		template <typename T> 
+		OcpQpBase& Q(const T& q) 
+		{ 
+			derived().Q(q);
+			return *this;
+		}
 
 		decltype(auto) R() const {	return derived().R(); }
-		template <typename T> void R(const T& r) { derived().R(r); }
+		template <typename T> OcpQpBase& R(const T& r) 
+		{ 
+			derived().R(r);
+			return *this;
+		}
 
 		decltype(auto) S() const {	return derived().S(); }
-		template <typename T> void S(const T& s) { derived().S(s); }
+		template <typename T> OcpQpBase& S(const T& s) { derived().S(s); return *this; }
 
 		decltype(auto) q() const {	return derived().q(); }
-		template <typename T> void q(const T& q) { derived().q(q); }
+		template <typename T> OcpQpBase& q(const T& q) { derived().q(q); return *this; }
 
 		decltype(auto) r() const {	return derived().r(); }
-		template <typename T> void r(const T& r) { derived().r(r); }
+		template <typename T> OcpQpBase& r(const T& r) { derived().r(r); return *this; }
 
 		// -----------------------------------------------------------
 		// Soft constraints cost
 		// -----------------------------------------------------------
 		decltype(auto) Zl() const { return derived().Zl(); }
-		template <typename T> void Zl(const T& q) { derived().impl_Zl(q); }
+		template <typename T> OcpQpBase& Zl(const T& q) { derived().impl_Zl(q); return *this; }
 
 		decltype(auto) Zu() const {	return derived().Zu(); }
-		template <typename T> void Zu(const T& r) { derived().impl_Zu(r); }
+		template <typename T> OcpQpBase& Zu(const T& r) { derived().impl_Zu(r); return *this; }
 
 		decltype(auto) zl() const { return derived().zl(); }
-		template <typename T> void zl(const T& q) { derived().impl_zl(q); }
+		template <typename T> OcpQpBase& zl(const T& q) { derived().impl_zl(q); return *this; }
 
 		decltype(auto) zu() const {	return derived().zu(); }
-		template <typename T> void zu(const T& r) { derived().impl_zu(r); }
+		template <typename T> OcpQpBase& zu(const T& r) { derived().impl_zu(r); return *this; }
 
 		// -----------------------------------------------------------
 		// Shooting equalities
 		// -----------------------------------------------------------
 		decltype(auto) A() const {	return derived().A(); }
-		template <typename T> void A(const T& a) { derived().A(a); }
+		template <typename T> OcpQpBase& A(const T& a) { derived().A(a); return *this; }
 
 		decltype(auto) B() const {	return derived().B(); }
-		template <typename T> void B(const T& b) { derived().B(b); }
+		template <typename T> OcpQpBase& B(const T& b) { derived().B(b); return *this; }
 
 		decltype(auto) b() const { return derived().b(); }
-		template <typename T> void b(const T& b) { derived().b(b); }
+		template <typename T> OcpQpBase& b(const T& b) { derived().b(b); return *this; }
 
 		// -----------------------------------------------------------
 		// Linear constraints
 		// -----------------------------------------------------------
 		decltype(auto) C() const {	return derived().C(); }
-		template <typename T> void C(const T& c) { derived().C(c); }
+		template <typename T> OcpQpBase& C(const T& c) { derived().C(c); return *this; }
 
 		decltype(auto) D() const {	return derived().D(); }
-		template <typename T> void D(const T& d) { derived().D(d); }
+		template <typename T> OcpQpBase& D(const T& d) { derived().D(d); return *this; }
 
 		decltype(auto) lbd() const { return derived().lbd(); }
-		template <typename T> void lbd(const T& lbd) { derived().lbd(lbd); }
+		template <typename T> OcpQpBase& lbd(const T& lbd) { derived().lbd(lbd); return *this; }
 
 		decltype(auto) ubd() const { return derived().ubd(); }
-		template <typename T> void ubd(const T& ubd) { derived().ubd(ubd); }
+		template <typename T> OcpQpBase& ubd(const T& ubd) { derived().ubd(ubd); return *this; }
 
 		// -----------------------------------------------------------
 		// Soft linear constraints
@@ -84,26 +94,36 @@ namespace tmpc
 			return derived().impl_idxs(); 
 		}
 		
+		
 		template <typename T> 
-		void idxs(const T& val) 
+		OcpQpBase& idxs(T const& val) 
 		{ 
 			derived().impl_idxs(val);
+			return *this;
+		}
+
+
+		template <typename T> 
+		OcpQpBase& idxs(std::initializer_list<T> val) 
+		{ 
+			derived().impl_idxs(val);
+			return *this;
 		}
 
 		// -----------------------------------------------------------
 		// Bound constraints
 		// -----------------------------------------------------------
 		decltype(auto) lbu() const { return derived().lbu(); }
-		template <typename T> void lbu(const T& lbu) { derived().lbu(lbu); }
+		template <typename T> OcpQpBase& lbu(const T& lbu) { derived().lbu(lbu); return *this; }
 
 		decltype(auto) ubu() const { return derived().ubu(); }
-		template <typename T> void ubu(const T& ubu) { derived().ubu(ubu); }
+		template <typename T> OcpQpBase& ubu(const T& ubu) { derived().ubu(ubu); return *this; }
 
 		decltype(auto) lbx() const { return derived().lbx(); }
-		template <typename T> void lbx(const T& lbx) { derived().lbx(lbx); }		
+		template <typename T> OcpQpBase& lbx(const T& lbx) { derived().lbx(lbx); return *this; }		
 
 		decltype(auto) ubx() const { return derived().ubx(); }
-        template <typename T> void ubx(const T& ubx) { derived().ubx(ubx); }
+        template <typename T> OcpQpBase& ubx(const T& ubx) { derived().ubx(ubx); return *this; }
 		
 		/// Problem size
         decltype(auto) size() const
@@ -143,7 +163,7 @@ namespace tmpc
 		}
 
 		// Set all data to sNaN
-		void setNaN()
+		OcpQpBase& setNaN()
 		{
 			using Kernel = typename Derived::Kernel;
 			using Real = typename Kernel::Real;
@@ -168,11 +188,13 @@ namespace tmpc
 			ubu(sNaN<Real>());
 			lbx(sNaN<Real>());
 			ubx(sNaN<Real>());
+
+			return *this;
 		}
 		
 		// Set the Gauss-Newton approximation of the hessian Hessian and the gradient.
 		template <typename ResidualVector, typename CMatrix, typename DMatrix>
-		void gaussNewtonCostApproximation(ResidualVector const& res, CMatrix const& C, DMatrix const& D)
+		OcpQpBase& gaussNewtonCostApproximation(ResidualVector const& res, CMatrix const& C, DMatrix const& D)
 		{
 			// H = G^T G
 			//   = [Q S
@@ -187,49 +209,106 @@ namespace tmpc
 			// g = [q; r]
 			q(trans(C) * res);
 			r(trans(D) * res);
+
+			return *this;
 		}
 
 		// Set A, B and b to represent a linearized shooting equality
 		// of the form \Delta x_{k+1} = \frac{\dif f}{\dif x}(x_k,u_k)\, \Delta x_{k} 
 		//	+ \frac{\dif f}{\dif u}(x_k,u_k)\, \Delta u_{k} + f(x_{k},u_{k}) - x_{k+1}
 		template <typename Vector1, typename Matrix1, typename Matrix2, typename Vector2>
-		void linearizedShootingEquality(Vector1 const& f, Matrix1 const& Jx, Matrix2 const& Ju, Vector2 const& x_plus)
+		OcpQpBase& linearizedShootingEquality(Vector1 const& f, Matrix1 const& Jx, Matrix2 const& Ju, Vector2 const& x_plus)
 		{
 			A(Jx);
 			B(Ju);
 			b(f - x_plus);
+
+			return *this;
 		}
+
+
+		// Set A, B and b to specified values.
+		template <typename Matrix1, typename Matrix2, typename Vector>
+		OcpQpBase& shootingEquality(Matrix1 const& A, Matrix2 const& B, Vector const& b)
+		{
+			this->A(A);
+			this->B(B);
+			this->b(b);
+
+			return *this;
+		}
+
 
 		// Set upper and lower input bounds relative to a point.
 		template <typename Vector1, typename Vector2, typename Vector3>
-		void relativeInputBounds(Vector1 const& u, Vector2 const& lu, Vector3 const& uu)
+		OcpQpBase& relativeInputBounds(Vector1 const& u, Vector2 const& lu, Vector3 const& uu)
 		{
 			lbu(lu - u);
 			ubu(uu - u);
+
+			return *this;
 		}
 
 		// Set upper and lower state bounds relative to a point.
 		template <typename Vector1, typename Vector2, typename Vector3>
-		void relativeStateBounds(Vector1 const& x, Vector2 const& lx, Vector3 const& ux)
+		OcpQpBase& relativeStateBounds(Vector1 const& x, Vector2 const& lx, Vector3 const& ux)
 		{
 			lbx(lx - x);
 			ubx(ux - x);
+
+			return *this;
 		}
 
 		// Set upper and lower input bounds.
 		template <typename Vector1, typename Vector2>
-		void inputBounds(Vector1 const& lu, Vector2 const& uu)
+		OcpQpBase& inputBounds(Vector1 const& lu, Vector2 const& uu)
 		{
 			lbu(lu);
 			ubu(uu);
+
+			return *this;
 		}
 
 		// Set upper and lower state bounds.
 		template <typename Vector1, typename Vector2>
-		void stateBounds(Vector1 const& lx, Vector2 const& ux)
+		OcpQpBase& stateBounds(Vector1 const& lx, Vector2 const& ux)
 		{
 			lbx(lx);
 			ubx(ux);
+
+			return *this;
+		}
+
+
+		/// \brief Set soft constraints.
+		///
+		/// Sets slack Hessian and gradient as Zl = Zu = Z, zl = zu = z.
+		template <typename IteratorRange, typename Matrix, typename Vector>
+		OcpQpBase& softConstraints(IteratorRange const& idxs, Matrix const& Z, Vector const& z)
+		{
+			this->idxs(idxs);
+			Zl(Z);
+			Zu(Z);
+			zl(z);
+			zu(z);
+
+			return *this;
+		}
+
+
+		/// \brief Set soft constraints.
+		///
+		/// Sets slack Hessian and gradient as Zl = Zu = Z, zl = zu = z.
+		template <typename T, typename Matrix, typename Vector>
+		OcpQpBase& softConstraints(std::initializer_list<T> idxs, Matrix const& Z, Vector const& z)
+		{
+			this->idxs(idxs);
+			Zl(Z);
+			Zu(Z);
+			zl(z);
+			zu(z);
+
+			return *this;
 		}
 
     protected:
