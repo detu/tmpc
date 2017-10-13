@@ -148,29 +148,69 @@ private:
 		// -----------------------------------------------------------
 		// Soft constraints cost
 		// -----------------------------------------------------------
-		//decltype(auto) Zl() const { return derived().Zl(); }
+		decltype(auto) impl_Zl() const 
+		{ 
+			return StaticMatrix<Kernel, 0, 0> {};
+		}
+	
+		
 		template <typename T> void impl_Zl(const T& val) 
 		{ 
 			if (size_.ns() > 0)
 				throw std::runtime_error("Soft constraints are not implemented in QpOasesWorkspace");
 		}
 
-		//decltype(auto) Zu() const {	return derived().Zu(); }
+		
+		decltype(auto) impl_Zu() const 
+		{	
+			return StaticMatrix<Kernel, 0, 0> {};
+		}
+
+
 		template <typename T> void impl_Zu(const T& val) 
 		{ 
 			if (size_.ns() > 0)
 				throw std::runtime_error("Soft constraints are not implemented in QpOasesWorkspace");
 		}
 
-		//decltype(auto) zl() const { return derived().zl(); }
+		
+		decltype(auto) impl_zl() const 
+		{ 
+			return StaticVector<Kernel, 0> {}; 
+		}
+
+
 		template <typename T> void impl_zl(const T& val) 
 		{ 
 			if (size_.ns() > 0)
 				throw std::runtime_error("Soft constraints are not implemented in QpOasesWorkspace");
 		}
 
-		//decltype(auto) zu() const {	return derived().zu(); }
+		
+		decltype(auto) impl_zu() const 
+		{	
+			return StaticVector<Kernel, 0> {};
+		}
+
+
 		template <typename T> void impl_zu(const T& val) 
+		{ 
+			if (size_.ns() > 0)
+				throw std::runtime_error("Soft constraints are not implemented in QpOasesWorkspace");
+		}
+
+
+		// -----------------------------------------------------------
+		// Soft constraints index
+		// -----------------------------------------------------------
+		decltype(auto) impl_idxs() const
+		{
+			return std::array<int, 0> {};
+		}
+
+
+		template <typename T> 
+		void impl_idxs(T const& val) 
 		{ 
 			if (size_.ns() > 0)
 				throw std::runtime_error("Soft constraints are not implemented in QpOasesWorkspace");

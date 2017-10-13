@@ -8,6 +8,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <numeric>
+#include <array>
 
 namespace tmpc
 {
@@ -39,6 +40,8 @@ namespace tmpc
 	 * Manages resources needed for the condensing algorithm of a given size.
 	 *
 	 * \tparam <Kernel> Kernel for matrix arithmetic.
+	 * 
+	 * TODO: account for soft constraints.
 	 */
 	template <typename Kernel>
 	class Condensing
@@ -123,7 +126,45 @@ namespace tmpc
 			auto const& ubx() const {
 				return c_.ubx_;
 			}
-	
+
+
+			// -----------------------------------------------------------
+			// Soft constraints cost
+			// -----------------------------------------------------------
+			decltype(auto) impl_Zl() const 
+			{ 
+				return StaticMatrix<Kernel, 0, 0> {};
+			}
+
+			
+			decltype(auto) impl_Zu() const 
+			{	
+				return StaticMatrix<Kernel, 0, 0> {};
+			}
+
+			
+			decltype(auto) impl_zl() const 
+			{ 
+				return StaticVector<Kernel, 0> {}; 
+			}
+
+			
+			decltype(auto) impl_zu() const 
+			{	
+				return StaticVector<Kernel, 0> {};
+			}
+
+
+			// -----------------------------------------------------------
+			// Soft constraints index
+			// -----------------------------------------------------------
+			decltype(auto) impl_idxs() const
+			{
+				return std::array<int, 0> {};
+			}
+
+
+			// -----------------------------------------------------------	
 			OcpSize const& size() const
 			{
 				return c_.cs_;

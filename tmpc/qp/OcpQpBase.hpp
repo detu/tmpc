@@ -47,16 +47,16 @@ namespace tmpc
 		// -----------------------------------------------------------
 		// Soft constraints cost
 		// -----------------------------------------------------------
-		decltype(auto) Zl() const { return derived().Zl(); }
+		decltype(auto) Zl() const { return derived().impl_Zl(); }
 		template <typename T> OcpQpBase& Zl(const T& q) { derived().impl_Zl(q); return *this; }
 
-		decltype(auto) Zu() const {	return derived().Zu(); }
+		decltype(auto) Zu() const {	return derived().impl_Zu(); }
 		template <typename T> OcpQpBase& Zu(const T& r) { derived().impl_Zu(r); return *this; }
 
-		decltype(auto) zl() const { return derived().zl(); }
+		decltype(auto) zl() const { return derived().impl_zl(); }
 		template <typename T> OcpQpBase& zl(const T& q) { derived().impl_zl(q); return *this; }
 
-		decltype(auto) zu() const {	return derived().zu(); }
+		decltype(auto) zu() const {	return derived().impl_zu(); }
 		template <typename T> OcpQpBase& zu(const T& r) { derived().impl_zu(r); return *this; }
 
 		// -----------------------------------------------------------
@@ -97,7 +97,10 @@ namespace tmpc
 		
 		template <typename T> 
 		OcpQpBase& idxs(T const& val) 
-		{ 
+		{
+			if (val.size() != size().ns())
+				throw std::invalid_argument("Soft constraints index size does not match");
+
 			derived().impl_idxs(val);
 			return *this;
 		}

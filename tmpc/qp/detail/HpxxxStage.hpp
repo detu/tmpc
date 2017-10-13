@@ -161,9 +161,6 @@ namespace tmpc :: detail
 		template <typename IteratorRange>
 		void impl_idxs(IteratorRange const& val)
 		{
-			if (val.size() != idxs_.size())
-				throw std::invalid_argument("Soft constraints index size does not match");
-
 			std::copy(val.begin(), val.end(), idxs_.begin());
 		}
 
@@ -242,7 +239,7 @@ namespace tmpc :: detail
 				{
 					// Otherwise, check that the values are [-inf, inf]
 					if (!(lb_[i] == -inf<Real>() && ub_[i] == inf<Real>()))
-						throw std::invalid_argument("And invalid QP bound is found. For HPMPC, "
+						throw std::invalid_argument("An invalid QP bound is found. For HPMPC/HPIPM, "
 							"the bounds should be either both finite or [-inf, inf]");
 				}
 			}

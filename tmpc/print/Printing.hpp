@@ -71,6 +71,16 @@ namespace tmpc
 			os << qp_i << ".ubx = " << AsMatlab(stage.ubx()) << ";" << endl << endl;
 			os << qp_i << ".lbu = " << AsMatlab(stage.lbu()) << ";" << endl << endl;
 			os << qp_i << ".ubu = " << AsMatlab(stage.ubu()) << ";" << endl << endl;
+
+			os << qp_i << ".Zl = " << AsMatlab(stage.Zl()) << ";" << endl << endl;
+			os << qp_i << ".Zu = " << AsMatlab(stage.Zu()) << ";" << endl << endl;
+			os << qp_i << ".zl = " << AsMatlab(stage.zl()) << ";" << endl << endl;
+			os << qp_i << ".zu = " << AsMatlab(stage.zu()) << ";" << endl << endl;
+
+			os << qp_i << ".idxs = [ ..." << endl;
+			for (auto i: stage.idxs())
+				os << i << ", ";
+			os << "]" << endl << endl;
 			
 			++k;
 		}
