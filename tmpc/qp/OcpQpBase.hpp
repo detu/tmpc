@@ -302,6 +302,21 @@ namespace tmpc
 		/// \brief Set soft constraints.
 		///
 		/// Sets slack Hessian and gradient as Zl = Zu = Z, zl = zu = z.
+		template <typename Matrix, typename Vector>
+		OcpQpBase& slackPenalty(Matrix const& Z, Vector const& z)
+		{
+			Zl(Z);
+			Zu(Z);
+			zl(z);
+			zu(z);
+
+			return *this;
+		}
+
+
+		/// \brief Set soft constraints.
+		///
+		/// Sets slack index and sets slack Hessian and gradient as Zl = Zu = Z, zl = zu = z.
 		template <typename T, typename Matrix, typename Vector>
 		OcpQpBase& softConstraints(std::initializer_list<T> idxs, Matrix const& Z, Vector const& z)
 		{
