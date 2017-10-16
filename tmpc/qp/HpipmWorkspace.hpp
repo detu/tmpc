@@ -4,6 +4,7 @@
 #include <tmpc/ocp/OcpSize.hpp>
 #include <tmpc/ocp/OcpSolutionBase.hpp>
 #include <tmpc/qp/OcpQpBase.hpp>
+#include <tmpc/qp/QpWorkspaceBase.hpp>
 
 #include <tmpc/Matrix.hpp>
 #include <tmpc/Math.hpp>
@@ -61,18 +62,15 @@ namespace tmpc
 		static int solve_ocp_qp_ipm(ocp_qp const *qp, ocp_qp_sol *qp_sol, ocp_qp_ipm_arg const *arg, ocp_qp_ipm_workspace *ws);
 	};
 
-	class HpipmException 
-	:	public QpSolverException
+	class HpipmException
+	:	public std::runtime_error
 	{
 	public:
 		HpipmException(int code);
-
 		int code() const { return _code; }
-		char const * what() const noexcept override { return msg_.c_str(); }
 
 	private:
 		int const _code;
-		std::string const msg_;
 	};
 
 	/**
@@ -82,6 +80,7 @@ namespace tmpc
 	 */
 	template <typename Kernel_>
 	class HpipmWorkspace
+	:	public QpWorkspaceBase<HpipmWorkspace<Kernel_>>
 	{
 	public:
 		using Kernel = Kernel_;
@@ -145,6 +144,13 @@ namespace tmpc
 			{			
 			}
 		};
+
+
+		std::string impl_solverName() const
+		{
+			return "HPIPM";
+		}
+
 	
 		boost::iterator_range<ProblemIterator> problem()
 		{
@@ -156,7 +162,7 @@ namespace tmpc
 			return boost::iterator_range<ConstProblemIterator>(stage_.begin(), stage_.end());
 		}
 	
-		boost::iterator_range<ConstSolutionIterator> solution() const
+		boost::iterator_range<ConstSolutionIterator> impl_solution() const
 		{
 			return boost::iterator_range<ConstSolutionIterator>(stage_.begin(), stage_.end());
 		}
@@ -313,7 +319,7 @@ namespace tmpc
 		HpipmWorkspace& operator= (HpipmWorkspace const&) = delete;
 		HpipmWorkspace& operator= (HpipmWorkspace &&) = delete;
 
-		void solve()
+		void impl_solve()
 		{
 			if (stage_.size() > 1)
 			{
@@ -350,12 +356,13 @@ namespace tmpc
 	
 				// Call HPIPM
 				auto const ret = HPIPM::solve_ocp_qp_ipm(&qp, &sol, &solverArg_, &solver_workspace);
+				numIter_ = solver_workspace.iter;
 	
 				if (ret != 0)
 				{
 					throw HpipmException(ret);
 				}
-	
+
 				// Convert the solution
 				HPIPM::cvt_ocp_qp_sol_to_colmaj(&qp, &sol, 
 					u_.data(), x_.data(), ls_.data(), us_.data(),

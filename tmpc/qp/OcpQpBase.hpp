@@ -331,7 +331,7 @@ namespace tmpc
 
     protected:
 		// Allow default construction and copying only as a part of a derived class;
-		// otherwise, and object might be created which is not a part of Derived, 
+		// otherwise, an object might be created which is not a part of Derived, 
 		// and therefore calling its methods will cause undefined behavior.
 		OcpQpBase() = default;
 		OcpQpBase(OcpQpBase const&) = default;
