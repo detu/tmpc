@@ -375,6 +375,61 @@ namespace tmpc
 
 		/// \brief Get number of iterations performed by the QP solver.
 		unsigned numIter() const { return numIter_; }
+
+
+		void alphaMin(Real val)
+		{
+			if (val <= 0.)
+				throw std::invalid_argument("HpipmWorkspace::alphaMin(): value must be positive");
+
+			solverArg_.alpha_min = val;
+		}
+
+		
+		void resGMax(Real val)
+		{
+			if (val <= 0.)
+				throw std::invalid_argument("HpipmWorkspace::resGMax(): value must be positive");
+
+			solverArg_.res_g_max = val;
+		}
+
+		
+		void resBMax(Real val)
+		{
+			if (val <= 0.)
+				throw std::invalid_argument("HpipmWorkspace::resBMax(): value must be positive");
+			
+			solverArg_.res_b_max = val;
+		}
+
+		
+		void resDMax(Real val)
+		{
+			if (val <= 0.)
+				throw std::invalid_argument("HpipmWorkspace::resDMax(): value must be positive");
+			
+			solverArg_.res_d_max = val;
+		}
+
+		
+		void resMMax(Real val)
+		{
+			if (val <= 0.)
+				throw std::invalid_argument("HpipmWorkspace::resMMax(): value must be positive");
+		
+			solverArg_.res_m_max = val;
+		}
+
+
+		void mu0(Real val)
+		{
+			if (val <= 0.)
+				throw std::invalid_argument("HpipmWorkspace::mu0(): value must be positive");
+		
+			solverArg_.mu0 = val;
+		}
+
 		
 	private:
 		using HPIPM = Hpipm<Real>;
