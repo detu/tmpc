@@ -16,6 +16,8 @@ set (SRC
 	${TMPC_INCLUDE_DIR}/qp/QpSolverException.hpp
 
     mpc/MpcOcpSize.cpp
+
+    print/Exception.cpp
 )
 
 add_library(tmpc STATIC ${SRC})
