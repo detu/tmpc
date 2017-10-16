@@ -13,6 +13,9 @@ namespace tmpc :: detail
         using Real = typename Kernel::Real;
 
     public:
+        UnpaddedMatrix(UnpaddedMatrix const&) = default;
+        UnpaddedMatrix(UnpaddedMatrix &&) = default;
+
         UnpaddedMatrix(size_t m, size_t n)
         :   CustomMatrix<Kernel, unaligned, unpadded, SO> {new Real[m * n], m, n}
         {
