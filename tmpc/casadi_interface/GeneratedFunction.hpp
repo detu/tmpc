@@ -10,7 +10,7 @@
 #include <vector>
 #include <string>
 #include <array>
-//#include <initializer_list>
+#include <initializer_list>
 #include <sstream>
 
 #include <casadi/mem.h>
@@ -73,7 +73,7 @@ namespace casadi_interface
 			return fun_.f_->sparsity_out(ind)[1];
 		}
 
-		void operator()(std::initializer_list<const casadi_real_t *> arg, std::initializer_list<casadi_real_t *> res) const
+		void operator()(std::initializer_list<const casadi_real *> arg, std::initializer_list<casadi_real *> res) const
 		{
 			if (arg.size() != n_in())
 				throw std::invalid_argument("Invalid number of input arguments to " + name());
@@ -82,7 +82,7 @@ namespace casadi_interface
 				throw std::invalid_argument("Invalid number of output arguments to " + name());
 
 			// See https://github.com/casadi/casadi/issues/2091 for the explanation why the const_cast<>'s are here.
-			fun_.f_->eval(const_cast<casadi_real_t const **>(arg.begin()), const_cast<casadi_real_t **>(res.begin()), _iw.data(), _w.data(), 0);
+			fun_.f_->eval(const_cast<casadi_real const **>(arg.begin()), const_cast<casadi_real **>(res.begin()), _iw.data(), _w.data(), 0);
 		}
 
 	private:
@@ -117,7 +117,7 @@ namespace casadi_interface
 		http://casadi.sourceforge.net/users_guide/casadi-users_guide.pdf
 		*/
 		mutable std::vector<int> _iw;
-		mutable std::vector<casadi_real_t> _w;
+		mutable std::vector<casadi_real> _w;
 	};
 
 	// Some interesting ideas here: https://habrahabr.ru/post/228031/
