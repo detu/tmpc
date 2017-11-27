@@ -25,6 +25,7 @@
 
 #include "eigen/ForEach.hpp"
 #include "eigen/Trans.hpp"
+#include "eigen/IsNan.hpp"
 #include "eigen/Eval.hpp"
 #include "eigen/Norm.hpp"
 #include "eigen/Rand.hpp"

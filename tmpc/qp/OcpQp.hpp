@@ -38,6 +38,11 @@ namespace tmpc
 		,	ubu_(sz.nu())
 		,	lbd_(sz.nc())
 		,	ubd_(sz.nc())
+		,	Zl_(sz.ns(), sz.ns())
+		,	Zu_(sz.ns(), sz.ns())
+		,	zl_(sz.ns())
+		,	zu_(sz.ns())
+		,	idxs_(sz.nx(), 0)
 		{
 		}
 
@@ -60,7 +65,13 @@ namespace tmpc
 		,	ubu_(rhs.ubu())
 		,	lbd_(rhs.lbd())
 		,	ubd_(rhs.ubd())
+		,	Zl_(rhs.Zl())
+		,	Zu_(rhs.Zu())
+		,	zl_(rhs.zl())
+		,	zu_(rhs.zu())
+		,	idxs_(size_.ns())
 		{
+			this->idxs(rhs.idxs());
 		}
 
 		const Matrix& A() const {
@@ -242,6 +253,79 @@ namespace tmpc
 			noresize(ubx_) = ubx;
 		}
 
+
+		// -----------------------------------------------------------
+		// Soft constraints cost
+		// -----------------------------------------------------------
+		auto const& impl_Zl() const
+		{
+			return Zl_;
+		}
+
+
+		template <typename T>
+		void impl_Zl(T const& val)
+		{
+			noresize(Zl_) = val;
+		}
+
+
+		auto const& impl_Zu() const
+		{
+			return Zu_;
+		}
+
+
+		template <typename T>
+		void impl_Zu(T const& val)
+		{
+			noresize(Zu_) = val;
+		}
+
+
+		auto const& impl_zl() const
+		{
+			return zl_;
+		}
+
+
+		template <typename T>
+		void impl_zl(T const& val)
+		{
+			noresize(zl_) = val;
+		}
+
+
+		auto const& impl_zu() const
+		{
+			return zu_;
+		}
+
+
+		template <typename T>
+		void impl_zu(T const& val)
+		{
+			noresize(zu_) = val;
+		}
+
+
+		// -----------------------------------------------------------
+		// Soft constraints index
+		// -----------------------------------------------------------
+		auto const& impl_idxs() const
+		{
+			return idxs_;
+		}
+
+
+		template <typename T> 
+		void impl_idxs(T const& val) 
+		{ 
+			std::copy(val.begin(), val.end(), idxs_.begin());
+		}
+
+
+		// -----------------------------------------------------------
 		OcpSize const& size() const
 		{
 			return size_;
@@ -270,5 +354,10 @@ namespace tmpc
 		Vector ubu_;
 		Vector lbd_;
 		Vector ubd_;
+		Matrix Zl_;
+		Matrix Zu_;
+		Vector zl_;
+		Vector zu_;
+		std::vector<size_t> idxs_;
 	};
 }

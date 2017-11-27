@@ -2,10 +2,6 @@
 
 #include "Eigen.hpp"
 
-namespace tmpc :: eigen_adaptor
-{
-   
-}
 
 namespace Eigen
 {

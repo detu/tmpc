@@ -26,9 +26,8 @@ namespace tmpc
 	}
 
 	QpOasesException::QpOasesException(qpOASES::returnValue code)
-	:	QpSolverException("qpOASES"),
-		_code(code),
-		msg_(std::string(QpSolverException::what()) + "\nqpOASES return code " + std::to_string(code))
+	:	std::runtime_error("qpOASES return code " + std::to_string(code))
+	,	_code(code)
 	{
 	}
 }
