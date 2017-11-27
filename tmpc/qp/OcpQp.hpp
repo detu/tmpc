@@ -10,6 +10,11 @@
 
 namespace tmpc 
 {
+	///
+	/// \brief One stage of OCP QP.
+	///
+	/// Solver-agnostic memory layout.
+	///
 	template <typename Kernel>
 	class OcpQp
 	:	public OcpQpBase<OcpQp<Kernel>>

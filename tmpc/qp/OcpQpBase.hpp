@@ -48,16 +48,16 @@ namespace tmpc
 		// Soft constraints cost
 		// -----------------------------------------------------------
 		decltype(auto) Zl() const { return derived().impl_Zl(); }
-		template <typename T> OcpQpBase& Zl(const T& q) { derived().impl_Zl(q); return *this; }
+		template <typename T> OcpQpBase& Zl(const T& val) { derived().impl_Zl(val); return *this; }
 
 		decltype(auto) Zu() const {	return derived().impl_Zu(); }
-		template <typename T> OcpQpBase& Zu(const T& r) { derived().impl_Zu(r); return *this; }
+		template <typename T> OcpQpBase& Zu(const T& val) { derived().impl_Zu(val); return *this; }
 
 		decltype(auto) zl() const { return derived().impl_zl(); }
-		template <typename T> OcpQpBase& zl(const T& q) { derived().impl_zl(q); return *this; }
+		template <typename T> OcpQpBase& zl(const T& val) { derived().impl_zl(val); return *this; }
 
 		decltype(auto) zu() const {	return derived().impl_zu(); }
-		template <typename T> OcpQpBase& zu(const T& r) { derived().impl_zu(r); return *this; }
+		template <typename T> OcpQpBase& zu(const T& val) { derived().impl_zu(val); return *this; }
 
 		// -----------------------------------------------------------
 		// Shooting equalities
@@ -347,4 +347,72 @@ namespace tmpc
 			return static_cast<Derived const&>(*this);	
         }
     };
+
+
+	///
+    /// \brief Randomize a QP.
+    ///
+    template <typename QP>
+    inline void randomize(OcpQpBase<QP>& qp)
+    {
+        using Kernel = typename QP::Kernel;
+		using DynamicMatrix = typename Kernel::DynamicMatrix;
+		using DynamicVector = typename Kernel::DynamicVector;
+		typename Kernel::template Rand<DynamicMatrix> rand_matrix;
+		typename Kernel::template Rand<DynamicVector> rand_vector;
+
+		OcpSize const sz = qp.size();
+		auto const nx_next = rows(qp.A());
+
+		{
+			DynamicMatrix H = rand_matrix.generate(sz.nx() + sz.nu(), sz.nx() + sz.nu());
+			H *= ctrans(H);
+
+			qp.Q(submatrix(H, 0, 0, sz.nx(), sz.nx()));
+			qp.R(submatrix(H, sz.nx(), sz.nx(), sz.nu(), sz.nu()));
+			qp.S(submatrix(H, 0, sz.nx(), sz.nx(), sz.nu()));
+		}
+
+		qp.q(rand_vector.generate(sz.nx()));
+		qp.r(rand_vector.generate(sz.nu()));
+		qp.A(rand_matrix.generate(nx_next, sz.nx()));
+		qp.B(rand_matrix.generate(nx_next, sz.nu()));
+		qp.b(rand_vector.generate(nx_next));
+		qp.C(rand_matrix.generate(sz.ns(), sz.nx()));
+		qp.D(rand_matrix.generate(sz.ns(), sz.nu()));
+
+		{
+			DynamicVector const lbd = rand_vector.generate(sz.ns());
+			DynamicVector const ubd = rand_vector.generate(sz.ns());
+			qp.lbd(min(lbd, ubd));
+			qp.ubd(max(lbd, ubd));
+		}
+
+		{
+			DynamicVector const lbx = rand_vector.generate(sz.nx());
+			DynamicVector const ubx = rand_vector.generate(sz.nx());
+			qp.lbx(min(lbx, ubx));
+			qp.ubx(max(lbx, ubx));
+		}
+
+		{
+			DynamicVector const lbu = rand_vector.generate(sz.nu());
+			DynamicVector const ubu = rand_vector.generate(sz.nu());
+			qp.lbx(min(lbu, ubu));
+			qp.ubx(max(lbu, ubu));
+		}
+
+		{
+			DynamicMatrix const Z = rand_matrix.generate(sz.ns(), sz.ns());
+			qp.Zl(ctrans(Z) * Z);
+		}
+
+		{
+			DynamicMatrix const Z = rand_matrix.generate(sz.ns(), sz.ns());
+			qp.Zu(ctrans(Z) * Z);
+		}
+			
+		qp.zl(rand_matrix.generate(sz.ns()));
+		qp.zu(rand_matrix.generate(sz.ns()));
+    }
 }
