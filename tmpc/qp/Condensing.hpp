@@ -43,10 +43,12 @@ namespace tmpc
 	 * 
 	 * TODO: account for soft constraints.
 	 */
-	template <typename Kernel>
+	template <typename Kernel_>
 	class Condensing
 	{
 	public:
+		using Kernel = Kernel_;
+
 		class CondensedStage
 		:	public OcpQpBase<CondensedStage>
 		{
@@ -321,6 +323,13 @@ namespace tmpc
 			CondensedStage result(*this);
 			return std::move(result);
 		}
+
+
+		auto const& condensedSize() const
+		{
+			return cs_;
+		}
+		
 
 	private:
 		OcpSize const cs_;
