@@ -10,7 +10,7 @@
 #include <vector>
 #include <string>
 #include <array>
-//#include <initializer_list>
+#include <initializer_list>
 #include <sstream>
 
 #include <casadi/mem.h>
@@ -29,6 +29,8 @@ namespace casadi_interface
 			if (int code = fun_.f_->work(&sz_arg, &sz_res, &sz_iw, &sz_w) != 0)
 				throw std::runtime_error(name() + "_fun_work() returned " + std::to_string(code));
 
+			_arg.resize(sz_arg);
+			_res.resize(sz_res);
 			_iw.resize(sz_iw);
 			_w.resize(sz_w);
 		}
@@ -73,7 +75,7 @@ namespace casadi_interface
 			return fun_.f_->sparsity_out(ind)[1];
 		}
 
-		void operator()(std::initializer_list<const casadi_real_t *> arg, std::initializer_list<casadi_real_t *> res) const
+		void operator()(std::initializer_list<const casadi_real *> arg, std::initializer_list<casadi_real *> res) const
 		{
 			if (arg.size() != n_in())
 				throw std::invalid_argument("Invalid number of input arguments to " + name());
@@ -81,8 +83,10 @@ namespace casadi_interface
 			if (res.size() != n_out())
 				throw std::invalid_argument("Invalid number of output arguments to " + name());
 
-			// See https://github.com/casadi/casadi/issues/2091 for the explanation why the const_cast<>'s are here.
-			fun_.f_->eval(const_cast<casadi_real_t const **>(arg.begin()), const_cast<casadi_real_t **>(res.begin()), _iw.data(), _w.data(), 0);
+			std::copy(arg.begin(), arg.end(), _arg.begin());
+			std::copy(res.begin(), res.end(), _res.begin());
+
+			fun_.f_->eval(_arg.data(), _res.data(), _iw.data(), _w.data(), 0);
 		}
 
 	private:
@@ -116,8 +120,10 @@ namespace casadi_interface
 		CasADi user guide, section 5.3.
 		http://casadi.sourceforge.net/users_guide/casadi-users_guide.pdf
 		*/
+		mutable std::vector<casadi_real const *> _arg;
+		mutable std::vector<casadi_real *> _res;
 		mutable std::vector<int> _iw;
-		mutable std::vector<casadi_real_t> _w;
+		mutable std::vector<casadi_real> _w;
 	};
 
 	// Some interesting ideas here: https://habrahabr.ru/post/228031/

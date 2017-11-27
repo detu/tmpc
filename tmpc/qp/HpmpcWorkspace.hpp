@@ -4,6 +4,7 @@
 #include <tmpc/ocp/OcpSize.hpp>
 #include <tmpc/ocp/OcpSolutionBase.hpp>
 #include <tmpc/qp/OcpQpBase.hpp>
+#include <tmpc/qp/QpWorkspaceBase.hpp>
 
 #include <tmpc/Matrix.hpp>
 #include <tmpc/Math.hpp>
@@ -43,17 +44,14 @@ namespace tmpc
 	};
 
 	class HpmpcException 
-	:	public QpSolverException
+	:	public std::runtime_error
 	{
 	public:
 		HpmpcException(int code);
-
 		int code() const { return _code;	}
-		char const * what() const noexcept override { return msg_.c_str(); }
 
 	private:
 		int const _code;
-		std::string const msg_;
 	};
 
 	/**
@@ -63,6 +61,7 @@ namespace tmpc
 	 */
 	template <typename Kernel_>
 	class HpmpcWorkspace
+	:	public QpWorkspaceBase<HpmpcWorkspace<Kernel_>>
 	{
 	public:
 		using Kernel = Kernel_;
@@ -128,6 +127,13 @@ namespace tmpc
 			{			
 			}
 		};
+
+
+		std::string impl_solverName() const
+		{
+			return "HPMPC";
+		}
+
 	
 		boost::iterator_range<ProblemIterator> problem()
 		{
@@ -139,7 +145,8 @@ namespace tmpc
 			return boost::iterator_range<ConstProblemIterator>(stage_.begin(), stage_.end());
 		}
 	
-		boost::iterator_range<ConstSolutionIterator> solution() const
+		
+		boost::iterator_range<ConstSolutionIterator> impl_solution() const
 		{
 			return boost::iterator_range<ConstSolutionIterator>(stage_.begin(), stage_.end());
 		}
@@ -199,7 +206,7 @@ namespace tmpc
 		HpmpcWorkspace& operator= (HpmpcWorkspace const&) = delete;
 		HpmpcWorkspace& operator= (HpmpcWorkspace &&) = delete;
 
-		void solve()
+		void impl_solve()
 		{
 			if (stage_.size() > 0)
 			{

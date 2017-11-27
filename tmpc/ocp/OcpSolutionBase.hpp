@@ -38,4 +38,17 @@ namespace tmpc
 			return static_cast<Derived const&>(*this);	
 		}
 	};
+
+
+	///
+	/// \brief Checks if any of the solution components has NaNs.
+	///
+	template <typename Derived>
+	inline bool isnan(OcpSolutionBase<Derived> const& sol)
+	{
+		return isnan(sol.x()) || isnan(sol.u()) || isnan(sol.pi())
+			|| isnan(sol.lam_lbu()) || isnan(sol.lam_ubu())
+			|| isnan(sol.lam_lbx()) || isnan(sol.lam_ubx())
+			|| isnan(sol.lam_lbd()) || isnan(sol.lam_ubd());
+	}
 }

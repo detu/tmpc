@@ -9,18 +9,35 @@
 
 #include <stdexcept>
 
-namespace tmpc {
 
-/**
- * \brief Thrown by a QP solver when a QP could not be solved.
- */
-class QpSolverException : public std::runtime_error
+namespace tmpc 
 {
-public:
-	QpSolverException(std::string const& solver_name) 
-	:	std::runtime_error(solver_name + " could not solve a QP.")
+	/**
+	 * \brief Thrown by a QP solver when a QP could not be solved.
+	 */
+	class QpSolverException : public std::runtime_error
 	{
-	}
-};
+	public:
+		QpSolverException(std::string const& solver_name) 
+		:	std::runtime_error(solver_name + " could not solve a QP.")
+		,	solverName_(solver_name)
+		{
+		}
 
-}	// namespace tmpc
+		
+		QpSolverException(std::string const& solver_name, std::string const& message) 
+		:	std::runtime_error(message)
+		,	solverName_(solver_name)
+		{
+		}
+
+
+		std::string const& solverName() const
+		{
+			return solverName_;
+		}
+
+	private:
+		std::string const solverName_;
+	};
+}

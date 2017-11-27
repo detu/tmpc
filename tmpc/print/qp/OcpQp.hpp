@@ -34,6 +34,16 @@ namespace tmpc
 		os << "lbu = " << endl << trans(stage.lbu()) << endl << endl;
 		os << "ubu = " << endl << trans(stage.ubu()) << endl << endl;
 
+		os << "Zl = " << endl << stage.Zl() << endl << endl;
+		os << "Zu = " << endl << stage.Zu() << endl << endl;
+		os << "zl = " << endl << trans(stage.zl()) << endl << endl;
+		os << "zu = " << endl << trans(stage.zu()) << endl << endl;
+
+		os << "idxs = " << endl;
+		for (auto i: stage.idxs())
+			os << i << " ";
+		os << endl;
+
 		return os;
 	}
 }

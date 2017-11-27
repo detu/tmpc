@@ -18,9 +18,8 @@
 namespace tmpc
 {
 	HpmpcException::HpmpcException(int code)
-	:	QpSolverException("HPMPC"),
-		_code(code),
-		msg_(std::string(QpSolverException::what()) + "\nReturn code " + std::to_string(code))
+	:	std::runtime_error("HPMPC return code " + std::to_string(code))
+	,	_code(code)
 	{
 	}
 
