@@ -21,8 +21,9 @@ namespace tmpc :: benchmark
         std::vector<OcpQp<Kernel>> qp;
         qp.reserve(N);
 
-        for (size_t k = 0; k < N; ++k)
+        for (size_t k = 0; k + 1 < N; ++k)
             qp.emplace_back(OcpSize {nx, nu, nc, ns}, nx);
+        qp.emplace_back(OcpSize {nx, nu, nc, ns}, 0);
 
         return qp;
     }
