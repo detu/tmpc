@@ -231,13 +231,10 @@ namespace tmpc
 				submatrix(Sc_, 0, nu, Sc_.rows(), sz.nu()) = trans(A_) * stage->S();
 
 				// Update R
-				//K::top_left_corner(Rc_, nu, nu) += K::trans(B) * stage->Q() * B;
+				// This is the hottest line of the algorithm:
 				submatrix(Rc_, 0, 0, nu, nu) += trans(B_) * stage->Q() * B_;
-				//K::block(Rc_, 0, nu, nu, sz.nu()) = K::trans(B) * stage->S();
 				submatrix(Rc_, 0, nu, nu, sz.nu()) = trans(B_) * stage->S();
-				//K::block(Rc_, nu, 0, sz.nu(), nu) = K::trans(stage->S()) * B;
 				submatrix(Rc_, nu, 0, sz.nu(), nu) = trans(stage->S()) * B_;
-				//K::block(Rc_, nu, nu, sz.nu(), sz.nu()) = stage->R();
 				submatrix(Rc_, nu, nu, sz.nu(), sz.nu()) = stage->R();
 
 				// Update q
