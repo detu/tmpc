@@ -1,5 +1,6 @@
 set(src
-    CondensingTest.cpp
+    CondensingN3Test.cpp
+    CondensingN2Test.cpp
 )
 
 if (TMPC_WITH_qpOASES)

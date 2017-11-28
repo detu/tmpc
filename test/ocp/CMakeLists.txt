@@ -1,5 +1,6 @@
 add_executable(tmpc_test_ocp
     SensitivityTupleTest.cpp
+    CondensedOcpSizeTest.cpp
 )
 
 target_link_libraries(tmpc_test_ocp
