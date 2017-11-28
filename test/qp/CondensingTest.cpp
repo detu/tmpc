@@ -1,4 +1,4 @@
-#include <tmpc/qp/Condensing.hpp>
+#include <tmpc/qp/CondensingN3.hpp>
 #include <tmpc/qp/OcpQp.hpp>
 #include <tmpc/mpc/MpcOcpSize.hpp>
 
@@ -10,7 +10,7 @@ namespace tmpc :: testing
 {
 	TEST(QpSizeTest, testCondensedQpSize)
 	{
-		EXPECT_EQ(condensedQpSize({
+		EXPECT_EQ(condensedOcpSize({
 			OcpSize(2, 1, 3),
 			OcpSize(4, 5, 6),
 			OcpSize(2, 1, 1)
@@ -26,7 +26,7 @@ namespace tmpc :: testing
 			OcpSize(2, 1, 1)
 			};
 
-		EXPECT_EQ(condensedQpSize(sz.begin(), sz.end()),
+		EXPECT_EQ(condensedOcpSize(sz.begin(), sz.end()),
 			OcpSize(2, 1 + 5 + 1, (3 + 6 + 1) + (4 + 2)));
 	}
 
@@ -176,7 +176,7 @@ namespace tmpc :: testing
 	TEST_F(CondensingTest, testCondensing)
 	{
 		// Condense
-		Condensing<Kernel> condensing(sizeBegin(qp), sizeEnd(qp));
+		CondensingN3<Kernel> condensing(sizeBegin(qp), sizeEnd(qp));
 		OcpQp<Kernel> const condensed = condensing(qp.begin(), qp.end());
 
 		EXPECT_EQ(print_wrap(condensed.Q()), print_wrap(Qc_expected));

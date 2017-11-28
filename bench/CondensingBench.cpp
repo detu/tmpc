@@ -1,4 +1,4 @@
-#include <tmpc/qp/Condensing.hpp>
+#include <tmpc/qp/CondensingN3.hpp>
 #include <tmpc/qp/OcpQp.hpp>
 #include <tmpc/BlazeKernel.hpp>
 #include <tmpc/EigenKernel.hpp>
@@ -41,8 +41,8 @@ namespace tmpc :: benchmark
     }
 
 
-    BENCHMARK_TEMPLATE(BM_Condensing, Condensing<BlazeKernel<double>>)->Arg(5)->Arg(8)->Range(10, 100);
-    BENCHMARK_TEMPLATE(BM_Condensing, Condensing<EigenKernel<double>>)->Arg(5)->Arg(8)->Range(10, 100);
+    BENCHMARK_TEMPLATE(BM_Condensing, CondensingN3<BlazeKernel<double>>)->Arg(5)->Arg(8)->Range(10, 100);
+    BENCHMARK_TEMPLATE(BM_Condensing, CondensingN3<EigenKernel<double>>)->Arg(5)->Arg(8)->Range(10, 100);
 }
 
 

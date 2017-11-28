@@ -13,36 +13,7 @@
 namespace tmpc
 {
 	/**
-	 * Resulting QP size after full condensing.
-	 */
-	template <typename InIter>
-	inline OcpSize condensedQpSize(InIter sz_begin, InIter sz_end)
-	{
-		if (sz_begin == sz_end)
-			throw std::invalid_argument("condensedQpSize(): OcpSize range must be not empty");
-
-		return OcpSize {
-			sz_begin->nx(),
-			std::accumulate(sz_begin, sz_end, size_t{0},
-				[] (size_t n, OcpSize const& s) { return n + s.nu(); }),
-			std::accumulate(sz_begin, sz_end, size_t{0},
-				[] (size_t n, OcpSize const& s) { return n + s.nc(); })
-			+ std::accumulate(sz_begin + 1, sz_end, size_t{0},
-					[] (size_t n, OcpSize const& s) { return n + s.nx(); }),
-			std::accumulate(sz_begin, sz_end, size_t{0},
-				[] (size_t n, OcpSize const& s) { return n + s.ns(); })
-		};
-	}
-
-
-	inline OcpSize condensedQpSize(std::initializer_list<OcpSize> sz)
-	{
-		return condensedQpSize(sz.begin(), sz.end());
-	}
-	
-
-	/**
-	 * \brief Condensing algorithm.
+	 * \brief CondensingN3 algorithm with O(N^3) runtime in horizon length.
 	 *
 	 * Manages resources needed for the condensing algorithm of a given size.
 	 *
@@ -51,7 +22,7 @@ namespace tmpc
 	 * TODO: account for soft constraints.
 	 */
 	template <typename Kernel_>
-	class Condensing
+	class CondensingN3
 	{
 	public:
 		using Kernel = Kernel_;
@@ -67,7 +38,7 @@ namespace tmpc
 			CondensedStage(CondensedStage const&) = delete;
 			CondensedStage(CondensedStage &&) = default;
 
-			CondensedStage(Condensing const& c)
+			CondensedStage(CondensingN3 const& c)
 			:	c_(c)
 			{
 			}
@@ -185,12 +156,12 @@ namespace tmpc
 			}
 	
 		private:
-			Condensing const& c_;
+			CondensingN3 const& c_;
 		};
 
 		template <typename InIter>
-		Condensing(InIter const& sz_first, InIter const& sz_last)
-		:	cs_(condensedQpSize(sz_first, sz_last))
+		CondensingN3(InIter const& sz_first, InIter const& sz_last)
+		:	cs_(condensedOcpSize(sz_first, sz_last))
 		,	Qc_(cs_.nx(), cs_.nx())
 		,   Rc_(cs_.nu(), cs_.nu())
 		,   Sc_(cs_.nx(), cs_.nu())
@@ -211,7 +182,7 @@ namespace tmpc
 		template <typename InIter>
 		CondensedStage operator()(InIter first, InIter last)
 		{
-			if (condensedQpSize(qpSizeIterator(first), qpSizeIterator(last)) != cs_)
+			if (condensedOcpSize(ocpSizeIterator(first), ocpSizeIterator(last)) != cs_)
 				throw std::invalid_argument("QP size does not match the condensed size");
 
 			// Initialization of QP variables

@@ -9,7 +9,7 @@ set (SRC
     ${TMPC_INCLUDE_DIR}/Matrix.hpp
     ${TMPC_INCLUDE_DIR}/casadi_interface/GeneratedFunction.hpp
 
-	${TMPC_INCLUDE_DIR}/qp/Condensing.hpp
+	${TMPC_INCLUDE_DIR}/qp/CondensingN3.hpp
 	${TMPC_INCLUDE_DIR}/qp/OcpQp.hpp
 
 	${TMPC_INCLUDE_DIR}/qp/diagnostics.hpp
