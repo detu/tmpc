@@ -15,24 +15,31 @@ namespace tmpc
 	/**
 	 * Resulting QP size after full condensing.
 	 */
-	OcpSize condensedQpSize(std::vector<OcpSize> const& sz);
-
 	template <typename InIter>
-	OcpSize condensedQpSize(InIter sz_begin, InIter sz_end)
+	inline OcpSize condensedQpSize(InIter sz_begin, InIter sz_end)
 	{
 		if (sz_begin == sz_end)
 			throw std::invalid_argument("condensedQpSize(): OcpSize range must be not empty");
 
-		return OcpSize(
+		return OcpSize {
 			sz_begin->nx(),
-			std::accumulate(sz_begin, sz_end, std::size_t{0},
-				[] (std::size_t n, OcpSize const& s) { return n + s.nu(); }),
-			std::accumulate(sz_begin, sz_end, std::size_t{0},
-				[] (std::size_t n, OcpSize const& s) { return n + s.nc(); })
-			+ std::accumulate(sz_begin + 1, sz_end, std::size_t{0},
-					[] (std::size_t n, OcpSize const& s) { return n + s.nx(); })
-			);
+			std::accumulate(sz_begin, sz_end, size_t{0},
+				[] (size_t n, OcpSize const& s) { return n + s.nu(); }),
+			std::accumulate(sz_begin, sz_end, size_t{0},
+				[] (size_t n, OcpSize const& s) { return n + s.nc(); })
+			+ std::accumulate(sz_begin + 1, sz_end, size_t{0},
+					[] (size_t n, OcpSize const& s) { return n + s.nx(); }),
+			std::accumulate(sz_begin, sz_end, size_t{0},
+				[] (size_t n, OcpSize const& s) { return n + s.ns(); })
+		};
 	}
+
+
+	inline OcpSize condensedQpSize(std::initializer_list<OcpSize> sz)
+	{
+		return condensedQpSize(sz.begin(), sz.end());
+	}
+	
 
 	/**
 	 * \brief Condensing algorithm.
