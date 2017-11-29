@@ -1,0 +1,178 @@
+\documentclass[a4paper]{article}
+
+%--------------------------------------------------
+% Usefull packages
+%--------------------------------------------------
+\usepackage{mathtools}
+\usepackage{graphicx}
+\usepackage{listings}
+\usepackage{optidef}
+\usepackage{texlogos}
+\usepackage{commath}
+\usepackage{algpseudocode}
+\usepackage{amsthm}
+\usepackage{amsfonts}
+\usepackage{bbm}
+
+
+\makeatletter
+\renewcommand*\env@matrix[1][*\c@MaxMatrixCols c]{%
+  \hskip -\arraycolsep
+  \let\@ifnextchar\new@ifnextchar
+  \array{#1}}
+\makeatother
+
+\newtheorem{definition}{Definition}
+
+\newcommand{\Reals}{\mathbb{R}}
+\newcommand{\I}{\mathbbm{1}}
+
+\newcommand{\tmpc}{\texttt{tmpc}}
+\newcommand{\CasADi}{\texttt{CasADi}}
+\newcommand{\HPMPC}{\texttt{HPMPC}} 
+\newcommand{\HPIPM}{\texttt{HPIPM}}
+\newcommand{\qpOASES}{\texttt{qpOASES}}
+\newcommand{\MATLAB}{\texttt{MATLAB}}
+\newcommand{\Eigen}{\texttt{Eigen3}}
+\newcommand{\Blaze}{\texttt{Blaze}}
+
+\newcommand{\bbmat}{\begin{bmatrix}}
+\newcommand{\ebmat}{\end{bmatrix}}
+
+\def\doubleunderline#1{\underline{\underline{#1}}}
+\def\doubleoverline#1{\overline{\overline{#1}}}
+%--------------------------------------------------
+% TITLE
+%--------------------------------------------------
+
+% NOTE: what's in [ ] goes to footer for the fields title, author and date
+\title{A \cpluspluslogo{} Library for Model Predictive Control}
+%\subtitle{\large Presentation subtitle}
+\author{Mikhail Katliar}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\section{Introduction to \tmpc{}}
+
+\section{Quadratic Programming}
+
+\begin{definition}[OCP QP]
+	An OCP QP is a QP in the form\footnote{Slightly changed Gianluca's notation; $x$ comes before $u$.}
+	\begin{mini}|l|[0]
+		{\substack{x_0,x_1,\dots,x_{N-1}\\u_0,u_1,\dots,u_{N-1}}}{\sum_{n=0}^{N-1} \frac 1 2 \begin{bmatrix} x_k \\ u_k \\ 1 \end{bmatrix}^\top \begin{bmatrix} Q_k & S_k & q_k \\ S_k^\top & R_k & r_k \\ q_k^\top & r_k^\top & 0 \end{bmatrix} \begin{bmatrix} x_k \\ u_k \\ 1 \end{bmatrix}}
+		{}{}
+		\addConstraint{x_{k+1}}{ = A_k x_k + B_k u_k + b_k,}{\quad k=0,\dots,N-1}
+		\addConstraint{\begin{bmatrix} \underline{x}_k \\ \underline{u}_k \end{bmatrix}}{\leq \begin{bmatrix} x_k \\ u_k \end{bmatrix} \leq \begin{bmatrix} \overline{x}_k \\ \overline{u}_k \end{bmatrix},}{\quad k=0,\dots,N-1}
+		\addConstraint{\underline{d}_k}{\leq \begin{bmatrix} C_k & D_k \end{bmatrix}\begin{bmatrix} x_k \\ u_k \end{bmatrix} \leq \overline{d}_k,}{\quad k=0,\dots,N-1}
+		\label{eq:OCP_QP}
+	\end{mini}
+	where $u_k$ are the control inputs, $x_k$ are the states.
+\end{definition}
+An OCP QP consists of 16 elements: $Q,\,R,\,S,\,q,\,r,\,A,\,B,\,b,\,\underline{x},\,\underline{u},\,\overline{x},\,\overline{u},\,C,\,D,\,\underline{d},\,\overline{d}$.
+Each of the elements has a time index $k$ which runs from $0$ to $N-1$. 
+Note that $x_0,x_1,\dots,x_{N-1}$ are optimization variables, but $x_N$ is not.
+It is convenient to group the elements corresponding to the same time index $k$ together:
+\begin{definition}[QP stage]
+	An OCP QP \emph{stage} is a combination of OCP QP elements corresponding to the same time index $k$:
+	$$
+	\mathcal{S}_k=(Q_k,R_k,S_k,q_k,r_k,A_k,B_k,b_k,\underline{x}_k,\underline{u}_k,\overline{x}_k,\overline{u}_k,C_k,D_k,\underline{d}_k,\overline{d}_k)\ .
+	$$
+\end{definition}
+
+The problem \eqref{eq:OCP_QP} can be written in matrix form as
+\begin{mini}|l|[0]
+	{
+		x,u
+	}
+	{
+		\frac 1 2 \begin{bmatrix} x \\ u \\ 1 \end{bmatrix}^\top 
+		\begin{bmatrix} Q & S & q \\ S^\top & R & r \\ q^\top & r^\top & 0 \end{bmatrix} 
+		\begin{bmatrix} x \\ u \\ 1 \end{bmatrix}
+	}
+	{}{}
+	\addConstraint{A \bbmat x \\ x_N \ebmat} {= B u + b} {}
+	\addConstraint
+	{
+		\begin{bmatrix} \underline{x} \\ \underline{u} \end{bmatrix}
+	}
+	{
+		\leq \begin{bmatrix} x \\ u \end{bmatrix} \leq \begin{bmatrix} \overline{x} \\ \overline{u} \end{bmatrix}
+	}
+	{}
+	\addConstraint
+	{
+		\underline{d}
+	}
+	{
+		\leq \begin{bmatrix} C & D \end{bmatrix}\begin{bmatrix} x \\ u \end{bmatrix} \leq \overline{d},
+	}
+	{}
+	\label{eq:OCP_QP_matrix_form}
+\end{mini}
+where
+\begin{multline}
+	Q = \bbmat Q_0 \\ & \ddots \\ && Q_{N-1} \ebmat,
+	\quad R = \bbmat R_0 \\ & \ddots \\ && R_{N-1} \ebmat,\\
+	S = \bbmat S_0 \\ & \ddots \\ && S_{N-1} \ebmat,
+	\quad q = \bbmat q_0 \\ \vdots \\ q_{N-1} \ebmat,
+	\quad r = \bbmat r_0 \\ \vdots \\ r_{N-1} \ebmat,
+\end{multline}
+\begin{multline}
+	A = \begin{bmatrix}[c|cccc|c]
+		-A_0 & \I & & & & \\
+		& -A_1 & \I & & & \\
+		& & \ddots & \ddots & & \\
+		& & & -A_{N-2} & \I & \\
+		& & & & -A_{N-1} & \I
+	\end{bmatrix},\\
+	\quad B = \bbmat B_0 \\ & \ddots \\ && B_{N-1} \ebmat,
+	\quad b = \bbmat b_0 \\ \vdots \\ b_{N-1} \ebmat,
+\end{multline}
+\begin{multline}
+	C = \bbmat C_0 \\ & \ddots \\ && C_{N-1} \ebmat,
+	\quad D = \bbmat D_0 \\ & \ddots \\ && D_{N-1} \ebmat,\\
+	\quad \underline{d} = \bbmat \underline{d}_0 \\ \vdots \\ \underline{d}_{N-1} \ebmat,
+	\quad \overline{d} = \bbmat \overline{d}_0 \\ \vdots \\ \overline{d}_{N-1} \ebmat,
+\end{multline}
+\begin{equation}
+	x = \bbmat x_0 \\ \vdots \\ x_{N-1} \ebmat,
+	\quad \underline{x} = \bbmat \underline{x}_0 \\ \vdots \\ \underline{x}_{N-1} \ebmat,
+	\quad \overline{x} = \bbmat \overline{x}_0 \\ \vdots \\ \overline{x}_{N-1} \ebmat,
+\end{equation}
+\begin{equation}
+	u = \bbmat u_0 \\ \vdots \\ u_{N-1} \ebmat,\\	
+	\quad \underline{u} = \bbmat \underline{u}_0 \\ \vdots \\ \underline{u}_{N-1} \ebmat,
+	\quad \overline{u} = \bbmat \overline{u}_0 \\ \vdots \\ \overline{u}_{N-1} \ebmat.
+\end{equation}
+
+\subsection{Condensing}
+Using the equality constraints from \eqref{eq:OCP_QP}, $x$ can be expressed as a function of $x_0$ and $u$:
+\begin{equation}
+	x = F x_0 + G u + g.
+\end{equation}
+By substituting this expression into the objective function in \eqref{eq:OCP_QP_matrix_form}, we obtain a new objective with reduced number of variables:
+\begin{multline}
+	J(x_0,u) = \left(\bbmat F & G & g \\ & \I \\ && 1 \ebmat \bbmat x_0 \\ u \\ 1 \ebmat\right)^\top 
+	\bbmat Q & S & q \\ S^\top & R & r \\ q^\top & r^\top & 0 \ebmat
+	\bbmat F & G & g \\ & \I \\ && 1 \ebmat \bbmat x_0 \\ u \\ 1 \ebmat\\
+	= \bbmat x_0 \\ u \\ 1 \ebmat^\top 
+	\bbmat F^\top \\ G^\top & \I \\ g^\top && 1 \ebmat
+	\bbmat Q & S & q \\ S^\top & R & r \\ q^\top & r^\top & 0 \ebmat
+	\bbmat F & G & g \\ & \I \\ && 1 \ebmat 
+	\bbmat x_0 \\ u \\ 1 \ebmat\\
+	= \bbmat x_0 \\ u \\ 1 \ebmat^\top 
+	\bbmat 
+		F^\top QF & F^\top (QG + S) & F^\top(Qg + q) \\ 
+		(QG + S)^\top F & G^\top Q G + S^\top G + G^\top S + R & G^\top (Qg + q) + S^\top g + r \\ 
+		(Qg + q)^\top F & (Qg + q)^\top G + g^\top S + r^\top & g^\top Q g + q^\top g + g^\top q 
+	\ebmat
+	\bbmat x_0 \\ u \\ 1 \ebmat\ .
+\end{multline}
+We have transformed the original problem \eqref{eq:OCP_QP_matrix_form} to a new one with optimization variables $(x_0,u)$.
+
+\bibliographystyle{plain} 
+
+\end{document}
