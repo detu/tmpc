@@ -1,6 +1,7 @@
 #pragma once
 
 #include <tmpc/Math.hpp>
+#include <tmpc/qp/OcpQpExpressionBase.hpp>
 
 #include <boost/range/iterator_range_core.hpp>
 
@@ -164,6 +165,15 @@ namespace tmpc
 
 			return *this;
 		}
+
+
+		/// \brief Expression assignment.
+		template <typename Expr>
+		OcpQpBase& operator=(OcpQpExpressionBase<Expr> const& expr)
+		{
+			expr.evalTo(*this);
+		}
+
 
 		// Set all data to sNaN
 		OcpQpBase& setNaN()

@@ -24,6 +24,7 @@ namespace tmpc
 		using Real = typename Kernel::Real;
 		using Matrix = DynamicMatrix<Kernel>;
 		using Vector = DynamicVector<Kernel>;
+		//using OcpQpBase<OcpQp<Kernel>>::operator=;
 
 		OcpQp(OcpSize const& sz, size_type nx_next = 0)
 		:	size_(sz)
@@ -49,6 +50,14 @@ namespace tmpc
 		,	zu_(sz.ns())
 		,	idxs_(sz.nx(), 0)
 		{
+		}
+
+
+		template <typename Expr>
+		OcpQp(OcpQpExpressionBase<Expr> const& expr)
+		:	OcpQp(expr.size())
+		{
+			expr.evalTo(*this);
 		}
 
 		template <typename Other>

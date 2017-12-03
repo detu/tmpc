@@ -1,5 +1,3 @@
-#include <tmpc/qp/CondensingN3.hpp>
-#include <tmpc/qp/CondensingN2.hpp>
 #include <tmpc/qp/OcpQp.hpp>
 #include <tmpc/mpc/MpcOcpSize.hpp>
 
@@ -9,7 +7,7 @@
 
 namespace tmpc :: testing
 {
-	template <typename CondensingAlgorithm>
+	template <typename CA>
 	class CondensingTest 
 	: 	public ::testing::Test
 	{
@@ -27,7 +25,7 @@ namespace tmpc :: testing
 		static auto constexpr NT = 2u;
 		static auto constexpr NZ = NX + NU;
 
-		
+		using CondensingAlgorithm = CA;
 		using Kernel = typename CondensingAlgorithm::Kernel;
 		using Real = typename Kernel::Real;
 		using StateVector = StaticVector<Kernel, NX>;
@@ -161,7 +159,7 @@ namespace tmpc :: testing
 		using Kernel = typename TestFixture::Kernel;
 
 		// Condense
-		CondensingN3<Kernel> condensing(sizeBegin(this->qp), sizeEnd(this->qp));
+		typename TestFixture::CondensingAlgorithm condensing(sizeBegin(this->qp), sizeEnd(this->qp));
 		OcpQp<Kernel> const condensed = condensing(this->qp.begin(), this->qp.end());
 
 		EXPECT_EQ(print_wrap(condensed.Q()), print_wrap(this->Qc_expected));
