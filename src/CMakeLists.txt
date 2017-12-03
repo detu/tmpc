@@ -22,17 +22,6 @@ set (SRC
 
 add_library(tmpc STATIC ${SRC})
 
-# Enable modern C++ for tmpc.
-set_property(TARGET tmpc PROPERTY CXX_STANDARD 14)
-
-# Don't use compiler's C++ extensions
-set_property(TARGET tmpc PROPERTY CXX_EXTENSIONS False)
-
-# Enable position-independent code in tmpc.
-# Otherwise, when trying to link it as a part of a shared library,
-# a linker can complain.
-set_property(TARGET tmpc PROPERTY POSITION_INDEPENDENT_CODE True)
-
 target_include_directories(tmpc
     PUBLIC ${PROJECT_INCLUDE_DIR}
 )
