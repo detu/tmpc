@@ -62,10 +62,8 @@ namespace tmpc
 				auto nu = first_->size().nu();
 				auto nc = first_->size().nc();
 
-				c_.Qc_ = first_->Q();
 				//K::left_cols(Sc_, nu) = first_->S();
 				submatrix(c_.Sc_, 0, 0, c_.Sc_.rows(), nu) = first_->S();
-				c_.qc_ = first_->q();
 
 				//K::top_rows(Cc_, nc) = first_->C();
 				submatrix(c_.Cc_, 0, 0, nc, columns(c_.Cc_)) = first_->C();
@@ -84,19 +82,33 @@ namespace tmpc
 				c_.A_ = first_->A();
 				c_.B_ = first_->B();
 
-				std::vector<DynamicVector<Kernel>> g(N + 1);
+				std::vector<DynamicVector<Kernel>> g(N + 1);				
 				g[0] = DynamicVector<Kernel>(stages[0].size().nx(), 0);
+
+				std::vector<DynamicMatrix<Kernel>> F(N + 1);
+
+				// Precalculate F. Can it be optimized/eliminated?
+				F[0] = IdentityMatrix<Kernel>(stages[0].size().nx());
+				for (size_t i = 0; i < N; ++i)
+					F[i + 1] = stages[i].A() * F[i];
+	
+				c_.Qc_ = 0;
+				c_.qc_ = 0;
+				//c_.Sc_ = 0;
 
 				for (size_t i = 0; i < N; ++i)
 				{
+					// Update g
 					g[i + 1] = stages[i].A() * g[i] + stages[i].b();
 					
+					// Update G
 					std::vector<DynamicMatrix<Kernel>> G(N + 1);
 					G[i + 1] = stages[i].B();
 					
 					for (size_t k = i + 1; k < N; ++k)
-						G[k + 1] = stages[k].A() * G[k];
+						G[k + 1] = stages[k].A() * G[k];	// <-- this can be sped-up by precomputing partial products of A_k
 
+					// Update R
 					DynamicMatrix<Kernel> W(rows(stages[N - 1].B()), columns(G[N]), 0);
 
 					for (size_t k = N; k-- > i + 1; )
@@ -107,6 +119,17 @@ namespace tmpc
 					}
 
 					c_.R(i, i) = stages[i].R() + trans(stages[i].B()) * W;
+
+					// Update Q
+					c_.Qc_ += trans(F[i]) * stages[i].Q() * F[i];
+
+					// Update q
+					c_.qc_ += trans(F[i]) * (stages[i].Q() * g[i] + stages[i].q());
+
+					// Update S
+					c_.S(i) = trans(F[i]) * stages[i].S(); 
+					for (size_t k = i + 1; k < N; ++k)
+						c_.S(i) += trans(F[k]) * stages[k].Q() * G[k];
 				}
 
 				auto stage = stages.begin() + 1;
@@ -115,18 +138,6 @@ namespace tmpc
 					auto const& sz = stage->size();
 					// TODO: add nx1() to OcpSize
 					auto const nx_next = stage->B().rows();
-
-					// Update Q
-					c_.Qc_ += trans(c_.A_) * stage->Q() * c_.A_;
-
-					// Update S
-					//K::left_cols(c_.Sc_, nu) += K::trans(A) * stage->Q() * B;
-					submatrix(c_.Sc_, 0, 0, c_.Sc_.rows(), nu) += trans(c_.A_) * stage->Q() * c_.B_;
-					//K::middle_cols(c_.Sc_, nu, sz.nu()) = K::trans(A) * stage->S();
-					submatrix(c_.Sc_, 0, nu, c_.Sc_.rows(), sz.nu()) = trans(c_.A_) * stage->S();
-
-					// Update q
-					c_.qc_ += trans(c_.A_) * (stage->Q() * g[k] + stage->q());
 
 					// Update C
 					//K::middle_rows(c_.Cc_, nc, sz.nx() + sz.nc()) << A, stage->C() * A;
@@ -330,6 +341,12 @@ namespace tmpc
 		decltype(auto) R(size_t i, size_t j)
 		{
 			return submatrix(Rc_, cumNu_[i], cumNu_[j], size_[i].nu(), size_[j].nu());
+		}
+
+
+		decltype(auto) S(size_t j)
+		{
+			return submatrix(Sc_, 0, cumNu_[j], rows(Sc_), size_[j].nu());
 		}
 	};
 }
