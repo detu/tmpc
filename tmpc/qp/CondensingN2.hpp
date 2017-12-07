@@ -57,14 +57,12 @@ namespace tmpc
 			{
 				auto const stages = boost::make_iterator_range(first_, last_);
 				auto const N = stages.size();
-				auto& g = c_.g_;
 				
 				// Initialization of QP variables
 				auto nu = first_->size().nu();
 				auto nc = first_->size().nc();
 
 				c_.Qc_ = first_->Q();
-				submatrix(c_.Rc_, 0, 0, nu, nu) = first_->R();
 				//K::left_cols(Sc_, nu) = first_->S();
 				submatrix(c_.Sc_, 0, 0, c_.Sc_.rows(), nu) = first_->S();
 				c_.qc_ = first_->q();
@@ -86,10 +84,30 @@ namespace tmpc
 				c_.A_ = first_->A();
 				c_.B_ = first_->B();
 
-				// Calculate g
+				std::vector<DynamicVector<Kernel>> g(N + 1);
 				g[0] = DynamicVector<Kernel>(stages[0].size().nx(), 0);
-				for (size_t k = 0; k + 1 < N; ++k)
-					g[k + 1] = stages[k].A() * g[k] + stages[k].b();
+
+				for (size_t i = 0; i < N; ++i)
+				{
+					g[i + 1] = stages[i].A() * g[i] + stages[i].b();
+					
+					std::vector<DynamicMatrix<Kernel>> G(N + 1);
+					G[i + 1] = stages[i].B();
+					
+					for (size_t k = i + 1; k < N; ++k)
+						G[k + 1] = stages[k].A() * G[k];
+
+					DynamicMatrix<Kernel> W(rows(stages[N - 1].B()), columns(G[N]), 0);
+
+					for (size_t k = N; k-- > i + 1; )
+					{
+						c_.R(k, i) = trans(stages[k].S()) * G[k] + trans(stages[k].B()) * W;
+						c_.R(i, k) = trans(c_.R(k, i));
+						W = stages[k].Q() * G[k] + trans(stages[k].A()) * W;
+					}
+
+					c_.R(i, i) = stages[i].R() + trans(stages[i].B()) * W;
+				}
 
 				auto stage = stages.begin() + 1;
 				for (size_t k = 1; k < N; ++k, ++stage)
@@ -106,13 +124,6 @@ namespace tmpc
 					submatrix(c_.Sc_, 0, 0, c_.Sc_.rows(), nu) += trans(c_.A_) * stage->Q() * c_.B_;
 					//K::middle_cols(c_.Sc_, nu, sz.nu()) = K::trans(A) * stage->S();
 					submatrix(c_.Sc_, 0, nu, c_.Sc_.rows(), sz.nu()) = trans(c_.A_) * stage->S();
-
-					// Update R
-					// This is the hottest line of the algorithm:
-					submatrix(c_.Rc_, 0, 0, nu, nu) += trans(c_.B_) * stage->Q() * c_.B_;
-					submatrix(c_.Rc_, 0, nu, nu, sz.nu()) = trans(c_.B_) * stage->S();
-					submatrix(c_.Rc_, nu, 0, sz.nu(), nu) = trans(stage->S()) * c_.B_;
-					submatrix(c_.Rc_, nu, nu, sz.nu(), sz.nu()) = stage->R();
 
 					// Update q
 					c_.qc_ += trans(c_.A_) * (stage->Q() * g[k] + stage->q());
@@ -177,7 +188,7 @@ namespace tmpc
 				// Assign the output values.				
 				qp.A(c_.A_);
 				qp.B(c_.B_);
-				qp.b(stages[N - 1].A() * g[N - 1] + stages[N - 1].b());				
+				qp.b(g[N]);				
 				qp.C(c_.Cc_);
 				qp.D(c_.Dc_);
 				qp.lbd(c_.lbd_);
@@ -229,7 +240,7 @@ namespace tmpc
 		,	size_(sz_first, sz_last)
 		{
 			size_t const N = std::distance(sz_first, sz_last);
-			g_.resize(N);
+			//g_.resize(N);
 			
 			// Init cumulative sizes.
 			cumNu_.reserve(N);
@@ -304,7 +315,7 @@ namespace tmpc
 		};
 		*/
 
-		std::vector<DynamicVector<Kernel>> g_;
+		//std::vector<DynamicVector<Kernel>> g_;
 		std::vector<OcpSize> size_;
 		std::vector<size_t> cumNu_;
 		//std::vector<size_t> cumNc_;
@@ -313,6 +324,12 @@ namespace tmpc
 		decltype(auto) r(size_t k)
 		{
 			return subvector(rc_, cumNu_[k], size_[k].nu());
+		}
+
+
+		decltype(auto) R(size_t i, size_t j)
+		{
+			return submatrix(Rc_, cumNu_[i], cumNu_[j], size_[i].nu(), size_[j].nu());
 		}
 	};
 }
