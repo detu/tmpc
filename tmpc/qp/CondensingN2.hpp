@@ -79,7 +79,6 @@ namespace tmpc
 				//K::head(ubu, nu) = first_->ubu();
 				subvector(c_.ubu_, 0, nu) = first_->ubu();
 
-				c_.A_ = first_->A();
 				c_.B_ = first_->B();
 
 				std::vector<DynamicVector<Kernel>> g(N + 1);				
@@ -130,6 +129,11 @@ namespace tmpc
 					c_.S(i) = trans(F[i]) * stages[i].S(); 
 					for (size_t k = i + 1; k < N; ++k)
 						c_.S(i) += trans(F[k]) * stages[k].Q() * G[k];
+
+					// Update C
+					if (i > 0)
+						c_.Cx(i) = F[i];
+					c_.Cc(i) = stages[i].C() * F[i];
 				}
 
 				auto stage = stages.begin() + 1;
@@ -138,11 +142,6 @@ namespace tmpc
 					auto const& sz = stage->size();
 					// TODO: add nx1() to OcpSize
 					auto const nx_next = stage->B().rows();
-
-					// Update C
-					//K::middle_rows(c_.Cc_, nc, sz.nx() + sz.nc()) << A, stage->C() * A;
-					submatrix(c_.Cc_, nc          , 0, sz.nx(), columns(c_.Cc_)) = c_.A_;
-					submatrix(c_.Cc_, nc + sz.nx(), 0, sz.nc(), columns(c_.Cc_)) = stage->C() * c_.A_;
 
 					// Update D (which is initialized to 0)
 					//K::middle_rows(c_.Dc_, nc, sz.nx() + sz.nc()) << B, K::zero(sz.nx(), cs_.nu() - nu),
@@ -162,9 +161,6 @@ namespace tmpc
 					// Uplate lbu, ubu
 					subvector(c_.lbu_, nu, sz.nu()) = stage->lbu();
 					subvector(c_.ubu_, nu, sz.nu()) = stage->ubu();
-
-					// Update A
-					c_.A_ = stage->A() * c_.A_;
 
 					// Update B
 					{
@@ -197,7 +193,7 @@ namespace tmpc
 				qp.ubx(first_->ubx());
 
 				// Assign the output values.				
-				qp.A(c_.A_);
+				qp.A(F[N]);
 				qp.B(c_.B_);
 				qp.b(g[N]);				
 				qp.C(c_.Cc_);
@@ -255,17 +251,21 @@ namespace tmpc
 			
 			// Init cumulative sizes.
 			cumNu_.reserve(N);
-			//cumNc_.reserve(N);
+			cumNc_.reserve(N);
 
 			auto nu = 0;
-			//auto nc = size_.front().nc();
+			auto nc = 0;
 
 			for (auto sz = size_.begin(); sz != size_.end(); ++sz)
 			{
 				cumNu_.push_back(nu);
-				//cumNc_.push_back(nc);
+				cumNc_.push_back(nc);
 				nu += sz->nu();
-				//nc += sz->nx() + sz->nc();
+
+				if (sz != size_.begin())
+					nc += sz->nx();
+					
+				nc += sz->nc();
 			}
 		}
 
@@ -305,7 +305,6 @@ namespace tmpc
 		DynamicVector<Kernel> lbu_;
 		DynamicVector<Kernel> ubu_;
 
-		DynamicMatrix<Kernel> A_;
 		DynamicMatrix<Kernel> B_;
 
 		/*
@@ -329,7 +328,7 @@ namespace tmpc
 		//std::vector<DynamicVector<Kernel>> g_;
 		std::vector<OcpSize> size_;
 		std::vector<size_t> cumNu_;
-		//std::vector<size_t> cumNc_;
+		std::vector<size_t> cumNc_;
 
 
 		decltype(auto) r(size_t k)
@@ -347,6 +346,19 @@ namespace tmpc
 		decltype(auto) S(size_t j)
 		{
 			return submatrix(Sc_, 0, cumNu_[j], rows(Sc_), size_[j].nu());
+		}
+
+
+		decltype(auto) Cx(size_t i)
+		{
+			assert(i > 0);
+			return submatrix(Cc_, cumNc_[i], 0, size_[i].nx(), columns(Cc_));
+		}
+
+
+		decltype(auto) Cc(size_t i)
+		{
+			return submatrix(Cc_, cumNc_[i] + size_[i].nx(), 0, size_[i].nc(), columns(Cc_));
 		}
 	};
 }
