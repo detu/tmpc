@@ -3,6 +3,7 @@ add_executable(tmpc_test_matrix
     DynamicSubmatrixTest.cpp
     DynamicSubvectorTest.cpp
     KernelTest.cpp
+    BlockMatrixViewTest.cpp
 )
 
 target_link_libraries(tmpc_test_matrix PRIVATE 

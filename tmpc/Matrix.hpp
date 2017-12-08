@@ -5,6 +5,7 @@
 #include "matrix/TransposeFlag.hpp"
 #include "matrix/AlignmentFlag.hpp"
 #include "matrix/PaddingFlag.hpp"
+#include "matrix/BlockMatrixView.hpp"
 
 namespace tmpc
 {
