@@ -3,6 +3,7 @@
 #include <tmpc/ocp/OcpSize.hpp>
 #include <tmpc/qp/OcpQpBase.hpp>
 #include <tmpc/Matrix.hpp>
+#include <tmpc/core/IteratorTools.hpp>
 
 #include <vector>
 #include <sstream>
@@ -55,7 +56,7 @@ namespace tmpc
 			template <typename QP>
 			void implEvalTo(OcpQpBase<QP>& qp) const
 			{
-				auto const stages = boost::make_iterator_range(first_, last_);
+				auto const stages = make_iterator_range(first_, last_);
 				auto const N = stages.size();
 				
 				// Initialization of QP variables
@@ -101,20 +102,19 @@ namespace tmpc
 					g[i + 1] = stages[i].A() * g[i] + stages[i].b();
 					
 					// Update G
-					std::vector<DynamicMatrix<Kernel>> G(N + 1);
-					G[i + 1] = stages[i].B();
+					c_.blockG_(i + 1, i) = stages[i].B();
 					
 					for (size_t k = i + 1; k < N; ++k)
-						G[k + 1] = stages[k].A() * G[k];	// <-- this can be sped-up by precomputing partial products of A_k
+						c_.blockG_(k + 1, i) = stages[k].A() * c_.blockG_(k, i);	// <-- this can be sped-up by precomputing partial products of A_k
 
 					// Update R
-					DynamicMatrix<Kernel> W(rows(stages[N - 1].B()), columns(G[N]), 0);
+					DynamicMatrix<Kernel> W(rows(stages[N - 1].B()), columns(c_.blockG_(N, i)), 0); // <-- blockG_(N, ...) is undefined!
 
 					for (size_t k = N; k-- > i + 1; )
 					{
-						c_.R(k, i) = trans(stages[k].S()) * G[k] + trans(stages[k].B()) * W;
+						c_.R(k, i) = trans(stages[k].S()) * c_.blockG_(k, i) + trans(stages[k].B()) * W;
 						c_.R(i, k) = trans(c_.R(k, i));
-						W = stages[k].Q() * G[k] + trans(stages[k].A()) * W;
+						W = stages[k].Q() * c_.blockG_(k, i) + trans(stages[k].A()) * W;
 					}
 
 					c_.R(i, i) = stages[i].R() + trans(stages[i].B()) * W;
@@ -128,7 +128,7 @@ namespace tmpc
 					// Update S
 					c_.S(i) = trans(F[i]) * stages[i].S(); 
 					for (size_t k = i + 1; k < N; ++k)
-						c_.S(i) += trans(F[k]) * stages[k].Q() * G[k];
+						c_.S(i) += trans(F[k]) * stages[k].Q() * c_.blockG_(k, i);
 
 					// Update C
 					if (i > 0)
@@ -231,7 +231,7 @@ namespace tmpc
 		};
 
 		template <typename InIter>
-		CondensingN2(InIter const& sz_first, InIter const& sz_last)
+		CondensingN2(InIter const& sz_first, InIter const& sz_last, size_t nx_next = 0)
 		:	cs_(condensedOcpSize(sz_first, sz_last))
 		,	Qc_(cs_.nx(), cs_.nx())
 		,   Rc_(cs_.nu(), cs_.nu())
@@ -244,6 +244,12 @@ namespace tmpc
 		,   ubd_(cs_.nc())
 		,   lbu_(cs_.nu())
 		,   ubu_(cs_.nu())
+		// Init G.
+		,	G_(sumNx(sz_first, sz_last) + nx_next, sumNu(sz_first, sz_last), 0)
+		,	blockG_(G_, 
+			blockRowSizeG(sz_first, sz_last, nx_next),
+			make_transform_iterator_range(sz_first, sz_last, [] (OcpSize const& s) { return s.nu(); })
+			)
 		,	size_(sz_first, sz_last)
 		{
 			size_t const N = std::distance(sz_first, sz_last);
@@ -253,8 +259,8 @@ namespace tmpc
 			cumNu_.reserve(N);
 			cumNc_.reserve(N);
 
-			auto nu = 0;
-			auto nc = 0;
+			size_t nu = 0;
+			size_t nc = 0;
 
 			for (auto sz = size_.begin(); sz != size_.end(); ++sz)
 			{
@@ -306,6 +312,8 @@ namespace tmpc
 		DynamicVector<Kernel> ubu_;
 
 		DynamicMatrix<Kernel> B_;
+		DynamicMatrix<Kernel> G_;
+		BlockMatrixView<Kernel, DynamicMatrix<Kernel>> blockG_;
 
 		/*
 		class PerStageData
@@ -359,6 +367,20 @@ namespace tmpc
 		decltype(auto) Cc(size_t i)
 		{
 			return submatrix(Cc_, cumNc_[i] + size_[i].nx(), 0, size_[i].nc(), columns(Cc_));
+		}
+
+
+		template <typename InputIterator>
+		static auto blockRowSizeG(InputIterator sz_first, InputIterator sz_last, size_t nx_next)
+		{
+			std::vector<size_t> sx;
+			sx.reserve(std::distance(sz_first, sz_last) + nx_next);
+			
+			while (sz_first != sz_last)
+				sx.push_back(sz_first++->nx());
+			sx.push_back(nx_next);
+			
+			return sx;
 		}
 	};
 }
