@@ -22,11 +22,6 @@ set (SRC
 
 add_library(tmpc STATIC ${SRC})
 
-# Enable modern C++ for tmpc.
-set_property(TARGET tmpc PROPERTY CXX_STANDARD 14)
-
-# Don't use compiler's C++ extensions
-set_property(TARGET tmpc PROPERTY CXX_EXTENSIONS False)
 
 # Enable position-independent code in tmpc.
 # Otherwise, when trying to link it as a part of a shared library,
@@ -63,6 +58,13 @@ if (TMPC_WITH_qpOASES)
         PUBLIC ${qpOASES_STATIC_LIBRARIES}
     )
 endif()
+
+
+if (blaze_FOUND)
+    target_link_libraries(tmpc
+        PUBLIC blaze::blaze
+    )
+endif ()
 
 #
 # Add HPMPC interface

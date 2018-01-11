@@ -10,7 +10,7 @@ set(CMAKE_CXX_EXTENSIONS False)
 # Include CMakeToolsHelpers for easier debugging from VS Code
 include(CMakeToolsHelpers OPTIONAL)
 
-SET(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/CMakeModules;${CMAKE_MODULE_PATH})
+list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/CMakeModules)
 set(PROJECT_INCLUDE_DIR ${PROJECT_SOURCE_DIR})
 
 # List of QP solvers
@@ -37,16 +37,15 @@ endif ()
 find_package(Eigen3 3.2.10)
 
 if (EIGEN3_FOUND)
-    message(STATUS "Eigen3 Found in ${EIGEN3_INCLUDE_DIR}")
+    message(STATUS "Eigen3 found in ${EIGEN3_INCLUDE_DIR}")
     include_directories(${EIGEN3_INCLUDE_DIR})
 else()
     message(STATUS "Eigen3 NOT FOUND")
 endif()
 
-if (BLAZE_DIR)
-    include_directories(${BLAZE_DIR})
-    message(STATUS "BLAZE_DIR=${BLAZE_DIR}")
-endif()
+
+find_package(blaze)
+
 
 # TMPC_WITH_CASADI_INTERFACE
 set(TMPC_WITH_CASADI_INTERFACE ON CACHE BOOL "Build tmpc with CasADi generated function support classes")
