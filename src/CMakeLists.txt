@@ -53,6 +53,13 @@ if (TMPC_WITH_qpOASES)
     )
 endif()
 
+
+if (blaze_FOUND)
+    target_link_libraries(tmpc
+        PUBLIC blaze::blaze
+    )
+endif ()
+
 #
 # Add HPMPC interface
 #
