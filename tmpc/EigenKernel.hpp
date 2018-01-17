@@ -43,3 +43,13 @@ namespace tmpc
     template <typename T>
     using KernelOf = std::enable_if_t<std::is_base_of<Eigen::EigenBase<T>, T>::value, EigenKernel<typename T::Scalar>>;
 }
+
+
+namespace Eigen
+{
+    template <typename MT>
+    inline void randomize(MatrixBase<MT>& m)
+    {
+        m = MT::Random(m.rows(), m.cols());
+    }
+}

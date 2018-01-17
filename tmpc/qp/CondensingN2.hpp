@@ -3,6 +3,7 @@
 #include <tmpc/ocp/OcpSize.hpp>
 #include <tmpc/qp/OcpQpBase.hpp>
 #include <tmpc/Matrix.hpp>
+#include <tmpc/core/IteratorTools.hpp>
 
 #include <vector>
 #include <sstream>
@@ -48,23 +49,22 @@ namespace tmpc
 			,	first_ {first}
 			,	last_ {last}
 			{
+				assert(first_ < last_);
 			}
 
 
 			template <typename QP>
 			void implEvalTo(OcpQpBase<QP>& qp) const
 			{
+				auto const stages = make_iterator_range(first_, last_);
+				auto const N = stages.size();
+				
 				// Initialization of QP variables
 				auto nu = first_->size().nu();
 				auto nc = first_->size().nc();
 
-				c_.Qc_ = first_->Q();
-				submatrix(c_.Rc_, 0, 0, nu, nu) = first_->R();
 				//K::left_cols(Sc_, nu) = first_->S();
 				submatrix(c_.Sc_, 0, 0, c_.Sc_.rows(), nu) = first_->S();
-				c_.qc_ = first_->q();
-				//K::head(c_.rc_, nu) = first_->r();
-				subvector(c_.rc_, 0, nu) = first_->r();
 
 				//K::top_rows(Cc_, nc) = first_->C();
 				submatrix(c_.Cc_, 0, 0, nc, columns(c_.Cc_)) = first_->C();
@@ -80,45 +80,68 @@ namespace tmpc
 				//K::head(ubu, nu) = first_->ubu();
 				subvector(c_.ubu_, 0, nu) = first_->ubu();
 
-				c_.A_ = first_->A();
 				c_.B_ = first_->B();
-				c_.b_ = first_->b();
 
-				for (auto stage = first_ + 1; stage != last_; ++stage)
+				std::vector<DynamicVector<Kernel>> g(N + 1);				
+				g[0] = DynamicVector<Kernel>(stages[0].size().nx(), 0);
+
+				std::vector<DynamicMatrix<Kernel>> F(N + 1);
+
+				// Precalculate F. Can it be optimized/eliminated?
+				F[0] = IdentityMatrix<Kernel>(stages[0].size().nx());
+				for (size_t i = 0; i < N; ++i)
+					F[i + 1] = stages[i].A() * F[i];
+	
+				c_.Qc_ = 0;
+				c_.qc_ = 0;
+				//c_.Sc_ = 0;
+
+				for (size_t i = 0; i < N; ++i)
+				{
+					// Update g
+					g[i + 1] = stages[i].A() * g[i] + stages[i].b();
+					
+					// Update G
+					c_.blockG_(i + 1, i) = stages[i].B();
+					
+					for (size_t k = i + 1; k < N; ++k)
+						c_.blockG_(k + 1, i) = stages[k].A() * c_.blockG_(k, i);	// <-- this can be sped-up by precomputing partial products of A_k
+
+					// Update R
+					DynamicMatrix<Kernel> W(rows(stages[N - 1].B()), columns(c_.blockG_(N, i)), 0); // <-- blockG_(N, ...) is undefined!
+
+					for (size_t k = N; k-- > i + 1; )
+					{
+						c_.R(k, i) = trans(stages[k].S()) * c_.blockG_(k, i) + trans(stages[k].B()) * W;
+						c_.R(i, k) = trans(c_.R(k, i));
+						W = stages[k].Q() * c_.blockG_(k, i) + trans(stages[k].A()) * W;
+					}
+
+					c_.R(i, i) = stages[i].R() + trans(stages[i].B()) * W;
+
+					// Update Q
+					c_.Qc_ += trans(F[i]) * stages[i].Q() * F[i];
+
+					// Update q
+					c_.qc_ += trans(F[i]) * (stages[i].Q() * g[i] + stages[i].q());
+
+					// Update S
+					c_.S(i) = trans(F[i]) * stages[i].S(); 
+					for (size_t k = i + 1; k < N; ++k)
+						c_.S(i) += trans(F[k]) * stages[k].Q() * c_.blockG_(k, i);
+
+					// Update C
+					if (i > 0)
+						c_.Cx(i) = F[i];
+					c_.Cc(i) = stages[i].C() * F[i];
+				}
+
+				auto stage = stages.begin() + 1;
+				for (size_t k = 1; k < N; ++k, ++stage)
 				{
 					auto const& sz = stage->size();
 					// TODO: add nx1() to OcpSize
 					auto const nx_next = stage->B().rows();
-
-					// Update Q
-					c_.Qc_ += trans(c_.A_) * stage->Q() * c_.A_;
-
-					// Update S
-					//K::left_cols(c_.Sc_, nu) += K::trans(A) * stage->Q() * B;
-					submatrix(c_.Sc_, 0, 0, c_.Sc_.rows(), nu) += trans(c_.A_) * stage->Q() * c_.B_;
-					//K::middle_cols(c_.Sc_, nu, sz.nu()) = K::trans(A) * stage->S();
-					submatrix(c_.Sc_, 0, nu, c_.Sc_.rows(), sz.nu()) = trans(c_.A_) * stage->S();
-
-					// Update R
-					// This is the hottest line of the algorithm:
-					submatrix(c_.Rc_, 0, 0, nu, nu) += trans(c_.B_) * stage->Q() * c_.B_;
-					submatrix(c_.Rc_, 0, nu, nu, sz.nu()) = trans(c_.B_) * stage->S();
-					submatrix(c_.Rc_, nu, 0, sz.nu(), nu) = trans(stage->S()) * c_.B_;
-					submatrix(c_.Rc_, nu, nu, sz.nu(), sz.nu()) = stage->R();
-
-					// Update q
-					c_.qc_ += trans(c_.A_) * (stage->Q() * c_.b_ + stage->q());
-
-					// Update r
-					//K::head(c_.rc_, nu) += K::trans(B) * (stage->Q() * b + stage->q());
-					subvector(c_.rc_, 0, nu) += trans(c_.B_) * (stage->Q() * c_.b_ + stage->q());
-					//K::segment(c_.rc_, nu, sz.nu()) = K::trans(stage->S()) * b + stage->r();
-					subvector(c_.rc_, nu, sz.nu()) = trans(stage->S()) * c_.b_ + stage->r();
-
-					// Update C
-					//K::middle_rows(c_.Cc_, nc, sz.nx() + sz.nc()) << A, stage->C() * A;
-					submatrix(c_.Cc_, nc          , 0, sz.nx(), columns(c_.Cc_)) = c_.A_;
-					submatrix(c_.Cc_, nc + sz.nx(), 0, sz.nc(), columns(c_.Cc_)) = stage->C() * c_.A_;
 
 					// Update D (which is initialized to 0)
 					//K::middle_rows(c_.Dc_, nc, sz.nx() + sz.nc()) << B, K::zero(sz.nx(), cs_.nu() - nu),
@@ -128,21 +151,16 @@ namespace tmpc
 					submatrix(c_.Dc_, nc + sz.nx(), nu, sz.nc(), sz.nu()) = stage->D();
 
 					// Update lbd
-					//K::segment(lbd, nc, sz.nx() + sz.nc()) << stage->lbx() - b, stage->lbd() - stage->C() * b;
-					subvector(c_.lbd_, nc          , sz.nx()) = stage->lbx() - c_.b_;
-					subvector(c_.lbd_, nc + sz.nx(), sz.nc()) = stage->lbd() - stage->C() * c_.b_;
+					subvector(c_.lbd_, nc          , sz.nx()) = stage->lbx() - g[k];
+					subvector(c_.lbd_, nc + sz.nx(), sz.nc()) = stage->lbd() - stage->C() * g[k];
 
 					// Update ubd
-					//K::segment(ubd, nc, sz.nx() + sz.nc()) << stage->ubx() - b, stage->ubd() - stage->C() * b;
-					subvector(c_.ubd_, nc          , sz.nx()) = stage->ubx() - c_.b_;
-					subvector(c_.ubd_, nc + sz.nx(), sz.nc()) = stage->ubd() - stage->C() * c_.b_;
+					subvector(c_.ubd_, nc          , sz.nx()) = stage->ubx() - g[k];
+					subvector(c_.ubd_, nc + sz.nx(), sz.nc()) = stage->ubd() - stage->C() * g[k];
 
 					// Uplate lbu, ubu
 					subvector(c_.lbu_, nu, sz.nu()) = stage->lbu();
 					subvector(c_.ubu_, nu, sz.nu()) = stage->ubu();
-
-					// Update A
-					c_.A_ = stage->A() * c_.A_;
 
 					// Update B
 					{
@@ -152,22 +170,32 @@ namespace tmpc
 						c_.B_ = std::move(B_next);
 					}
 
-					// Update b
-					c_.b_ = stage->A() * c_.b_ + stage->b();
-
 					// Update indices
 					nu += sz.nu();
 					nc += sz.nx() + sz.nc();
 				}
 
-				// Set the state bounds of the condensed stage
+				// Calculate r by backward substitution
+				{
+					c_.r(N - 1) = stages[N - 1].r() + trans(stages[N - 1].S()) * g[N - 1];
+					DynamicVector<Kernel> w = stages[N - 1].q() + stages[N - 1].Q() * g[N - 1];
+
+					for (size_t k = N - 1; k --> 0 ;)
+					{
+						// Update r
+						c_.r(k) = stages[k].r() + trans(stages[k].S()) * g[k] + trans(stages[k].B()) * w;
+						w = stages[k].q() + stages[k].Q() * g[k] + trans(stages[k].A()) * w;
+					}
+				}
+
+				// Set the state bounds of the condensed stage<tmpc/ocp/OcpSize.hpp>
 				qp.lbx(first_->lbx());
 				qp.ubx(first_->ubx());
 
 				// Assign the output values.				
-				qp.A(c_.A_);
+				qp.A(F[N]);
 				qp.B(c_.B_);
-				qp.b(c_.b_);
+				qp.b(g[N]);				
 				qp.C(c_.Cc_);
 				qp.D(c_.Dc_);
 				qp.lbd(c_.lbd_);
@@ -203,7 +231,7 @@ namespace tmpc
 		};
 
 		template <typename InIter>
-		CondensingN2(InIter const& sz_first, InIter const& sz_last)
+		CondensingN2(InIter const& sz_first, InIter const& sz_last, size_t nx_next = 0)
 		:	cs_(condensedOcpSize(sz_first, sz_last))
 		,	Qc_(cs_.nx(), cs_.nx())
 		,   Rc_(cs_.nu(), cs_.nu())
@@ -216,7 +244,35 @@ namespace tmpc
 		,   ubd_(cs_.nc())
 		,   lbu_(cs_.nu())
 		,   ubu_(cs_.nu())
+		// Init G.
+		,	G_(sumNx(sz_first, sz_last) + nx_next, sumNu(sz_first, sz_last), 0)
+		,	blockG_(G_, 
+			blockRowSizeG(sz_first, sz_last, nx_next),
+			make_transform_iterator_range(sz_first, sz_last, [] (OcpSize const& s) { return s.nu(); })
+			)
+		,	size_(sz_first, sz_last)
 		{
+			size_t const N = std::distance(sz_first, sz_last);
+			//g_.resize(N);
+			
+			// Init cumulative sizes.
+			cumNu_.reserve(N);
+			cumNc_.reserve(N);
+
+			size_t nu = 0;
+			size_t nc = 0;
+
+			for (auto sz = size_.begin(); sz != size_.end(); ++sz)
+			{
+				cumNu_.push_back(nu);
+				cumNc_.push_back(nc);
+				nu += sz->nu();
+
+				if (sz != size_.begin())
+					nc += sz->nx();
+					
+				nc += sz->nc();
+			}
 		}
 
 		/**
@@ -255,8 +311,76 @@ namespace tmpc
 		DynamicVector<Kernel> lbu_;
 		DynamicVector<Kernel> ubu_;
 
-		DynamicMatrix<Kernel> A_;
 		DynamicMatrix<Kernel> B_;
-		DynamicVector<Kernel> b_;
+		DynamicMatrix<Kernel> G_;
+		BlockMatrixView<Kernel, DynamicMatrix<Kernel>> blockG_;
+
+		/*
+		class PerStageData
+		{
+		public:
+			PerStageData(CondensingN2& c, size_t nx, size_t nu, size_t nc, size_t ns)
+			:	
+
+		private:
+			CondensingN2& 
+
+			OcpSize stageSize_;
+			OcpSize cumSize_;
+
+			DynamicVector<Kernel> g_;
+			Subvector<Kernel, DynamicVector<Kernel>> r_;
+		};
+		*/
+
+		//std::vector<DynamicVector<Kernel>> g_;
+		std::vector<OcpSize> size_;
+		std::vector<size_t> cumNu_;
+		std::vector<size_t> cumNc_;
+
+
+		decltype(auto) r(size_t k)
+		{
+			return subvector(rc_, cumNu_[k], size_[k].nu());
+		}
+
+
+		decltype(auto) R(size_t i, size_t j)
+		{
+			return submatrix(Rc_, cumNu_[i], cumNu_[j], size_[i].nu(), size_[j].nu());
+		}
+
+
+		decltype(auto) S(size_t j)
+		{
+			return submatrix(Sc_, 0, cumNu_[j], rows(Sc_), size_[j].nu());
+		}
+
+
+		decltype(auto) Cx(size_t i)
+		{
+			assert(i > 0);
+			return submatrix(Cc_, cumNc_[i], 0, size_[i].nx(), columns(Cc_));
+		}
+
+
+		decltype(auto) Cc(size_t i)
+		{
+			return submatrix(Cc_, cumNc_[i] + size_[i].nx(), 0, size_[i].nc(), columns(Cc_));
+		}
+
+
+		template <typename InputIterator>
+		static auto blockRowSizeG(InputIterator sz_first, InputIterator sz_last, size_t nx_next)
+		{
+			std::vector<size_t> sx;
+			sx.reserve(std::distance(sz_first, sz_last) + nx_next);
+			
+			while (sz_first != sz_last)
+				sx.push_back(sz_first++->nx());
+			sx.push_back(nx_next);
+			
+			return sx;
+		}
 	};
 }
