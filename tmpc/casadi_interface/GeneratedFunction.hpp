@@ -25,7 +25,7 @@ namespace casadi_interface
 		,	name_(n)
 		{
 			// Get work memory size.
-			int sz_arg, sz_res, sz_iw, sz_w;
+			casadi_int sz_arg, sz_res, sz_iw, sz_w;
 			if (int code = fun_.f_->work(&sz_arg, &sz_res, &sz_iw, &sz_w) != 0)
 				throw std::runtime_error(name() + "_fun_work() returned " + std::to_string(code));
 
@@ -122,7 +122,7 @@ namespace casadi_interface
 		*/
 		mutable std::vector<casadi_real const *> _arg;
 		mutable std::vector<casadi_real *> _res;
-		mutable std::vector<int> _iw;
+		mutable std::vector<casadi_int> _iw;
 		mutable std::vector<casadi_real> _w;
 	};
 
@@ -134,4 +134,4 @@ namespace casadi_interface
 		std::tuple<Args...> args_ = std::make_tuple(std::forward<Args>(args)...);
 	}
 	*/
-} /* namespace mpmc */
+}
