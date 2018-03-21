@@ -2,6 +2,7 @@
 
 #include <tmpc/Math.hpp>
 #include <tmpc/qp/OcpQpExpressionBase.hpp>
+#include <tmpc/Matrix.hpp>
 
 #include <boost/range/iterator_range_core.hpp>
 
@@ -366,8 +367,8 @@ namespace tmpc
     inline void randomize(OcpQpBase<QP>& qp)
     {
         using Kernel = typename QP::Kernel;
-		using DynamicMatrix = typename Kernel::DynamicMatrix;
-		using DynamicVector = typename Kernel::DynamicVector;
+		using DynamicMatrix = DynamicMatrix<Kernel>;
+		using DynamicVector = DynamicVector<Kernel>;
 		typename Kernel::template Rand<DynamicMatrix> rand_matrix;
 		typename Kernel::template Rand<DynamicVector> rand_vector;
 
@@ -408,8 +409,8 @@ namespace tmpc
 		{
 			DynamicVector const lbu = rand_vector.generate(sz.nu());
 			DynamicVector const ubu = rand_vector.generate(sz.nu());
-			qp.lbx(min(lbu, ubu));
-			qp.ubx(max(lbu, ubu));
+			qp.lbu(min(lbu, ubu));
+			qp.ubu(max(lbu, ubu));
 		}
 
 		{
@@ -422,7 +423,7 @@ namespace tmpc
 			qp.Zu(ctrans(Z) * Z);
 		}
 			
-		qp.zl(rand_matrix.generate(sz.ns()));
-		qp.zu(rand_matrix.generate(sz.ns()));
+		qp.zl(rand_vector.generate(sz.ns()));
+		qp.zu(rand_vector.generate(sz.ns()));
     }
 }

@@ -17,19 +17,9 @@ namespace tmpc :: testing
         using Stage = OcpQp<Kernel>;
 
         Stage stage0 {OcpSize {3, 2, 0}, 2};
-        
-        stage0
-        .Q({{1., 0., 0.},
-            {0., 2., 0.},
-            {0., 0., 3.}})
-        .R({{5., 0.},
-            {0., 6.}})
-        .S({{7., 8.},
-            {9., 10.},
-            {11., 12.}})
-        .q({13., 14., 15.})
-        .r({16., 17.});
 
+        randomize(stage0);
+        
         json j = stage0;
         std::cout << std::setw(4) << j << std::endl;
 

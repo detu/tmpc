@@ -15,11 +15,12 @@ namespace tmpc
 	///
 	/// Solver-agnostic memory layout.
 	///
-	template <typename Kernel>
+	template <typename Kernel_>
 	class OcpQp
-	:	public OcpQpBase<OcpQp<Kernel>>
+	:	public OcpQpBase<OcpQp<Kernel_>>
 	{
 	public:
+		using Kernel = Kernel_;
 		using size_type = typename Kernel::size_t;
 		using Real = typename Kernel::Real;
 		using Matrix = DynamicMatrix<Kernel>;
