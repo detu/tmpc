@@ -9,7 +9,7 @@ set (SRC
     ${TMPC_INCLUDE_DIR}/Matrix.hpp
     ${TMPC_INCLUDE_DIR}/casadi_interface/GeneratedFunction.hpp
 
-	${TMPC_INCLUDE_DIR}/qp/Condensing.hpp    qp/Condensing.cpp
+	${TMPC_INCLUDE_DIR}/qp/CondensingN3.hpp
 	${TMPC_INCLUDE_DIR}/qp/OcpQp.hpp
 
 	${TMPC_INCLUDE_DIR}/qp/diagnostics.hpp
@@ -21,12 +21,6 @@ set (SRC
 )
 
 add_library(tmpc STATIC ${SRC})
-
-
-# Enable position-independent code in tmpc.
-# Otherwise, when trying to link it as a part of a shared library,
-# a linker can complain.
-set_property(TARGET tmpc PROPERTY POSITION_INDEPENDENT_CODE True)
 
 target_include_directories(tmpc
     PUBLIC ${PROJECT_INCLUDE_DIR}

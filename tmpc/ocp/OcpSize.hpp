@@ -1,11 +1,11 @@
 #pragma once
 
 #include <tmpc/SizeT.hpp>
+#include <tmpc/core/TransformIterator.hpp>
 
-#include <cstdlib>
-#include <vector>
 #include <numeric>
 #include <stdexcept>
+
 
 namespace tmpc 
 {
@@ -102,9 +102,31 @@ namespace tmpc
 
 
 	template <typename IteratorRange>
-	inline std::size_t numVariables(IteratorRange const& sz)
+	inline size_t numVariables(IteratorRange const& sz)
 	{
 		return numVariables(sz.begin(), sz.end());
+	}
+
+
+	///
+	/// \return Sum of nx() of all OcpSize in the given range.
+	///
+	template <typename InputIt>
+	inline size_t sumNx(InputIt sz_begin, InputIt sz_end)
+	{
+		return std::accumulate(sz_begin, sz_end, size_t {0},
+			[] (size_t n, OcpSize const& s) { return n + s.nx(); });
+	}
+
+
+	///
+	/// \return Sum of nu() of all OcpSize in the given range.
+	///
+	template <typename InputIt>
+	inline size_t sumNu(InputIt sz_begin, InputIt sz_end)
+	{
+		return std::accumulate(sz_begin, sz_end, size_t {0},
+			[] (size_t n, OcpSize const& s) { return n + s.nu(); });
 	}
 
 
@@ -142,105 +164,60 @@ namespace tmpc
 
 
 	/**
-	 * \brief An iterator through QP stages returning stage's OcpSize.
-	 * 
-	 * TODO: Deprecate?
+	* \brief Helper function to create a OcpSizeIterator from an arbitrary iterator type implementing StageIterator concept.
 	*/
 	template <typename StageIterator>
-	class QpSizeIterator
+	inline auto ocpSizeIterator(StageIterator const& it)
 	{
-	public:
-		// iterator traits
-		using difference_type = typename StageIterator::difference_type;
-		using value_type = OcpSize const;
-		using pointer = OcpSize const *;
-		using reference = OcpSize const &;
-		using iterator_category = typename StageIterator::iterator_category;
-
-		explicit QpSizeIterator(StageIterator const& it)
-		:	it_(it)
-		{
-		}
-
-		reference operator*() const
-		{
-			return it_->size();
-		}
-
-		pointer operator->() const
-		{
-			return &it_->size();
-		}
-
-		QpSizeIterator& operator++()
-		{
-			++it_;
-			return *this;
-		}
-
-		QpSizeIterator operator++(int)
-		{
-			return QpSizeIterator(it_++);
-		}
-
-		reference operator[](difference_type n) const
-		{
-			return it_[n].size();
-		}
-
-		friend bool operator!=(QpSizeIterator const& a, QpSizeIterator const& b)
-		{
-			return a.it_ != b.it_;
-		}
-
-		friend bool operator==(QpSizeIterator const& a, QpSizeIterator const& b)
-		{
-			return a.it_ == b.it_;
-		}
-
-		friend QpSizeIterator operator+(QpSizeIterator const& a, difference_type n)
-		{
-			return QpSizeIterator(a.it_ + n);
-		}
-
-		friend QpSizeIterator operator+(difference_type n, QpSizeIterator const& a)
-		{
-			return QpSizeIterator(n + a.it_);
-		}
-
-		friend difference_type operator-(QpSizeIterator const& a, QpSizeIterator const& b)
-		{
-			return a.it_ - b.it_;
-		}
-
-	private:
-		StageIterator it_;
-	};
-
-	/**
-	* \brief Helper function to create a QpSizeIterator from an arbitrary iterator type implementing StageIterator concept.
-	*/
-	template <typename StageIterator>
-	inline QpSizeIterator<StageIterator> qpSizeIterator(StageIterator const& it)
-	{
-		return QpSizeIterator<StageIterator>(it);
+		return make_transform_iterator(it, [] (auto const& x) { return x.size(); });
 	}
 
-	/**
-	* \brief Helper function to create a QpSizeIterator.
-	*/
-	template <typename Collection>
-	inline QpSizeIterator<typename Collection::const_iterator> sizeBegin(Collection const& c)
-	{
-		return QpSizeIterator<typename Collection::const_iterator>(c.begin());
-	}
 
 	/**
-	* \brief Helper function to create a QpSizeIterator.
+	* \brief Iterator marking the beginning of the size sequence.
 	*/
 	template <typename Collection>
-	inline QpSizeIterator<typename Collection::const_iterator> sizeEnd(Collection const& c)
+	inline auto sizeBegin(Collection const& c)
 	{
-		return QpSizeIterator<typename Collection::const_iterator>(c.end());
+		return ocpSizeIterator(c.begin());
+	}
+	
+
+	/**
+	* \brief Iterator marking the end of the size sequence.
+	*/
+	template <typename Collection>
+	inline auto sizeEnd(Collection const& c)
+	{
+		return ocpSizeIterator(c.end());
+	}
+
+
+	/**
+	 * Resulting OCP size after full condensing.
+	 */
+	template <typename InIter>
+	inline OcpSize condensedOcpSize(InIter sz_begin, InIter sz_end)
+	{
+		if (sz_begin == sz_end)
+			throw std::invalid_argument("condensedOcpSize(): OcpSize range must be not empty");
+
+		return OcpSize {
+			sz_begin->nx(),
+			std::accumulate(sz_begin, sz_end, size_t{0},
+				[] (size_t n, OcpSize const& s) { return n + s.nu(); }),
+			std::accumulate(sz_begin, sz_end, size_t{0},
+				[] (size_t n, OcpSize const& s) { return n + s.nc(); })
+			+ std::accumulate(sz_begin + 1, sz_end, size_t{0},
+					[] (size_t n, OcpSize const& s) { return n + s.nx(); }),
+			std::accumulate(sz_begin, sz_end, size_t{0},
+				[] (size_t n, OcpSize const& s) { return n + s.ns(); })
+		};
+	}
+
+
+	inline OcpSize condensedOcpSize(std::initializer_list<OcpSize> sz)
+	{
+		return condensedOcpSize(sz.begin(), sz.end());
 	}
 }

@@ -10,6 +10,11 @@
 
 namespace tmpc 
 {
+	///
+	/// \brief One stage of OCP QP.
+	///
+	/// Solver-agnostic memory layout.
+	///
 	template <typename Kernel>
 	class OcpQp
 	:	public OcpQpBase<OcpQp<Kernel>>
@@ -19,6 +24,7 @@ namespace tmpc
 		using Real = typename Kernel::Real;
 		using Matrix = DynamicMatrix<Kernel>;
 		using Vector = DynamicVector<Kernel>;
+		//using OcpQpBase<OcpQp<Kernel>>::operator=;
 
 
 		/// @brief Default constructor makes OcpQp DefaultConstructible.
@@ -69,6 +75,14 @@ namespace tmpc
 		,	zu_(sz.ns())
 		,	idxs_(sz.nx(), 0)
 		{
+		}
+
+
+		template <typename Expr>
+		OcpQp(OcpQpExpressionBase<Expr> const& expr)
+		:	OcpQp(expr.size())
+		{
+			expr.evalTo(*this);
 		}
 
 

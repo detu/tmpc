@@ -1,4 +1,3 @@
-#include <tmpc/qp/Condensing.hpp>
 #include <tmpc/qp/OcpQp.hpp>
 #include <tmpc/mpc/MpcOcpSize.hpp>
 
@@ -8,29 +7,9 @@
 
 namespace tmpc :: testing
 {
-	TEST(QpSizeTest, testCondensedQpSize)
-	{
-		EXPECT_EQ(condensedQpSize({
-			OcpSize(2, 1, 3),
-			OcpSize(4, 5, 6),
-			OcpSize(2, 1, 1)
-			}),
-			OcpSize(2, 1 + 5 + 1, (3 + 6 + 1) + (4 + 2)));
-	}
-
-	TEST(QpSizeTest, testCondensedQpSizeIteratorRange)
-	{
-		std::array<OcpSize, 3> sz = {
-			OcpSize(2, 1, 3),
-			OcpSize(4, 5, 6),
-			OcpSize(2, 1, 1)
-			};
-
-		EXPECT_EQ(condensedQpSize(sz.begin(), sz.end()),
-			OcpSize(2, 1 + 5 + 1, (3 + 6 + 1) + (4 + 2)));
-	}
-
-	class CondensingTest : public ::testing::Test
+	template <typename CA>
+	class CondensingTest 
+	: 	public ::testing::Test
 	{
 	public:
 
@@ -46,8 +25,9 @@ namespace tmpc :: testing
 		static auto constexpr NT = 2u;
 		static auto constexpr NZ = NX + NU;
 
-		using Real = double;
-		using Kernel = BlazeKernel<Real>;
+		using CondensingAlgorithm = CA;
+		using Kernel = typename CondensingAlgorithm::Kernel;
+		using Real = typename Kernel::Real;
 		using StateVector = StaticVector<Kernel, NX>;
 		using InputVector = StaticVector<Kernel, NU>;
 		using StateStateMatrix = StaticMatrix<Kernel, NX, NX>;
@@ -170,23 +150,31 @@ namespace tmpc :: testing
 		StaticVector<Kernel, NT * NU> ubu_expected;
 	};
 
-	unsigned constexpr CondensingTest::NX;
-	unsigned constexpr CondensingTest::NU;
 
-	TEST_F(CondensingTest, testCondensing)
+	TYPED_TEST_CASE_P(CondensingTest);
+
+	
+	TYPED_TEST_P(CondensingTest, testCondensing)
 	{
-		// Condense
-		Condensing<Kernel> condensing(sizeBegin(qp), sizeEnd(qp));
-		OcpQp<Kernel> const condensed = condensing(qp.begin(), qp.end());
+		using Kernel = typename TestFixture::Kernel;
 
-		EXPECT_EQ(print_wrap(condensed.Q()), print_wrap(Qc_expected));
-		EXPECT_EQ(print_wrap(condensed.R()), print_wrap(Rc_expected));
-		EXPECT_EQ(print_wrap(condensed.S()), print_wrap(Sc_expected));
-		EXPECT_EQ(print_wrap(condensed.q()), print_wrap(qc_expected));
-		EXPECT_EQ(print_wrap(condensed.r()), print_wrap(rc_expected));
-		EXPECT_EQ(print_wrap(condensed.lbx()), print_wrap(lbx_expected));
-		EXPECT_EQ(print_wrap(condensed.ubx()), print_wrap(ubx_expected));
-		EXPECT_EQ(print_wrap(condensed.lbu()), print_wrap(lbu_expected));
-		EXPECT_EQ(print_wrap(condensed.ubu()), print_wrap(ubu_expected));
+		// Condense
+		typename TestFixture::CondensingAlgorithm condensing(sizeBegin(this->qp), sizeEnd(this->qp));
+		OcpQp<Kernel> const condensed = condensing(this->qp.begin(), this->qp.end());
+
+		EXPECT_EQ(print_wrap(condensed.Q()), print_wrap(this->Qc_expected));
+		EXPECT_EQ(print_wrap(condensed.R()), print_wrap(this->Rc_expected));
+		EXPECT_EQ(print_wrap(condensed.S()), print_wrap(this->Sc_expected));
+		EXPECT_EQ(print_wrap(condensed.q()), print_wrap(this->qc_expected));
+		EXPECT_EQ(print_wrap(condensed.r()), print_wrap(this->rc_expected));
+		EXPECT_EQ(print_wrap(condensed.lbx()), print_wrap(this->lbx_expected));
+		EXPECT_EQ(print_wrap(condensed.ubx()), print_wrap(this->ubx_expected));
+		EXPECT_EQ(print_wrap(condensed.lbu()), print_wrap(this->lbu_expected));
+		EXPECT_EQ(print_wrap(condensed.ubu()), print_wrap(this->ubu_expected));
 	}
+	
+
+	REGISTER_TYPED_TEST_CASE_P(CondensingTest,
+		testCondensing
+	);
 }
