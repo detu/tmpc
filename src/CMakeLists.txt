@@ -114,3 +114,12 @@ if (TMPC_WITH_BLASFEO)
         PUBLIC ${BLASFEO_STATIC_LIB}
     )
 endif()
+
+#
+# Link to nlohmann_json
+#
+if (TMPC_WITH_JSON)
+    target_link_libraries(tmpc
+        PUBLIC nlohmann_json
+    )
+endif ()

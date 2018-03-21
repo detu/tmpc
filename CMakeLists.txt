@@ -55,6 +55,15 @@ if (TMPC_WITH_CASADI_INTERFACE)
     message(STATUS "CASADI_INCLUDE_DIRS=${CASADI_INCLUDE_DIRS}")
 endif ()
 
+
+# TMPC_WITH_JSON
+set(TMPC_WITH_JSON ON CACHE BOOL "Build tmpc with JSON support")
+
+if (TMPC_WITH_JSON)
+    # Find Nlohmann json library
+    find_package(nlohmann_json REQUIRED)
+endif ()
+
 add_subdirectory(src)
 add_subdirectory(examples)
 

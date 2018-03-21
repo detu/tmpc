@@ -20,6 +20,31 @@ namespace tmpc
 		using Matrix = DynamicMatrix<Kernel>;
 		using Vector = DynamicVector<Kernel>;
 
+
+		/// @brief Default constructor makes OcpQp DefaultConstructible.
+		///
+		/// "default" default constructor is fine.
+		OcpQp() = default;
+
+
+		/// @brief Copy constructor makes OcpQp CopyConstructible.
+		///
+		/// "default" copy constructor is fine.
+		OcpQp(OcpQp const&) = default;
+
+
+		/// @brief Copy assignment makes OcpQp CopyAssignable.
+		///
+		/// "default" copy assignment is fine.
+		/// OcpQp& operator=(OcpQp const&) = default;
+
+
+		/// @brief Move assignment makes OcpQp MoveAssignable.
+		///
+		/// "default" move assignment is fine.
+		OcpQp& operator=(OcpQp &&) = default;
+
+
 		OcpQp(OcpSize const& sz, size_type nx_next = 0)
 		:	size_(sz)
 		,	Q_(sz.nx(), sz.nx())
@@ -45,6 +70,7 @@ namespace tmpc
 		,	idxs_(sz.nx(), 0)
 		{
 		}
+
 
 		template <typename Other>
 		OcpQp(OcpQpBase<Other> const& rhs)

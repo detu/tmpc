@@ -100,6 +100,10 @@ if (TMPC_WITH_CASADI_INTERFACE)
     add_subdirectory(casadi_interface)
 endif ()
 
+if (TMPC_WITH_JSON)
+    add_subdirectory(json)
+endif ()
+
 #GTEST_ADD_TESTS(tmpc_test "" AUTO)
 add_test(NAME tmpc_test COMMAND tmpc_test)
 
