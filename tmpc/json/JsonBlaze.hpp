@@ -13,8 +13,14 @@ namespace blaze
         jsn = tmpc::json::array();
 
         for (size_t i = 0; i < rows(m); ++i)
+        {
+            tmpc::json row = tmpc::json::array();
+
             for (size_t j = 0; j < columns(m); ++j)
-                jsn.push_back((~m)(i, j));
+                row.push_back((~m)(i, j));
+
+            jsn.push_back(row);
+        }
     }
 
 
@@ -30,39 +36,42 @@ namespace blaze
     void from_json(tmpc::json const& j, Matrix<MT, SO>& v)
     {
         using Scalar = typename MT::ElementType;
+
+        auto const M = rows(v);
+        auto const N = columns(v);
+
+        if (j.size() != M)
+            throw std::invalid_argument("Number of rows in json does not match matrix size");
         
-        if (rows(v) * columns(v) != j.size())
-            throw std::invalid_argument("Number of elements in json value does not match matrix size");
-
-        int ii = 0, jj = 0;
-        for (auto const& val : j)
+        for (size_t ii = 0; ii < M; ++ii)
         {
-            auto numeric_val = std::numeric_limits<Scalar>::signaling_NaN();
+            if (j[ii].size() != N)
+                throw std::invalid_argument("Number of columns in json value does not match matrix size");
 
-            if (val.is_string())
+            for (size_t jj = 0; jj < N; ++jj)
             {
-                static auto constexpr inf = std::numeric_limits<Scalar>::infinity();
+                auto const val = j[ii][jj];
+                auto numeric_val = std::numeric_limits<Scalar>::signaling_NaN();
 
-                if (val == "-inf")
-                    numeric_val = -inf;
-                else if (val == "inf")
-                    numeric_val = inf;
-                else
+                if (val.is_string())
                 {
-                    std::ostringstream msg;
-                    msg << "Invalid floating point value in json file: a number, a \"inf\" or a \"-inf\" was expected, but \"" << val << "\" found.";
-                    throw std::invalid_argument(msg.str());
+                    static auto constexpr inf = std::numeric_limits<Scalar>::infinity();
+
+                    if (val == "-inf")
+                        numeric_val = -inf;
+                    else if (val == "inf")
+                        numeric_val = inf;
+                    else
+                    {
+                        std::ostringstream msg;
+                        msg << "Invalid floating point value in json file: a number, a \"inf\" or a \"-inf\" was expected, but \"" << val << "\" found.";
+                        throw std::invalid_argument(msg.str());
+                    }
                 }
-            }
-            else
-                numeric_val = val;
+                else
+                    numeric_val = val;
 
-            (~v)(ii, jj) = numeric_val;
-
-            if (++jj >= columns(v))
-            {
-                jj = 0;                
-                ++ii;
+                (~v)(ii, jj) = numeric_val;
             }
         }
     }
