@@ -72,7 +72,7 @@ namespace tmpc
 		// centering parameter, duality measure for predictor and corrector.
 		using IterStat = std::array<Real, 5>;
 
-		using Stage = detail::HpxxxStage<Kernel, StorageOrder::rowMajor>;
+		using Stage = detail::HpxxxStage<Kernel, StorageOrder::rowMajor, true>;
 
 		class ProblemIterator
 		:	public boost::iterator_adaptor<

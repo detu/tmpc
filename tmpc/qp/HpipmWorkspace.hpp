@@ -87,7 +87,7 @@ namespace tmpc
 		using Real = typename Kernel::Real;
 		
 	private:
-		using Stage = detail::HpxxxStage<Kernel, StorageOrder::columnMajor>;
+		using Stage = detail::HpxxxStage<Kernel, StorageOrder::columnMajor, false>;
 
 	public:
 

@@ -21,10 +21,10 @@ namespace tmpc :: detail
 	///
 	/// Common class for both HPMPC and HPIPM stage data.
 	///
-	template <typename Kernel_, StorageOrder SO>
+	template <typename Kernel_, StorageOrder SO, bool ISHPMC>
 	class HpxxxStage
-	:	public OcpSolutionBase<HpxxxStage<Kernel_, SO>>
-	,	public OcpQpBase<HpxxxStage<Kernel_, SO>>
+	:	public OcpSolutionBase<HpxxxStage<Kernel_, SO, ISHPMC>>
+	,	public OcpQpBase<HpxxxStage<Kernel_, SO, ISHPMC>>
 	{
 	public:
 		using Kernel = Kernel_;
@@ -182,37 +182,45 @@ namespace tmpc :: detail
 
 		auto const& x() const { return x_; }
 		auto const& u() const { return u_;	}
-		auto const& pi() const	{ return pi_; }
-		
+		auto pi() const	{
+			// The lagrange multipliers pi in HP*** refer to the equality constraints x(k+1) - A x(k) - B x(k).
+			// To be consistent with QPOASES, we consider equality constraints expressed as  A x(k) + B x(k) - x(k+1).
+			return -pi_;
+		}
+
 		auto lam_lbu() const 
 		{ 
-			return subvector(lam_, 2 * size_.nc(), size_.nu()); 
+			return subvector(lam_, 0, size_.nu());
 		}
 
 		auto lam_ubu() const 
 		{ 
-			return subvector(lam_, 2 * size_.nc() + size_.nu(), size_.nu()); 
+			if (ISHPMC) return subvector(lam_, size_.nu() + size_.nx() + size_.nc(), size_.nu());
+			else return subvector(lam_, size_.nu() + size_.nx(), size_.nu());
 		}
 
 		auto lam_lbx() const 
 		{ 
-			return subvector(lam_, 2 * size_.nc() + 2 * size_.nu(), size_.nx()); 
+			return subvector(lam_, size_.nu(), size_.nx());
 		}
 
 		auto lam_ubx() const 
 		{ 
-			return subvector(lam_, 2 * size_.nc() + 2 * size_.nu() + size_.nx(), size_.nx()); 
+			if (ISHPMC) return subvector(lam_, 2 * size_.nu() + size_.nx() + size_.nc(), size_.nx()); 
+			else return subvector(lam_, 2 * size_.nu() + size_.nx(), size_.nx());
 		}
 
 		auto lam_lbd() const 
 		{ 
-			return subvector(lam_, 0, size_.nc()); 
+			if (ISHPMC) return subvector(lam_, size_.nu() + size_.nx(), size_.nc()); 
+			else return subvector(lam_, 2 * size_.nu() + 2 * size_.nx(), size_.nc());
 		}
 
 		auto lam_ubd() const 
 		{ 
-			return subvector(lam_, size_.nc(), size_.nc()); 
+			return subvector(lam_, 2 * size_.nu() + 2.* size_.nx() + size_.nc(), size_.nc()); 
 		}
+
 
 		OcpSize const& size() const { return size_; }
 

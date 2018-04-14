@@ -353,26 +353,19 @@ namespace tmpc
 
 			auto pi() const	
 			{ 
-				return subvector(ws_->dualSolution, ws_->primalSolution.size() + na_ + size_.nc(), nxNext_);
+				return subvector(ws_->dualSolution, ws_->primalSolution.size() + na_, nxNext_);
 			}
 
 			auto lam_lbu() const 
 			{ 
-				// lamU_(subvector(ws_->dualSolution, n + size_.nx(), size_.nu()))
-
-				// TODO: this must be fixed, since qpOASES returns both lower an upper bound 
-				// Lagrange multipliers in one vector of size NU.
-				return subvector(ws_->dualSolution, n_ + size_.nx(), size_.nu());
+				return subvector(ws_->dualSolutionLb, n_ + size_.nx(), size_.nu());
 			}
 
 			auto lam_ubu() const 
 			{ 
-				// lamU_(subvector(ws_->dualSolution, n + size_.nx(), size_.nu()))
-
-				// TODO: this must be fixed, since qpOASES returns both lower an upper bound 
-				// Lagrange multipliers in one vector of size NU.
-				return subvector(ws_->dualSolution, n_ + size_.nx(), size_.nu()); 
+				return subvector(ws_->dualSolutionUb, n_ + size_.nx(), size_.nu()); 
 			}
+
 
 			auto lam_lbx() const 
 			{ 
@@ -380,7 +373,8 @@ namespace tmpc
 
 				// TODO: this must be fixed, since qpOASES returns both lower an upper bound 
 				// Lagrange multipliers in one vector of size NX.
-				return subvector(ws_->dualSolution, n_, size_.nx()); 
+				//return subvector(ws_->dualSolution, n_, size_.nx()); 
+				return subvector(ws_->dualSolutionLb, n_, size_.nx()); 
 			}
 
 			auto lam_ubx() const 
@@ -389,7 +383,8 @@ namespace tmpc
 
 				// TODO: this must be fixed, since qpOASES returns both lower an upper bound 
 				// Lagrange multipliers in one vector of size NX.
-				return subvector(ws_->dualSolution, n_, size_.nx()); 
+				//return subvector(ws_->dualSolution, n_, size_.nx()); 
+				return subvector(ws_->dualSolutionUb, n_, size_.nx()); 
 			}
 
 			auto lam_lbd() const 
@@ -398,7 +393,8 @@ namespace tmpc
 
 				// TODO: this must be fixed, since qpOASES returns both lower an upper bound 
 				// Lagrange multipliers in one vector of size NC.
-				return subvector(ws_->dualSolution, ws_->primalSolution.size() + na_, size_.nc()); 
+				// return subvector(ws_->dualSolution, ws_->primalSolution.size() + na_, size_.nc()); 
+				return subvector(ws_->dualSolutionLb, ws_->primalSolution.size() + na_ + nxNext_, size_.nc()); 
 			}
 
 			auto lam_ubd() const 
@@ -407,7 +403,8 @@ namespace tmpc
 
 				// TODO: this must be fixed, since qpOASES returns both lower an upper bound 
 				// Lagrange multipliers in one vector of size NC.
-				return subvector(ws_->dualSolution, ws_->primalSolution.size() + na_, size_.nc()); 
+				//return subvector(ws_->dualSolution, ws_->primalSolution.size() + na_, size_.nc()); 
+				return subvector(ws_->dualSolutionUb, ws_->primalSolution.size() + na_ + nxNext_, size_.nc()); 
 			}
 
 			OcpSize const& size() const { return size_; }
@@ -602,6 +599,22 @@ namespace tmpc
 			/* Get solution data. */
 			problem_.getPrimalSolution(ws_.primalSolution.data());
 			problem_.getDualSolution(ws_.dualSolution.data());
+		
+			/* Separate dual solutions for upper and lower bounds */
+			for (auto i = 0; i < ws_.dualSolution.size(); ++i) {				
+				if ( ws_.dualSolution[i] > 0 ) {
+					ws_.dualSolutionLb[i] = ws_.dualSolution[i]; 
+					ws_.dualSolutionUb[i] = 0; 
+				}
+				else if ( ws_.dualSolution[i] < 0 ) {
+					ws_.dualSolutionLb[i] = 0; 
+					ws_.dualSolutionUb[i] = - ws_.dualSolution[i];
+				}
+				else {
+					ws_.dualSolutionLb[i] = 0; 
+					ws_.dualSolutionUb[i] = 0;
+				}
+			}	
 		}
 
 	private:
@@ -631,6 +644,8 @@ namespace tmpc
 			, 	ubA(nc, Real {})
 			,	primalSolution(nx)
 			,	dualSolution(nx + nc)
+			,	dualSolutionLb(nx + nc)
+			,	dualSolutionUb(nx + nc)
 			{		
 				H = Real {0};
 				A = Real {0};
@@ -692,6 +707,8 @@ namespace tmpc
 
 			DynamicVector<Kernel> primalSolution;
 			DynamicVector<Kernel> dualSolution;
+			DynamicVector<Kernel> dualSolutionUb;
+			DynamicVector<Kernel> dualSolutionLb;
 		};
 
 		Workspace ws_;
