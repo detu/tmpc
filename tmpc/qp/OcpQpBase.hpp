@@ -273,6 +273,21 @@ namespace tmpc
 			return *this;
 		}
 
+
+		// Set path constraint inequality relative to a point.
+		template <typename Vector1, typename Vector2, typename Matrix1, typename Matrix2, typename Vector3, typename Vector4>
+		OcpQpBase& relativePathConstraints(Vector1 const& x, Vector2 const& u, 
+			Matrix1 const& C, Matrix2 const& D, Vector3 const& ld, Vector4 const& ud)
+		{
+			this->C(C);
+			this->D(D);
+			this->lbd(ld - C * x - D * u);
+			this->ubd(ud - C * x - D * u);
+
+			return *this;
+		}
+
+
 		// Set upper and lower input bounds.
 		template <typename Vector1, typename Vector2>
 		OcpQpBase& inputBounds(Vector1 const& lu, Vector2 const& uu)
