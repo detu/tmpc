@@ -262,6 +262,7 @@ namespace tmpc
 
 			return *this;
 		}
+		
 
 		// Set upper and lower state bounds relative to a point.
 		template <typename Vector1, typename Vector2, typename Vector3>
@@ -269,6 +270,19 @@ namespace tmpc
 		{
 			lbx(lx - x);
 			ubx(ux - x);
+
+			return *this;
+		}
+
+
+		// Set path constraint inequality.
+		template <typename Matrix1, typename Matrix2, typename Vector1, typename Vector2>
+		OcpQpBase& pathConstraints(Matrix1 const& C, Matrix2 const& D, Vector1 const& ld, Vector2 const& ud)
+		{
+			this->C(C);
+			this->D(D);
+			this->lbd(ld);
+			this->ubd(ud);
 
 			return *this;
 		}
