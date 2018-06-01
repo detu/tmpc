@@ -210,7 +210,7 @@ namespace tmpc
 		{
 			if (stage_.size() > 0)
 			{
-				// Recalculate bounds indices of each stage, at the bounds might have changed.				
+				// Recalculate bounds indices of each stage, as the bounds might have changed.				
 				// Update the nb_ array.
 				std::transform(stage_.begin(), stage_.end(), nb_.begin(), [] (Stage& s) -> int
 				{

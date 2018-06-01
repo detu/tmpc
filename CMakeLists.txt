@@ -46,6 +46,9 @@ endif()
 
 find_package(blaze)
 
+# Find boost, we use graphs from it.
+find_package(Boost REQUIRED COMPONENTS graph)
+
 
 # TMPC_WITH_CASADI_INTERFACE
 set(TMPC_WITH_CASADI_INTERFACE ON CACHE BOOL "Build tmpc with CasADi generated function support classes")
