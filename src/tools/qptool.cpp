@@ -2,25 +2,22 @@
 #include <iostream>
 #include <vector>
 #include <string>
-#include <boost/graph/adjacency_list.hpp>
-#include <boost/graph/wavefront.hpp>
+
+#include <nlohmann/json.hpp>
 
 #include <tmpc/ocp/OcpSizeGraph.hpp>
 #include <tmpc/core/IteratorRange.hpp>
 
+#include <boost/range/adaptor/indexed.hpp>
 
-int main()
+
+using namespace tmpc;
+
+
+void printSizeGraph(OcpSizeGraph const& g)
 {
-    using namespace boost;
-    using namespace tmpc;
-
-    size_t const N = 4;
-    OcpSizeGraph g(N);
-    add_edge(0, 1, g);
-    add_edge(1, 2, g);
-    add_edge(0, 3, g);
-
-    auto index_map = get(vertex_index, g);
+    auto index_map = get(boost::vertex_index, g);
+    auto ocp_size = get(OcpSizeProperty_t(), g);
 
     for (auto i : make_iterator_range(vertices(g)))
     {
@@ -39,17 +36,36 @@ int main()
         std::cout << std::endl;
     }
 
-    auto ocp_size = get(OcpSizeProperty_t(), g);
-    put(ocp_size, 0, OcpSize {2, 3, 1, 1});
-    put(ocp_size, 2, OcpSize {3, 4, 2, 3});
-
     for (auto v : make_iterator_range(vertices(g)))
     {
         auto sz = get(ocp_size, v);
         std::cout << "Vertex " << v << ", nx=" << sz.nx() << ", nu=" << sz.nu() << ", nc=" << sz.nc() << ", ns=" << sz.ns() << std::endl;
     }
+}
 
-    std::cout << "Max wavefront = " << max_wavefront(g) << std::endl;
+
+int main(int argc, char ** argv)
+{
+    using nlohmann::json;
+    using boost::adaptors::indexed;
+
+    json j;
+    std::cin >> j;
+
+    size_t const N = j["nodes"].size();
+    OcpSizeGraph g(N);
+
+    auto ocp_size = get(OcpSizeProperty_t(), g);
+    for (auto const& j_vertex : j["nodes"] | indexed(0))
+    {
+        auto const& j_v = j_vertex.value();
+        put(ocp_size, j_vertex.index(), OcpSize {j_v["q"].size(), j_v["r"].size(), j_v["ld"].size(), j_v["zl"].size()});
+    }
+
+    for (auto j_edge : j["edges"])
+        add_edge(j_edge["from"], j_edge["to"], g);
+
+    printSizeGraph(g);
 
     return EXIT_SUCCESS;
 }

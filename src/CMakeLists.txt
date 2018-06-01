@@ -117,3 +117,5 @@ if (TMPC_WITH_JSON)
         PUBLIC nlohmann_json
     )
 endif ()
+
+add_subdirectory(tools)

@@ -7,6 +7,9 @@ set(CMAKE_CXX_STANDARD 17)
 # Don't use compiler's C++ extensions
 set(CMAKE_CXX_EXTENSIONS False)
 
+# Enable position-independent code on all targets by default.
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
 # Include CMakeToolsHelpers for easier debugging from VS Code
 include(CMakeToolsHelpers OPTIONAL)
 
@@ -46,7 +49,7 @@ endif()
 
 find_package(blaze)
 
-# Find boost, we use graphs from it.
+# Find boost.
 find_package(Boost REQUIRED COMPONENTS graph)
 
 
