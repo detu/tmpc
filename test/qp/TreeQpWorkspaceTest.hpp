@@ -68,77 +68,91 @@ namespace tmpc :: testing
 
     TYPED_TEST_CASE_P(TreeQpWorkspaceTest);
 
+
     TYPED_TEST_P(TreeQpWorkspaceTest, testQpInterface)
     {
-        /*
-        auto const N = this->size_.size();
+        using graph_traits = boost::graph_traits<OcpSizeGraph>;
 
-        std::vector<typename TestFixture::Matrix> Q(N);
-        std::vector<typename TestFixture::Vector> q(N);
-        std::vector<typename TestFixture::Vector> r(N);
+        auto const N = num_vertices(this->ws_.graph());
 
-        std::vector<typename TestFixture::Matrix> S(N);
-        std::vector<typename TestFixture::Matrix> R(N);
-        std::vector<typename TestFixture::Matrix> A(N);
-        std::vector<typename TestFixture::Matrix> B(N);
-        std::vector<typename TestFixture::Vector> b(N);
+        std::map<graph_traits::vertex_descriptor, typename TestFixture::Matrix> Q;
+        std::map<graph_traits::vertex_descriptor, typename TestFixture::Vector> q;
+        std::map<graph_traits::vertex_descriptor, typename TestFixture::Vector> r;
+        std::map<graph_traits::vertex_descriptor, typename TestFixture::Matrix> S;
+        std::map<graph_traits::vertex_descriptor, typename TestFixture::Matrix> R;
 
-        std::vector<typename TestFixture::Vector> x_min(N), x_max(N);
-        std::vector<typename TestFixture::Vector> u_min(N), u_max(N);
-        std::vector<typename TestFixture::Vector> d_min(N), d_max(N);
+        std::map<graph_traits::edge_descriptor, typename TestFixture::Matrix> A;
+        std::map<graph_traits::edge_descriptor, typename TestFixture::Matrix> B;
+        std::map<graph_traits::edge_descriptor, typename TestFixture::Vector> b;
+
+        std::map<graph_traits::vertex_descriptor, typename TestFixture::Vector> x_min, x_max;
+        std::map<graph_traits::vertex_descriptor, typename TestFixture::Vector> u_min, u_max;
+        std::map<graph_traits::vertex_descriptor, typename TestFixture::Vector> d_min, d_max;
 
         // Writing random data
         Rand<typename TestFixture::Kernel, typename TestFixture::Matrix> rand_matrix;
         Rand<typename TestFixture::Kernel, typename TestFixture::Vector> rand_vector;
 
-        for (std::size_t i = 0; i < N; ++i)
+        for (auto v : verticesR(this->ws_.graph()))
         {
-            auto const& sz = this->size_[i];
-            auto const nx1 = i + 1 < N ? this->size_[i + 1].nx() : 0;
-            auto& stage = this->ws_.problem()[i];
+            auto const& sz = get(this->ws_.size(), v);
+            auto& stage = get(this->ws_.problemVertex(), v);
 
-            stage.Q(Q[i] = rand_matrix.generate(sz.nx(), sz.nx()));
-            stage.R(R[i] = rand_matrix.generate(sz.nu(), sz.nu()));
-            stage.S(S[i] = rand_matrix.generate(sz.nx(), sz.nu()));
-            stage.q(q[i] = rand_vector.generate(sz.nx()));
-            stage.r(r[i] = rand_vector.generate(sz.nu()));
+            stage.Q(Q[v] = rand_matrix.generate(sz.nx(), sz.nx()));
+            stage.R(R[v] = rand_matrix.generate(sz.nu(), sz.nu()));
+            stage.S(S[v] = rand_matrix.generate(sz.nx(), sz.nu()));
+            stage.q(q[v] = rand_vector.generate(sz.nx()));
+            stage.r(r[v] = rand_vector.generate(sz.nu()));
 
-            stage.A(A[i] = rand_matrix.generate(nx1, sz.nx()));
-            stage.B(B[i] = rand_matrix.generate(nx1, sz.nu()));
-            stage.b(b[i] = rand_vector.generate(nx1));
+            stage.lbx(x_min[v] = rand_vector.generate(sz.nx()));
+            stage.ubx(x_max[v] = rand_vector.generate(sz.nx()));
+            stage.lbu(u_min[v] = rand_vector.generate(sz.nu()));
+            stage.ubu(u_max[v] = rand_vector.generate(sz.nu()));
+            stage.lbd(d_min[v] = rand_vector.generate(sz.nc()));
+            stage.ubd(d_max[v] = rand_vector.generate(sz.nc()));
+        }
 
-            stage.lbx(x_min[i] = rand_vector.generate(sz.nx()));
-            stage.ubx(x_max[i] = rand_vector.generate(sz.nx()));
-            stage.lbu(u_min[i] = rand_vector.generate(sz.nu()));
-            stage.ubu(u_max[i] = rand_vector.generate(sz.nu()));
-            stage.lbd(d_min[i] = rand_vector.generate(sz.nc()));
-            stage.ubd(d_max[i] = rand_vector.generate(sz.nc()));
+        for (auto e : edgesR(this->ws_.graph()))
+        {
+            auto const from = source(e, this->ws_.graph());
+            auto const to = target(e, this->ws_.graph());
+            auto const& sz_from = get(this->ws_.size(), from);
+            auto const& sz_to = get(this->ws_.size(), to);
+            auto& stage = get(this->ws_.problemEdge(), e);
+
+            stage.A(A[e] = rand_matrix.generate(sz_to.nx(), sz_from.nx()));
+            stage.B(B[e] = rand_matrix.generate(sz_to.nx(), sz_from.nu()));
+            stage.b(b[e] = rand_vector.generate(sz_to.nx()));
         }
 
         // Reading the data and checking that they are the same that we wrote
-        for (std::size_t i = 0; i < N; ++i)
+        for (auto v : verticesR(this->ws_.graph()))
         {
-            auto const& stage = this->ws_.problem()[i];
+            auto const& stage = get(this->ws_.problemVertex(), v);
 
-            EXPECT_EQ(print_wrap(stage.Q()), print_wrap(Q[i])) << "at i=" << i;
-            EXPECT_EQ(print_wrap(stage.R()), print_wrap(R[i])) << "at i=" << i;
-            EXPECT_EQ(print_wrap(stage.S()), print_wrap(S[i]));
-            EXPECT_EQ(print_wrap(stage.q()), print_wrap(q[i]));
-            EXPECT_EQ(print_wrap(stage.r()), print_wrap(r[i]));
+            EXPECT_EQ(print_wrap(stage.Q()), print_wrap(Q[v])) << "at v=" << v;
+            EXPECT_EQ(print_wrap(stage.R()), print_wrap(R[v])) << "at v=" << v;
+            EXPECT_EQ(print_wrap(stage.S()), print_wrap(S[v])) << "at v=" << v;
+            EXPECT_EQ(print_wrap(stage.q()), print_wrap(q[v])) << "at v=" << v;
+            EXPECT_EQ(print_wrap(stage.r()), print_wrap(r[v])) << "at v=" << v;
 
-            EXPECT_EQ(print_wrap(stage.A()), print_wrap(A[i]));
-            EXPECT_EQ(print_wrap(stage.B()), print_wrap(B[i]));
-            EXPECT_EQ(print_wrap(stage.b()), print_wrap(b[i]));
-
-            EXPECT_EQ(print_wrap(stage.lbx()), print_wrap(x_min[i]));
-            EXPECT_EQ(print_wrap(stage.ubx()), print_wrap(x_max[i]));
-            EXPECT_EQ(print_wrap(stage.lbu()), print_wrap(u_min[i]));
-            EXPECT_EQ(print_wrap(stage.ubu()), print_wrap(u_max[i]));
-            EXPECT_EQ(print_wrap(stage.lbd()), print_wrap(d_min[i]));
-            EXPECT_EQ(print_wrap(stage.ubd()), print_wrap(d_max[i]));
+            EXPECT_EQ(print_wrap(stage.lbx()), print_wrap(x_min[v])) << "at v=" << v;
+            EXPECT_EQ(print_wrap(stage.ubx()), print_wrap(x_max[v])) << "at v=" << v;
+            EXPECT_EQ(print_wrap(stage.lbu()), print_wrap(u_min[v])) << "at v=" << v;
+            EXPECT_EQ(print_wrap(stage.ubu()), print_wrap(u_max[v])) << "at v=" << v;
+            EXPECT_EQ(print_wrap(stage.lbd()), print_wrap(d_min[v])) << "at v=" << v;
+            EXPECT_EQ(print_wrap(stage.ubd()), print_wrap(d_max[v])) << "at v=" << v;
         }
-        */
+
+        for (auto e : edgesR(this->ws_.graph()))
+        {
+            auto const& stage = get(this->ws_.problemEdge(), e);
+            EXPECT_EQ(print_wrap(stage.A()), print_wrap(A[e])) << "at e=" << e;
+            EXPECT_EQ(print_wrap(stage.B()), print_wrap(B[e])) << "at e=" << e;
+            EXPECT_EQ(print_wrap(stage.b()), print_wrap(b[e])) << "at e=" << e;
+        }
     }
+
 
     TYPED_TEST_P(TreeQpWorkspaceTest, testMatrixSizesCorrect)
     {
