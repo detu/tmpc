@@ -10,6 +10,15 @@ namespace tmpc
 {
     struct OcpVertex
     {
+        OcpVertex() = default;
+
+
+        OcpVertex(OcpSize const& sz)
+        :   size(sz)
+        {            
+        }
+
+
         OcpSize size;
     };
 

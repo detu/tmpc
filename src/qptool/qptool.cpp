@@ -13,6 +13,7 @@
 #include <tmpc/BlazeKernel.hpp>
 #include <tmpc/json/JsonBlaze.hpp>
 #include <tmpc/json/JsonQp.hpp>
+#include <tmpc/core/GraphTools.hpp>
 
 #include <boost/range/adaptor/indexed.hpp>
 
@@ -42,7 +43,7 @@ int main(int argc, char ** argv)
     for (auto const& j_vertex : j["nodes"] | indexed(0))
     {
         auto const& j_v = j_vertex.value();
-        g[j_vertex.index()].size =  
+        g[j_vertex.index()].size =
             OcpSize {j_v["q"].size(), j_v["r"].size(), j_v["ld"].size(), j_v["zl"].size()};
     }
 
@@ -61,6 +62,18 @@ int main(int argc, char ** argv)
 
         std::cout << qp_vertex.Q() << std::endl;
     }
+
+    for (auto e : edgesR(solver.graph()))
+    {
+        auto const edge_index = get(solver.edgeIndex(), e);
+        auto& qp_edge = get(solver.problemEdge(), e);
+        from_json(j["edges"][edge_index], qp_edge);
+
+        std::cout << qp_edge.A() << std::endl;
+    }
+
+
+    solver.solve();
 
 
     return EXIT_SUCCESS;

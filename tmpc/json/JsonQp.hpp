@@ -6,8 +6,12 @@
 
 #include <tmpc/qp/OcpQpBase.hpp>
 #include <tmpc/qp/OcpQp.hpp>
+#include <tmpc/ocp/OcpSizeGraph.hpp>
+#include <tmpc/Matrix.hpp>
 
 #include "Json.hpp"
+
+#include <string>
 
 
 namespace tmpc
@@ -55,6 +59,19 @@ namespace tmpc
         qp.lbu(j["lu"].get<Vector>());
         qp.ubu(j["uu"].get<Vector>());
         qp.idxs(j["idxs"]);
+    }
+
+
+    template <typename QP>
+    void from_json(json const& j, OcpQpEdgeBase<QP>& qp)
+    {
+        using Kernel = typename QP::Kernel;
+        using Vector = DynamicVector<Kernel>;
+        using Matrix = DynamicMatrix<Kernel>;
+
+        qp.A(j["A"].get<Matrix>());
+        qp.B(j["B"].get<Matrix>());
+        qp.b(j["b"].get<Vector>());
     }
 
 
@@ -106,4 +123,160 @@ namespace tmpc
             {"edges", edges}
         };
     }
+
+
+    namespace detail
+    {
+        template <typename Descriptor>
+        struct DescriptorTraits;
+
+        
+        template <>
+        struct DescriptorTraits<OcpSizeGraph::vertex_descriptor>
+        {
+            static char const * dictionaryKey()
+            {
+                return "nodes";
+            }
+
+            using index_property_t = boost::vertex_index_t;
+        };
+
+
+        template <>
+        struct DescriptorTraits<OcpSizeGraph::edge_descriptor>
+        {
+            static char const * dictionaryKey()
+            {
+                return "edges";
+            }
+
+            using index_property_t = boost::edge_index_t;
+        };
+    }
+
+
+    template <typename Kernel>
+    class JsonQp
+    {
+    public:
+        using vertex_descriptor = OcpSizeGraph::vertex_descriptor;
+        using edge_descriptor = OcpSizeGraph::edge_descriptor;
+
+
+        JsonQp()
+        {
+        }
+
+
+        auto& graph()
+        {
+            return graph_;
+        }
+
+
+        auto const& graph() const
+        {
+            return graph_;
+        }
+
+
+        auto const& json() const
+        {
+            return json_;
+        }
+
+
+        template <typename KeyType, typename ValueType>
+        struct PropertyMap
+        {
+            using key_type = KeyType; 
+            using value_type = ValueType;
+            using category = boost::read_write_property_map_tag;
+
+            PropertyMap(JsonQp& qp, std::string const& name) 
+            :   qp_{qp}
+            ,   name_{name}
+            {
+            }
+
+
+            JsonQp& qp_;
+            std::string const name_;
+        };
+
+
+        auto Q()
+        {
+            return PropertyMap<vertex_descriptor, DynamicMatrix<Kernel>> {*this, "Q"};
+        }
+
+
+        auto R()
+        {
+            return PropertyMap<vertex_descriptor, DynamicMatrix<Kernel>> {*this, "R"};
+        }
+
+
+        auto S()
+        {
+            return PropertyMap<vertex_descriptor, DynamicMatrix<Kernel>> {*this, "S"};
+        }
+
+
+        auto q()
+        {
+            return PropertyMap<vertex_descriptor, DynamicVector<Kernel>> {*this, "q"};
+        }
+
+
+        auto r()
+        {
+            return PropertyMap<vertex_descriptor, DynamicVector<Kernel>> {*this, "r"};
+        }
+
+
+        auto A()
+        {
+            return PropertyMap<edge_descriptor, DynamicMatrix<Kernel>> {*this, "A"};
+        }
+
+
+        auto B()
+        {
+            return PropertyMap<edge_descriptor, DynamicMatrix<Kernel>> {*this, "B"};
+        }
+
+
+        auto b()
+        {
+            return PropertyMap<edge_descriptor, DynamicVector<Kernel>> {*this, "b"};
+        }
+
+
+        template <typename KeyType, typename ValueType>
+        friend void put(PropertyMap<KeyType, ValueType> const& m, KeyType const& key, ValueType const& val)
+        {
+            using traits = detail::DescriptorTraits<KeyType>;
+            auto const top_key = traits::dictionaryKey();
+            auto const index = get(typename traits::index_property_t(), m.qp_.graph_);
+            m.qp_.json_[top_key][get(index, key)][m.name_] = val;
+        }
+
+
+        template <typename KeyType, typename ValueType>
+        friend ValueType get(PropertyMap<KeyType, ValueType> const& m, KeyType const& key)
+        {
+            using traits = detail::DescriptorTraits<KeyType>;
+            auto const top_key = traits::dictionaryKey();
+            auto const index = get(typename traits::index_property_t(), m.qp_.graph_);
+            
+            return m.qp_.json_[top_key][get(index, key)][m.name_];
+        }
+
+
+    private:
+        OcpSizeGraph graph_;
+        ::tmpc::json json_;
+    };
 }

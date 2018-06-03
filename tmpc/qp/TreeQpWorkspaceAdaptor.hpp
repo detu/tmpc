@@ -89,6 +89,24 @@ namespace tmpc
         }
 
 
+        auto const& vertexIndex() const
+        {
+            return vertexId_;
+        }
+
+
+        auto const& edgeIndex() const
+        {
+            return edgeId_;
+        }
+
+
+        void solve()
+        {
+            workspace_.solve();
+        }
+
+
     private:
         class ProblemVertexIterator
 		:	public boost::iterator_adaptor<
