@@ -17,4 +17,11 @@ namespace tmpc
     {
         return make_iterator_range(::boost::edges(g));
     }
+
+
+    template <typename VertexDescriptor, typename Graph>
+    auto adjacent_verticesR(VertexDescriptor const& v, Graph const& g)
+    {
+        return make_iterator_range(adjacent_vertices(v, g));
+    }
 }

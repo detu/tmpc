@@ -35,7 +35,7 @@ namespace tmpc
 
 
     template <typename QP>
-    void from_json(json const& j, OcpQpBase<QP>& qp)
+    void from_json(json const& j, OcpQpVertexBase<QP>& qp)
     {
         using Kernel = typename QP::Kernel;
         using Vector = DynamicVector<Kernel>;
