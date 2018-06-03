@@ -34,23 +34,27 @@ namespace tmpc
     }
 
 
-    /*
     template <typename QP>
-    void from_json(json const& j, OcpQpBase<QP>& qp) 
+    void from_json(json const& j, OcpQpBase<QP>& qp)
     {
-        // Not implemented        
-    }
-    */
+        using Kernel = typename QP::Kernel;
+        using Vector = DynamicVector<Kernel>;
+        using Matrix = DynamicMatrix<Kernel>;
 
-    template <typename Kernel>
-    void from_json(json const& j, OcpQp<Kernel> qp)
-    {
-        OcpSize sz {j["q"].size(), j["r"].size(), j["ld"].size(), j["zl"].size()};
-        qp = OcpQp<Kernel> {sz};
-
-        DynamicMatrix<Kernel> Q {sz.nx(), sz.nx()};
-        from_json(j["Q"], Q);
-        qp.Q(Q);
+        qp.Q(j["Q"].get<Matrix>());
+        qp.R(j["R"].get<Matrix>());
+        qp.S(j["S"].get<Matrix>());
+        qp.q(j["q"].get<Vector>());
+        qp.r(j["r"].get<Vector>());
+        qp.Zl(j["Zl"].get<Matrix>());
+        qp.Zu(j["Zu"].get<Matrix>());
+        qp.zl(j["zl"].get<Vector>());
+        qp.zu(j["zu"].get<Vector>());
+        qp.lbx(j["lx"].get<Vector>());
+        qp.ubx(j["ux"].get<Vector>());
+        qp.lbu(j["lu"].get<Vector>());
+        qp.ubu(j["uu"].get<Vector>());
+        qp.idxs(j["idxs"]);
     }
 
 

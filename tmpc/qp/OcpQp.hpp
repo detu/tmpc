@@ -74,7 +74,7 @@ namespace tmpc
 		,	Zu_(sz.ns(), sz.ns())
 		,	zl_(sz.ns())
 		,	zu_(sz.ns())
-		,	idxs_(sz.nx(), 0)
+		,	idxs_(sz.ns(), 0)
 		{
 		}
 

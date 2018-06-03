@@ -44,6 +44,8 @@ namespace Eigen
     }
 
 
+    // TODO: change from_json() function for matrices such that they expect
+    // json array of arrays as input.
     template <typename VT>
     void from_json(tmpc::json const& j, PlainObjectBase<VT>& v)
     {

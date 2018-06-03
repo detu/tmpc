@@ -118,4 +118,4 @@ if (TMPC_WITH_JSON)
     )
 endif ()
 
-add_subdirectory(tools)
+add_subdirectory(qptool)

@@ -37,16 +37,15 @@ namespace blaze
     {
         using Scalar = typename MT::ElementType;
 
-        auto const M = rows(v);
-        auto const N = columns(v);
+        size_t const M = j.size();
+        size_t const N = M > 0 ? j[0].size() : 0;
 
-        if (j.size() != M)
-            throw std::invalid_argument("Number of rows in json does not match matrix size");
+        (~v).resize(M, N);
         
         for (size_t ii = 0; ii < M; ++ii)
         {
             if (j[ii].size() != N)
-                throw std::invalid_argument("Number of columns in json value does not match matrix size");
+                throw std::invalid_argument("Non-equal number of columns in json matrix");
 
             for (size_t jj = 0; jj < N; ++jj)
             {
@@ -82,7 +81,7 @@ namespace blaze
     {
         using Scalar = typename VT::ElementType;
 
-        v.resize(j.size());
+        (~v).resize(j.size());
         std::transform(j.begin(), j.end(), (~v).begin(), [] (tmpc::json const& val) -> Scalar
         {
             if (val.is_string())
