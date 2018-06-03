@@ -15,7 +15,6 @@ namespace tmpc
         {
             auto const n_stages = num_vertices(graph);
             auto const vert = make_iterator_range(vertices(graph));
-            auto const size = get(OcpSizeProperty_t(), graph);
 
             std::vector<OcpSize> size_vec;
             size_vec.reserve(n_stages);
@@ -34,7 +33,7 @@ namespace tmpc
                 if (adj_vert.size() == 1 && adj_vert.front() != vertex_index + 1)
                     throw std::invalid_argument("TreeQpWorkspaceAdaptor: graph nodes must be sequentially connected");
 
-                size_vec.push_back(get(size, *v));
+                size_vec.push_back(graph[*v].size);
             }
 
             return size_vec;
@@ -57,7 +56,7 @@ namespace tmpc
         :   workspace_ {detail::sizeGraphToSizeVector(graph)}
 		{
 			copy_graph(graph, graph_);
-            size_ = get(OcpSizeProperty_t(), graph_);
+            size_ = get(&OcpVertex::size, std::as_const(graph_));
             vertexId_ = get(boost::vertex_index, graph_);
             edgeId_ = get(boost::edge_index, graph_);
             problemVertex_ = ProblemVertexMap(workspace_.problem().begin(), vertexId_);
@@ -90,7 +89,7 @@ namespace tmpc
 
 
     private:
-        using SizeMap = typename boost::property_map<OcpSizeGraph, OcpSizeProperty_t>::type;
+        using SizeMap = typename boost::property_map<OcpSizeGraph, OcpSize OcpVertex::*>::const_type;
         using VertexIdMap = boost::property_map<OcpSizeGraph, boost::vertex_index_t>::type;
         using EdgeIdMap = boost::property_map<OcpSizeGraph, boost::edge_index_t>::type;
         using ProblemVertexMap = boost::iterator_property_map<typename QpWorkspace::ProblemIterator, VertexIdMap>;

@@ -39,12 +39,11 @@ int main(int argc, char ** argv)
     size_t const N = j["nodes"].size();
     OcpSizeGraph g(N);
 
-    auto ocp_size = get(OcpSizeProperty_t(), g);
     for (auto const& j_vertex : j["nodes"] | indexed(0))
     {
         auto const& j_v = j_vertex.value();
-        put(ocp_size, j_vertex.index(), 
-            OcpSize {j_v["q"].size(), j_v["r"].size(), j_v["ld"].size(), j_v["zl"].size()});
+        g[j_vertex.index()].size =  
+            OcpSize {j_v["q"].size(), j_v["r"].size(), j_v["ld"].size(), j_v["zl"].size()};
     }
 
     for (auto j_edge : j["edges"] | indexed(0))

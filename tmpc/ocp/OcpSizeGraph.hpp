@@ -8,15 +8,15 @@
 
 namespace tmpc
 {
-    struct OcpSizeProperty_t
+    struct OcpVertex
     {
-        using kind = boost::vertex_property_tag;
+        OcpSize size;
     };
 
 
     using OcpSizeGraph = boost::adjacency_list<
         boost::vecS, boost::vecS, boost::directedS, 
-        boost::property<OcpSizeProperty_t, OcpSize>, 
+        OcpVertex,
         boost::property<boost::edge_index_t, size_t>
     >;
 }

@@ -44,22 +44,13 @@ namespace tmpc :: testing
         static OcpSizeGraph initSizeGraph()
         {
             OcpSizeGraph g(3);
-            auto size = get(OcpSizeProperty_t(), g);
 
-            put(size, 0, OcpSize(2, 3, 4));
-            put(size, 1, OcpSize(5, 6, 7));
-            put(size, 2, OcpSize(8, 9, 10));
+            g[0].size = OcpSize(2, 3, 4);
+            g[1].size = OcpSize(5, 6, 7);
+            g[2].size = OcpSize(8, 9, 10);
             
             add_edge(0, 1, 0, g);
             add_edge(1, 2, 1, g);
-
-            auto edge_index = get(boost::edge_index, g);
-            for (auto e : edgesR(g))
-            {
-                auto const from = source(e, g);
-                auto const to = target(e, g);
-                std::cout << "from=" << from << ", to=" << to << ", edge_index=" << edge_index(e) << std::endl;
-            }
 
             return g;
         }
@@ -157,12 +148,11 @@ namespace tmpc :: testing
     TYPED_TEST_P(TreeQpWorkspaceTest, testMatrixSizesCorrect)
     {
         auto const& ws = this->ws_;
-        auto const original_size = get(OcpSizeProperty_t(), this->size_);
 
         for (auto v : verticesR(ws.graph()))
         {
             auto const& s = get(ws.size(), v);
-            EXPECT_EQ(s, original_size(v));
+            EXPECT_EQ(s, this->size_[v].size);
 
             auto const& stage = get(ws.problemVertex(), v);
 

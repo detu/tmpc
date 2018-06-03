@@ -7,6 +7,7 @@
 
 #include <tmpc/ocp/OcpSizeGraph.hpp>
 #include <tmpc/core/IteratorRange.hpp>
+#include <tmpc/core/GraphTools.hpp>
 
 
 int main()
@@ -39,13 +40,12 @@ int main()
         std::cout << std::endl;
     }
 
-    auto ocp_size = get(OcpSizeProperty_t(), g);
-    put(ocp_size, 0, OcpSize {2, 3, 1, 1});
-    put(ocp_size, 2, OcpSize {3, 4, 2, 3});
+    g[0].size = OcpSize {2, 3, 1, 1};
+    g[2].size = OcpSize {3, 4, 2, 3};
 
-    for (auto v : make_iterator_range(vertices(g)))
+    for (auto v : verticesR(g))
     {
-        auto sz = get(ocp_size, v);
+        auto const& sz = g[v].size;
         std::cout << "Vertex " << v << ", nx=" << sz.nx() << ", nu=" << sz.nu() << ", nc=" << sz.nc() << ", ns=" << sz.ns() << std::endl;
     }
 
