@@ -117,22 +117,22 @@ namespace tmpc :: detail
 			subvector(lb_, size_.nu(), size_.nx()) = lbx; 
 		}
 
-		auto const& Q() const { return Q_; }
-		template <typename T> void Q(T const& q) { noresize(Q_) = q; }
+		auto const& impl_Q() const { return Q_; }
+		template <typename T> void impl_Q(T const& q) { noresize(Q_) = q; }
 
-		auto const& R() const { return R_; }
-		template <typename T> void R(T const& r) { noresize(R_) = r; }
+		auto const& impl_R() const { return R_; }
+		template <typename T> void impl_R(T const& r) { noresize(R_) = r; }
 
 		// HPMPC convention for S is [nu, nx], therefore the trans().
-		auto S() const { return trans(S_); }
-		void S(Real v) { S_ = v; }
-		template <typename T> void S(T const& s) { noresize(S_) = trans(s); }
+		auto impl_S() const { return trans(S_); }
+		void impl_S(Real v) { S_ = v; }
+		template <typename T> void impl_S(T const& s) { noresize(S_) = trans(s); }
 
-		auto const& q() const { return q_; }
-		template <typename T> void q(T const& q) { noresize(q_) = q; }
+		auto const& impl_q() const { return q_; }
+		template <typename T> void impl_q(T const& q) { noresize(q_) = q; }
 
-		auto const& r() const { return r_; }
-		template <typename T> void r(T const& r) { noresize(r_) = r; }
+		auto const& impl_r() const { return r_; }
+		template <typename T> void impl_r(T const& r) { noresize(r_) = r; }
 
 		// ----------------------------------------------
 		// Soft constraints cost
