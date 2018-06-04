@@ -65,15 +65,4 @@ namespace blaze
     {
         return submatrix(m, 0, 0, rows(m), columns(m));
     }
-
-    template <typename VT, bool TF>
-    inline decltype(auto) l1Norm( const DenseVector<VT,TF>& vec )
-    {
-       ElementType_<VT> norm{};
-    
-       for( const auto& element : ~vec )
-          norm += abs( element );
-    
-       return norm;
-    }
 }
