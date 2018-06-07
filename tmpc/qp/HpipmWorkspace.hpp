@@ -282,12 +282,8 @@ namespace tmpc
 				// nb_ is set to nx+nu at this point, which ensures maximum capacity.
 				ocpQpMem_.resize(HPIPM::memsize_ocp_qp(N, nx_.data(), nu_.data(), nb_.data(), ng_.data(), ns_.data()));
 
-				// This ocp_qp borns and dies just for memsize_ipm_hard_ocp_qp() to calculate the necessary workspace size.
-				typename HPIPM::ocp_qp qp;
-				HPIPM::create_ocp_qp(N, nx_.data(), nu_.data(), nb_.data(), ng_.data(), ns_.data(), &qp, ocpQpMem_.data());
-
 				ocpQpSolMem_.resize(HPIPM::memsize_ocp_qp_sol(N, nx_.data(), nu_.data(), nb_.data(), ng_.data(), ns_.data()));
-				solverWorkspaceMem_.resize(HPIPM::memsize_ocp_qp_ipm(&qp, &solverArg_));				
+				resizeSolverWorkspace();			
 			}
 		}
 
@@ -372,6 +368,15 @@ namespace tmpc
 		}
 
 		std::size_t maxIter() const noexcept { return solverArg_.iter_max; }
+
+		void maxIter(size_t val) 
+		{ 
+			if (val != solverArg_.iter_max)
+			{
+				solverArg_.iter_max = val;
+				resizeSolverWorkspace();
+			}
+		}
 
 		/// \brief Get number of iterations performed by the QP solver.
 		unsigned numIter() const { return numIter_; }
@@ -553,6 +558,18 @@ namespace tmpc
 		static Real constexpr sNaN()
 		{
 			return std::numeric_limits<Real>::signaling_NaN();
+		}
+
+
+		void resizeSolverWorkspace()
+		{
+			int const N = stage_.size() - 1;
+
+			// This ocp_qp borns and dies just for memsize_ipm_hard_ocp_qp() to calculate the necessary workspace size.
+			typename HPIPM::ocp_qp qp;
+			HPIPM::create_ocp_qp(N, nx_.data(), nu_.data(), nb_.data(), ng_.data(), ns_.data(), &qp, ocpQpMem_.data());
+
+			solverWorkspaceMem_.resize(HPIPM::memsize_ocp_qp_ipm(&qp, &solverArg_));
 		}
 	};
 }

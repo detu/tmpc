@@ -55,7 +55,7 @@ namespace tmpc :: eigen_adaptor
         }
 
         template <typename T>
-        Submatrix& operator=(Eigen::MatrixBase<T> const& rhs)
+        Submatrix& operator=(Eigen::EigenBase<T> const& rhs)
         {
             OurEigenBase::operator=(rhs);
             return *this;

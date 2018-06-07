@@ -317,6 +317,19 @@ namespace tmpc
 		}
 
 
+		// Set path constraint inequality.
+		template <typename Matrix1, typename Matrix2, typename Vector1, typename Vector2>
+		Derived& pathConstraints(Matrix1 const& C, Matrix2 const& D, Vector1 const& ld, Vector2 const& ud)
+		{
+			this->C(C);
+			this->D(D);
+			this->lbd(ld);
+			this->ubd(ud);
+
+			return derived();
+		}
+
+
 		// Set path constraint inequality relative to a point.
 		template <typename Vector1, typename Vector2, typename Matrix1, typename Matrix2, typename Vector3, typename Vector4>
 		Derived& relativePathConstraints(Vector1 const& x, Vector2 const& u, 
