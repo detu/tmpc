@@ -8,8 +8,9 @@
 
 #include <tmpc/ocp/OcpSizeGraph.hpp>
 #include <tmpc/core/IteratorRange.hpp>
-#include <tmpc/qp/HpmpcWorkspace.hpp>
-#include <tmpc/qp/TreeQpWorkspaceAdaptor.hpp>
+//#include <tmpc/qp/HpmpcWorkspace.hpp>
+//#include <tmpc/qp/TreeQpWorkspaceAdaptor.hpp>
+#include <tmpc/qp/DualNewtonTreeWorkspace.hpp>
 #include <tmpc/BlazeKernel.hpp>
 #include <tmpc/json/JsonBlaze.hpp>
 #include <tmpc/json/JsonQp.hpp>
@@ -22,7 +23,8 @@ using namespace tmpc;
 
 
 using Kernel = BlazeKernel<double>;
-using HpmpcSolver = TreeQpWorkspaceAdaptor<HpmpcWorkspace<Kernel>>;
+//using HpmpcSolver = TreeQpWorkspaceAdaptor<HpmpcWorkspace<Kernel>>;
+using DualNewtonTreeSolver = DualNewtonTreeWorkspace<Kernel>;
 
 
 int main(int argc, char ** argv)
@@ -52,9 +54,11 @@ int main(int argc, char ** argv)
 
 
     // Create solver workspace.
-    HpmpcSolver solver {g};
+    DualNewtonTreeSolver solver {g};
+    //HpmpcSolver solver {g};
 
     // Set problem properties from json.
+    /*
     for (auto const& j_vertex : j["nodes"] | indexed(0))
     {
         auto& qp_vertex = get(solver.problemVertex(), j_vertex.index());
@@ -71,8 +75,29 @@ int main(int argc, char ** argv)
 
         std::cout << qp_edge.A() << std::endl;
     }
+    */
 
+    DynamicMatrix<Kernel> Q {
+        {1., 2., 3.}, 
+        {3., 4., 5.},
+        {6., 7., 8.}
+    };
+    
+    DynamicMatrix<Kernel> R {
+        {1., 2.}, {3., 4.}
+    };
 
+    DynamicMatrix<Kernel> S {
+        {1., 2.}, 
+        {3., 4.},
+        {5., 6.}
+    };
+
+    DynamicVector<Kernel> q {11., 12., 13.};
+    DynamicVector<Kernel> r {11., 12.};
+
+    solver.setNodeObjective(0, Q, R, S, q, r);
+    solver.print();
     solver.solve();
 
 

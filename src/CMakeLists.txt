@@ -97,6 +97,26 @@ if (TMPC_WITH_HPIPM)
 endif()
 
 #
+# Add treeQP interface
+#
+if (TMPC_WITH_treeQP)
+    #target_sources(tmpc PRIVATE 
+    #    ${TMPC_INCLUDE_DIR}/qp/HpipmWorkspace.hpp
+    #    qp/HpipmWorkspace.cpp
+    #)
+
+    target_include_directories(tmpc
+        PUBLIC ${treeQP_INCLUDE_DIR}
+        PUBLIC ${qpOASES_e_INCLUDE_DIR}
+    )
+
+    target_link_libraries(tmpc
+        PUBLIC ${treeQP_STATIC_LIB}
+        PUBLIC ${qpOASES_e_STATIC_LIBRARIES}
+    )
+endif()
+
+#
 # Link to BLASFEO
 #
 if (TMPC_WITH_BLASFEO)

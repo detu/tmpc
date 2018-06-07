@@ -17,7 +17,7 @@ list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/CMakeModules)
 set(PROJECT_INCLUDE_DIR ${PROJECT_SOURCE_DIR})
 
 # List of QP solvers
-set(qp_solvers "qpOASES" "HPMPC" "HPIPM")
+set(qp_solvers "qpOASES" "HPMPC" "HPIPM" "treeQP" "qpOASES_e")
 
 # List of selectable extern libs
 set(extern_libs ${qp_solvers} "BLASFEO")
@@ -35,6 +35,10 @@ endforeach ()
 
 if (TMPC_WITH_HPIPM AND NOT TMPC_WITH_BLASFEO)
     message(SEND_ERROR "If you choose TMPC_WITH_HPIPM, you have to choose TMPC_WITH_BLASFEO as well.")
+endif ()
+
+if (TMPC_WITH_treeQP AND NOT TMPC_WITH_qpOASES_e)
+    message(SEND_ERROR "If you choose TMPC_WITH_treeQP, you have to choose TMPC_WITH_qpOASES_e as well.")
 endif ()
 
 find_package(Eigen3 3.2.10)
