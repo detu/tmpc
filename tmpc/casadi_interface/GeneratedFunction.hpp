@@ -15,11 +15,14 @@
 
 #include <casadi/mem.h>
 
+
 namespace casadi_interface
 {
+	/// TODO: implement move constructor.
 	class GeneratedFunction
 	{
 	public:
+		/// @brief Constructor.
 		GeneratedFunction(casadi_functions const * f, std::string const& n = "Unknown CasADi function")
 		:	fun_(f)
 		,	name_(n)
@@ -29,11 +32,30 @@ namespace casadi_interface
 			if (int code = fun_.f_->work(&sz_arg, &sz_res, &sz_iw, &sz_w) != 0)
 				throw std::runtime_error(name() + "_fun_work() returned " + std::to_string(code));
 
-			_arg.resize(sz_arg);
-			_res.resize(sz_res);
-			_iw.resize(sz_iw);
-			_w.resize(sz_w);
+			arg_.resize(sz_arg);
+			res_.resize(sz_res);
+			iw_.resize(sz_iw);
+			w_.resize(sz_w);
 		}
+
+
+		/// @brief Copy constructor.
+		GeneratedFunction(GeneratedFunction const& rhs)
+		:	fun_{rhs.fun_}
+		,	name_{rhs.name_}
+		,	arg_(rhs.arg_.size())
+		,	res_(rhs.res_.size())
+		,	iw_(rhs.iw_.size())
+		,	w_(rhs.w_.size())
+		{
+		}
+		
+
+		// MK: I am too lazy to implement the assignment operator at the moment, 
+		// so I prevent it from being used.
+		// TODO: implement assignment and move-assignment.
+		GeneratedFunction& operator=(GeneratedFunction const& rhs) = delete;
+
 
 		std::string const& name() const
 		{
@@ -83,10 +105,10 @@ namespace casadi_interface
 			if (res.size() != n_out())
 				throw std::invalid_argument("Invalid number of output arguments to " + name());
 
-			std::copy(arg.begin(), arg.end(), _arg.begin());
-			std::copy(res.begin(), res.end(), _res.begin());
+			std::copy(arg.begin(), arg.end(), arg_.begin());
+			std::copy(res.begin(), res.end(), res_.begin());
 
-			fun_.f_->eval(_arg.data(), _res.data(), _iw.data(), _w.data(), 0);
+			fun_.f_->eval(arg_.data(), res_.data(), iw_.data(), w_.data(), 0);
 		}
 
 	private:
@@ -97,6 +119,27 @@ namespace casadi_interface
 			{ 
 				f_->incref(); 
 			}
+
+
+			Functions(Functions const& f) 
+			:	f_(f.f_)
+			{ 
+				f_->incref();
+			}
+
+
+			Functions& operator=(Functions const& rhs) noexcept
+			{
+				if (&rhs != this)
+				{
+					f_->decref();
+					f_ = rhs.f_;
+					f_->incref();
+				}
+
+				return *this;
+			}
+
 
 			~Functions() 
 			{ 
@@ -120,10 +163,10 @@ namespace casadi_interface
 		CasADi user guide, section 5.3.
 		http://casadi.sourceforge.net/users_guide/casadi-users_guide.pdf
 		*/
-		mutable std::vector<casadi_real const *> _arg;
-		mutable std::vector<casadi_real *> _res;
-		mutable std::vector<casadi_int> _iw;
-		mutable std::vector<casadi_real> _w;
+		mutable std::vector<casadi_real const *> arg_;
+		mutable std::vector<casadi_real *> res_;
+		mutable std::vector<casadi_int> iw_;
+		mutable std::vector<casadi_real> w_;
 	};
 
 	// Some interesting ideas here: https://habrahabr.ru/post/228031/
