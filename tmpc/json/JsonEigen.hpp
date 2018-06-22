@@ -45,7 +45,7 @@ namespace Eigen
         {
             tmpc::json row = tmpc::json::array();
 
-            for (size_t j = 0; j < columns(m); ++j)
+            for (size_t j = 0; j < m.cols(); ++j)
             {
                 auto const el = m(i, j);
                 if (std::isinf(el))
