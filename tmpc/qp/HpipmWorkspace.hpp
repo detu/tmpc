@@ -38,29 +38,32 @@ namespace tmpc
 		using ocp_qp_sol = ::d_ocp_qp_sol;
 		using ocp_qp_ipm_workspace = ::d_ocp_qp_ipm_workspace;
 		using ocp_qp_ipm_arg = ::d_ocp_qp_ipm_arg;
+		using ocp_qp_dim = ::d_ocp_qp_dim;
 
-		static int memsize_ocp_qp(int N, int const *nx, int const *nu, int const *nb, int const *ng, int const * ns);
-		static void create_ocp_qp(int N, int const *nx, int const *nu, int const *nb, int const *ng, int const * ns, ocp_qp *qp, void *memory);
+		static int memsize_ocp_qp(ocp_qp_dim const* dim);
+		static void create_ocp_qp(ocp_qp_dim const* dim, ocp_qp * qp, void * memory);
 		static void cvt_colmaj_to_ocp_qp(
 			double const * const *A, double const * const *B, double const * const *b, 
 			double const * const *Q, double const * const *S, double const * const *R, double const * const *q, double const * const *r, 
 			int const * const *idxb, double const * const *lb, double const * const *ub, 
 			double const * const *C, double const * const *D, double const * const *lg, double const * const *ug,
 			double const * const *Zl, double const * const *Zu, double const * const *zl, double const * const *zu, int const * const *idxs, 
+			double const * const *ls, double const * const *us, 
 			ocp_qp * qp);
 		
-		static int memsize_ocp_qp_sol(int N, int const *nx, int const *nu, int const *nb, int const *ng, int const *ns);
-		static void create_ocp_qp_sol(int N, int const *nx, int const *nu, int const *nb, int const *ng, int const *ns, ocp_qp_sol *qp_sol, void *memory);
-		static void cvt_ocp_qp_sol_to_colmaj(ocp_qp const *qp, ocp_qp_sol const *qp_sol, 
+		static int memsize_ocp_qp_sol(ocp_qp_dim const * dim);
+		static void create_ocp_qp_sol(ocp_qp_dim const * dim, d_ocp_qp_sol * qp_sol, void * memory);
+		static void cvt_ocp_qp_sol_to_colmaj(ocp_qp_sol const *qp_sol, 
 			double * const *u, double * const *x, double * const * ls, double * const * us,
 			double * const *pi, 
 			double * const *lam_lb, double * const *lam_ub, double * const *lam_lg, double * const *lam_ug,
 			double * const *lam_ls, double * const *lam_us);
 
-		static int memsize_ocp_qp_ipm(ocp_qp const *qp, ocp_qp_ipm_arg const *arg);
-		static void create_ocp_qp_ipm(ocp_qp const *qp, ocp_qp_ipm_arg const *arg, ocp_qp_ipm_workspace *ws, void *mem);
+		static int memsize_ocp_qp_ipm(ocp_qp_dim const * ocp_dim, ocp_qp_ipm_arg const * arg);
+		static void create_ocp_qp_ipm(ocp_qp_dim const * ocp_dim, ocp_qp_ipm_arg const * arg, ocp_qp_ipm_workspace * ws, void * mem);
 		static int solve_ocp_qp_ipm(ocp_qp const *qp, ocp_qp_sol *qp_sol, ocp_qp_ipm_arg const *arg, ocp_qp_ipm_workspace *ws);
 	};
+
 
 	class HpipmException
 	:	public std::runtime_error
@@ -72,6 +75,7 @@ namespace tmpc
 	private:
 		int const _code;
 	};
+
 
 	/**
 	 * \brief Multistage QP solver using HPIPM
@@ -156,23 +160,27 @@ namespace tmpc
 		{
 			return boost::iterator_range<ProblemIterator>(stage_.begin(), stage_.end());
 		}
+
 	
 		boost::iterator_range<ConstProblemIterator> problem() const
 		{
 			return boost::iterator_range<ConstProblemIterator>(stage_.begin(), stage_.end());
 		}
+
 	
 		boost::iterator_range<ConstSolutionIterator> impl_solution() const
 		{
 			return boost::iterator_range<ConstSolutionIterator>(stage_.begin(), stage_.end());
 		}
 
+
 		/**
 		 * \brief Takes QP problem size to preallocate workspace.
 		 */
 		template <typename InputIterator>
 		HpipmWorkspace(InputIterator size_first, InputIterator size_last, int max_iter = 100)
-		:	solverArg_ {}
+		:	ocpQpDim_ {}
+		,	solverArg_ {}
 		{
 			solverArg_.alpha_min = 1e-8;
 			solverArg_.res_g_max = 1e-8;
@@ -273,6 +281,17 @@ namespace tmpc
 				lam_ls_.push_back(st.lam_ls_data());
 				lam_us_.push_back(st.lam_us_data());
 			}
+
+			ocpQpDim_.N = stage_.size() - 1;
+			ocpQpDim_.nx = nx_.data();
+			ocpQpDim_.nu = nu_.data();
+			ocpQpDim_.nb = nb_.data();
+			ocpQpDim_.nbx = nullptr; // ?
+			ocpQpDim_.nbu = nullptr; // ?
+			ocpQpDim_.ns = ns_.data();
+			ocpQpDim_.nsbx = nullptr; // ?
+			ocpQpDim_.nsbu = nullptr; // ?
+			ocpQpDim_.nsg = nullptr; // ?
 				
 			if (stage_.size() > 1)
 			{
@@ -280,9 +299,8 @@ namespace tmpc
 
 				// Allocate big enough memory pools for Qp, QpSol and SolverWorkspace.
 				// nb_ is set to nx+nu at this point, which ensures maximum capacity.
-				ocpQpMem_.resize(HPIPM::memsize_ocp_qp(N, nx_.data(), nu_.data(), nb_.data(), ng_.data(), ns_.data()));
-
-				ocpQpSolMem_.resize(HPIPM::memsize_ocp_qp_sol(N, nx_.data(), nu_.data(), nb_.data(), ng_.data(), ns_.data()));
+				ocpQpMem_.resize(HPIPM::memsize_ocp_qp(&ocpQpDim_));
+				ocpQpSolMem_.resize(HPIPM::memsize_ocp_qp_sol(&ocpQpDim_));
 				resizeSolverWorkspace();			
 			}
 		}
@@ -333,13 +351,13 @@ namespace tmpc
 				// Init HPIPM structures. Since the nb_ might change if the bounds change, we need to do it every time, sorry.
 				// Hopefully these operations are not expensive compared to actual solving.
 				typename HPIPM::ocp_qp qp;
-				HPIPM::create_ocp_qp(N, nx_.data(), nu_.data(), nb_.data(), ng_.data(), ns_.data(), &qp, ocpQpMem_.data());
+				HPIPM::create_ocp_qp(&ocpQpDim_, &qp, ocpQpMem_.data());
 	
 				typename HPIPM::ocp_qp_sol sol;
-				HPIPM::create_ocp_qp_sol(N, nx_.data(), nu_.data(), nb_.data(), ng_.data(), ns_.data(), &sol, ocpQpSolMem_.data());
+				HPIPM::create_ocp_qp_sol(&ocpQpDim_, &sol, ocpQpSolMem_.data());
 	
 				NativeHpipmWorkspace solver_workspace;
-				HPIPM::create_ocp_qp_ipm(&qp, &solverArg_, &solver_workspace, solverWorkspaceMem_.data());
+				HPIPM::create_ocp_qp_ipm(&ocpQpDim_, &solverArg_, &solver_workspace, solverWorkspaceMem_.data());
 	
 				// Convert the problem
 				HPIPM::cvt_colmaj_to_ocp_qp(
@@ -348,6 +366,7 @@ namespace tmpc
 					hidxb_.data(), lb_.data(), ub_.data(), 
 					C_.data(), D_.data(), lg_.data(), ug_.data(), 
 					Zl_.data(), Zu_.data(), zl_.data(), zu_.data(), idxs_.data(),
+					nullptr /* ls=? */, nullptr /* us=? */,
 					&qp);
 	
 				// Call HPIPM
@@ -360,7 +379,7 @@ namespace tmpc
 				}
 
 				// Convert the solution
-				HPIPM::cvt_ocp_qp_sol_to_colmaj(&qp, &sol, 
+				HPIPM::cvt_ocp_qp_sol_to_colmaj(&sol, 
 					u_.data(), x_.data(), ls_.data(), us_.data(),
 					pi_.data(), lam_lb_.data(), lam_ub_.data(), lam_lg_.data(), lam_ug_.data(),
 					lam_ls_.data(), lam_us_.data());
@@ -547,6 +566,7 @@ namespace tmpc
 		std::vector<char> ocpQpSolMem_;
 		std::vector<char> solverWorkspaceMem_;
 
+		typename HPIPM::ocp_qp_dim ocpQpDim_;
 		typename HPIPM::ocp_qp_ipm_arg solverArg_;
 
 
@@ -567,9 +587,9 @@ namespace tmpc
 
 			// This ocp_qp borns and dies just for memsize_ipm_hard_ocp_qp() to calculate the necessary workspace size.
 			typename HPIPM::ocp_qp qp;
-			HPIPM::create_ocp_qp(N, nx_.data(), nu_.data(), nb_.data(), ng_.data(), ns_.data(), &qp, ocpQpMem_.data());
+			HPIPM::create_ocp_qp(&ocpQpDim_, &qp, ocpQpMem_.data());
 
-			solverWorkspaceMem_.resize(HPIPM::memsize_ocp_qp_ipm(&qp, &solverArg_));
+			solverWorkspaceMem_.resize(HPIPM::memsize_ocp_qp_ipm(&ocpQpDim_, &solverArg_));
 		}
 	};
 }
