@@ -246,10 +246,7 @@ namespace tmpc :: detail
 		}
 
 		// ******************************************************
-		//                HPMPC raw data interface.
-		//
-		// The prefixes before _data() correspond to the names of
-		// the argument to c_order_d_ip_ocp_hard_tv().
+		// HPMPC/HPIPM raw data interface.
 		// ******************************************************
 		Real const * A_data () const { return A_.data(); }
 		Real const * B_data () const { return B_.data(); }
