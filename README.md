@@ -9,6 +9,7 @@
 - *qpOASES* https://projects.coin-or.org/qpOASES (optional, only if `TMPC_WITH_qpOASES` is selected). Build and install as usual.
 - *CasADi 3.2.0 or higher* https://github.com/casadi/casadi/wiki/InstallationInstructions (optional, only if `TMPC_WITH_CASADI_INTERFACE` is selected). Python bindings for CasADi must be installed. It is recommended to use Python3 CasADi bindings; I didn't test the latest code with Python2. To build Python3 CasADi bindings, specify `-DWITH_PYTHON3=ON` in `cmake` command line when configuring CasADi.
 - *Google Test* https://github.com/google/googletest must be installed and findable by the CMake build system (optional, only if `TMPC_WITH_TEST` is selected).
+- *Google Benchmark* https://github.com/google/benchmark must be installed and findable by the CMake build system (optional, only if `TMPC_WITH_BENCH` is selected).
 - *JSON for Modern C++*. Build and install from sources https://github.com/nlohmann/json (optional, only if `TMPC_WITH_JSON` is selected).
 
 ## Building
