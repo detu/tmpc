@@ -1,9 +1,4 @@
-find_package(OpenMP)
-if (OPENMP_FOUND)
-    list(APPEND CMAKE_C_FLAGS ${OpenMP_C_FLAGS})
-    list(APPEND CMAKE_CXX_FLAGS ${OpenMP_CXX_FLAGS})
-    list(APPEND CMAKE_EXE_LINKER_FLAGS ${OpenMP_EXE_LINKER_FLAGS})
-endif()
+find_package(OpenMP REQUIRED)
 
 # Generate code for casadi_generated_function test
 add_custom_command(
@@ -40,6 +35,7 @@ target_link_libraries(tmpc_test_casadi
     tmpc
     GTest::GTest
     GTest::Main
+    OpenMP::OpenMP_CXX
 )
 
 #GTEST_ADD_TESTS(tmpc_test_casadi "" AUTO)
