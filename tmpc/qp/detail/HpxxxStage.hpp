@@ -270,6 +270,93 @@ namespace tmpc :: detail
 		int const * idxs_data() const { return idxs_.data(); }
 		int nb() const { return idxb_.size(); }
 
+		
+		/// \brief Number of state bound constraints.
+		int nbx() const
+		{
+			decltype(auto) lbx = this->lbx();
+			decltype(auto) ubx = this->ubx();
+
+			int count = 0;
+
+			// Cycle through the bounds and check for infinities
+			for (size_t i = 0; i < size_.nx(); ++i)
+			{
+				if (std::isfinite(lbx[i]) && std::isfinite(ubx[i]))
+					++count;
+			}
+
+			return count;
+		}
+
+
+		/// \brief Number of input bound constraints.
+		int nbu() const
+		{
+			decltype(auto) lbu = this->lbu();
+			decltype(auto) ubu = this->ubu();
+
+			int count = 0;
+
+			// Cycle through the bounds and check for infinities
+			for (size_t i = 0; i < size_.nu(); ++i)
+			{
+				if (std::isfinite(lbu[i]) && std::isfinite(ubu[i]))
+					++count;
+			}
+
+			return count;
+		}
+
+
+		/// \brief Number of soft state bound constraints.
+		int nsbx() const
+		{
+			int count = 0;
+
+			// Cycle through the bounds and check for infinities
+			for (size_t i = 0; i < size_.ns(); ++i)
+			{
+				if (size_.nu() <= idxs_[i] && idxs_[i] < size_.nu() + size_.nx())
+					++count;
+			}
+
+			return count;
+		}
+
+
+		/// \brief Number of soft input bound constraints.
+		int nsbu() const
+		{
+			int count = 0;
+
+			// Cycle through the bounds and check for infinities
+			for (size_t i = 0; i < size_.ns(); ++i)
+			{
+				if (idxs_[i] < size_.nu())
+					++count;
+			}
+
+			return count;
+		}
+
+
+		/// \brief Number of soft general bound constraints.
+		int nsg() const
+		{
+			int count = 0;
+
+			// Cycle through the bounds and check for infinities
+			for (size_t i = 0; i < size_.ns(); ++i)
+			{
+				if (idxs_[i] >= size_.nu() + size_.nx())
+					++count;
+			}
+
+			return count;
+		}
+
+
 		Real * x_data() { return x_.data(); }
 		Real * u_data() { return u_.data(); }
 		Real * ls_data() { return ls_.data(); }

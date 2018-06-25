@@ -17,6 +17,7 @@
 
 #include <boost/range/iterator_range_core.hpp>
 #include <boost/iterator/iterator_adaptor.hpp>
+#include <boost/range/adaptor/indexed.hpp>
 
 #include <limits>
 #include <stdexcept>
@@ -190,8 +191,13 @@ namespace tmpc
 			nx_.reserve(nt);
 			nu_.reserve(nt);
 			nb_.reserve(nt);
+			nbx_.reserve(nt);
+			nbu_.reserve(nt);
 			ng_.reserve(nt);
 			ns_.reserve(nt);
+			nsbx_.reserve(nt);
+			nsbu_.reserve(nt);
+			nsg_.reserve(nt);
 			hidxb_.reserve(nt);
 			idxs_.reserve(nt);
 	
@@ -231,9 +237,14 @@ namespace tmpc
 		
 				nx_.push_back(sz->nx());
 				nu_.push_back(sz->nu());
-				nb_.push_back(st.nb());
+				nb_.push_back(sz->nx() + sz->nu());	// upper estimate
+				nbx_.push_back(sz->nx());	// upper estimate
+				nbu_.push_back(sz->nu());	// upper estimate
 				ng_.push_back(sz->nc());
 				ns_.push_back(sz->ns());
+				nsbx_.push_back(sz->nx());	// upper estimate
+				nsbu_.push_back(sz->nu());	// upper estimate
+				nsg_.push_back(sz->nc());	// upper estimate
 				
 				hidxb_.push_back(st.hidxb_data());
 				idxs_.push_back(st.idxs_data());
@@ -276,17 +287,16 @@ namespace tmpc
 			ocpQpDim_.nx = nx_.data();
 			ocpQpDim_.nu = nu_.data();
 			ocpQpDim_.nb = nb_.data();
-			ocpQpDim_.nbx = nullptr; // ?
-			ocpQpDim_.nbu = nullptr; // ?
+			ocpQpDim_.nbx = nbx_.data();
+			ocpQpDim_.nbu = nbu_.data();
+			ocpQpDim_.ng = ng_.data();
 			ocpQpDim_.ns = ns_.data();
-			ocpQpDim_.nsbx = nullptr; // ?
-			ocpQpDim_.nsbu = nullptr; // ?
-			ocpQpDim_.nsg = nullptr; // ?
+			ocpQpDim_.nsbx = nsbx_.data();
+			ocpQpDim_.nsbu = nsbu_.data();
+			ocpQpDim_.nsg = nsg_.data();
 				
 			if (stage_.size() > 1)
 			{
-				int const N = stage_.size() - 1;
-
 				// Allocate big enough memory pools for Qp, QpSol and SolverWorkspace.
 				// nb_ is set to nx+nu at this point, which ensures maximum capacity.
 				ocpQpMem_.resize(Hpipm::memsize_ocp_qp(&ocpQpDim_));
@@ -325,20 +335,28 @@ namespace tmpc
 
 		void impl_solve()
 		{
+			using boost::adaptors::index;
+
 			if (stage_.size() > 1)
 			{
-				// Recalculate bounds indices of each stage, at the bounds might have changed.				
+				// Recalculate bounds indices of each stage, as the bounds might have changed.				
 				// Update the nb_ array.
-				std::transform(stage_.begin(), stage_.end(), nb_.begin(), [] (Stage& s) -> int
+				for (auto const& s : index(stage_))
 				{
-					s.adjustBoundsIndex();
-					return s.nb();
-				});
+					s.value().adjustBoundsIndex();
+					nb_[s.index()] = s.value().nb();
+					nbx_[s.index()] = s.value().nbx();
+					nbu_[s.index()] = s.value().nbu();
+					nsbx_[s.index()] = s.value().nsbx();
+					nsbu_[s.index()] = s.value().nsbu();
+					nsg_[s.index()] = s.value().nsg();
+				}
 	
 				// Number of QP steps for HPIPM
 				auto const N = stage_.size() - 1;
 	
-				// Init HPIPM structures. Since the nb_ might change if the bounds change, we need to do it every time, sorry.
+				// Init HPIPM structures. Since the nb_, nbx_, nbu_, might change if the bounds change, 
+				// we need to do it every time, sorry.
 				// Hopefully these operations are not expensive compared to actual solving.
 				typename Hpipm::ocp_qp qp;
 				Hpipm::create_ocp_qp(&ocpQpDim_, &qp, ocpQpMem_.data());
@@ -513,11 +531,26 @@ namespace tmpc
 		// Array of NB (bound constraints) sizes
 		std::vector<int> nb_;
 
+		// Array of NBX (state bound constraints) sizes
+		std::vector<int> nbx_;
+
+		// Array of NBU (input bound constraints) sizes
+		std::vector<int> nbu_;
+
 		// Array of NG (path constraints) sizes
 		std::vector<int> ng_;
 
 		// Array of NS (soft constraints) sizes
 		std::vector<int> ns_;
+
+		// Array of NSBX (soft state bound constraints) sizes
+		std::vector<int> nsbx_;
+
+		// Array of NSBU (soft input bound constraints) sizes
+		std::vector<int> nsbu_;
+
+		// Array of NSG (soft general bound constraints) sizes
+		std::vector<int> nsg_;
 
 		// Hard constraints index
 		std::vector<int const *> hidxb_;
@@ -572,12 +605,6 @@ namespace tmpc
 
 		void resizeSolverWorkspace()
 		{
-			int const N = stage_.size() - 1;
-
-			// This ocp_qp borns and dies just for memsize_ipm_hard_ocp_qp() to calculate the necessary workspace size.
-			typename Hpipm::ocp_qp qp;
-			Hpipm::create_ocp_qp(&ocpQpDim_, &qp, ocpQpMem_.data());
-
 			solverWorkspaceMem_.resize(Hpipm::memsize_ocp_qp_ipm(&ocpQpDim_, &solverArg_));
 		}
 	};
