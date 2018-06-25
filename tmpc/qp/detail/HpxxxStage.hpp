@@ -54,6 +54,8 @@ namespace tmpc :: detail
 		,	lbd_(sz.nc())
 		,	ubd_(sz.nc())
 		,	idxs_(sz.ns())
+		,	lbls_(sz.ns())
+		,	lbus_(sz.ns())
 		,	x_(sz.nx())
 		,	u_(sz.nu())
 		,	ls_(sz.ns())
@@ -66,6 +68,10 @@ namespace tmpc :: detail
 			// Initialize all numeric data to NaN so that if an uninitialized object
 			// by mistake used in calculations is easier to detect.
 			this->setNaN();
+
+			// Set lower bound for both slacks to 0.
+			lbls_ = 0.;
+			lbus_ = 0.;
 
 			// idxb is initialized to its maximum size, s.t. nb == nx + nu.
 			// This is necessary so that the solver workspace memory is calculated as its maximum when allocated.
@@ -268,6 +274,8 @@ namespace tmpc :: detail
 		Real const * ug_data() const { return ubd_.data(); }
 		int const * hidxb_data() const { return idxb_.data(); }
 		int const * idxs_data() const { return idxs_.data(); }
+		Real const * lbls_data() const { return lbls_.data(); }
+		Real const * lbus_data() const { return lbus_.data(); }
 		int nb() const { return idxb_.size(); }
 
 		
@@ -412,7 +420,13 @@ namespace tmpc :: detail
 		// Soft constraints index
 		std::vector<int> idxs_;
 
-		// Lower and upper bound arrays for HPMPC,
+		// Lower bound of lower slack
+		DynamicVector<Kernel> lbls_;
+
+		// Lower bound of upper slack
+		DynamicVector<Kernel> lbus_;
+
+		// Lower and upper bound arrays for HPMPC/HPIPM,
 		// containing finite values only.
 		std::vector<Real> lb_internal_;
 		std::vector<Real> ub_internal_;

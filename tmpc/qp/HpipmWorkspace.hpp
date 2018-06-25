@@ -198,6 +198,8 @@ namespace tmpc
 			nsbx_.reserve(nt);
 			nsbu_.reserve(nt);
 			nsg_.reserve(nt);
+			lbls_.reserve(nt);
+			lbus_.reserve(nt);
 			hidxb_.reserve(nt);
 			idxs_.reserve(nt);
 	
@@ -264,6 +266,8 @@ namespace tmpc
 				zu_.push_back(st.zu_data());
 				lb_.push_back(st.lb_data());
 				ub_.push_back(st.ub_data());
+				lbls_.push_back(st.lbls_data());
+				lbus_.push_back(st.lbus_data());
 		
 				C_ .push_back(st.C_data());
 				D_ .push_back(st.D_data());
@@ -374,7 +378,7 @@ namespace tmpc
 					const_cast<int **>(hidxb_.data()), const_cast<Real **>(lb_.data()), const_cast<Real **>(ub_.data()), 
 					const_cast<Real **>(C_.data()), const_cast<Real **>(D_.data()), const_cast<Real **>(lg_.data()), const_cast<Real **>(ug_.data()), 
 					const_cast<Real **>(Zl_.data()), const_cast<Real **>(Zu_.data()), const_cast<Real **>(zl_.data()), const_cast<Real **>(zu_.data()), const_cast<int **>(idxs_.data()),
-					nullptr /* ls=? */, nullptr /* us=? */,
+					const_cast<Real **>(lbls_.data()), const_cast<Real **>(lbus_.data()),
 					&qp);
 	
 				// Call HPIPM
@@ -551,6 +555,12 @@ namespace tmpc
 
 		// Array of NSG (soft general bound constraints) sizes
 		std::vector<int> nsg_;
+
+		// Lower bound of lower slack.
+		std::vector<Real const *> lbls_;
+
+		// Upper bound of upper slack.
+		std::vector<Real const *> lbus_;
 
 		// Hard constraints index
 		std::vector<int const *> hidxb_;
