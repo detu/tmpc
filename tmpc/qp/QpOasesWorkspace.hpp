@@ -601,6 +601,13 @@ namespace tmpc
 			problem_.getDualSolution(ws_.dualSolution.data());
 		
 			/* Separate dual solutions for upper and lower bounds */
+			//
+			// Note that qpOases defines the Lagrange multipliers by considering the following Lagrangian: (p. 15 of the manual)
+			//		H * xopt + g - y[0, ..., nV-1] - A.T * y[nV, ..., nV + nC -1]
+			// where y are the Lagrangian multipliers, positive for active lower bounds, and negative for active upper bounds.
+			//
+			// This corresponds to consider all inequality constraints as: in(x, u) >= in_, and all Lagrange multipliers larger than 0. 
+			
 			for (auto i = 0; i < ws_.dualSolution.size(); ++i) {				
 				if ( ws_.dualSolution[i] > 0 ) {
 					ws_.dualSolutionLb[i] = ws_.dualSolution[i]; 
@@ -608,7 +615,7 @@ namespace tmpc
 				}
 				else if ( ws_.dualSolution[i] < 0 ) {
 					ws_.dualSolutionLb[i] = 0; 
-					ws_.dualSolutionUb[i] = - ws_.dualSolution[i];
+					ws_.dualSolutionUb[i] = -ws_.dualSolution[i];
 				}
 				else {
 					ws_.dualSolutionLb[i] = 0; 

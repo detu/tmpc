@@ -121,6 +121,117 @@ namespace tmpc :: testing
 
 			return std::move(ws);
 		}
+
+		static Workspace problem_2()
+		{
+			// Create a problem whose solution activates the bounds and inequality constraints.
+			// Specifically:
+			//	- x0: activates bounds and max inequality constraint
+			// 	- x1: activates the min inequality constraint
+			//	- x2: no constraints are activated
+
+			unsigned const NX = 2;
+			unsigned const NU = 1;
+			unsigned const NZ = NX + NU;
+			unsigned const NC = 1;
+			unsigned const NCT = 0;
+			unsigned const NT = 2;
+
+			typedef StaticMatrix<Kernel, NZ, NZ> StageHessianMatrix;
+
+			const auto sz = mpcOcpSize(NT, NX, NU, NC, NCT);
+			Workspace ws(sz.begin(), sz.end());
+			auto qp = ws.problem();
+			
+			// At initial stage, bound constraints are active
+			qp[0].lbx(0.5);		qp[0].lbu(-1.);		qp[0].ubx(0.5);		qp[0].ubu(1.);
+			qp[1].lbx(-1.);		qp[1].lbu(-1.);		qp[1].ubx(1.);		qp[1].ubu(1.);
+			qp[2].lbx(-1.);							qp[2].ubx(1.);
+
+			// Stage 0
+			StageHessianMatrix H0 {
+					{1., 2., 3.},
+					{4., 5., 6.},
+					{7., 8., 9.}
+			};
+			H0 = trans(H0) * H0;	// Make positive definite.
+
+			StaticVector<Kernel, NX> const q0 {1., 2.};
+			StaticVector<Kernel, NU> const r0 {3.};
+
+			const DynamicMatrix<Kernel> Q0 = submatrix(H0, 0, 0, NX, NX);
+			const DynamicMatrix<Kernel> R0 = submatrix(H0, NX, NX, NU, NU);
+			const DynamicMatrix<Kernel> S0 = submatrix(H0, 0, NX, NX, NU);
+			const DynamicMatrix<Kernel> S0T = submatrix(H0, NX, 0, NU, NX);
+
+			DynamicMatrix<Kernel> const A0 {{1., 1.}, {0., 1.}};
+			DynamicMatrix<Kernel> const B0 {{0.5}, {1.0}};
+			Vector a0 {0.1, 0.2};
+
+			DynamicMatrix<Kernel> const C0 {{1., 1.}};
+			DynamicMatrix<Kernel> const D0 {{0.}};
+			StaticVector<Kernel, NC> const dmin0 {0.8};
+			StaticVector<Kernel, NC> const dmax0 {1};			
+
+			// Stage 1
+			StageHessianMatrix H1 {
+					{1., 2., 3.},
+					{4., 5., 6.},
+					{7., 8., 9.}
+			};
+			H1 = trans(H1) * H1;	// Make positive definite.
+
+			StaticVector<Kernel, NX> const q1 {1., 2.};
+			StaticVector<Kernel, NU> const r1 {3.};
+
+			const DynamicMatrix<Kernel> Q1 = submatrix(H1, 0, 0, NX, NX);
+			const DynamicMatrix<Kernel> R1 = submatrix(H1, NX, NX, NU, NU);
+			const DynamicMatrix<Kernel> S1 = submatrix(H1, 0, NX, NX, NU);
+			const DynamicMatrix<Kernel> S1T = submatrix(H1, NX, 0, NU, NX);
+
+			DynamicMatrix<Kernel> const A1 {{1., 1.}, {0., 1.}};
+			DynamicMatrix<Kernel> const B1 {{0.5}, {1.0}};
+			Vector const a1 {0.1, 0.2};
+
+			DynamicMatrix<Kernel> const C1 {{1., 1.}};
+			DynamicMatrix<Kernel> const D1 {{0.}};
+			StaticVector<Kernel, NC> const dmin1 {0.8};
+			StaticVector<Kernel, NC> const dmax1 {1};
+
+
+			// Stage 2
+			DynamicMatrix<Kernel> H2 {{1., 2.}, {3., 4.}};
+			H2 = trans(H2) * H2;	// Make positive definite.
+
+			StaticVector<Kernel, NX> const q2 {1., 2.};
+
+			const DynamicMatrix<Kernel> Q2 = submatrix(H2, 0, 0, NX, NX);
+
+			// Setup QP
+			qp[0].Q(Q0);	qp[0].R(R0);	qp[0].S(S0);	qp[0].q(q0);	qp[0].r(r0);
+			qp[1].Q(Q1);	qp[1].R(R1);	qp[1].S(S1);	qp[1].q(q1);	qp[1].r(r1);
+			qp[2].Q(Q2);									qp[2].q(q2);
+
+			qp[0].A(A0);	
+			qp[0].B(B0);		
+			qp[0].b(a0);
+			
+			qp[1].A(A1);	
+			qp[1].B(B1);		
+			qp[1].b(a1);
+
+			qp[0].C(C0);	
+			qp[0].D(D0);		
+			qp[0].lbd(dmin0);
+			qp[0].ubd(dmax0);
+			
+			qp[1].C(C1);	
+			qp[1].D(D1);		
+			qp[1].lbd(dmin1);
+			qp[1].ubd(dmax1);
+
+			return std::move(ws);
+		}
 	};
 
 	TYPED_TEST_CASE_P(QpWorkspaceSolveTest);
@@ -449,6 +560,67 @@ namespace tmpc :: testing
 		EXPECT_EQ(print_wrap(workspace.solution()[0].x()), print_wrap(DynamicVector<Kernel> {-1., -2., -42.}));
 	}
 
+	TYPED_TEST_P(QpWorkspaceSolveTest, testLagrangianMultiplier)
+	{
+		using Kernel = typename TestFixture::Kernel;
+		unsigned const NX = 2;
+		unsigned const NU = 1;
+
+		auto ws = TestFixture::problem_2();
+
+		ws.solve();
+		auto const sol = ws.solution();
+		auto const prob = ws.problem();
+		
+		auto prob_k = prob.begin();
+		auto sol_k = sol.begin();
+
+		for (; prob_k + 1 != prob.end(); ++prob_k, ++sol_k)
+		{
+			auto x_sol = sol_k->x();
+			auto u_sol = sol_k->u();
+
+			// *************************************
+			// Calculate gradient of the lagrangian
+			// *************************************
+			
+			// Contribution from the cost function: J
+			auto dJ_dx =  prob_k->Q() * x_sol +  prob_k->S() * u_sol +  prob_k->q();				
+			auto dJ_du = trans( prob_k->S() ) * x_sol +  prob_k->R() * u_sol +  prob_k->r();				
+
+			// Contribution from equality constraints: A * x(k) + B * u(k) - x(k + 1) + b(k) = 0
+			StaticVector<Kernel, NX> dLeq_dx =  trans( prob_k->A() ) * sol_k->pi();
+			StaticVector<Kernel, NU> dLeq_du = (trans( prob_k->B() ) * sol_k->pi() );
+			if (sol_k != sol.begin())
+			{
+				dLeq_dx -= (sol_k - 1)->pi();
+			}			
+	
+			// Contribution of bounds path constraints: x >= x_, u >= u_
+			auto dLubx_dx = -sol_k->lam_ubx();
+			auto dLlbx_dx = sol_k->lam_lbx();
+			auto dLubu_du = -sol_k->lam_ubu();
+			auto dLlbu_du = sol_k->lam_lbu();
+
+			// Contribution of path constraints: C * x + D * u >= c_ 
+			auto dLubc_dx = static_cast< StaticVector<Kernel, NX> > (-trans( prob_k->C() ) * sol_k->lam_ubd() );
+			auto dLlbc_dx = static_cast< StaticVector<Kernel, NX> > (trans( prob_k->C() ) * sol_k->lam_lbd() );
+			auto dLubc_du = static_cast< StaticVector<Kernel, NU> > (-trans( prob_k->D() ) * sol_k->lam_ubd() );
+			auto dLlbc_du = static_cast< StaticVector<Kernel, NU> > (trans( prob_k->D() )* sol_k->lam_lbd() );
+
+			// Gradient of the lagrangian
+			StaticVector<Kernel, NX> dL_dx = dJ_dx - dLeq_dx - dLubx_dx - dLlbx_dx - dLubc_dx - dLlbc_dx;
+			StaticVector<Kernel, NU> dL_du = dJ_du - dLeq_du - dLubu_du - dLlbu_du - dLubc_du - dLlbc_du;
+
+		
+			// *********************
+			// Check KKT condition 
+			// *********************
+			EXPECT_PRED2(MatrixApproxEquality(1e-6), dL_dx, (DynamicVector<Kernel> {0.0, 0.}));
+			EXPECT_PRED2(MatrixApproxEquality(1e-6), dL_du, (DynamicVector<Kernel> {0.}));
+		}
+	}
+
 	REGISTER_TYPED_TEST_CASE_P(QpWorkspaceSolveTest,
 		testMoveConstructor, 
 		testSolve0, 
@@ -458,6 +630,7 @@ namespace tmpc :: testing
 		testSolve2stage5d, 
 		testInfiniteBoundsAll, 
 		testInfiniteBoundsSome,
-		testSolve2
+		testSolve2, 
+		testLagrangianMultiplier
 	);
 }
