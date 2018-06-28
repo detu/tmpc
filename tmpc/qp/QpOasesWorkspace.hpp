@@ -609,17 +609,17 @@ namespace tmpc
 			// This corresponds to consider all inequality constraints as: in(x, u) >= in_, and all Lagrange multipliers larger than 0. 
 			
 			for (auto i = 0; i < ws_.dualSolution.size(); ++i) {				
-				if ( ws_.dualSolution[i] > 0 ) {
+				if ( ws_.dualSolution[i] > 0. ) {
 					ws_.dualSolutionLb[i] = ws_.dualSolution[i]; 
-					ws_.dualSolutionUb[i] = 0; 
+					ws_.dualSolutionUb[i] = 0.; 
 				}
-				else if ( ws_.dualSolution[i] < 0 ) {
-					ws_.dualSolutionLb[i] = 0; 
+				else if ( ws_.dualSolution[i] < 0. ) {
+					ws_.dualSolutionLb[i] = 0.; 
 					ws_.dualSolutionUb[i] = -ws_.dualSolution[i];
 				}
 				else {
-					ws_.dualSolutionLb[i] = 0; 
-					ws_.dualSolutionUb[i] = 0;
+					ws_.dualSolutionLb[i] = 0.; 
+					ws_.dualSolutionUb[i] = 0.;
 				}
 			}	
 		}

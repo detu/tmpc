@@ -122,19 +122,21 @@ namespace tmpc :: testing
 			return std::move(ws);
 		}
 
+		/**
+		 \brief Create a QP whose solution activates bounds and inequality constraints.
+
+		Specifically, the solution of the problem is (from Matlab):
+			- x0 = [0.5, 0.5]: activates bounds and max inequality constraint
+			- x1 = [0.77, 0.03]: activates the min inequality constraint
+			- x2 = [0.59, -0.39]: no constraints are activated
+		*/
 		static Workspace problem_2()
 		{
-			// Create a problem whose solution activates the bounds and inequality constraints.
-			// Specifically:
-			//	- x0: activates bounds and max inequality constraint
-			// 	- x1: activates the min inequality constraint
-			//	- x2: no constraints are activated
-
 			unsigned const NX = 2;
 			unsigned const NU = 1;
 			unsigned const NZ = NX + NU;
 			unsigned const NC = 1;
-			unsigned const NCT = 0;
+			unsigned const NCT = 1;
 			unsigned const NT = 2;
 
 			typedef StaticMatrix<Kernel, NZ, NZ> StageHessianMatrix;
@@ -143,7 +145,7 @@ namespace tmpc :: testing
 			Workspace ws(sz.begin(), sz.end());
 			auto qp = ws.problem();
 			
-			// At initial stage, bound constraints are active
+			// Bound constraints
 			qp[0].lbx(0.5);		qp[0].lbu(-1.);		qp[0].ubx(0.5);		qp[0].ubu(1.);
 			qp[1].lbx(-1.);		qp[1].lbu(-1.);		qp[1].ubx(1.);		qp[1].ubu(1.);
 			qp[2].lbx(-1.);							qp[2].ubx(1.);
@@ -170,8 +172,9 @@ namespace tmpc :: testing
 
 			DynamicMatrix<Kernel> const C0 {{1., 1.}};
 			DynamicMatrix<Kernel> const D0 {{0.}};
-			StaticVector<Kernel, NC> const dmin0 {0.8};
-			StaticVector<Kernel, NC> const dmax0 {1};			
+			StaticVector<Kernel, NC> const lbd0 {0.8};
+			StaticVector<Kernel, NC> const ubd0 {1};
+
 
 			// Stage 1
 			StageHessianMatrix H1 {
@@ -195,8 +198,8 @@ namespace tmpc :: testing
 
 			DynamicMatrix<Kernel> const C1 {{1., 1.}};
 			DynamicMatrix<Kernel> const D1 {{0.}};
-			StaticVector<Kernel, NC> const dmin1 {0.8};
-			StaticVector<Kernel, NC> const dmax1 {1};
+			StaticVector<Kernel, NC> const lbd1 {0.8};
+			StaticVector<Kernel, NC> const ubd1 {1};
 
 
 			// Stage 2
@@ -206,6 +209,11 @@ namespace tmpc :: testing
 			StaticVector<Kernel, NX> const q2 {1., 2.};
 
 			const DynamicMatrix<Kernel> Q2 = submatrix(H2, 0, 0, NX, NX);
+
+			DynamicMatrix<Kernel> const C2 {{1., 1.}};
+			StaticVector<Kernel, NC> const lbd2 {0.};
+			StaticVector<Kernel, NC> const ubd2 {1.};
+
 
 			// Setup QP
 			qp[0].Q(Q0);	qp[0].R(R0);	qp[0].S(S0);	qp[0].q(q0);	qp[0].r(r0);
@@ -222,13 +230,17 @@ namespace tmpc :: testing
 
 			qp[0].C(C0);	
 			qp[0].D(D0);		
-			qp[0].lbd(dmin0);
-			qp[0].ubd(dmax0);
+			qp[0].lbd(lbd0);
+			qp[0].ubd(ubd0);
 			
 			qp[1].C(C1);	
 			qp[1].D(D1);		
-			qp[1].lbd(dmin1);
-			qp[1].ubd(dmax1);
+			qp[1].lbd(lbd1);
+			qp[1].ubd(ubd1);
+			
+			qp[2].C(C2);	
+			qp[2].lbd(lbd2);
+			qp[2].ubd(ubd2);
 
 			return std::move(ws);
 		}
@@ -560,6 +572,9 @@ namespace tmpc :: testing
 		EXPECT_EQ(print_wrap(workspace.solution()[0].x()), print_wrap(DynamicVector<Kernel> {-1., -2., -42.}));
 	}
 
+	/**
+	 \brief Check whether lagrangian multipliers are correct.
+	 */
 	TYPED_TEST_P(QpWorkspaceSolveTest, testLagrangianMultiplier)
 	{
 		using Kernel = typename TestFixture::Kernel;
@@ -589,36 +604,84 @@ namespace tmpc :: testing
 			auto dJ_du = trans( prob_k->S() ) * x_sol +  prob_k->R() * u_sol +  prob_k->r();				
 
 			// Contribution from equality constraints: A * x(k) + B * u(k) - x(k + 1) + b(k) = 0
-			StaticVector<Kernel, NX> dLeq_dx =  trans( prob_k->A() ) * sol_k->pi();
-			StaticVector<Kernel, NU> dLeq_du = (trans( prob_k->B() ) * sol_k->pi() );
+     		// The following static_cast is used to evaluate the expression, such that dLeq_dx can be modified
+			auto dLeq_dx =  static_cast<StaticVector<Kernel, NX> >( trans( prob_k->A() ) * sol_k->pi() );
+			auto dLeq_du = trans( prob_k->B() ) * sol_k->pi();
+			
 			if (sol_k != sol.begin())
 			{
 				dLeq_dx -= (sol_k - 1)->pi();
 			}			
 	
 			// Contribution of bounds path constraints: x >= x_, u >= u_
-			auto dLubx_dx = -sol_k->lam_ubx();
-			auto dLlbx_dx = sol_k->lam_lbx();
-			auto dLubu_du = -sol_k->lam_ubu();
-			auto dLlbu_du = sol_k->lam_lbu();
-
+			// Without static_cast, the test with Blaze generates a segmentation fault in Release mode.
+			// TODO: Is it due to how the submatrix function is implemented for blaze?
+			//auto dLubx_dx = (-sol_k->lam_ubx());
+			//auto dLlbx_dx = (sol_k->lam_lbx());
+			auto dLubx_dx = static_cast<StaticVector<Kernel, NX> >(-sol_k->lam_ubx());
+			auto dLlbx_dx = static_cast<StaticVector<Kernel, NX> >(sol_k->lam_lbx());
+			auto dLubu_du = (-sol_k->lam_ubu());
+			auto dLlbu_du = (sol_k->lam_lbu());
+	
 			// Contribution of path constraints: C * x + D * u >= c_ 
-			auto dLubc_dx = static_cast< StaticVector<Kernel, NX> > (-trans( prob_k->C() ) * sol_k->lam_ubd() );
-			auto dLlbc_dx = static_cast< StaticVector<Kernel, NX> > (trans( prob_k->C() ) * sol_k->lam_lbd() );
-			auto dLubc_du = static_cast< StaticVector<Kernel, NU> > (-trans( prob_k->D() ) * sol_k->lam_ubd() );
-			auto dLlbc_du = static_cast< StaticVector<Kernel, NU> > (trans( prob_k->D() )* sol_k->lam_lbd() );
+			auto dLubc_dx = (-trans( prob_k->C() ) * sol_k->lam_ubd() );
+			auto dLlbc_dx = (trans( prob_k->C() ) * sol_k->lam_lbd() );
+			auto dLubc_du = (-trans( prob_k->D() ) * sol_k->lam_ubd() );
+			auto dLlbc_du = (trans( prob_k->D() ) * sol_k->lam_lbd() );
+
+			/*
+			// Print
+			std::cout << "dLeq_dx:\n" << dLeq_dx <<"\n\n";
+			std::cout << "dLeq_du:\n" << dLeq_du <<"\n\n";
+			std::cout << "dLubx_dx:\n" << dLubx_dx <<"\n\n";
+			std::cout << "dLubu_du:\n" << dLubu_du <<"\n\n";
+			std::cout << "dLlbx_dx:\n" << dLlbx_dx <<"\n\n";
+			std::cout << "dLlbu_du:\n" << dLlbu_du <<"\n\n";
+			std::cout << "dLubc_dx:\n" << dLubc_dx <<"\n\n";
+			std::cout << "dLubc_du:\n" << dLubc_du <<"\n\n";
+			std::cout << "dLlbc_dx:\n" << dLlbc_dx <<"\n\n";
+			std::cout << "dLlbc_du:\n" << dLlbc_du <<"\n\n";
+			*/
 
 			// Gradient of the lagrangian
 			StaticVector<Kernel, NX> dL_dx = dJ_dx - dLeq_dx - dLubx_dx - dLlbx_dx - dLubc_dx - dLlbc_dx;
 			StaticVector<Kernel, NU> dL_du = dJ_du - dLeq_du - dLubu_du - dLlbu_du - dLubc_du - dLlbc_du;
 
-		
+
 			// *********************
 			// Check KKT condition 
 			// *********************
-			EXPECT_PRED2(MatrixApproxEquality(1e-6), dL_dx, (DynamicVector<Kernel> {0.0, 0.}));
-			EXPECT_PRED2(MatrixApproxEquality(1e-6), dL_du, (DynamicVector<Kernel> {0.}));
+			// Nocedal, "Numerical Optimization", p. 485
+			EXPECT_PRED2(MatrixApproxEquality(1e-6), dL_dx, (StaticVector<Kernel, NX> {0.0, 0.}));
+			EXPECT_PRED2(MatrixApproxEquality(1e-6), dL_du, (StaticVector<Kernel, NU> {0.}));
 		}
+
+		{
+			// Last stage
+			auto x_sol = sol_k->x();
+			auto u_sol = sol_k->u();
+
+			// Contribution from the cost function
+			auto dJ_dx =  prob_k->Q() * x_sol +  prob_k->q();				
+			
+			// Contribution from equality constraints
+			auto dLeq_dx =  -(sol_k - 1)->pi();
+
+			// Contribution of bounds path constraints: x >= x_, u >= u_
+			auto dLubx_dx = static_cast<StaticVector<Kernel, NX> >(-sol_k->lam_ubx());
+			auto dLlbx_dx = static_cast<StaticVector<Kernel, NX> >(sol_k->lam_lbx());
+
+			// Contribution of path constraints: C * x + D * u >= c_ 
+			auto dLubc_dx = (-trans( prob_k->C() ) * sol_k->lam_ubd() );
+			auto dLlbc_dx = (trans( prob_k->C() ) * sol_k->lam_lbd() );
+
+			// Gradient of the lagrangian
+			StaticVector<Kernel, NX> dL_dx = dJ_dx - dLeq_dx - dLubx_dx - dLlbx_dx - dLubc_dx - dLlbc_dx;
+
+			// Check KKT condition 
+			EXPECT_PRED2(MatrixApproxEquality(1e-6), dL_dx, (StaticVector<Kernel, NX> {0.0, 0.}));
+		}
+
 	}
 
 	REGISTER_TYPED_TEST_CASE_P(QpWorkspaceSolveTest,
