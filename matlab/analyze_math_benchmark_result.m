@@ -13,12 +13,14 @@ function analyze_math_benchmark_result(filename)
         end
     end
     
-    bar(categorical(n), cpu_time);
+    flops = repmat((n.^3).', 1, length(method)) ./ cpu_time;
+    
+    bar(categorical(n), flops);
     grid('on');
-    set(gca, 'YScale', 'log');
+%     set(gca, 'YScale', 'log');
     legend(method, 'Location', 'NorthWest');
     xlabel('Matrix size');
-    ylabel('CPU time [ns]');
+    ylabel('Performance [Gflops]');
     title('Benchmark C=A*B');
 end
 
