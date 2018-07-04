@@ -77,9 +77,9 @@ if (TMPC_WITH_TEST)
     add_subdirectory(test)
 endif()
 
-# TMPC_WITH_BENCH
-set(TMPC_WITH_BENCH ON CACHE BOOL "Build tmpc benchmarks")
+# TMPC_WITH_BENCHMARK
+set(TMPC_WITH_BENCHMARK ON CACHE BOOL "Build tmpc benchmarks")
 
-if (TMPC_WITH_BENCH)
+if (TMPC_WITH_BENCHMARK)
     add_subdirectory(bench)
 endif()

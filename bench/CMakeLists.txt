@@ -15,6 +15,10 @@ if (TMPC_WITH_CASADI_INTERFACE)
     target_sources(tmpc_bench
         PRIVATE CasadiMathBench.cpp ${GENERATED_SRCS} ${GENERATED_HDRS}
     )
+
+    target_include_directories(tmpc_bench
+        PRIVATE ${CMAKE_CURRENT_BINARY_DIR}
+    )
 endif ()
 
 
