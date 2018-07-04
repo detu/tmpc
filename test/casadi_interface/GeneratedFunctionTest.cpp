@@ -3,7 +3,7 @@
 #include <tmpc/EigenKernel.hpp>
 #include <tmpc/test_tools.hpp>
 
-#include "casadi_function_test_generated.h"
+#include <test_functions.h>
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -108,7 +108,7 @@ namespace tmpc :: testing
 
 		fun_({A.data(), B.data(), &x}, {X.data(), Y.data()});
 
-		EXPECT_EQ(print_wrap(X), print_wrap((A * x) * B));
+		EXPECT_PRED2(MatrixApproxEquality(1e-12), X, (A * x) * B);
 		EXPECT_EQ(Y, (StaticVector<Kernel, 3, rowVector> {1., 1., 1.} * (A * B)));
 	}
 
@@ -137,9 +137,9 @@ namespace tmpc :: testing
 		fun_({A.data(), B.data(), &x}, {X.data(), Y.data()});
 		fun_copy({A.data(), B.data(), &x}, {X1.data(), Y1.data()});
 
-		EXPECT_EQ(print_wrap(X), print_wrap((A * x) * B));
+		EXPECT_PRED2(MatrixApproxEquality(1e-12), X, (A * x) * B);
 		EXPECT_EQ(Y, (StaticVector<Kernel, 3, rowVector> {1., 1., 1.} * (A * B)));
-		EXPECT_EQ(print_wrap(X1), print_wrap((A * x) * B));
+		EXPECT_PRED2(MatrixApproxEquality(1e-12), X1, (A * x) * B);
 		EXPECT_EQ(Y1, (StaticVector<Kernel, 3, rowVector> {1., 1., 1.} * (A * B)));
 	}
 
