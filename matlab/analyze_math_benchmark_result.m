@@ -2,7 +2,7 @@ function analyze_math_benchmark_result(filename)
     j = jsondecode(fileread(filename));
     
     n = [2, 3, 5, 10, 20, 30];
-    method = {'CasADi MX', 'CasADi SX', 'Eigen', 'Blaze'};
+    method = {'CasADi MX', 'CasADi SX', 'Eigen', 'Blaze', 'blasfeo'};
     cpu_time = zeros(length(n), length(method));
     
     for i_n = 1 : length(n)
@@ -35,6 +35,8 @@ function name = benchmark_name(method, n)
             name = sprintf('BM_MTimes<EigenKernel<double>, %d, %d, %d>_median', n, n, n);
         case 'Blaze'
             name = sprintf('BM_MTimes<BlazeKernel<double>, %d, %d, %d>_median', n, n, n);
+        case 'blasfeo'
+            name = sprintf('BM_MTimes/%dx%dx%d_blasfeo_median', n, n, n);
         otherwise
             error('Unknown method %s', method);
     end

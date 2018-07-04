@@ -22,6 +22,13 @@ if (TMPC_WITH_CASADI_INTERFACE)
 endif ()
 
 
+if (TMPC_WITH_BLASFEO)
+    target_sources(tmpc_bench
+        PRIVATE BlasfeoMathBench.cpp
+    )
+endif ()
+
+
 target_link_libraries(tmpc_bench
     tmpc
     benchmark
