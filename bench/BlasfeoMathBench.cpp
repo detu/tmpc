@@ -3,8 +3,8 @@
 
 #include <benchmark/benchmark.h>
 
-#include <vector>
 #include <random>
+#include <memory>
 
 
 #define ADD_BM_MTIMES(m, n, p) BENCHMARK_CAPTURE(BM_MTimes, m##x##n##x##p##_blasfeo, m, n, p)
@@ -24,17 +24,24 @@ namespace tmpc :: benchmark
     }
 
 
+    static auto alignedAlloc(size_t bytes)
+    {
+        return std::unique_ptr<char[], decltype(&std::free)>(
+            reinterpret_cast<char *>(std::aligned_alloc(0x1000, bytes)), &std::free);
+    }
+
+
     static void BM_MTimes(::benchmark::State& state, size_t m, size_t n, size_t p)
     {
         blasfeo_dmat A, B, C;
 
-        std::vector<char> mem_A(::blasfeo_memsize_dmat(m, n));
-        std::vector<char> mem_B(blasfeo_memsize_dmat(n, p));
-        std::vector<char> mem_C(blasfeo_memsize_dmat(m, p));
+        auto mem_A = alignedAlloc(blasfeo_memsize_dmat(m, n));
+        auto mem_B = alignedAlloc(blasfeo_memsize_dmat(n, p));
+        auto mem_C = alignedAlloc(blasfeo_memsize_dmat(m, p));
 
-        blasfeo_create_dmat(m, n, &A, mem_A.data());
-        blasfeo_create_dmat(n, p, &B, mem_B.data());
-        blasfeo_create_dmat(m, p, &C, mem_C.data());
+        blasfeo_create_dmat(m, n, &A, mem_A.get());
+        blasfeo_create_dmat(n, p, &B, mem_B.get());
+        blasfeo_create_dmat(m, p, &C, mem_C.get());
 
         randomize(m, n, &A);
         randomize(n, p, &B);
