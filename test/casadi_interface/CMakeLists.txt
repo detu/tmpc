@@ -1,28 +1,11 @@
+find_package(OpenMP REQUIRED)
+
 # Generate code for casadi_generated_function test
-add_custom_command(
-    OUTPUT
-        ${CMAKE_CURRENT_BINARY_DIR}/casadi_function_test_generated.h
-        ${CMAKE_CURRENT_BINARY_DIR}/casadi_function_test_generated.c
-    COMMAND
-        ${PYTHON_EXECUTABLE}
-    ARGS
-        ${CMAKE_CURRENT_SOURCE_DIR}/casadi_function_test_generate_code.py casadi_function_test_generated.c
-    #[COMMAND command2 [ARGS] [args2...] ...]
-    #[MAIN_DEPENDENCY depend]
-    DEPENDS
-        casadi_function_test_generate_code.py
-    #[IMPLICIT_DEPENDS <lang1> depend1
-    #                 [<lang2> depend2] ...]
-    WORKING_DIRECTORY
-        ${CMAKE_CURRENT_BINARY_DIR}
-    COMMENT
-        "Generating code for casadi function test..."
-)
+tmpc_generate_casadi_function(SRCS HDRS "test_functions.py")
 
 add_executable(tmpc_test_casadi
-    casadi_function_test.cpp
-    ${CMAKE_CURRENT_BINARY_DIR}/casadi_function_test_generated.h
-    ${CMAKE_CURRENT_BINARY_DIR}/casadi_function_test_generated.c
+    GeneratedFunctionTest.cpp
+    ${SRCS} ${HDRS}
 )
 
 target_include_directories(tmpc_test_casadi
@@ -33,6 +16,7 @@ target_link_libraries(tmpc_test_casadi
     tmpc
     GTest::GTest
     GTest::Main
+    OpenMP::OpenMP_CXX
 )
 
 #GTEST_ADD_TESTS(tmpc_test_casadi "" AUTO)

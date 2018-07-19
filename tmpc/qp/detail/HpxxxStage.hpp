@@ -54,6 +54,8 @@ namespace tmpc :: detail
 		,	lbd_(sz.nc())
 		,	ubd_(sz.nc())
 		,	idxs_(sz.ns())
+		,	lbls_(sz.ns())
+		,	lbus_(sz.ns())
 		,	x_(sz.nx())
 		,	u_(sz.nu())
 		,	ls_(sz.ns())
@@ -66,6 +68,10 @@ namespace tmpc :: detail
 			// Initialize all numeric data to NaN so that if an uninitialized object
 			// by mistake used in calculations is easier to detect.
 			this->setNaN();
+
+			// Set lower bound for both slacks to 0.
+			lbls_ = 0.;
+			lbus_ = 0.;
 
 			// idxb is initialized to its maximum size, s.t. nb == nx + nu.
 			// This is necessary so that the solver workspace memory is calculated as its maximum when allocated.
@@ -246,10 +252,7 @@ namespace tmpc :: detail
 		}
 
 		// ******************************************************
-		//                HPMPC raw data interface.
-		//
-		// The prefixes before _data() correspond to the names of
-		// the argument to c_order_d_ip_ocp_hard_tv().
+		// HPMPC/HPIPM raw data interface.
 		// ******************************************************
 		Real const * A_data () const { return A_.data(); }
 		Real const * B_data () const { return B_.data(); }
@@ -271,7 +274,96 @@ namespace tmpc :: detail
 		Real const * ug_data() const { return ubd_.data(); }
 		int const * hidxb_data() const { return idxb_.data(); }
 		int const * idxs_data() const { return idxs_.data(); }
+		Real const * lbls_data() const { return lbls_.data(); }
+		Real const * lbus_data() const { return lbus_.data(); }
 		int nb() const { return idxb_.size(); }
+
+		
+		/// \brief Number of state bound constraints.
+		int nbx() const
+		{
+			decltype(auto) lbx = this->lbx();
+			decltype(auto) ubx = this->ubx();
+
+			int count = 0;
+
+			// Cycle through the bounds and check for infinities
+			for (size_t i = 0; i < size_.nx(); ++i)
+			{
+				if (std::isfinite(lbx[i]) && std::isfinite(ubx[i]))
+					++count;
+			}
+
+			return count;
+		}
+
+
+		/// \brief Number of input bound constraints.
+		int nbu() const
+		{
+			decltype(auto) lbu = this->lbu();
+			decltype(auto) ubu = this->ubu();
+
+			int count = 0;
+
+			// Cycle through the bounds and check for infinities
+			for (size_t i = 0; i < size_.nu(); ++i)
+			{
+				if (std::isfinite(lbu[i]) && std::isfinite(ubu[i]))
+					++count;
+			}
+
+			return count;
+		}
+
+
+		/// \brief Number of soft state bound constraints.
+		int nsbx() const
+		{
+			int count = 0;
+
+			// Cycle through the bounds and check for infinities
+			for (size_t i = 0; i < size_.ns(); ++i)
+			{
+				if (size_.nu() <= idxs_[i] && idxs_[i] < size_.nu() + size_.nx())
+					++count;
+			}
+
+			return count;
+		}
+
+
+		/// \brief Number of soft input bound constraints.
+		int nsbu() const
+		{
+			int count = 0;
+
+			// Cycle through the bounds and check for infinities
+			for (size_t i = 0; i < size_.ns(); ++i)
+			{
+				if (idxs_[i] < size_.nu())
+					++count;
+			}
+
+			return count;
+		}
+
+
+		/// \brief Number of soft general bound constraints.
+		int nsg() const
+		{
+			int count = 0;
+
+			// Cycle through the bounds and check for infinities
+			for (size_t i = 0; i < size_.ns(); ++i)
+			{
+				if (idxs_[i] >= size_.nu() + size_.nx())
+					++count;
+			}
+
+			return count;
+		}
+
 
 		Real * x_data() { return x_.data(); }
 		Real * u_data() { return u_.data(); }
@@ -328,7 +420,13 @@ namespace tmpc :: detail
 		// Soft constraints index
 		std::vector<int> idxs_;
 
-		// Lower and upper bound arrays for HPMPC,
+		// Lower bound of lower slack
+		DynamicVector<Kernel> lbls_;
+
+		// Lower bound of upper slack
+		DynamicVector<Kernel> lbus_;
+
+		// Lower and upper bound arrays for HPMPC/HPIPM,
 		// containing finite values only.
 		std::vector<Real> lb_internal_;
 		std::vector<Real> ub_internal_;

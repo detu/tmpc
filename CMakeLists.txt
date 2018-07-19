@@ -63,6 +63,8 @@ set(TMPC_WITH_CASADI_INTERFACE ON CACHE BOOL "Build tmpc with CasADi generated f
 if (TMPC_WITH_CASADI_INTERFACE)
     find_package(CasADi 3.2.0 REQUIRED)
     message(STATUS "CASADI_INCLUDE_DIRS=${CASADI_INCLUDE_DIRS}")
+
+    include ("CMakeModules/GenerateCasadiFunction.cmake")
 endif ()
 
 
@@ -85,9 +87,9 @@ if (TMPC_WITH_TEST)
     add_subdirectory(test)
 endif()
 
-# TMPC_WITH_BENCH
-set(TMPC_WITH_BENCH ON CACHE BOOL "Build tmpc benchmarks")
+# TMPC_WITH_BENCHMARK
+set(TMPC_WITH_BENCHMARK ON CACHE BOOL "Build tmpc benchmarks")
 
-if (TMPC_WITH_BENCH)
+if (TMPC_WITH_BENCHMARK)
     add_subdirectory(bench)
 endif()

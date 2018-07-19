@@ -69,7 +69,7 @@ namespace tmpc
             ns.push_back(0);
             setup_tree(num_nodes, ns.data(), tree_.data());
 
-            print_node(tree_.data());
+            //print_node(tree_.data());
 
             std::vector<int> nx, nu, nc;
             nx.reserve(num_nodes);
@@ -120,7 +120,7 @@ namespace tmpc
 
         void print() const
         {
-            tree_ocp_qp_in_print(const_cast<tree_ocp_qp_in *>(&qp_in_));
+            //tree_ocp_qp_in_print(const_cast<tree_ocp_qp_in *>(&qp_in_));
         }
 
 

@@ -1,3 +1,11 @@
+//
+// TODO: this is a very naive implementation of convertion between Eigen matrices and JSON.
+// Probably smarter functions, like std::stof, std::stod, std::stold (http://en.cppreference.com/w/cpp/string/basic_string/stof)
+// can be used to convert between numbers and strings, such that INFs and NANs are handled correctly.
+//
+// https://gitlab.syscop.de/mikhail.katliar/tmpc/issues/40
+//
+
 #pragma once
 
 #include "Json.hpp"
@@ -9,39 +17,58 @@
 
 namespace Eigen
 {
+    /*
     template <typename T, int Rows, int Cols, int Options>
     void to_json(tmpc::json& jsn, Matrix<T, Rows, Cols, Options> const& m) 
     {
         jsn = tmpc::json::array();
 
-        /*
         for (size_t i = 0; i < m.rows(); ++i)
         {
             tmpc::json row = tmpc::json::array();
 
             for (size_t j = 0; j < columns(m); ++j)
-                row.push_back((~m)(i, j));
+                row.push_back(m(i, j));
 
             jsn.push_back(row);
         }
-        */
     }
+    */
 
 
-    template <typename VT>
-    void to_json(tmpc::json& jsn, MatrixBase<VT> const& v) 
+    template <typename MT>
+    void to_json(tmpc::json& jsn, MatrixBase<MT> const& m) 
     {
         jsn = tmpc::json::array();
-        //std::copy(v.begin(), v.end(), std::back_inserter(jsn));
+
+        for (size_t i = 0; i < m.rows(); ++i)
+        {
+            tmpc::json row = tmpc::json::array();
+
+            for (size_t j = 0; j < m.cols(); ++j)
+            {
+                auto const el = m(i, j);
+                if (std::isinf(el))
+                    row.push_back(el > 0 ? "inf" : "-inf");
+                else if (std::isnan(el))
+                    row.push_back("nan");
+                else
+                    row.push_back(el);
+            }
+
+            jsn.push_back(row);
+        }
     }
 
 
+    /*
     template <typename VT>
     void to_json(tmpc::json& jsn, PlainObjectBase<VT> const& v) 
     {
         jsn = tmpc::json::array();
         //std::copy(v.begin(), v.end(), std::back_inserter(jsn));
     }
+    */
 
 
     // TODO: change from_json() function for matrices such that they expect

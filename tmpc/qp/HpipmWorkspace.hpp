@@ -17,6 +17,7 @@
 
 #include <boost/range/iterator_range_core.hpp>
 #include <boost/iterator/iterator_adaptor.hpp>
+#include <boost/range/adaptor/indexed.hpp>
 
 #include <limits>
 #include <stdexcept>
@@ -28,39 +29,32 @@
 
 namespace tmpc
 {
-	template <typename Real>
-	struct Hpipm;
-
-	template <>
-	struct Hpipm<double>
+	namespace detail
 	{
-		using ocp_qp = ::d_ocp_qp;
-		using ocp_qp_sol = ::d_ocp_qp_sol;
-		using ocp_qp_ipm_workspace = ::d_ocp_qp_ipm_workspace;
-		using ocp_qp_ipm_arg = ::d_ocp_qp_ipm_arg;
+		template <typename Real>
+		struct HpipmApi;
 
-		static int memsize_ocp_qp(int N, int const *nx, int const *nu, int const *nb, int const *ng, int const * ns);
-		static void create_ocp_qp(int N, int const *nx, int const *nu, int const *nb, int const *ng, int const * ns, ocp_qp *qp, void *memory);
-		static void cvt_colmaj_to_ocp_qp(
-			double const * const *A, double const * const *B, double const * const *b, 
-			double const * const *Q, double const * const *S, double const * const *R, double const * const *q, double const * const *r, 
-			int const * const *idxb, double const * const *lb, double const * const *ub, 
-			double const * const *C, double const * const *D, double const * const *lg, double const * const *ug,
-			double const * const *Zl, double const * const *Zu, double const * const *zl, double const * const *zu, int const * const *idxs, 
-			ocp_qp * qp);
-		
-		static int memsize_ocp_qp_sol(int N, int const *nx, int const *nu, int const *nb, int const *ng, int const *ns);
-		static void create_ocp_qp_sol(int N, int const *nx, int const *nu, int const *nb, int const *ng, int const *ns, ocp_qp_sol *qp_sol, void *memory);
-		static void cvt_ocp_qp_sol_to_colmaj(ocp_qp const *qp, ocp_qp_sol const *qp_sol, 
-			double * const *u, double * const *x, double * const * ls, double * const * us,
-			double * const *pi, 
-			double * const *lam_lb, double * const *lam_ub, double * const *lam_lg, double * const *lam_ug,
-			double * const *lam_ls, double * const *lam_us);
+		template <>
+		struct HpipmApi<double>
+		{
+			using ocp_qp = ::d_ocp_qp;
+			using ocp_qp_sol = ::d_ocp_qp_sol;
+			using ocp_qp_ipm_workspace = ::d_ocp_qp_ipm_workspace;
+			using ocp_qp_ipm_arg = ::d_ocp_qp_ipm_arg;
+			using ocp_qp_dim = ::d_ocp_qp_dim;
 
-		static int memsize_ocp_qp_ipm(ocp_qp const *qp, ocp_qp_ipm_arg const *arg);
-		static void create_ocp_qp_ipm(ocp_qp const *qp, ocp_qp_ipm_arg const *arg, ocp_qp_ipm_workspace *ws, void *mem);
-		static int solve_ocp_qp_ipm(ocp_qp const *qp, ocp_qp_sol *qp_sol, ocp_qp_ipm_arg const *arg, ocp_qp_ipm_workspace *ws);
-	};
+			static auto constexpr memsize_ocp_qp = ::d_memsize_ocp_qp;
+			static auto constexpr create_ocp_qp = ::d_create_ocp_qp;
+			static auto constexpr cvt_colmaj_to_ocp_qp = ::d_cvt_colmaj_to_ocp_qp;
+			static auto constexpr memsize_ocp_qp_sol = ::d_memsize_ocp_qp_sol;
+			static auto constexpr create_ocp_qp_sol = ::d_create_ocp_qp_sol;
+			static auto constexpr cvt_ocp_qp_sol_to_colmaj = ::d_cvt_ocp_qp_sol_to_colmaj;
+			static auto constexpr memsize_ocp_qp_ipm = ::d_memsize_ocp_qp_ipm;
+			static auto constexpr create_ocp_qp_ipm = ::d_create_ocp_qp_ipm;
+			static auto constexpr solve_ocp_qp_ipm = ::d_solve_ocp_qp_ipm;
+		};
+	}
+
 
 	class HpipmException
 	:	public std::runtime_error
@@ -72,6 +66,7 @@ namespace tmpc
 	private:
 		int const _code;
 	};
+
 
 	/**
 	 * \brief Multistage QP solver using HPIPM
@@ -156,23 +151,27 @@ namespace tmpc
 		{
 			return boost::iterator_range<ProblemIterator>(stage_.begin(), stage_.end());
 		}
+
 	
 		boost::iterator_range<ConstProblemIterator> problem() const
 		{
 			return boost::iterator_range<ConstProblemIterator>(stage_.begin(), stage_.end());
 		}
+
 	
 		boost::iterator_range<ConstSolutionIterator> impl_solution() const
 		{
 			return boost::iterator_range<ConstSolutionIterator>(stage_.begin(), stage_.end());
 		}
 
+
 		/**
 		 * \brief Takes QP problem size to preallocate workspace.
 		 */
 		template <typename InputIterator>
 		HpipmWorkspace(InputIterator size_first, InputIterator size_last, int max_iter = 100)
-		:	solverArg_ {}
+		:	ocpQpDim_ {}
+		,	solverArg_ {}
 		{
 			solverArg_.alpha_min = 1e-8;
 			solverArg_.res_g_max = 1e-8;
@@ -192,8 +191,15 @@ namespace tmpc
 			nx_.reserve(nt);
 			nu_.reserve(nt);
 			nb_.reserve(nt);
+			nbx_.reserve(nt);
+			nbu_.reserve(nt);
 			ng_.reserve(nt);
 			ns_.reserve(nt);
+			nsbx_.reserve(nt);
+			nsbu_.reserve(nt);
+			nsg_.reserve(nt);
+			lbls_.reserve(nt);
+			lbus_.reserve(nt);
 			hidxb_.reserve(nt);
 			idxs_.reserve(nt);
 	
@@ -233,9 +239,14 @@ namespace tmpc
 		
 				nx_.push_back(sz->nx());
 				nu_.push_back(sz->nu());
-				nb_.push_back(st.nb());
+				nb_.push_back(sz->nx() + sz->nu());	// upper estimate
+				nbx_.push_back(sz->nx());	// upper estimate
+				nbu_.push_back(sz->nu());	// upper estimate
 				ng_.push_back(sz->nc());
 				ns_.push_back(sz->ns());
+				nsbx_.push_back(sz->nx());	// upper estimate
+				nsbu_.push_back(sz->nu());	// upper estimate
+				nsg_.push_back(sz->nc());	// upper estimate
 				
 				hidxb_.push_back(st.hidxb_data());
 				idxs_.push_back(st.idxs_data());
@@ -255,6 +266,8 @@ namespace tmpc
 				zu_.push_back(st.zu_data());
 				lb_.push_back(st.lb_data());
 				ub_.push_back(st.ub_data());
+				lbls_.push_back(st.lbls_data());
+				lbus_.push_back(st.lbus_data());
 		
 				C_ .push_back(st.C_data());
 				D_ .push_back(st.D_data());
@@ -273,16 +286,25 @@ namespace tmpc
 				lam_ls_.push_back(st.lam_ls_data());
 				lam_us_.push_back(st.lam_us_data());
 			}
+
+			ocpQpDim_.N = stage_.size() - 1;
+			ocpQpDim_.nx = nx_.data();
+			ocpQpDim_.nu = nu_.data();
+			ocpQpDim_.nb = nb_.data();
+			ocpQpDim_.nbx = nbx_.data();
+			ocpQpDim_.nbu = nbu_.data();
+			ocpQpDim_.ng = ng_.data();
+			ocpQpDim_.ns = ns_.data();
+			ocpQpDim_.nsbx = nsbx_.data();
+			ocpQpDim_.nsbu = nsbu_.data();
+			ocpQpDim_.nsg = nsg_.data();
 				
 			if (stage_.size() > 1)
 			{
-				int const N = stage_.size() - 1;
-
 				// Allocate big enough memory pools for Qp, QpSol and SolverWorkspace.
 				// nb_ is set to nx+nu at this point, which ensures maximum capacity.
-				ocpQpMem_.resize(HPIPM::memsize_ocp_qp(N, nx_.data(), nu_.data(), nb_.data(), ng_.data(), ns_.data()));
-
-				ocpQpSolMem_.resize(HPIPM::memsize_ocp_qp_sol(N, nx_.data(), nu_.data(), nb_.data(), ng_.data(), ns_.data()));
+				ocpQpMem_.resize(Hpipm::memsize_ocp_qp(&ocpQpDim_));
+				ocpQpSolMem_.resize(Hpipm::memsize_ocp_qp_sol(&ocpQpDim_));
 				resizeSolverWorkspace();			
 			}
 		}
@@ -317,41 +339,50 @@ namespace tmpc
 
 		void impl_solve()
 		{
+			using boost::adaptors::index;
+
 			if (stage_.size() > 1)
 			{
-				// Recalculate bounds indices of each stage, at the bounds might have changed.				
+				// Recalculate bounds indices of each stage, as the bounds might have changed.				
 				// Update the nb_ array.
-				std::transform(stage_.begin(), stage_.end(), nb_.begin(), [] (Stage& s) -> int
+				for (auto const& s : index(stage_))
 				{
-					s.adjustBoundsIndex();
-					return s.nb();
-				});
+					s.value().adjustBoundsIndex();
+					nb_[s.index()] = s.value().nb();
+					nbx_[s.index()] = s.value().nbx();
+					nbu_[s.index()] = s.value().nbu();
+					nsbx_[s.index()] = s.value().nsbx();
+					nsbu_[s.index()] = s.value().nsbu();
+					nsg_[s.index()] = s.value().nsg();
+				}
 	
 				// Number of QP steps for HPIPM
 				auto const N = stage_.size() - 1;
 	
-				// Init HPIPM structures. Since the nb_ might change if the bounds change, we need to do it every time, sorry.
+				// Init HPIPM structures. Since the nb_, nbx_, nbu_, might change if the bounds change, 
+				// we need to do it every time, sorry.
 				// Hopefully these operations are not expensive compared to actual solving.
-				typename HPIPM::ocp_qp qp;
-				HPIPM::create_ocp_qp(N, nx_.data(), nu_.data(), nb_.data(), ng_.data(), ns_.data(), &qp, ocpQpMem_.data());
+				typename Hpipm::ocp_qp qp;
+				Hpipm::create_ocp_qp(&ocpQpDim_, &qp, ocpQpMem_.data());
 	
-				typename HPIPM::ocp_qp_sol sol;
-				HPIPM::create_ocp_qp_sol(N, nx_.data(), nu_.data(), nb_.data(), ng_.data(), ns_.data(), &sol, ocpQpSolMem_.data());
+				typename Hpipm::ocp_qp_sol sol;
+				Hpipm::create_ocp_qp_sol(&ocpQpDim_, &sol, ocpQpSolMem_.data());
 	
-				NativeHpipmWorkspace solver_workspace;
-				HPIPM::create_ocp_qp_ipm(&qp, &solverArg_, &solver_workspace, solverWorkspaceMem_.data());
+				typename Hpipm::ocp_qp_ipm_workspace solver_workspace;
+				Hpipm::create_ocp_qp_ipm(&ocpQpDim_, &solverArg_, &solver_workspace, solverWorkspaceMem_.data());
 	
 				// Convert the problem
-				HPIPM::cvt_colmaj_to_ocp_qp(
-					A_.data(), B_.data(), b_.data(), 
-					Q_.data(), S_.data(), R_.data(), q_.data(), r_.data(), 
-					hidxb_.data(), lb_.data(), ub_.data(), 
-					C_.data(), D_.data(), lg_.data(), ug_.data(), 
-					Zl_.data(), Zu_.data(), zl_.data(), zu_.data(), idxs_.data(),
+				Hpipm::cvt_colmaj_to_ocp_qp(
+					const_cast<Real **>(A_.data()), const_cast<Real **>(B_.data()), const_cast<Real **>(b_.data()), 
+					const_cast<Real **>(Q_.data()), const_cast<Real **>(S_.data()), const_cast<Real **>(R_.data()), const_cast<Real **>(q_.data()), const_cast<Real **>(r_.data()), 
+					const_cast<int **>(hidxb_.data()), const_cast<Real **>(lb_.data()), const_cast<Real **>(ub_.data()), 
+					const_cast<Real **>(C_.data()), const_cast<Real **>(D_.data()), const_cast<Real **>(lg_.data()), const_cast<Real **>(ug_.data()), 
+					const_cast<Real **>(Zl_.data()), const_cast<Real **>(Zu_.data()), const_cast<Real **>(zl_.data()), const_cast<Real **>(zu_.data()), const_cast<int **>(idxs_.data()),
+					const_cast<Real **>(lbls_.data()), const_cast<Real **>(lbus_.data()),
 					&qp);
 	
 				// Call HPIPM
-				auto const ret = HPIPM::solve_ocp_qp_ipm(&qp, &sol, &solverArg_, &solver_workspace);
+				auto const ret = Hpipm::solve_ocp_qp_ipm(&qp, &sol, &solverArg_, &solver_workspace);
 				numIter_ = solver_workspace.iter;
 	
 				if (ret != 0)
@@ -360,7 +391,7 @@ namespace tmpc
 				}
 
 				// Convert the solution
-				HPIPM::cvt_ocp_qp_sol_to_colmaj(&qp, &sol, 
+				Hpipm::cvt_ocp_qp_sol_to_colmaj(&sol, 
 					u_.data(), x_.data(), ls_.data(), us_.data(),
 					pi_.data(), lam_lb_.data(), lam_ub_.data(), lam_lg_.data(), lam_ug_.data(),
 					lam_ls_.data(), lam_us_.data());
@@ -437,8 +468,7 @@ namespace tmpc
 
 		
 	private:
-		using HPIPM = Hpipm<Real>;
-		using NativeHpipmWorkspace = typename HPIPM::ocp_qp_ipm_workspace;
+		using Hpipm = detail::HpipmApi<Real>;
 
 		// --------------------------------
 		//
@@ -505,11 +535,32 @@ namespace tmpc
 		// Array of NB (bound constraints) sizes
 		std::vector<int> nb_;
 
+		// Array of NBX (state bound constraints) sizes
+		std::vector<int> nbx_;
+
+		// Array of NBU (input bound constraints) sizes
+		std::vector<int> nbu_;
+
 		// Array of NG (path constraints) sizes
 		std::vector<int> ng_;
 
 		// Array of NS (soft constraints) sizes
 		std::vector<int> ns_;
+
+		// Array of NSBX (soft state bound constraints) sizes
+		std::vector<int> nsbx_;
+
+		// Array of NSBU (soft input bound constraints) sizes
+		std::vector<int> nsbu_;
+
+		// Array of NSG (soft general bound constraints) sizes
+		std::vector<int> nsg_;
+
+		// Lower bound of lower slack.
+		std::vector<Real const *> lbls_;
+
+		// Upper bound of upper slack.
+		std::vector<Real const *> lbus_;
 
 		// Hard constraints index
 		std::vector<int const *> hidxb_;
@@ -547,7 +598,8 @@ namespace tmpc
 		std::vector<char> ocpQpSolMem_;
 		std::vector<char> solverWorkspaceMem_;
 
-		typename HPIPM::ocp_qp_ipm_arg solverArg_;
+		typename Hpipm::ocp_qp_dim ocpQpDim_;
+		typename Hpipm::ocp_qp_ipm_arg solverArg_;
 
 
 		// Warmstarting disabled on purpose.
@@ -563,13 +615,7 @@ namespace tmpc
 
 		void resizeSolverWorkspace()
 		{
-			int const N = stage_.size() - 1;
-
-			// This ocp_qp borns and dies just for memsize_ipm_hard_ocp_qp() to calculate the necessary workspace size.
-			typename HPIPM::ocp_qp qp;
-			HPIPM::create_ocp_qp(N, nx_.data(), nu_.data(), nb_.data(), ng_.data(), ns_.data(), &qp, ocpQpMem_.data());
-
-			solverWorkspaceMem_.resize(HPIPM::memsize_ocp_qp_ipm(&qp, &solverArg_));
+			solverWorkspaceMem_.resize(Hpipm::memsize_ocp_qp_ipm(&ocpQpDim_, &solverArg_));
 		}
 	};
 }
