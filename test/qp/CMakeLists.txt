@@ -15,6 +15,10 @@ if (TMPC_WITH_HPIPM)
     list(APPEND src HpipmWorkspaceTest.cpp)
 endif ()
 
+if (TMPC_WITH_treeQP)
+    list(APPEND src DualNewtonTreeWorkspaceTest.cpp)
+endif ()
+
 message("src=${src}")
 
 add_executable(tmpc_test_qp ${src})
