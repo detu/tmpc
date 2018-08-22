@@ -108,3 +108,21 @@ endif ()
 add_test(NAME tmpc_test COMMAND tmpc_test)
 
 
+if (TMPC_WITH_qpOASES)
+    add_subdirectory("qp-qpoases")
+endif ()
+
+
+if (TMPC_WITH_treeQP)
+    add_subdirectory("qp-treeqp")
+endif ()
+
+
+if (TMPC_WITH_HPMPC)
+    add_subdirectory("qp-hpmpc")
+endif ()
+
+
+if (TMPC_WITH_HPIPM)
+    add_subdirectory("qp-hpipm")
+endif ()

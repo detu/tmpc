@@ -69,11 +69,10 @@ namespace tmpc :: testing
 			
 			// Stage 0
 			StageHessianMatrix H0 {
-					{1, 2, 3},
-					{4, 5, 6},
-					{7, 8, 9}
+				{67,   78,   90},
+				{78,   94,  108},
+				{90,  108,  127}
 			};
-			H0 = trans(H0) * H0;	// Make positive definite.
 
 			StaticVector<Kernel, NX> const q0 {0., 0.};
 			StaticVector<Kernel, NU> const r0 {0.};
@@ -89,11 +88,10 @@ namespace tmpc :: testing
 
 			// Stage 1
 			StageHessianMatrix H1 {
-					{1., 2., 3.},
-					{4., 5., 6.},
-					{7., 8., 9.}
+				{67,   78,   90},
+				{78,   94,  108},
+				{90,  108,  127}
 			};
-			H1 = trans(H1) * H1;	// Make positive definite.
 
 			StaticVector<Kernel, NX> const q1 {0., 0.};
 			StaticVector<Kernel, NU> const r1 {0.};

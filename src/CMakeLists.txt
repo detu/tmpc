@@ -39,18 +39,7 @@ endif ()
 # Add qpOASES interface
 #
 if (TMPC_WITH_qpOASES)
-    target_sources(tmpc
-        PRIVATE ${TMPC_INCLUDE_DIR}/qp/QpOasesWorkspace.hpp
-        PRIVATE qp/QpOasesWorkspace.cpp
-	)
-
-	target_include_directories(tmpc
-        PRIVATE ${qpOASES_INCLUDE_DIRS}
-    )
-
-    target_link_libraries(tmpc
-        PUBLIC ${qpOASES_STATIC_LIBRARIES}
-    )
+    add_subdirectory("qp-qpoases")
 endif()
 
 
@@ -64,56 +53,21 @@ endif ()
 # Add HPMPC interface
 #
 if (TMPC_WITH_HPMPC)
-    target_sources(tmpc PRIVATE 
-        ${TMPC_INCLUDE_DIR}/qp/HpmpcWorkspace.hpp
-        qp/HpmpcWorkspace.cpp
-    )
-
-    target_include_directories(tmpc
-        PRIVATE ${HPMPC_INCLUDE_DIR}
-    )
-
-    target_link_libraries(tmpc
-        PUBLIC ${HPMPC_STATIC_LIB}
-    )
+    add_subdirectory("qp-hpmpc")
 endif()
 
 #
 # Add HPIPM interface
 #
 if (TMPC_WITH_HPIPM)
-    target_sources(tmpc PRIVATE 
-        ${TMPC_INCLUDE_DIR}/qp/HpipmWorkspace.hpp
-        qp/HpipmWorkspace.cpp
-    )
-
-    target_include_directories(tmpc
-        PUBLIC ${HPIPM_INCLUDE_DIR}
-    )
-
-    target_link_libraries(tmpc
-        PUBLIC ${HPIPM_STATIC_LIB}
-    )
+    add_subdirectory("qp-hpipm")
 endif()
 
 #
 # Add treeQP interface
 #
 if (TMPC_WITH_treeQP)
-    #target_sources(tmpc PRIVATE 
-    #    ${TMPC_INCLUDE_DIR}/qp/HpipmWorkspace.hpp
-    #    qp/HpipmWorkspace.cpp
-    #)
-
-    target_include_directories(tmpc
-        PUBLIC ${treeQP_INCLUDE_DIR}
-        PUBLIC ${qpOASES_e_INCLUDE_DIR}
-    )
-
-    target_link_libraries(tmpc
-        PUBLIC ${treeQP_STATIC_LIB}
-        PUBLIC ${qpOASES_e_STATIC_LIBRARIES}
-    )
+    add_subdirectory("qp-treeqp")
 endif()
 
 #
@@ -138,4 +92,7 @@ if (TMPC_WITH_JSON)
     )
 endif ()
 
-add_subdirectory(qptool)
+
+if (TMPC_WITH_treeQP)
+    add_subdirectory(qptool)
+endif ()
