@@ -62,7 +62,8 @@ namespace tmpc
         template <
             typename Key,
             std::pair<size_t, size_t> (* SizeFunc)(OcpSizeGraph const&, Key),
-            void (* SetterFunc)(const double * const, const int, tree_ocp_qp_in * const, const int),
+            void (* SetterFunc)(const Real * const, const int, tree_ocp_qp_in * const, const int),
+            void (* GetterFunc)(Real * const R, const int lda, const tree_ocp_qp_in * const qp_in, const int indx),
             StorageOrder SO = columnMajor
         >
         class MatrixPropertyMap
@@ -102,9 +103,16 @@ namespace tmpc
             DynamicMatrix<Kernel, SO> get(Key k) const
             {
                 auto const sz = SizeFunc(ws_.graph_, k);
-                // TODO: call getter here
-                return DynamicMatrix<Kernel, SO>(sz.first, sz.second);
+                
+                DynamicMatrix<Kernel, SO> m(sz.first, sz.second);
+
+                // TODO: use the proper stride value instead of rows()/columns().
+                auto const spacing = SO == columnMajor ? rows(m) : columns(m);
+                GetterFunc(m.data(), spacing, &ws_.qp_in_, ws_.getIndex(k));
+
+                return m;
             }
+
 
             DualNewtonTreeWorkspace& ws_;
         };
@@ -297,13 +305,13 @@ namespace tmpc
 
         auto Q()
         {
-            return MatrixPropertyMap<vertex_descriptor, &size_Q, &tree_ocp_qp_in_set_node_Q_colmajor>(*this);
+            return MatrixPropertyMap<vertex_descriptor, &size_Q, &tree_ocp_qp_in_set_node_Q_colmajor, &tree_ocp_qp_in_get_node_Q_colmajor>(*this);
         }
 
 
         auto R()
         {
-            return MatrixPropertyMap<vertex_descriptor, &size_R, &tree_ocp_qp_in_set_node_R_colmajor>(*this);
+            return MatrixPropertyMap<vertex_descriptor, &size_R, &tree_ocp_qp_in_set_node_R_colmajor, &tree_ocp_qp_in_get_node_R_colmajor>(*this);
         }
 
 
@@ -311,7 +319,7 @@ namespace tmpc
         {
             // NOTE: treeQP assumes the size of S to be NU-by-NX, tmpc assumes it to be NX-by-NU.
             // Passing rowMajor matrix as column-major to treeQP actually transposes it.
-            return MatrixPropertyMap<vertex_descriptor, &size_S, &tree_ocp_qp_in_set_node_S_colmajor, rowMajor>(*this);
+            return MatrixPropertyMap<vertex_descriptor, &size_S, &tree_ocp_qp_in_set_node_S_colmajor, &tree_ocp_qp_in_get_node_S_colmajor, rowMajor>(*this);
         }
 
 
@@ -329,13 +337,13 @@ namespace tmpc
 
         auto C()
         {
-            return MatrixPropertyMap<vertex_descriptor, &size_C, &tree_ocp_qp_in_set_node_C_colmajor>(*this);
+            return MatrixPropertyMap<vertex_descriptor, &size_C, &tree_ocp_qp_in_set_node_C_colmajor, &tree_ocp_qp_in_get_node_C_colmajor>(*this);
         }
 
 
         auto D()
         {
-            return MatrixPropertyMap<vertex_descriptor, &size_D, &tree_ocp_qp_in_set_node_D_colmajor>(*this);
+            return MatrixPropertyMap<vertex_descriptor, &size_D, &tree_ocp_qp_in_set_node_D_colmajor, &tree_ocp_qp_in_get_node_D_colmajor>(*this);
         }
 
 
@@ -377,13 +385,13 @@ namespace tmpc
 
         auto A()
         {
-            return MatrixPropertyMap<edge_descriptor, &size_A, &tree_ocp_qp_in_set_edge_A_colmajor>(*this);
+            return MatrixPropertyMap<edge_descriptor, &size_A, &tree_ocp_qp_in_set_edge_A_colmajor, &tree_ocp_qp_in_get_edge_A_colmajor>(*this);
         }
 
 
         auto B()
         {
-            return MatrixPropertyMap<edge_descriptor, &size_B, &tree_ocp_qp_in_set_edge_B_colmajor>(*this);
+            return MatrixPropertyMap<edge_descriptor, &size_B, &tree_ocp_qp_in_set_edge_B_colmajor, &tree_ocp_qp_in_get_edge_B_colmajor>(*this);
         }
 
 
