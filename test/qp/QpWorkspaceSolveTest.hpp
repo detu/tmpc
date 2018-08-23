@@ -46,9 +46,9 @@ namespace tmpc :: testing
 
 			// Stage 0
 			StageHessianMatrix H0 {
-				{66,   78,   90},
-				{78,   93,  108},
-				{90,  108,  126}
+				{67,   78,   90},
+				{78,   94,  108},
+				{90,  108,  127}
 			};
 
 			StaticVector<Kernel, NX> const q0 {0., 0.};
@@ -65,9 +65,9 @@ namespace tmpc :: testing
 
 			// Stage 1
 			StageHessianMatrix H1 {
-				{66,   78,   90},
-				{78,   93,  108},
-				{90,  108,  126}
+				{67,   78,   90},
+				{78,   94,  108},
+				{90,  108,  127}
 			};
 
 			StaticVector<Kernel, NX> const q1 {0., 0.};
@@ -165,13 +165,14 @@ namespace tmpc :: testing
 		auto const sol = ws.solution();
 
 		EXPECT_PRED2(MatrixApproxEquality(1e-6), sol[0].x(), (DynamicVector<typename TestFixture::Kernel> {1., 0.}));
-		EXPECT_PRED2(MatrixApproxEquality(1e-6), sol[0].u(), (DynamicVector<typename TestFixture::Kernel> {-0.690877362606266}));
+		EXPECT_PRED2(MatrixApproxEquality(1e-6), sol[0].u(), (DynamicVector<typename TestFixture::Kernel> {-0.68098253759615734}));
 
-		EXPECT_PRED2(MatrixApproxEquality(1e-6), sol[1].x(), (DynamicVector<typename TestFixture::Kernel> {0.654561318696867, -0.690877362606266}));
-		EXPECT_PRED2(MatrixApproxEquality(1e-6), sol[1].u(), (DynamicVector<typename TestFixture::Kernel> {0.215679569867116}));
+		EXPECT_PRED2(MatrixApproxEquality(1e-6), sol[1].x(), (DynamicVector<typename TestFixture::Kernel> {0.65950873120185627, -0.68098253759609839}));
+		EXPECT_PRED2(MatrixApproxEquality(1e-6), sol[1].u(), (DynamicVector<typename TestFixture::Kernel> {0.20174225742383531}));
 
-		EXPECT_PRED2(MatrixApproxEquality(1e-6), sol[2].x(), (DynamicVector<typename TestFixture::Kernel> {0.0715237410241597, -0.475197792739149}));
+		EXPECT_PRED2(MatrixApproxEquality(1e-6), sol[2].x(), (DynamicVector<typename TestFixture::Kernel> {0.079397322317675517, -0.47924028017226311}));
 	}
+	
 
 	TYPED_TEST_P(QpWorkspaceSolveTest, DISABLED_testSolve1stage1d)
 	{
