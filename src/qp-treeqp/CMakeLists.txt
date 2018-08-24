@@ -3,6 +3,7 @@ find_package(BLASFEO REQUIRED)
 
 add_library(tmpc-qp-treeqp
     ${TMPC_INCLUDE_DIR}/qp/DualNewtonTreeWorkspace.hpp
+    DualNewtonTreeWorkspace.cpp
 )
 
 target_include_directories(tmpc-qp-treeqp

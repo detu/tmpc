@@ -9,10 +9,23 @@
 #include <boost/graph/breadth_first_search.hpp>
 
 #include <vector>
+#include <stdexcept>
 
 
 namespace tmpc
 {
+    class DualNewtonTreeException 
+	:	public std::runtime_error
+	{
+	public:
+		DualNewtonTreeException(return_t code);
+		return_t code() const { return _code; }
+
+	private:
+		return_t const _code;
+	};
+
+
     template <typename Kernel_>
     class DualNewtonTreeWorkspace
     {
@@ -268,7 +281,10 @@ namespace tmpc
 
         void solve()
         {
-            treeqp_tdunes_solve(&qp_in_, &qp_out_, &opts_, &work_);
+            auto const ret = treeqp_tdunes_solve(&qp_in_, &qp_out_, &opts_, &work_);
+
+            if (ret != TREEQP_OPTIMAL_SOLUTION_FOUND)
+                throw DualNewtonTreeException(ret);
         }
 
 
