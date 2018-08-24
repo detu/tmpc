@@ -23,25 +23,29 @@
 
 namespace tmpc
 {
-	// Type-parameterized HPMPC interface
-	template <typename Real>
-	struct Hpmpc
+	namespace detail
 	{
-		static int c_order_ip_ocp_hard_tv(
-			int *kk, int k_max, Real mu0, Real mu_tol,
-			int N, int const *nx, int const *nu, int const *nb, int const * const *hidxb, int const *ng, int N2,
-			int warm_start,
-			Real const * const *A, Real const * const *B, Real const * const *b,
-			Real const * const *Q, Real const * const *S, Real const * const *R, Real const * const *q, Real const * const *r,
-			Real const * const *lb, Real const * const *ub,
-			Real const * const *C, Real const * const *D, Real const * const *lg, Real const * const *ug,
-			Real * const *x, Real * const *u, Real * const *pi, Real * const *lam,
-			Real *inf_norm_res,
-			void *work0,
-			Real *stat);
+		// Type-parameterized HPMPC interface
+		template <typename Real>
+		struct Hpmpc
+		{
+			static int c_order_ip_ocp_hard_tv(
+				int *kk, int k_max, Real mu0, Real mu_tol,
+				int N, int const *nx, int const *nu, int const *nb, int const * const *hidxb, int const *ng, int N2,
+				int warm_start,
+				Real const * const *A, Real const * const *B, Real const * const *b,
+				Real const * const *Q, Real const * const *S, Real const * const *R, Real const * const *q, Real const * const *r,
+				Real const * const *lb, Real const * const *ub,
+				Real const * const *C, Real const * const *D, Real const * const *lg, Real const * const *ug,
+				Real * const *x, Real * const *u, Real * const *pi, Real * const *lam,
+				Real *inf_norm_res,
+				void *work0,
+				Real *stat);
 
-		static int ip_ocp_hard_tv_work_space_size_bytes(int N, int const *nx, int const *nu, int const *nb, int const * const * hidxb, int const *ng, int N2);
-	};
+			static int ip_ocp_hard_tv_work_space_size_bytes(int N, int const *nx, int const *nu, int const *nb, int const * const * hidxb, int const *ng, int N2);
+		};
+	}
+
 
 	class HpmpcException 
 	:	public std::runtime_error
@@ -210,7 +214,7 @@ namespace tmpc
 		{
 			if (stage_.size() > 0)
 			{
-				// Recalculate bounds indices of each stage, at the bounds might have changed.				
+				// Recalculate bounds indices of each stage, as the bounds might have changed.				
 				// Update the nb_ array.
 				std::transform(stage_.begin(), stage_.end(), nb_.begin(), [] (Stage& s) -> int
 				{
@@ -225,7 +229,7 @@ namespace tmpc
 				Real mu0 = 1.;
 	
 				// Call HPMPC
-				auto const ret = Hpmpc<Real>::c_order_ip_ocp_hard_tv(&numIter_, maxIter(), mu0, muTol_, N,
+				auto const ret = detail::Hpmpc<Real>::c_order_ip_ocp_hard_tv(&numIter_, maxIter(), mu0, muTol_, N,
 						nx_.data(), nu_.data(), nb_.data(), hidxb_.data(), ng_.data(), N, _warmStart ? 1 : 0, A_.data(), B_.data(), b_.data(),
 						Q_.data(), S_.data(), R_.data(), q_.data(), r_.data(), lb_.data(), ub_.data(), C_.data(), D_.data(),
 						lg_.data(), ug_.data(), x_.data(), u_.data(), pi_.data(), lam_.data(), infNormRes_.data(),
@@ -395,7 +399,7 @@ namespace tmpc
 			// Number of QP steps for HPMPC
 			auto const N = stage_.size() - 1;
 	
-			solverWorkspace_.resize(Hpmpc<Real>::ip_ocp_hard_tv_work_space_size_bytes(
+			solverWorkspace_.resize(detail::Hpmpc<Real>::ip_ocp_hard_tv_work_space_size_bytes(
 				static_cast<int>(N), nx_.data(), nu_.data(), nb_.data(), hidxb_.data(), ng_.data(), static_cast<int>(N)));
 		}
 	};

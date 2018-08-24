@@ -74,7 +74,7 @@ namespace tmpc
 		,	Zu_(sz.ns(), sz.ns())
 		,	zl_(sz.ns())
 		,	zu_(sz.ns())
-		,	idxs_(sz.nx(), 0)
+		,	idxs_(sz.ns(), 0)
 		{
 		}
 
@@ -187,81 +187,81 @@ namespace tmpc
 			noresize(lbx_) = lbx;
 		}
 
-		const Matrix& Q() const {
+		const Matrix& impl_Q() const {
 			return Q_;
 		}
 
 		template <typename T>
-		void Q(const T& q) {
+		void impl_Q(const T& q) {
 			noresize(Q_) = q;
 		}
 
 		template <typename T>
-		auto& Q(std::initializer_list<std::initializer_list<T>> q) 
+		auto& impl_Q(std::initializer_list<std::initializer_list<T>> q) 
 		{
 			noresize(Q_) = q;
 			return *this;
 		}
 
-		const Matrix& R() const {
+		const Matrix& impl_R() const {
 			return R_;
 		}
 
 		template <typename T>
-		void R(const T& r) {
+		void impl_R(const T& r) {
 			noresize(R_) = r;
 		}
 
 		template <typename T>
-		auto& R(std::initializer_list<std::initializer_list<T>> val) 
+		auto& impl_R(std::initializer_list<std::initializer_list<T>> val) 
 		{
 			noresize(R_) = val;
 			return *this;
 		}
 
-		const Matrix& S() const {
+		const Matrix& impl_S() const {
 			return S_;
 		}
 
 		template <typename T>
-		void S(const T& s) {
+		void impl_S(const T& s) {
 			noresize(S_) = s;
 		}
 
 		template <typename T>
-		auto& S(std::initializer_list<std::initializer_list<T>> val) 
+		auto& impl_S(std::initializer_list<std::initializer_list<T>> val) 
 		{
 			noresize(S_) = val;
 			return *this;
 		}
 
-		const Vector& q() const {
+		const Vector& impl_q() const {
 			return q_;
 		}
 
 		template <typename T>
-		void q(const T& q) {
+		void impl_q(const T& q) {
 			noresize(q_) = q;
 		}
 
 		template <typename T>
-		auto& q(std::initializer_list<T> val) 
+		auto& impl_q(std::initializer_list<T> val) 
 		{
 			noresize(q_) = val;
 			return *this;
 		}
 
-		const Vector& r() const {
+		const Vector& impl_r() const {
 			return r_;
 		}
 
 		template <typename T>
-		void r(const T& r) {
+		void impl_r(const T& r) {
 			noresize(r_) = r;
 		}
 
 		template <typename T>
-		auto& r(std::initializer_list<T> val) 
+		auto& impl_r(std::initializer_list<T> val) 
 		{
 			noresize(r_) = val;
 			return *this;

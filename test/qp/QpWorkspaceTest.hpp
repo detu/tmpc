@@ -159,6 +159,14 @@ namespace tmpc :: testing
             EXPECT_EQ(size(stage.ubu()), s.nu());
             EXPECT_EQ(size(stage.lbd()), s.nc());
             EXPECT_EQ(size(stage.ubd()), s.nc());
+
+            EXPECT_EQ(rows(stage.Zl()), s.ns());
+            EXPECT_EQ(columns(stage.Zl()), s.ns());
+            EXPECT_EQ(rows(stage.Zu()), s.ns());
+            EXPECT_EQ(columns(stage.Zu()), s.ns());
+            EXPECT_EQ(size(stage.zl()), s.ns());
+            EXPECT_EQ(size(stage.zu()), s.ns());
+            EXPECT_EQ(stage.idxs().size(), s.ns());
         }
     }
 

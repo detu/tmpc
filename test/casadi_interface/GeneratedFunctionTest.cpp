@@ -3,7 +3,7 @@
 #include <tmpc/EigenKernel.hpp>
 #include <tmpc/test_tools.hpp>
 
-#include "casadi_function_test_generated.h"
+#include <test_functions.h>
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>

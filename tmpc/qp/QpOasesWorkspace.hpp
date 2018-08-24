@@ -82,66 +82,66 @@ namespace tmpc
 				ws_ = &ws;
 			}
 
-			auto Q() const 
+			auto impl_Q() const 
 			{	
 				return submatrix(ws_->H, n_, n_, size_.nx(), size_.nx());
 			}
 			
 			template <typename T> 
-			void Q(const T& q) 
+			void impl_Q(const T& q) 
 			{ 
 				submatrix(ws_->H, n_, n_, size_.nx(), size_.nx()) = q; 
 			}
 
-			auto R() const 
+			auto impl_R() const 
 			{	
 				return submatrix(ws_->H, n_ + size_.nx(), n_ + size_.nx(), size_.nu(), size_.nu()); 
 			}
 
 			template <typename T> 
-			void R(const T& r) 
+			void impl_R(const T& r) 
 			{ 
 				submatrix(ws_->H, n_ + size_.nx(), n_ + size_.nx(), size_.nu(), size_.nu()) = r; 
 			}
 
-			auto S() const 
+			auto impl_S() const 
 			{	
 				return submatrix(ws_->H, n_, n_ + size_.nx(), size_.nx(), size_.nu()); 
 			}
 
 			template <typename T> 
-			void S(const T& s) 
+			void impl_S(const T& s) 
 			{
 				// Set both S and S^T in H
 				submatrix(ws_->H, n_, n_ + size_.nx(), size_.nx(), size_.nu()) = s;
 				submatrix(ws_->H, n_ + size_.nx(), n_, size_.nu(), size_.nx()) = trans(s); 
 			}
 
-			void S(Real val) 
+			void impl_S(Real val) 
 			{
 				// Set both S and S^T in H
 				submatrix(ws_->H, n_, n_ + size_.nx(), size_.nx(), size_.nu()) = val;
 				submatrix(ws_->H, n_ + size_.nx(), n_, size_.nu(), size_.nx()) = val; 
 			}
 
-			auto q() const 
+			auto impl_q() const 
 			{	
 				return subvector(ws_->g, n_, size_.nx());
 			}
 
 			template <typename T> 
-			void q(const T& q) 
+			void impl_q(const T& q) 
 			{ 
 				subvector(ws_->g, n_, size_.nx()) = q; 
 			}
 
-			auto r() const 
+			auto impl_r() const 
 			{	
 				return subvector(ws_->g , n_ + size_.nx(), size_.nu());
 			}
 
 			template <typename T> 
-			void r(const T& r) 
+			void impl_r(const T& r) 
 			{ 
 				subvector(ws_->g , n_ + size_.nx(), size_.nu()) = r;
 			}
