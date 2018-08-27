@@ -9,10 +9,15 @@
 #include <tmpc/Matrix.hpp>
 #include <tmpc/Math.hpp>
 
-#include "detail/HpxxxStage.hpp"
+#include "detail/HpxxxVertexData.hpp"
+#include "detail/HpxxxEdgeData.hpp"
+#include "TreeQpWorkspaceAdaptor.hpp"
+//#include "OcpQpVertexElement.hpp"
 
 #include <boost/range/iterator_range_core.hpp>
 #include <boost/iterator/iterator_adaptor.hpp>
+#include <boost/graph/breadth_first_search.hpp>
+#include <boost/property_map/property_map.hpp>
 
 #include <stdexcept>
 #include <algorithm>
@@ -58,6 +63,7 @@ namespace tmpc
 		int const _code;
 	};
 
+
 	/**
 	 * \brief Multistage QP solver using HPMPC
 	 *
@@ -69,6 +75,7 @@ namespace tmpc
 	{
 	public:
 		using Kernel = Kernel_;
+		using SO = StorageOrder::rowMajor;
 		using Real = typename Kernel::Real;
 		
 		// Iteration statistics. HPMPC returns 5 Real numbers per iteration:
@@ -76,122 +83,81 @@ namespace tmpc
 		// centering parameter, duality measure for predictor and corrector.
 		using IterStat = std::array<Real, 5>;
 
-		using Stage = detail::HpxxxStage<Kernel, StorageOrder::rowMajor>;
-
-		class ProblemIterator
-		:	public boost::iterator_adaptor<
-				ProblemIterator	// derived
-			,	typename std::vector<Stage>::iterator	// base
-			,	OcpQpBase<Stage>&	// value
-			,	boost::random_access_traversal_tag	// category of traversal
-			,	OcpQpBase<Stage>&	// reference
-			>
-		{
-		public:
-			ProblemIterator() = default;
-			
-			ProblemIterator(typename ProblemIterator::base_type const& p)
-			:	ProblemIterator::iterator_adaptor_(p)
-			{			
-			}
-		};
-
-		class ConstProblemIterator
-		:	public boost::iterator_adaptor<
-				ConstProblemIterator	// derived
-			,	typename std::vector<Stage>::const_iterator	// base
-			,	OcpQpBase<Stage> const&	// value
-			,	boost::random_access_traversal_tag	// category of traversal
-			,	OcpQpBase<Stage> const&	// reference
-			>
-		{
-		public:
-			ConstProblemIterator() = default;
-			
-			ConstProblemIterator(typename ConstProblemIterator::base_type const& p)
-			:	ConstProblemIterator::iterator_adaptor_(p)
-			{			
-			}
-		};
-	
-		class ConstSolutionIterator
-		:	public boost::iterator_adaptor<
-				ConstSolutionIterator	// derived
-			,	typename std::vector<Stage>::const_iterator	// base
-			,	OcpSolutionBase<Stage> const&	// value
-			,	boost::random_access_traversal_tag	// category of traversal
-			,	OcpSolutionBase<Stage> const&	// reference
-			>
-		{
-		public:
-			ConstSolutionIterator() = default;
-			
-			ConstSolutionIterator(typename ConstSolutionIterator::base_type const& p)
-			:	ConstSolutionIterator::iterator_adaptor_(p)
-			{			
-			}
-		};
-
-
 		std::string impl_solverName() const
 		{
 			return "HPMPC";
 		}
 
 	
-		boost::iterator_range<ProblemIterator> problem()
-		{
-			return boost::iterator_range<ProblemIterator>(stage_.begin(), stage_.end());
-		}
-	
-		boost::iterator_range<ConstProblemIterator> problem() const
-		{
-			return boost::iterator_range<ConstProblemIterator>(stage_.begin(), stage_.end());
-		}
-	
-		
-		boost::iterator_range<ConstSolutionIterator> impl_solution() const
-		{
-			return boost::iterator_range<ConstSolutionIterator>(stage_.begin(), stage_.end());
-		}
-
-		boost::iterator_range<typename std::vector<IterStat>::const_iterator> stat() const
+		auto stat() const
 		{
 			return boost::make_iterator_range(stat_.begin(), stat_.begin() + numIter_);
 		}
+
 
 		/**
 		 * \brief Takes QP problem size to preallocate workspace.
 		 */
 		template <typename InputIterator>
-		explicit HpmpcWorkspace(InputIterator size_first, InputIterator size_last, unsigned max_iter = 100)
-		:	stat_ {max_iter}
+		explicit HpmpcWorkspace(OcpSizeGraph const& graph, unsigned max_iter = 100)
+		:	graph_ {graph}
+		,	stat_ {max_iter}
 		{
 			std::fill(infNormRes_.begin(), infNormRes_.end(), sNaN<Real>());
 
-			auto const n_stages = std::distance(size_first, size_last);
+			auto const nv = num_vertices(graph_);
+			auto const ne = num_edges(graph_);
 
-			if (n_stages < 2)
-				throw std::invalid_argument("HPMPC needs at least 2 stages problem");
+			if (nv < 2)
+				throw std::invalid_argument("HPMPC needs an at least 2-stages problem");
 
-			preallocateStages(n_stages);
+			if (ne + 1 != num_vertices(graph_))
+				throw std::invalid_argument("Number of edges in HPMPC size graph must be 1 less than the number of vertices");
 
-			for (auto sz = size_first; sz != size_last; ++sz)
-				addStage(*sz, sz + 1 != size_last ? sz[1].nx() : 0);
+			// Preallocate arrays holding QP vertex data.
+			vertexData_.reserve(nv);
+	
+			nx_.reserve(nv);
+			nu_.reserve(nv);
+			nb_.reserve(nv);
+			ng_.reserve(nv);
+			hidxb_.reserve(nv);
+	
+			A_ .reserve(nv);
+			B_ .reserve(nv);
+			b_ .reserve(nv);
+			Q_ .reserve(nv);
+			S_ .reserve(nv);
+			R_ .reserve(nv);
+			q_ .reserve(nv);
+			r_ .reserve(nv);
+			lb_.reserve(nv);
+			ub_.reserve(nv);
+			C_ .reserve(nv);
+			D_ .reserve(nv);
+			lg_.reserve(nv);
+			ug_.reserve(nv);
+			
+			x_.reserve(nv);
+			u_.reserve(nv);
+			pi_.reserve(nv);
+			lam_.reserve(nv);
 
+			// Preallocate arrays holding QP edge data.
+			edgeData_.reserve(ne);
+	
+			A_ .reserve(ne);
+			B_ .reserve(ne);
+			b_ .reserve(ne);
+			pi_.reserve(ne);
+
+			// Traverse the graph and init vertex and edge data.
+			breadth_first_search(graph_, vertex(0, graph_), visitor(InitVisitor(*this)));
+
+			// Allocate HPMPC working memory
 			allocateSolverWorkspace();
 		}
 
-		template <typename IteratorRange>
-		explicit HpmpcWorkspace(IteratorRange sz, int max_iter = 100)
-		:	HpmpcWorkspace(sz.begin(), sz.end(), max_iter)
-		{
-		}
-
-		explicit HpmpcWorkspace(std::initializer_list<OcpSize> sz, int max_iter = 100)
-		:	HpmpcWorkspace(sz.begin(), sz.end(), max_iter)
-		{
-		}
 
 		/**
 		 * \brief Copy constructor
@@ -200,6 +166,7 @@ namespace tmpc
 		 */
 		HpmpcWorkspace(HpmpcWorkspace const&) = delete;
 
+
 		/**
 		 * \brief Move constructor
 		 *
@@ -207,42 +174,45 @@ namespace tmpc
 		 */
 		HpmpcWorkspace(HpmpcWorkspace&& rhs) = default;
 
+
 		HpmpcWorkspace& operator= (HpmpcWorkspace const&) = delete;
 		HpmpcWorkspace& operator= (HpmpcWorkspace &&) = delete;
 
+
 		void impl_solve()
 		{
-			if (stage_.size() > 0)
+			// Recalculate bounds indices of each stage, as the bounds might have changed.				
+			// Update the nb_ array.
+			auto const vd = make_iterator_range(vertices(graph_));
+			std::transform(vd.begin(), vd.end(), nb_.begin(), [] (auto& s) -> int
 			{
-				// Recalculate bounds indices of each stage, as the bounds might have changed.				
-				// Update the nb_ array.
-				std::transform(stage_.begin(), stage_.end(), nb_.begin(), [] (Stage& s) -> int
-				{
-					s.adjustBoundsIndex();
-					return s.nb();
-				});
-	
-				// Number of QP steps for HPMPC
-				auto const N = stage_.size() - 1;
-	
-				// What is a good value for mu0?
-				Real mu0 = 1.;
-	
-				// Call HPMPC
-				auto const ret = detail::Hpmpc<Real>::c_order_ip_ocp_hard_tv(&numIter_, maxIter(), mu0, muTol_, N,
-						nx_.data(), nu_.data(), nb_.data(), hidxb_.data(), ng_.data(), N, _warmStart ? 1 : 0, A_.data(), B_.data(), b_.data(),
-						Q_.data(), S_.data(), R_.data(), q_.data(), r_.data(), lb_.data(), ub_.data(), C_.data(), D_.data(),
-						lg_.data(), ug_.data(), x_.data(), u_.data(), pi_.data(), lam_.data(), infNormRes_.data(),
-						solverWorkspace_.data(), stat_[0].data());
-	
-				if (ret != 0)
-				{
-					throw HpmpcException(ret);
-				}
-			}
+				s.adjustBoundsIndex();
+				return s.nb();
+			});
+
+			// Number of QP steps for HPMPC
+			auto const N = num_vertices(graph_) - 1;
+
+			// What is a good value for mu0?
+			Real mu0 = 1.;
+
+			// Call HPMPC
+			auto const ret = detail::Hpmpc<Real>::c_order_ip_ocp_hard_tv(&numIter_, maxIter(), mu0, muTol_, N,
+					nx_.data(), nu_.data(), nb_.data(), hidxb_.data(), ng_.data(), N, _warmStart ? 1 : 0, A_.data(), B_.data(), b_.data(),
+					Q_.data(), S_.data(), R_.data(), q_.data(), r_.data(), lb_.data(), ub_.data(), C_.data(), D_.data(),
+					lg_.data(), ug_.data(), x_.data(), u_.data(), pi_.data(), lam_.data(), infNormRes_.data(),
+					solverWorkspace_.data(), stat_[0].data());
+
+			if (ret != 0)
+				throw HpmpcException(ret);
 		}
 
-		std::size_t maxIter() const noexcept { return stat_.size(); }
+
+		std::size_t maxIter() const noexcept 
+		{ 
+			return stat_.size(); 
+		}
+
 
 		/// \brief Set max number of iterations
 		void maxIter(size_t val)
@@ -250,7 +220,12 @@ namespace tmpc
 			stat_.resize(val);
 		}
 
-		Real muTol() const noexcept { return muTol_; }
+
+		Real muTol() const noexcept 
+		{ 
+			return muTol_; 
+		}
+
 
 		void muTol(Real val)
 		{
@@ -260,12 +235,284 @@ namespace tmpc
 			muTol_ = val;
 		}
 
+
 		/// \brief Get number of iterations performed by the QP solver.
-		unsigned numIter() const { return numIter_; }
+		auto numIter() const 
+		{ 
+			return numIter_; 
+		}
+
+
+		using VertexPropertyMap = boost::iterator_property_map<
+			std::vector<VertexData>::iterator, 
+
+
+		class VertexPropertyMap
+		{
+		public:
+			VertexPropertyMap(HpmpcWorkspace& ws)
+			:	ws_ {ws}
+			{				
+			}
+
+
+			VertexData& at(OcpVertexDescriptor k) const
+			{
+				return ws_.vertexData_.at(k);
+			}
+
+
+		private:
+			HpmpcWorkspace& ws_;
+		};
+
+
+		class EdgePropertyMap
+		{
+		public:
+			EdgePropertyMap(HpmpcWorkspace& ws)
+			:	ws_ {ws}
+			{				
+			}
+
+
+			EdgeData& at(OcpEdgeDescriptor k) const
+			{
+				return ws_.edgeData_.at(EDGE_INDEX(k));
+			}
+
+
+		private:
+			HpmpcWorkspace& ws_;
+		};
+
+
+		template <
+			typename EdgeOrVectorPropertyMap,
+            Real * (VertexData::* PtrFunc)(),
+            std::pair<size_t, size_t> (* SizeFunc)(OcpSizeGraph const&, OcpVertexDescriptor),
+			StorageOrder SO = HpmpcWorkspace::SO
+        >
+		class VertexMatrixPropertyMap
+        {
+        public:
+            VertexMatrixPropertyMap(HpmpcWorkspace& ws)
+            :   ws_{ws}
+            {
+            }
+
+
+			template <typename T>
+            friend void put(VertexMatrixPropertyMap const& pm, OcpVertexDescriptor k, T const& val)
+            {
+                pm.put(k, val);
+            }
+
+
+            friend decltype(auto) get(VertexMatrixPropertyMap const& pm, OcpVertexDescriptor k)
+            {
+                return pm.get(k);
+            }
+
+
+        private:
+			template <typename T>
+            void put(OcpVertexDescriptor k, T const& val) const
+            {
+                auto const sz = SizeFunc(ws_.graph_, k);
+				
+				CustomMatrix<Real, unaligned, unpadded, SO> lhs(
+					(ws_.vertexData_.at(k).*PtrFunc)(), sz.first, sz.second);
+
+                noresize(lhs) = val;
+            }
+
+
+            auto get(OcpVertexDescriptor k) const
+            {
+                auto const sz = SizeFunc(ws_.graph_, k);
+                
+                CustomMatrix<Real const, unaligned, unpadded, SO> m(
+					(ws_.vertexData_.at(k).*PtrFunc)(), sz.first, sz.second);
+
+                return m;
+            }
+
+
+            HpmpcWorkspace& ws_;
+        };
+
+
+		template <
+            Real * (VertexData::* PtrFunc)(),
+            size_t (* SizeFunc)(OcpSizeGraph const&, OcpVertexDescriptor)
+        >
+		class VertexVectorPropertyMap
+        {
+        public:
+            VertexVectorPropertyMap(HpmpcWorkspace& ws)
+            :   ws_{ws}
+            {
+            }
+
+
+			template <typename T>
+            friend void put(VertexVectorPropertyMap const& pm, OcpVertexDescriptor k, T const& val)
+            {
+                pm.put(k, val);
+            }
+
+
+            friend decltype(auto) get(VertexVectorPropertyMap const& pm, OcpVertexDescriptor k)
+            {
+                return pm.get(k);
+            }
+
+
+        private:
+			template <typename T>
+            void put(OcpVertexDescriptor k, T const& val) const
+            {
+                auto const sz = SizeFunc(ws_.graph_, k);
+				
+				CustomVector<Real, unaligned, unpadded, columnVector> lhs(
+					(ws_.vertexData_.at(k).*PtrFunc)(), sz);
+
+                noresize(lhs) = val;
+            }
+
+
+            auto get(OcpVertexDescriptor k) const
+            {
+                auto const sz = SizeFunc(ws_.graph_, k);
+                
+                CustomVector<Real const, unaligned, unpadded, columnVector> val(
+					(ws_.vertexData_.at(k).*PtrFunc)(), sz);
+
+                return val;
+            }
+
+
+            HpmpcWorkspace& ws_;
+        };
+
+
+		template <
+            Real * (EdgeData::* PtrFunc)(),
+            std::pair<size_t, size_t> (* SizeFunc)(OcpSizeGraph const&, OcpEdgeDescriptor),
+			StorageOrder SO = HpmpcWorkspace::SO
+        >
+		class EdgeMatrixPropertyMap
+        {
+        public:
+            EdgeMatrixPropertyMap(HpmpcWorkspace& ws)
+            :   ws_{ws}
+            {
+            }
+
+
+			template <typename T>
+            friend void put(EdgeMatrixPropertyMap const& pm, OcpEdgeDescriptor k, T const& val)
+            {
+                pm.put(k, val);
+            }
+
+
+            friend decltype(auto) get(EdgeMatrixPropertyMap const& pm, OcpEdgeDescriptor k)
+            {
+                return pm.get(k);
+            }
+
+
+        private:
+			template <typename T>
+            void put(OcpEdgeDescriptor k, T const& val) const
+            {
+                auto const sz = SizeFunc(ws_.graph_, k);
+				
+				CustomMatrix<Real, unaligned, unpadded, SO> lhs(
+					(ws_.edgeData_.at(k).*PtrFunc)(), sz.first, sz.second);
+
+                noresize(lhs) = val;
+            }
+
+
+            auto get(OcpEdgeDescriptor k) const
+            {
+                auto const sz = SizeFunc(ws_.graph_, k);
+                
+                CustomMatrix<Real const, unaligned, unpadded, SO> m(
+					(ws_.edgeData_.at(k).*PtrFunc)(), sz.first, sz.second);
+
+                return m;
+            }
+
+
+            HpmpcWorkspace& ws_;
+        };
+
+
+		template <
+            Real * (VertexData::* PtrFunc)(),
+            size_t (* SizeFunc)(OcpSizeGraph const&, Key)
+        >
+		class EdgeVectorPropertyMap
+        {
+        public:
+            EdgeVectorPropertyMap(HpmpcWorkspace& ws)
+            :   ws_{ws}
+            {
+            }
+
+
+			template <typename T>
+            friend void put(EdgeVectorPropertyMap const& pm, OcpEdgeDescriptor k, T const& val)
+            {
+                pm.put(k, val);
+            }
+
+
+            friend decltype(auto) get(EdgeVectorPropertyMap const& pm, OcpEdgeDescriptor k)
+            {
+                return pm.get(k);
+            }
+
+
+        private:
+			template <typename T>
+            void put(OcpEdgeDescriptor k, T const& val) const
+            {
+                auto const sz = SizeFunc(ws_.graph_, k);
+				
+				CustomVector<Real, unaligned, unpadded, columnVector> lhs(
+					(ws_.edgeData_.at(k).*PtrFunc)(), sz);
+
+                noresize(lhs) = val;
+            }
+
+
+            auto get(OcpEdgeDescriptor k) const
+            {
+                auto const sz = SizeFunc(ws_.graph_, k);
+                
+                CustomVector<Real const, unaligned, unpadded, columnVector> val(
+					(ws_.edgeData_.at(k).*PtrFunc)(), sz);
+
+                return val;
+            }
+
+
+            HpmpcWorkspace& ws_;
+        };
+
 		
 	private:
-		// Stores stage data
-		std::vector<Stage> stage_;
+		using VertexData = detail::HpxxxVertexData<Kernel, SO>;
+		using EdgeData = detail::HpxxxEdgeData<Kernel, SO>;
+
+		OcpSizeGraph graph_;
+		std::vector<VertexData> vertexData_;
+		std::vector<EdgeData> edgeData_;
 
 		// --------------------------------
 		//
@@ -325,79 +572,84 @@ namespace tmpc
 		// FASTER (9ms vs 14ms per time step) than with warmstarting. I am curious why.
 		bool _warmStart = false;
 
-		// Preallocate arrays holding QP stage data.
-		void preallocateStages(size_t nt)
-		{
-			stage_.reserve(nt);
-	
-			nx_.reserve(nt);
-			nu_.reserve(nt);
-			nb_.reserve(nt);
-			ng_.reserve(nt);
-			hidxb_.reserve(nt);
-	
-			A_ .reserve(nt);
-			B_ .reserve(nt);
-			b_ .reserve(nt);
-			Q_ .reserve(nt);
-			S_ .reserve(nt);
-			R_ .reserve(nt);
-			q_ .reserve(nt);
-			r_ .reserve(nt);
-			lb_.reserve(nt);
-			ub_.reserve(nt);
-			C_ .reserve(nt);
-			D_ .reserve(nt);
-			lg_.reserve(nt);
-			ug_.reserve(nt);
-			
-			x_.reserve(nt);
-			u_.reserve(nt);
-			pi_.reserve(nt);
-			lam_.reserve(nt);
-		}
 
-		// Add one stage with specified sizes at the end of the stage sequence.
-		void addStage(OcpSize const& sz, size_t nx_next)
-		{
-			stage_.emplace_back(sz, nx_next);
-			auto& st = stage_.back();
+		class InitVisitor
+        :   public boost::default_bfs_visitor 
+        {
+        public:
+            InitVisitor(HpmpcWorkspace& ws)
+            :   ws_{ws}
+            {                
+            }
 
-			nx_.push_back(sz.nx());
-			nu_.push_back(sz.nu());
-			nb_.push_back(st.nb());
-			ng_.push_back(sz.nc());
-			
-			hidxb_.push_back(st.hidxb_data());
+        
+            void discover_vertex(OcpVertexDescriptor u, OcpSizeGraph const& g)
+            {
+				auto const& sz = g[u].size;
 
-			A_.push_back(st.A_data());
-			B_.push_back(st.B_data());
-			b_.push_back(st.b_data());
+                ws_.vertexData_.emplace_back(sz);
+				auto& vd = vertexData_.back();
 
-			Q_.push_back(st.Q_data());
-			S_.push_back(st.S_data());
-			R_.push_back(st.R_data());
-			q_.push_back(st.q_data());
-			r_.push_back(st.r_data());
-			lb_.push_back(st.lb_data());
-			ub_.push_back(st.ub_data());
+				ws_.nx_.push_back(sz.nx());
+				ws_.nu_.push_back(sz.nu());
+				ws_.nb_.push_back(vd.nb());
+				ws_.ng_.push_back(sz.nc());
+				
+				ws_.hidxb_.push_back(vd.hidxb_data());
 
-			C_ .push_back(st.C_data());
-			D_ .push_back(st.D_data());
-			lg_.push_back(st.lg_data());
-			ug_.push_back(st.ug_data());
+				ws_.Q_.push_back(vd.Q_data());
+				ws_.S_.push_back(vd.S_data());
+				ws_.R_.push_back(vd.R_data());
+				ws_.q_.push_back(vd.q_data());
+				ws_.r_.push_back(vd.r_data());
+				ws_.lb_.push_back(vd.lb_data());
+				ws_.ub_.push_back(vd.ub_data());
 
-			x_.push_back(st.x_data());
-			u_.push_back(st.u_data());
-			pi_.push_back(st.pi_data());
-			lam_.push_back(st.lam_data());
-		}
+				ws_.C_ .push_back(vd.C_data());
+				ws_.D_ .push_back(vd.D_data());
+				ws_.lg_.push_back(vd.lg_data());
+				ws_.ug_.push_back(vd.ug_data());
+
+				ws_.x_.push_back(vd.x_data());
+				ws_.u_.push_back(vd.u_data());
+				ws_.lam_.push_back(vd.lam_data());
+            }
+
+
+			void tree_edge(OcpEdgeDescriptor e, OcpSizeGraph const& g)
+			{
+				auto const vertex_from = source(e, g);
+				auto const vertex_to = target(e, g);
+
+				if (vertex_to != vertex_from + 1)
+					throw std::invalid_argument("Invalid tree structure in HpmpcWorkspace ctor:	vertices are not sequentially connected");
+
+				ws_.edgeData_.emplace_back(g[source(e, g)].size, g[target(e, g)].size);
+				auto& ed = vertexData_.back();
+
+				ws_.A_.push_back(ed.A_data());
+				ws_.B_.push_back(ed.B_data());
+				ws_.b_.push_back(ed.b_data());
+				ws_.pi_.push_back(ed.pi_data());
+			}
+
+
+			void non_tree_edge(OcpEdgeDescriptor e, OcpSizeGraph const& g)
+			{
+				throw std::invalid_argument("Invalid tree structure in HpmpcWorkspace ctor:	non-tree graph structure detected.");
+			}
+
+        
+        private:
+            HpmpcWorkspace& ws_;
+        };
+
 
 		// Allocate soverWorkspace_ according to nx, nu, nb, ng etc.
 		void allocateSolverWorkspace()
 		{
 			// Number of QP steps for HPMPC
-			auto const N = stage_.size() - 1;
+			auto const N = num_vertices(graph_) - 1;
 	
 			solverWorkspace_.resize(detail::Hpmpc<Real>::ip_ocp_hard_tv_work_space_size_bytes(
 				static_cast<int>(N), nx_.data(), nu_.data(), nb_.data(), hidxb_.data(), ng_.data(), static_cast<int>(N)));

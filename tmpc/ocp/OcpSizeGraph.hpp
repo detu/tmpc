@@ -4,6 +4,7 @@
 #include <tmpc/SizeT.hpp>
 
 #include <boost/graph/adjacency_list.hpp>
+#include <boost/graph/properties.hpp>
 
 
 namespace tmpc
@@ -32,6 +33,8 @@ namespace tmpc
 
     using OcpVertexDescriptor = boost::graph_traits<OcpSizeGraph>::vertex_descriptor;
     using OcpEdgeDescriptor = boost::graph_traits<OcpSizeGraph>::edge_descriptor;
+    using OcpVertexIndexMap = boost::property_map<OcpSizeGraph, boost::vertex_index_t>::type;
+    using OcpEdgeIndexMap = boost::property_map<OcpSizeGraph, boost::edge_index_t>::type;
 
 
     inline auto size(OcpSizeGraph const& g)
@@ -130,5 +133,23 @@ namespace tmpc
     {
         auto const& sz_v = get(size(g), target(e, g));
         return sz_v.nx();
+    }
+
+
+    inline size_t numElements(std::pair<size_t, size_t> const& dims)
+    {
+        return dims.first * dims.second;
+    }
+
+
+    inline OcpVertexIndexMap vertexIndex(OcpSizeGraph const& g)
+    {
+        return get(boost::vertex_index, g);
+    }
+
+
+    inline OcpEdgeIndexMap edgeIndex(OcpSizeGraph const& g)
+    {
+        return get(boost::edge_index, g);
     }
 }

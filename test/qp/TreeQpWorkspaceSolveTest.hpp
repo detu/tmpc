@@ -180,9 +180,11 @@ namespace tmpc :: testing
 	{
 		auto ws = TestFixture::problem_0();
 
+		/*
 		std::cout << "== QP ====================================================================" << std::endl;
 		ws.print();
 		std::cout << "== END QP ================================================================" << std::endl;
+		*/
 
 		ws.solve();
 
