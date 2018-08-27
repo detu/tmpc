@@ -34,10 +34,11 @@ namespace tmpc
         :   public boost::default_bfs_visitor 
         {
         public:
-            RecordOcpSizeVisitor(Iterator nx, Iterator nu, Iterator nc)
+            RecordOcpSizeVisitor(Iterator nx, Iterator nu, Iterator nc, Iterator num_out_edges)
             :   nx_{nx}
             ,   nu_{nu}
             ,   nc_{nc}
+			,	numOutEdges_{num_out_edges}
             {                
             }
 
@@ -48,6 +49,7 @@ namespace tmpc
                 *nx_++ = g[u].size.nx();
                 *nu_++ = g[u].size.nu();
                 *nc_++ = g[u].size.nc();
+                *numOutEdges_++ = out_degree(u, g);
             }
 
         
@@ -55,14 +57,8 @@ namespace tmpc
             Iterator nx_;
             Iterator nu_;
             Iterator nc_;
+			Iterator numOutEdges_;
         };
-
-
-        template <typename Iterator>
-        static RecordOcpSizeVisitor<Iterator> recordOcpSizeVisitor(Iterator nx, Iterator nu, Iterator nc)
-        {
-            return RecordOcpSizeVisitor<Iterator>(nx, nu, nc);
-        }
 
 
     public:
@@ -221,22 +217,19 @@ namespace tmpc
             auto const num_nodes = num_vertices(g);
             tree_.resize(num_nodes);
 
-            // ns: an array of numbers, as if you were traversing the tree breadth-first,
-            // and output the number of children for each node.
-            // For now we assume linear tree structure.
-            std::vector<int> ns(num_nodes - 1, 1);
-            ns.push_back(0);
-            setup_tree(num_nodes, ns.data(), tree_.data());
-
-            //print_node(tree_.data());
-
-            std::vector<int> nx, nu, nc;
+            // Traverse the tree and get nx, nu, nc, numOutEdges as arrays.
+            std::vector<int> nx, nu, nc, ns;
             nx.reserve(num_nodes);
             nu.reserve(num_nodes);
             nc.reserve(num_nodes);
+			ns.reserve(num_nodes);
             
-            auto vis = recordOcpSizeVisitor(std::back_inserter(nx), std::back_inserter(nu), std::back_inserter(nc));
+            RecordOcpSizeVisitor vis(back_inserter(nx), back_inserter(nu), back_inserter(nc), back_inserter(ns));
             breadth_first_search(g, vertex(0, g), visitor(vis));
+
+            setup_tree(num_nodes, ns.data(), tree_.data());
+
+            //print_node(tree_.data());
 
             auto const qp_in_size = tree_ocp_qp_in_calculate_size(
                 num_nodes, nx.data(), nu.data(), nc.data(), tree_.data());

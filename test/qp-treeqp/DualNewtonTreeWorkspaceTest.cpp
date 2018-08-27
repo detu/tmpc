@@ -221,5 +221,6 @@ namespace tmpc :: testing
 {
 	INSTANTIATE_TYPED_TEST_CASE_P(DualNewtonTree_Blaze_double, TreeQpWorkspaceTest, DualNewtonTreeWorkspace<BlazeKernel<double>>);
 	INSTANTIATE_TYPED_TEST_CASE_P(DualNewtonTree_Eigen_double, TreeQpWorkspaceTest, DualNewtonTreeWorkspace<EigenKernel<double>>);
-    INSTANTIATE_TYPED_TEST_CASE_P(DualNewtonTree_Blaze_double, TreeQpWorkspaceSolveTest, DualNewtonTreeWorkspace<EigenKernel<double>>);
+    INSTANTIATE_TYPED_TEST_CASE_P(DualNewtonTree_Blaze_double, TreeQpWorkspaceSolveTest, DualNewtonTreeWorkspace<BlazeKernel<double>>);
+    INSTANTIATE_TYPED_TEST_CASE_P(DualNewtonTree_Eigen_double, TreeQpWorkspaceSolveTest, DualNewtonTreeWorkspace<EigenKernel<double>>);
 }
