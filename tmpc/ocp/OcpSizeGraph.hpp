@@ -172,5 +172,7 @@ namespace tmpc
             ++od;
             ++sz;
         }
+
+        return g;
     }
 }
