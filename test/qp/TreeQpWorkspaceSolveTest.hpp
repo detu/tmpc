@@ -2,7 +2,7 @@
 
 #include <tmpc/Matrix.hpp>
 #include <tmpc/Math.hpp>
-#include <tmpc/ocp/OcpSizeGraph.hpp>
+#include <tmpc/ocp/OcpGraph.hpp>
 #include <tmpc/mpc/MpcOcpSize.hpp>
 
 #include <tmpc/test_tools.hpp>

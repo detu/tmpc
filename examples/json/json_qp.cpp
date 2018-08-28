@@ -16,10 +16,16 @@ int main(int, char **)
 
     using Kernel = BlazeKernel<double>;
 
+    std::vector<OcpSize> size =
+    {
+        OcpSize {3, 2, 0},
+        OcpSize {2, 1, 0}
+    };
+
     JsonQp<Kernel> qp;
-    auto const v0 = add_vertex(OcpSize {3, 2, 0}, qp.graph());
-    auto const v1 = add_vertex(OcpSize {2, 1, 0}, qp.graph());
-    auto const e0 = add_edge(v0, v1, 0, qp.graph()).first;
+    auto const v0 = add_vertex(qp.graph());
+    auto const v1 = add_vertex(qp.graph());
+    auto const e0 = add_edge(v0, v1, qp.graph()).first;
 
     put(qp.Q(), v0, DynamicMatrix<Kernel> {3, 3});
     put(qp.q(), v0, DynamicVector<Kernel>(3u, 0.));

@@ -1,5 +1,5 @@
 #include <tmpc/ocp/OcpGraph.hpp>
-#include <tmpc/ocp/OcpSize.hpp>
+#include <tmpc/ocp/OcpSizeProperties.hpp>
 #include <tmpc/Matrix.hpp>
 #include <tmpc/core/PropertyMap.hpp>
 #include <tmpc/core/Graph.hpp>

@@ -1,4 +1,4 @@
-#include <tmpc/ocp/OcpSizeGraph.hpp>
+#include <tmpc/ocp/OcpSizeProperties.hpp>
 #include <tmpc/core/IteratorRange.hpp>
 #include <tmpc/core/PropertyMap.hpp>
 
@@ -9,11 +9,11 @@
 
 namespace tmpc :: testing
 {
-	class OcpSizeGraphPropertiesTest
+	class OcpSizePropertiesTest
 	: 	public ::testing::Test
 	{
 	public:
-		OcpSizeGraphPropertiesTest()
+		OcpSizePropertiesTest()
 		{			
 		}
 
@@ -36,7 +36,7 @@ namespace tmpc :: testing
 	};
 
 
-	TEST_F(OcpSizeGraphPropertiesTest, test_size_Q)
+	TEST_F(OcpSizePropertiesTest, test_size_Q)
 	{
 		auto const map = size_Q(sizeMap_);
 	
@@ -45,7 +45,7 @@ namespace tmpc :: testing
 	}
 
 
-	TEST_F(OcpSizeGraphPropertiesTest, test_size_R)
+	TEST_F(OcpSizePropertiesTest, test_size_R)
 	{
 		auto const map = size_R(sizeMap_);
 	
@@ -54,7 +54,7 @@ namespace tmpc :: testing
 	}
 
 
-	TEST_F(OcpSizeGraphPropertiesTest, test_size_S)
+	TEST_F(OcpSizePropertiesTest, test_size_S)
 	{
 		auto const map = size_S(sizeMap_);
 	
@@ -63,7 +63,7 @@ namespace tmpc :: testing
 	}
 
 
-	TEST_F(OcpSizeGraphPropertiesTest, test_size_x)
+	TEST_F(OcpSizePropertiesTest, test_size_x)
 	{
 		auto const map = size_x(sizeMap_);
 	
@@ -72,7 +72,7 @@ namespace tmpc :: testing
 	}
 
 
-	TEST_F(OcpSizeGraphPropertiesTest, test_size_u)
+	TEST_F(OcpSizePropertiesTest, test_size_u)
 	{
 		auto const map = size_u(sizeMap_);
 	
@@ -81,7 +81,7 @@ namespace tmpc :: testing
 	}
 
 
-	TEST_F(OcpSizeGraphPropertiesTest, test_size_C)
+	TEST_F(OcpSizePropertiesTest, test_size_C)
 	{
 		auto const map = size_C(sizeMap_);
 	
@@ -90,7 +90,7 @@ namespace tmpc :: testing
 	}
 
 
-	TEST_F(OcpSizeGraphPropertiesTest, test_size_D)
+	TEST_F(OcpSizePropertiesTest, test_size_D)
 	{
 		auto const map = size_D(sizeMap_);
 	
@@ -99,7 +99,7 @@ namespace tmpc :: testing
 	}
 
 
-	TEST_F(OcpSizeGraphPropertiesTest, test_size_d)
+	TEST_F(OcpSizePropertiesTest, test_size_d)
 	{
 		auto const map = size_d(sizeMap_);
 	
@@ -108,7 +108,7 @@ namespace tmpc :: testing
 	}
 
 
-	TEST_F(OcpSizeGraphPropertiesTest, test_size_A)
+	TEST_F(OcpSizePropertiesTest, test_size_A)
 	{
 		auto const map = size_A(sizeMap_, g_);
 	
@@ -121,7 +121,7 @@ namespace tmpc :: testing
 	}
 
 
-	TEST_F(OcpSizeGraphPropertiesTest, test_size_B)
+	TEST_F(OcpSizePropertiesTest, test_size_B)
 	{
 		auto const map = size_B(sizeMap_, g_);
 	
@@ -134,7 +134,7 @@ namespace tmpc :: testing
 	}
 
 
-	TEST_F(OcpSizeGraphPropertiesTest, test_size_b)
+	TEST_F(OcpSizePropertiesTest, test_size_b)
 	{
 		auto const map = size_b(sizeMap_, g_);
 	

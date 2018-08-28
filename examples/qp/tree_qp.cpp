@@ -5,29 +5,29 @@
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/wavefront.hpp>
 
-#include <tmpc/ocp/OcpSizeGraph.hpp>
+#include <tmpc/ocp/OcpGraph.hpp>
+#include <tmpc/ocp/OcpSize.hpp>
 #include <tmpc/core/IteratorRange.hpp>
-#include <tmpc/core/GraphTools.hpp>
+#include <tmpc/core/PropertyMap.hpp>
 
 
 int main()
 {
-    using namespace boost;
     using namespace tmpc;
 
     size_t const N = 4;
-    OcpSizeGraph g(N);
-    add_edge(0, 1, 0, g);
-    add_edge(1, 2, 1, g);
-    add_edge(0, 3, 2, g);
+    OcpGraph g(N);
+    add_edge(0, 1, g);
+    add_edge(1, 2, g);
+    add_edge(0, 3, g);
 
-    auto index_map = get(vertex_index, g);
+    auto index_map = vertexIndex(g);
 
-    for (auto i : verticesR(g))
+    for (auto i : make_iterator_range(vertices(g)))
     {
         std::cout << get(index_map, i);
 
-        auto adj_vert = adjacent_verticesR(i, g);
+        auto adj_vert = make_iterator_range(adjacent_vertices(i, g));
         if (adj_vert.size() == 0)
             std::cout << " has no children";
         else
@@ -43,33 +43,34 @@ int main()
         std::cout << std::endl;
     }
 
-    g[0].size = OcpSize {2, 3, 1, 1};
-    g[2].size = OcpSize {3, 4, 2, 3};
-
-    for (auto v : verticesR(g))
+    std::vector<OcpSize> const size = 
     {
-        auto const& sz = g[v].size;
+        OcpSize {2, 3, 1, 1},
+        OcpSize {3, 4, 2, 3}
+    };
+
+    auto const size_map = iterator_property_map(size.begin(), index_map);
+
+    for (auto v : make_iterator_range(vertices(g)))
+    {
+        auto const& sz = size_map[v];
         std::cout << "Vertex " << v << ", index=" << get(index_map, v)
             << ", nx=" << sz.nx() << ", nu=" << sz.nu() << ", nc=" << sz.nc() << ", ns=" << sz.ns() << std::endl;
     }
 
     std::cout << "Max wavefront = " << max_wavefront(g) << std::endl;
 
-    auto edge_index_map = get(edge_index, g);
-    for (auto e : edgesR(g))
-        std::cout << "Edge " << e << ", index=" << get(edge_index_map, e) << std::endl;
-
     remove_vertex(0, g);
     std::cout << "After removing vertex 0:" << std::endl;
-    for (auto v : verticesR(g))
+    for (auto v : make_iterator_range(vertices(g)))
     {
-        auto const& sz = g[v].size;
+        auto const& sz = size_map[v];
         std::cout << "Vertex " << v << ", index=" << get(index_map, v)
             << ", nx=" << sz.nx() << ", nu=" << sz.nu() << ", nc=" << sz.nc() << ", ns=" << sz.ns() << std::endl;
     }
 
-    for (auto e : edgesR(g))
-        std::cout << "Edge " << e << ", index=" << get(edge_index_map, e) << std::endl;
+    for (auto e : make_iterator_range(edges(g)))
+        std::cout << "Edge " << e << std::endl;
 
     return EXIT_SUCCESS;
 }

@@ -6,7 +6,7 @@
 
 #include <tmpc/qp/OcpQpBase.hpp>
 #include <tmpc/qp/OcpQp.hpp>
-#include <tmpc/ocp/OcpSizeGraph.hpp>
+#include <tmpc/ocp/OcpSizeProperties.hpp>
 #include <tmpc/Matrix.hpp>
 
 #include "Json.hpp"
@@ -132,7 +132,7 @@ namespace tmpc
 
         
         template <>
-        struct DescriptorTraits<OcpSizeGraph::vertex_descriptor>
+        struct DescriptorTraits<OcpVertexDescriptor>
         {
             static char const * dictionaryKey()
             {
@@ -144,7 +144,7 @@ namespace tmpc
 
 
         template <>
-        struct DescriptorTraits<OcpSizeGraph::edge_descriptor>
+        struct DescriptorTraits<OcpEdgeDescriptor>
         {
             static char const * dictionaryKey()
             {
@@ -160,8 +160,8 @@ namespace tmpc
     class JsonQp
     {
     public:
-        using vertex_descriptor = OcpSizeGraph::vertex_descriptor;
-        using edge_descriptor = OcpSizeGraph::edge_descriptor;
+        using vertex_descriptor = OcpVertexDescriptor;
+        using edge_descriptor = OcpEdgeDescriptor;
 
 
         JsonQp()
@@ -276,7 +276,7 @@ namespace tmpc
 
 
     private:
-        OcpSizeGraph graph_;
+        OcpGraph graph_;
         ::tmpc::json json_;
     };
 }

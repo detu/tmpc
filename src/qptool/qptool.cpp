@@ -6,7 +6,8 @@
 
 #include <nlohmann/json.hpp>
 
-#include <tmpc/ocp/OcpSizeGraph.hpp>
+#include <tmpc/ocp/OcpGraph.hpp>
+#include <tmpc/ocp/OcpSize.hpp>
 #include <tmpc/core/IteratorRange.hpp>
 //#include <tmpc/qp/HpmpcWorkspace.hpp>
 //#include <tmpc/qp/TreeQpWorkspaceAdaptor.hpp>
@@ -38,23 +39,25 @@ int main(int argc, char ** argv)
     else
         std::cin >> j;
 
-    // Build size graph from json.
-    size_t const N = j["nodes"].size();
-    OcpSizeGraph g(N);
+    auto const j_nodes = j["nodes"];
 
-    for (auto const& j_vertex : j["nodes"] | indexed(0))
+    // Build OCP graph from json.
+    size_t const N = j_nodes.size();
+    OcpGraph g(N);
+
+    for (auto j_edge : j["edges"])
+        add_edge(j_edge["from"], j_edge["to"], g);
+
+    // Fill node sizes.
+    std::vector<OcpSize> sz(N);
+    std::transform(j_nodes.begin(), j_nodes.end(), sz.begin(), [] (auto const& j_v)
     {
-        auto const& j_v = j_vertex.value();
-        g[j_vertex.index()].size =
-            OcpSize {j_v["q"].size(), j_v["r"].size(), j_v["ld"].size(), j_v["zl"].size()};
-    }
-
-    for (auto j_edge : j["edges"] | indexed(0))
-        add_edge(j_edge.value()["from"], j_edge.value()["to"], j_edge.index(), g);
+        return OcpSize {j_v["q"].size(), j_v["r"].size(), j_v["ld"].size(), j_v["zl"].size()};
+    });
 
 
     // Create solver workspace.
-    DualNewtonTreeSolver solver {g};
+    DualNewtonTreeSolver solver {g, sz.begin()};
     //HpmpcSolver solver {g};
 
     // Set problem properties from json.

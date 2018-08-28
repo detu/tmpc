@@ -67,8 +67,8 @@ add_executable(test-tmpc
     #mhe_test.cpp
     ocp/SensitivityTupleTest.cpp
     ocp/CondensedOcpSizeTest.cpp
-    ocp/OcpSizeGraphTest.cpp
-    ocp/OcpSizeGraphPropertiesTest.cpp
+    ocp/OcpGraphTest.cpp
+    ocp/OcpSizePropertiesTest.cpp
 
     ${CMAKE_CURRENT_BINARY_DIR}/pendulum_ode_generated.h
     ${CMAKE_CURRENT_BINARY_DIR}/pendulum_ode_generated.c
