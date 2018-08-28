@@ -32,9 +32,17 @@ namespace Eigen
         return m.rows();
     }
 
+    
     template <typename MT>
     inline size_t columns(MatrixBase<MT> const& m)
     {
         return m.cols();
+    }
+
+
+    template <typename MT>
+    inline size_t spacing(MatrixBase<MT> const& m)
+    {
+        return m.outerStride();
     }
 }

@@ -1,4 +1,6 @@
 #include <tmpc/ocp/OcpSizeGraph.hpp>
+#include <tmpc/core/IteratorRange.hpp>
+#include <tmpc/core/PropertyMap.hpp>
 
 #include <tmpc/test_tools.hpp>
 
@@ -12,7 +14,7 @@ namespace tmpc :: testing
     //     1 - 3
     //   /
     // 0 - 2 - 4
-	TEST(OcpSizeGraphTest, testOcpSizeGraphFromOutDegreeList)
+	TEST(OcpSizeGraphTest, test_OcpSizeGraphFromOutDegreeList)
 	{
 		size_t const N = 5;
 		std::array<size_t, N> const ns = { 2, 1, 1, 0, 0, };
@@ -48,7 +50,7 @@ namespace tmpc :: testing
 	// Build a linear graph
     //
     // 0 - 1 - 2 - 3
-	TEST(OcpSizeGraphTest, testOcpSizeGraphLinear)
+	TEST(OcpSizeGraphTest, test_OcpSizeGraphLinear)
 	{
 		size_t const N = 4;
 		std::array<OcpSize, N> const sz = {

@@ -3,6 +3,7 @@
 #include <tmpc/Matrix.hpp>
 #include <tmpc/Math.hpp>
 #include <tmpc/ocp/OcpSizeGraph.hpp>
+#include <tmpc/mpc/MpcOcpSize.hpp>
 
 #include <tmpc/test_tools.hpp>
 
@@ -38,9 +39,10 @@ namespace tmpc :: testing
 			typedef StaticMatrix<Kernel, NZ, NZ> StageHessianMatrix;
 
 			//const auto sz = ocpSizeGraphNominalMpc(NT, NX, NU, NC, NCT);
-			OcpSizeGraph const g = ocpSizeGraphNominalMpc(NT, NX, NU, NC, NCT);
+			OcpGraph const g = ocpGraphLinear(NT + 1);
+			auto const sz = mpcOcpSize(NT, NX, NU, NC, NCT);
 
-			Workspace ws {g};
+			Workspace ws {g, sz.begin()};
 			auto const e0 = *out_edges(0, g).first;
 			auto const e1 = *out_edges(1, g).first;
 
@@ -232,16 +234,16 @@ namespace tmpc :: testing
 			OcpSize {1, 0},
 			OcpSize {4, 0}
 		};
-		OcpSizeGraph const g = ocpSizeGraphFromOutDegreeList(n_kids.begin(), sz.begin());
 
-		typename TestFixture::Workspace ws {g};
+		OcpGraph const g = ocpGraphFromOutDegree(n_kids.begin());
+		typename TestFixture::Workspace ws {g, sz.begin()};
 
 		for (auto v : boost::make_iterator_range(vertices(g)))
 		{
-			put(ws.lx(), v, Vec(g[v].size.nx(), -inf<Real>()));
-			put(ws.lu(), v, Vec(g[v].size.nu(), -inf<Real>()));
-			put(ws.ux(), v, Vec(g[v].size.nx(), inf<Real>()));
-			put(ws.uu(), v, Vec(g[v].size.nu(), inf<Real>()));
+			put(ws.lx(), v, Vec(sz[v].nx(), -inf<Real>()));
+			put(ws.lu(), v, Vec(sz[v].nu(), -inf<Real>()));
+			put(ws.ux(), v, Vec(sz[v].nx(), inf<Real>()));
+			put(ws.uu(), v, Vec(sz[v].nu(), inf<Real>()));
 		}		
 
 		put(ws.Q(), 0, Mat {

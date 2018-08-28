@@ -1,7 +1,9 @@
 #pragma once
 
 #include <tmpc/ocp/OcpSize.hpp>
+#include <tmpc/ocp/OcpGraph.hpp>
 #include <tmpc/SizeT.hpp>
+#include <tmpc/core/PropertyMap.hpp>
 
 #include <boost/graph/adjacency_list.hpp>
 
@@ -30,106 +32,124 @@ namespace tmpc
     >;
 
 
-    using OcpVertexDescriptor = boost::graph_traits<OcpSizeGraph>::vertex_descriptor;
-    using OcpEdgeDescriptor = boost::graph_traits<OcpSizeGraph>::edge_descriptor;
-
-
-    inline auto size(OcpSizeGraph const& g)
+	inline auto size(OcpSizeGraph const& g)
     {
         return get(&OcpVertex::size, g);
     }
-
-
-    inline std::pair<size_t, size_t> size_Q(OcpSizeGraph const& g, OcpVertexDescriptor v)
+	
+	
+    /// Property map returning the size of Q matrix for a given vertex.
+    template <typename SizePropertyMap>
+    inline auto size_Q(SizePropertyMap size_map)
     {
-        auto const& sz = get(size(g), v);
-        return std::pair(sz.nx(), sz.nx());
+        return transform_value_property_map(
+            [] (OcpSize const& sz) { return std::pair(sz.nx(), sz.nx()); }, size_map);
     }
 
 
-    inline std::pair<size_t, size_t> size_R(OcpSizeGraph const& g, OcpVertexDescriptor v)
+    /// Property map returning the size of R matrix for a given vertex.
+    template <typename SizePropertyMap>
+    inline auto size_R(SizePropertyMap size_map)
     {
-        auto const& sz = get(size(g), v);
-        return std::pair(sz.nu(), sz.nu());
+        return transform_value_property_map(
+            [] (OcpSize const& sz) { return std::pair(sz.nu(), sz.nu()); }, size_map);
     }
 
 
-    inline std::pair<size_t, size_t> size_S(OcpSizeGraph const& g, OcpVertexDescriptor v)
+    /// Property map returning the size of S matrix for a given vertex.
+    template <typename SizePropertyMap>
+    inline auto size_S(SizePropertyMap size_map)
     {
-        auto const& sz = get(size(g), v);
-        return std::pair(sz.nx(), sz.nu());
+        return transform_value_property_map(
+            [] (OcpSize const& sz) { return std::pair(sz.nx(), sz.nu()); }, size_map);
     }
 
 
-    inline size_t size_q(OcpSizeGraph const& g, OcpVertexDescriptor v)
+    /// Property map returning the size of C matrix for a given vertex.
+    template <typename SizePropertyMap>
+    inline auto size_C(SizePropertyMap size_map)
     {
-        auto const& sz = get(size(g), v);
-        return sz.nx();
+        return transform_value_property_map(
+            [] (OcpSize const& sz) { return std::pair(sz.nc(), sz.nx()); }, size_map);
     }
 
 
-    inline size_t size_r(OcpSizeGraph const& g, OcpVertexDescriptor v)
+    /// Property map returning the size of D matrix for a given vertex.
+    template <typename SizePropertyMap>
+    inline auto size_D(SizePropertyMap size_map)
     {
-        auto const& sz = get(size(g), v);
-        return sz.nu();
+        return transform_value_property_map(
+            [] (OcpSize const& sz) { return std::pair(sz.nc(), sz.nu()); }, size_map);
     }
 
 
-    inline std::pair<size_t, size_t> size_C(OcpSizeGraph const& g, OcpVertexDescriptor v)
+    /// Property map returning the size of ld, ud vectors for a given vertex.
+    template <typename SizePropertyMap>
+    inline auto size_d(SizePropertyMap size_map)
     {
-        auto const& sz = get(size(g), v);
-        return std::pair(sz.nc(), sz.nx());
+        return transform_value_property_map(
+            [] (OcpSize const& sz) { return sz.nc(); }, size_map);
+    }
+	
+	
+	/// Property map returning the size of x, lx, ux, q vectors for a given vertex.
+    template <typename SizePropertyMap>
+    inline auto size_x(SizePropertyMap size_map)
+    {
+        return transform_value_property_map(
+            [] (OcpSize const& sz) { return sz.nx(); }, size_map);
     }
 
 
-    inline std::pair<size_t, size_t> size_D(OcpSizeGraph const& g, OcpVertexDescriptor v)
+    /// Property map returning the size of u, lu, uu, r vectors for a given vertex.
+    template <typename SizePropertyMap>
+    inline auto size_u(SizePropertyMap size_map)
     {
-        auto const& sz = get(size(g), v);
-        return std::pair(sz.nc(), sz.nu());
+        return transform_value_property_map(
+            [] (OcpSize const& sz) { return sz.nu(); }, size_map);
     }
 
 
-    inline size_t size_d(OcpSizeGraph const& g, OcpVertexDescriptor v)
+    /// Property map returning the size of A matrix for a given edge.
+    template <typename SizePropertyMap>
+    inline auto size_A(SizePropertyMap size_map, OcpGraph const& g)
     {
-        auto const& sz = get(size(g), v);
-        return sz.nc();
+        return make_function_property_map<OcpEdgeDescriptor>(
+            [size_map, &g] (OcpEdgeDescriptor e) 
+            { 
+                return std::pair(
+                    get(size_map, target(e, g)).nx(), 
+                    get(size_map, source(e, g)).nx()); 
+            }
+        );
     }
 
 
-    inline size_t size_x(OcpSizeGraph const& g, OcpVertexDescriptor v)
+    /// Property map returning the size of B matrix for a given edge.
+    template <typename SizePropertyMap>
+    inline auto size_B(SizePropertyMap size_map, OcpGraph const& g)
     {
-        auto const& sz = get(size(g), v);
-        return sz.nx();
+        return make_function_property_map<OcpEdgeDescriptor>(
+            [size_map, &g] (OcpEdgeDescriptor e) 
+            { 
+                return std::pair(
+                    get(size_map, target(e, g)).nx(), 
+                    get(size_map, source(e, g)).nu()); 
+            }
+        );
     }
 
 
-    inline size_t size_u(OcpSizeGraph const& g, OcpVertexDescriptor v)
+    /// Property map returning the size of b vector for a given edge.
+    template <typename SizePropertyMap>
+    inline auto size_b(SizePropertyMap size_map, OcpGraph const& g)
     {
-        auto const& sz = get(size(g), v);
-        return sz.nu();
-    }
-
-
-    inline std::pair<size_t, size_t> size_A(OcpSizeGraph const& g, OcpEdgeDescriptor e)
-    {
-        auto const& sz_u = get(size(g), source(e, g));
-        auto const& sz_v = get(size(g), target(e, g));
-        return std::pair(sz_v.nx(), sz_u.nx());
-    }
-
-
-    inline std::pair<size_t, size_t> size_B(OcpSizeGraph const& g, OcpEdgeDescriptor e)
-    {
-        auto const& sz_u = get(size(g), source(e, g));
-        auto const& sz_v = get(size(g), target(e, g));
-        return std::pair(sz_v.nx(), sz_u.nu());
-    }
-
-
-    inline size_t size_b(OcpSizeGraph const& g, OcpEdgeDescriptor e)
-    {
-        auto const& sz_v = get(size(g), target(e, g));
-        return sz_v.nx();
+        return make_function_property_map<OcpEdgeDescriptor>(
+            [size_map, &g] (OcpEdgeDescriptor e) 
+            { 
+                return get(size_map, target(e, g)).nx(); 
+            }
+        );
     }
  
 

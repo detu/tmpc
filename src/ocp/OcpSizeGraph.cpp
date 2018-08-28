@@ -1,5 +1,6 @@
 #include <tmpc/ocp/OcpSizeGraph.hpp>
 
+
 namespace tmpc 
 {
 	OcpSizeGraph ocpSizeGraphNominalMpc(size_t nt, size_t nx, size_t nu, size_t nc, size_t nct)
