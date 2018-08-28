@@ -37,17 +37,12 @@ namespace tmpc :: testing
 
 			typedef StaticMatrix<Kernel, NZ, NZ> StageHessianMatrix;
 
-			//const auto sz = mpcOcpSize(NT, NX, NU, NC, NCT);
-			OcpSizeGraph g(NT + 1);
-
-            g[0].size = OcpSize(NX, NU, NC);
-            g[1].size = OcpSize(NX, NU, NC);
-            g[2].size = OcpSize(NX, 0, NCT);
-            
-            auto const e0 = add_edge(0, 1, 0, g);
-            auto const e1 = add_edge(1, 2, 1, g);
+			//const auto sz = ocpSizeGraphNominalMpc(NT, NX, NU, NC, NCT);
+			OcpSizeGraph const g = ocpSizeGraphNominalMpc(NT, NX, NU, NC, NCT);
 
 			Workspace ws {g};
+			auto const e0 = *out_edges(0, g).first;
+			auto const e1 = *out_edges(1, g).first;
 
 			/*
 			auto qp = ws.problem();
@@ -133,8 +128,8 @@ namespace tmpc :: testing
 			put(ws.Q(), 1, Q1);	put(ws.R(), 1, R1);	put(ws.S(), 1, S1);	put(ws.q(), 1, q1);	put(ws.r(), 1, r1);
 			put(ws.Q(), 2, Q2);	put(ws.q(), 2, q2);
 
-			put(ws.A(), e0.first, A0);	put(ws.B(), e0.first, B0);	put(ws.b(), e0.first, a0);
-			put(ws.A(), e1.first, A1);	put(ws.B(), e1.first, B1);	put(ws.b(), e1.first, a1);
+			put(ws.A(), e0, A0);	put(ws.B(), e0, B0);	put(ws.b(), e0, a0);
+			put(ws.A(), e1, A1);	put(ws.B(), e1, B1);	put(ws.b(), e1, a1);
 
 			return std::move(ws);
 		}

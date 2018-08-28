@@ -133,6 +133,10 @@ namespace tmpc
     }
  
 
+    /// Create a tree-structured OcpSizeGraph from two lists:
+    /// * the first list defined by the out_gedree iterator is the number out-edges of each node, in breadth-first order.
+    /// * the second list defined by the sz iterator is the OcpSize of each node, in breadth-first order.
+    ///
     template <typename InIterOutDegree, typename InIterOcpSize>
     inline OcpSizeGraph ocpSizeGraphFromOutDegreeList(InIterOutDegree out_degree, InIterOcpSize sz)
     {
@@ -175,4 +179,33 @@ namespace tmpc
 
         return g;
     }
+
+
+    /// Create a linear OcpSizeGraph with sized defined by an iterator range [first, last) of OcpSize.
+    ///
+    template <typename InIterOcpSize>
+    inline OcpSizeGraph ocpSizeGraphLinear(InIterOcpSize first, InIterOcpSize last)
+    {
+        // Create the graph.
+        OcpSizeGraph g(std::distance(first, last));
+
+        size_t v = 0;
+        for (; first != last; ++first, ++v)
+        {
+            g[v].size = *first;
+
+            if (v > 0)
+                add_edge(v - 1, v, v - 1 /* edge index */, g);
+        }
+
+        return g;
+    }
+
+
+    /**
+	 * \brief OcpSizeGraph corresponding to a nominal MPC problem with given sizes.
+     * 
+     * \param nt is the number of control intervals. The total number of nodes is nt + 1.
+	 */
+	OcpSizeGraph ocpSizeGraphNominalMpc(size_t nt, size_t nx, size_t nu, size_t nc, size_t nct);
 }
