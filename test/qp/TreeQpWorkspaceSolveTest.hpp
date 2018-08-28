@@ -229,18 +229,15 @@ namespace tmpc :: testing
 		using Real = typename TestFixture::Real;
 
 		size_t const N = 5;
-		OcpSizeGraph g(N);
-
-		g[0].size = OcpSize(2, 2);
-		g[1].size = OcpSize(2, 2);
-		g[2].size = OcpSize(2, 2);
-		g[3].size = OcpSize(1, 0);
-		g[4].size = OcpSize(4, 0);
-		
-		auto const e1 = add_edge(0, 1, 0, g);
-		auto const e2 = add_edge(0, 2, 1, g);
-		auto const e3 = add_edge(1, 3, 2, g);
-		auto const e4 = add_edge(2, 4, 3, g);
+		std::array<size_t, N> const n_kids = {2, 1, 1, 0, 0};
+		std::array<OcpSize, N> const sz = {
+			OcpSize {2, 2},
+			OcpSize {2, 2},
+			OcpSize {2, 2},
+			OcpSize {1, 0},
+			OcpSize {4, 0}
+		};
+		OcpSizeGraph const g = ocpSizeGraphFromOutDegreeList(n_kids.begin(), sz.begin());
 
 		typename TestFixture::Workspace ws {g};
 
@@ -318,50 +315,55 @@ namespace tmpc :: testing
 		put(ws.r(), 1, Vec {8.324233862851839e-01, 5.974901918725793e-01});
 		put(ws.r(), 2, Vec {1.750097373820796e-01, 1.635699097849932e-01});
 
-		put(ws.A(), e1.first, trans(Mat {
+		auto const e1 = *in_edges(1, g).first;
+		auto const e2 = *in_edges(2, g).first;
+		auto const e3 = *in_edges(3, g).first;
+		auto const e4 = *in_edges(4, g).first;
+
+		put(ws.A(), e1, trans(Mat {
 			{1.844336677576532e-01, 2.120308425323207e-01}, 
 			{7.734680811267680e-02, 9.138004107795679e-01}
 		}));
 
-		put(ws.A(), e2.first, trans(Mat {
+		put(ws.A(), e2, trans(Mat {
 			{3.353113307052461e-01, 2.992250233331066e-01}, 
 			{4.525925415693240e-01, 4.226456532204624e-01}
 		}));
 
-		put(ws.A(), e3.first, trans(Mat {
+		put(ws.A(), e3, trans(Mat {
 			{6.659872164111106e-01}, 
 			{8.943893753542428e-01}
 		}));
 
-		put(ws.A(), e4.first, trans(Mat {
+		put(ws.A(), e4, trans(Mat {
 			{3.656301804845286e-02, 8.092038512937934e-01, 7.486188717761971e-01, 1.201870179870806e-01}, 
 			{5.250451647626088e-01, 3.258336287632492e-01, 5.464494399030685e-01, 3.988807523831990e-01}
 		}));
 
-		put(ws.B(), e1.first, trans(Mat {
+		put(ws.B(), e1, trans(Mat {
 			{7.067152176969306e-01, 5.577889667548762e-01}, 
 			{3.134289899365913e-01, 1.662035629021507e-01}
 		}));
 
-		put(ws.B(), e2.first, trans(Mat {
+		put(ws.B(), e2, trans(Mat {
 			{3.596063179722356e-01, 5.583191998692971e-01}, 
 			{7.425453657019391e-01, 4.243347836256907e-01}
 		}));
 
-		put(ws.B(), e3.first, trans(Mat {
+		put(ws.B(), e3, trans(Mat {
 			{5.165582083512704e-01}, 
 			{7.027023069504753e-01}
 		}));
 
-		put(ws.B(), e4.first, trans(Mat {
+		put(ws.B(), e4, trans(Mat {
 			{4.150933866130466e-01, 1.807377602547944e-01, 2.553867404880508e-01, 2.053577465818457e-02}, 
 			{9.236756126204072e-01, 6.536998890082529e-01, 9.326135720485641e-01, 1.635123685275256e-01}
 		}));
 
-		put(ws.b(), e1.first, Vec {6.224972592798952e-01, 9.879347349524954e-01});
-		put(ws.b(), e2.first, Vec {4.293557885762050e-01, 1.248727587198128e-01});
-		put(ws.b(), e3.first, Vec {1.535903766194002e-01});
-		put(ws.b(), e4.first, Vec {9.210972558921975e-01, 7.946578853887531e-01, 5.773941967066487e-01, 4.400355957602536e-01});
+		put(ws.b(), e1, Vec {6.224972592798952e-01, 9.879347349524954e-01});
+		put(ws.b(), e2, Vec {4.293557885762050e-01, 1.248727587198128e-01});
+		put(ws.b(), e3, Vec {1.535903766194002e-01});
+		put(ws.b(), e4, Vec {9.210972558921975e-01, 7.946578853887531e-01, 5.773941967066487e-01, 4.400355957602536e-01});
 
 		ws.solve();
 

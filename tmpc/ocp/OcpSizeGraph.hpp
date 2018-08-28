@@ -24,7 +24,7 @@ namespace tmpc
 
 
     using OcpSizeGraph = boost::adjacency_list<
-        boost::vecS, boost::vecS, boost::directedS, 
+        boost::vecS, boost::vecS, boost::bidirectionalS, 
         OcpVertex,
         boost::property<boost::edge_index_t, size_t>
     >;

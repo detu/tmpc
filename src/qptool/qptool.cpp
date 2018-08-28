@@ -96,7 +96,6 @@ int main(int argc, char ** argv)
     DynamicVector<Kernel> q {11., 12., 13.};
     DynamicVector<Kernel> r {11., 12.};
 
-    solver.setNodeObjective(0, Q, R, S, q, r);
     solver.print();
     solver.solve();
 

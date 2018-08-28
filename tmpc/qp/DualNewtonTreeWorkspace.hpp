@@ -29,6 +29,9 @@ namespace tmpc
     template <typename Kernel_>
     class DualNewtonTreeWorkspace
     {
+        /// Visitor that writes stage sizes and the number of children of each vertex to output iterators.
+        /// It also checks for non-tree edges and throws an std::invalid_argument() if one is found.
+        ///
         template <typename Iterator>
         class RecordOcpSizeVisitor
         :   public boost::default_bfs_visitor 
@@ -229,8 +232,6 @@ namespace tmpc
 
             setup_tree(num_nodes, ns.data(), tree_.data());
 
-            //print_node(tree_.data());
-
             auto const qp_in_size = tree_ocp_qp_in_calculate_size(
                 num_nodes, nx.data(), nu.data(), nc.data(), tree_.data());
 
@@ -261,14 +262,6 @@ namespace tmpc
             auto const treeqp_size = treeqp_tdunes_calculate_size(&qp_in_, &opts_);
             qp_solver_memory_.resize(treeqp_size);
             treeqp_tdunes_create(&qp_in_, &opts_, &work_, qp_solver_memory_.data());
-        }
-
-
-        void setNodeObjective(vertex_descriptor v, 
-            DynamicMatrix<Kernel> & Q, DynamicMatrix<Kernel> & R, DynamicMatrix<Kernel> & S,
-            DynamicVector<Kernel> & q, DynamicVector<Kernel> & r)
-        {
-            tree_ocp_qp_in_set_node_objective_colmajor(Q.data(), R.data(), S.data(), q.data(), r.data(), &qp_in_, v);
         }
 
 
