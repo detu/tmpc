@@ -131,4 +131,46 @@ namespace tmpc
         auto const& sz_v = get(size(g), target(e, g));
         return sz_v.nx();
     }
+ 
+
+    template <typename InIterOutDegree, typename InIterOcpSize>
+    inline OcpSizeGraph ocpSizeGraphFromOutDegreeList(InIterOutDegree out_degree, InIterOcpSize sz)
+    {
+        // Traverse the out-degree list and calculate the total number of vertices.
+        auto od = out_degree;
+        size_t u = 0;
+        size_t v = 1;
+
+        while (u < v)
+        {
+            v += *od;
+            ++u;
+            ++od;
+        }
+
+        size_t const num_v = u;
+
+        // Create the graph.
+        OcpSizeGraph g(num_v);
+
+        // Traverse the out-degree list again, create edges and set node sizes.
+        od = out_degree;
+        u = 0;
+        v = 1;
+
+        while (u < v)
+        {
+            g[u].size = *sz;
+
+            for (size_t k = 0; k < *od; ++k)
+            {
+                add_edge(u, v, v - 1 /* edge index */, g);
+                ++v;
+            }
+
+            ++u;
+            ++od;
+            ++sz;
+        }
+    }
 }

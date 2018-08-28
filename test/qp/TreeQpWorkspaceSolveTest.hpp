@@ -244,14 +244,12 @@ namespace tmpc :: testing
 
 		typename TestFixture::Workspace ws {g};
 
-		double constexpr inf = 1e12;
-
 		for (auto v : boost::make_iterator_range(vertices(g)))
 		{
-			put(ws.lx(), v, Vec(g[v].size.nx(), -inf));
-			put(ws.lu(), v, Vec(g[v].size.nu(), -inf));
-			put(ws.ux(), v, Vec(g[v].size.nx(), inf));
-			put(ws.uu(), v, Vec(g[v].size.nu(), inf));
+			put(ws.lx(), v, Vec(g[v].size.nx(), -inf<Real>()));
+			put(ws.lu(), v, Vec(g[v].size.nu(), -inf<Real>()));
+			put(ws.ux(), v, Vec(g[v].size.nx(), inf<Real>()));
+			put(ws.uu(), v, Vec(g[v].size.nu(), inf<Real>()));
 		}		
 
 		put(ws.Q(), 0, Mat {
