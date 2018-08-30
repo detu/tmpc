@@ -27,38 +27,26 @@ namespace tmpc :: detail
 
         friend void put(VectorPropertyMap const& pm, Key k, Vector const& val)
         {
-            pm.impl_put(k, val);
+            auto const sz = get(pm.sizeMap_, k);
+            if (sz != val.size())
+                throw std::invalid_argument("Invalid vector size");
+
+            pm.setter_(val.data(), get(pm.indexMap_, k));
         }
 
 
         friend decltype(auto) get(VectorPropertyMap const& pm, Key k)
         {
-            return pm.impl_get(k);
-        }
-
-
-    private:
-        void impl_put(Key k, Vector const& val) const
-        {
-            auto const sz = get(sizeMap_, k);
-            if (sz != val.size())
-                throw std::invalid_argument("Invalid vector size");
-
-            setter_(val.data(), get(indexMap_, k));
-        }
-
-
-        auto impl_get(Key k) const
-        {
-            auto const sz = get(sizeMap_, k);
+            auto const sz = get(pm.sizeMap_, k);
 
             Vector val(sz);
-            getter_(val.data(), get(indexMap_, k));
+            pm.getter_(val.data(), get(pm.indexMap_, k));
 
             return val;
         }
 
 
+    private:
         IndexPropertyMap indexMap_;
         SizePropertyMap sizeMap_;
         SetterFunc setter_;

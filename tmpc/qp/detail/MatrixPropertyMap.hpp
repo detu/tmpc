@@ -27,38 +27,26 @@ namespace tmpc :: detail
 
         friend void put(MatrixPropertyMap const& pm, Key k, Matrix const& val)
         {
-            pm.impl_put(k, val);
+            auto const sz = get(pm.sizeMap_, k);
+            if (sz.first != rows(val) || sz.second != columns(val))
+                throw std::invalid_argument("Invalid matrix size");
+
+            pm.setter_(val.data(), spacing(val), get(pm.indexMap_, k));
         }
 
 
         friend decltype(auto) get(MatrixPropertyMap const& pm, Key k)
         {
-            return pm.impl_get(k);
-        }
-
-
-    private:
-        void impl_put(Key k, Matrix const& val) const
-        {
-            auto const sz = get(sizeMap_, k);
-            if (sz.first != rows(val) || sz.second != columns(val))
-                throw std::invalid_argument("Invalid matrix size");
-
-            setter_(val.data(), spacing(val), get(indexMap_, k));
-        }
-
-
-        auto impl_get(Key k) const
-        {
-            auto const sz = get(sizeMap_, k);                
+            auto const sz = get(pm.sizeMap_, k);                
             Matrix m(sz.first, sz.second);
 
-            getter_(m.data(), spacing(m), get(indexMap_, k));
+            pm.getter_(m.data(), spacing(m), get(pm.indexMap_, k));
 
             return m;
         }
 
 
+    private:
         IndexPropertyMap indexMap_;
         SizePropertyMap sizeMap_;
         SetterFunc setter_;
