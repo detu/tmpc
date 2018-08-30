@@ -185,7 +185,11 @@ namespace tmpc
 
             friend Value get(JsonQpPropertyMap const& m, Key const& key)
             {
-                return m.json_.at(get(m.indexMap_, key)).at(m.name_);
+                auto const j_obj = m.json_.at(get(m.indexMap_, key));
+                auto const j_val = j_obj.find(m.name_);
+
+                // Return empty value if the m.name_ key is not present in json object.
+                return j_val != j_obj.end() ? Value(j_val.value()) : Value();
             }
 
 
@@ -234,7 +238,11 @@ namespace tmpc
             size_.resize(N);
             std::transform(j_nodes.begin(), j_nodes.end(), size_.begin(), [] (auto const& j_v)
             {
-                return OcpSize {j_v.at("q").size(), j_v.at("r").size(), j_v.at("ld").size(), j_v.at("zl").size()};
+                return OcpSize {
+                    j_v.count("q") ? j_v["q"].size() : 0, 
+                    j_v.count("r") ? j_v["r"].size() : 0, 
+                    j_v.count("ld") ? j_v["ld"].size() : 0, 
+                    j_v.count("zl") ? j_v["zl"].size() : 0};
             });
         }
 

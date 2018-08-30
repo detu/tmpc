@@ -17,7 +17,7 @@
 #include <tmpc/json/JsonQp.hpp>
 #include <tmpc/core/GraphTools.hpp>
 
-#include <boost/range/adaptor/indexed.hpp>
+#include <boost/graph/graphviz.hpp>
 
 
 using namespace tmpc;
@@ -41,49 +41,11 @@ int main(int argc, char ** argv)
 
     using K = BlazeKernel<double>;
     JsonQp<K> json_qp(j);
+
+    write_graphviz(std::cout, json_qp.graph());
     
     // Create solver workspace.
     DualNewtonTreeSolver solver {json_qp.graph(), json_qp.size()};
-    //HpmpcSolver solver {g};
-
-    // Set problem properties from json.
-    /*
-    for (auto const& j_vertex : j["nodes"] | indexed(0))
-    {
-        auto& qp_vertex = get(solver.problemVertex(), j_vertex.index());
-        from_json(j_vertex.value(), qp_vertex);
-
-        std::cout << qp_vertex.Q() << std::endl;
-    }
-
-    for (auto e : edgesR(solver.graph()))
-    {
-        auto const edge_index = get(solver.edgeIndex(), e);
-        auto& qp_edge = get(solver.problemEdge(), e);
-        from_json(j["edges"][edge_index], qp_edge);
-
-        std::cout << qp_edge.A() << std::endl;
-    }
-    */
-
-    DynamicMatrix<Kernel> Q {
-        {1., 2., 3.}, 
-        {3., 4., 5.},
-        {6., 7., 8.}
-    };
-    
-    DynamicMatrix<Kernel> R {
-        {1., 2.}, {3., 4.}
-    };
-
-    DynamicMatrix<Kernel> S {
-        {1., 2.}, 
-        {3., 4.},
-        {5., 6.}
-    };
-
-    DynamicVector<Kernel> q {11., 12., 13.};
-    DynamicVector<Kernel> r {11., 12.};
 
     solver.print();
     solver.solve();
