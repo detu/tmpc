@@ -3,6 +3,7 @@
 #include <tmpc/Matrix.hpp>
 #include <tmpc/core/PropertyMap.hpp>
 #include <tmpc/core/Graph.hpp>
+#include <tmpc/core/Range.hpp>
 #include <tmpc/qp/detail/MatrixPropertyMap.hpp>
 #include <tmpc/qp/detail/VectorPropertyMap.hpp>
 
@@ -64,20 +65,23 @@ namespace tmpc
         using Real = typename Kernel::Real;
 
 
-        template <typename InIterSize>
-        DualNewtonTreeWorkspace(OcpGraph const& g, InIterSize sz)
+        template <typename SizeMap>
+        DualNewtonTreeWorkspace(OcpGraph const& g, SizeMap sz)
         //DualNewtonTreeWorkspace(OcpGraph const& g, OcpSize const * sz)
         :   graph_{g}
-        ,   size_{sz, sz + num_vertices(g)}
+        ,   size_{num_vertices(g)}
         ,   tree_{num_vertices(g)}
         {
             auto const num_nodes = num_vertices(g);
+            auto const vertex_id = get(vertex_index, g);
 
             // Fill size arrays.
             std::vector<int> nx(num_nodes), nu(num_nodes), nc(num_nodes), ns(num_nodes);
 
-            for (size_t i = 0; i < num_nodes; ++i)
+            for (auto v : make_iterator_range(vertices(g)))
             {
+                auto const i = vertex_id[v];
+                size_[i] = sz[v];
                 nx[i] = size_[i].nx();
                 nu[i] = size_[i].nu();
                 nc[i] = size_[i].nc();
@@ -87,7 +91,7 @@ namespace tmpc
             breadth_first_search(g, vertex(0, g), visitor(OutDegreeVisitor {ns.begin()}));
 
             // Setup the tree.
-            setup_tree(num_nodes, ns.data(), tree_.data());
+            setup_tree(ns.data(), tree_.data());
 
             auto const qp_in_size = tree_ocp_qp_in_calculate_size(
                 num_nodes, nx.data(), nu.data(), nc.data(), tree_.data());
@@ -144,12 +148,6 @@ namespace tmpc
         }
 
 
-        auto vertexIndex() const
-        {
-            return get(boost::vertex_index, graph_);
-        }
-
-
         auto edgeIndex() const
         {
             return make_function_property_map<OcpEdgeDescriptor>(
@@ -163,7 +161,7 @@ namespace tmpc
 
         auto size() const
         {
-            return iterator_property_map(size_.begin(), vertexIndex());
+            return iterator_property_map(size_.begin(), vertexIndex(graph_));
         }
 
 
@@ -171,7 +169,7 @@ namespace tmpc
         {
             // void tree_ocp_qp_in_set_node_Q_colmajor(const double * const Q, const int lda, tree_ocp_qp_in * const qp_in, const int indx)
             // void tree_ocp_qp_in_get_node_Q_colmajor(double * const Q, const int lda, const tree_ocp_qp_in * const qp_in, const int indx)
-            return detail::makeMatrixPropertyMap<OcpVertexDescriptor, DynamicMatrix<Kernel, columnMajor>>(vertexIndex(), size_Q(size()), 
+            return detail::makeMatrixPropertyMap<OcpVertexDescriptor, DynamicMatrix<Kernel, columnMajor>>(vertexIndex(graph_), size_Q(size()), 
                 std::bind(tree_ocp_qp_in_set_node_Q_colmajor, std::placeholders::_1, std::placeholders::_2, &qp_in_, std::placeholders::_3),
                 std::bind(tree_ocp_qp_in_get_node_Q_colmajor, std::placeholders::_1, std::placeholders::_2, &qp_in_, std::placeholders::_3));
         }
@@ -179,7 +177,7 @@ namespace tmpc
 
         auto R()
         {
-            return detail::makeMatrixPropertyMap<OcpVertexDescriptor, DynamicMatrix<Kernel, columnMajor>>(vertexIndex(), size_R(size()), 
+            return detail::makeMatrixPropertyMap<OcpVertexDescriptor, DynamicMatrix<Kernel, columnMajor>>(vertexIndex(graph_), size_R(size()), 
                 std::bind(tree_ocp_qp_in_set_node_R_colmajor, std::placeholders::_1, std::placeholders::_2, &qp_in_, std::placeholders::_3),
                 std::bind(tree_ocp_qp_in_get_node_R_colmajor, std::placeholders::_1, std::placeholders::_2, &qp_in_, std::placeholders::_3));
         }
@@ -189,7 +187,7 @@ namespace tmpc
         {
             // NOTE: treeQP assumes the size of S to be NU-by-NX, tmpc assumes it to be NX-by-NU.
             // Treating a rowMajor matrix as column-major to treeQP actually transposes it.
-            return detail::makeMatrixPropertyMap<OcpVertexDescriptor, DynamicMatrix<Kernel, rowMajor>>(vertexIndex(), size_S(size()), 
+            return detail::makeMatrixPropertyMap<OcpVertexDescriptor, DynamicMatrix<Kernel, rowMajor>>(vertexIndex(graph_), size_S(size()), 
                 std::bind(tree_ocp_qp_in_set_node_S_colmajor, std::placeholders::_1, std::placeholders::_2, &qp_in_, std::placeholders::_3),
                 std::bind(tree_ocp_qp_in_get_node_S_colmajor, std::placeholders::_1, std::placeholders::_2, &qp_in_, std::placeholders::_3));
         }
@@ -199,7 +197,7 @@ namespace tmpc
         {
             // void tree_ocp_qp_in_set_node_q(const double * const q, tree_ocp_qp_in * const qp_in, const int indx)
             // void tree_ocp_qp_in_get_node_q(double * const q, const tree_ocp_qp_in * const qp_in, const int indx)
-            return detail::makeVectorPropertyMap<OcpVertexDescriptor, DynamicVector<Kernel>>(vertexIndex(), size_x(size()), 
+            return detail::makeVectorPropertyMap<OcpVertexDescriptor, DynamicVector<Kernel>>(vertexIndex(graph_), size_x(size()), 
                 std::bind(tree_ocp_qp_in_set_node_q, std::placeholders::_1, &qp_in_, std::placeholders::_2),
                 std::bind(tree_ocp_qp_in_get_node_q, std::placeholders::_1, &qp_in_, std::placeholders::_2));
         }
@@ -207,7 +205,7 @@ namespace tmpc
 
         auto r()
         {
-            return detail::makeVectorPropertyMap<OcpVertexDescriptor, DynamicVector<Kernel>>(vertexIndex(), size_u(size()), 
+            return detail::makeVectorPropertyMap<OcpVertexDescriptor, DynamicVector<Kernel>>(vertexIndex(graph_), size_u(size()), 
                 std::bind(tree_ocp_qp_in_set_node_r, std::placeholders::_1, &qp_in_, std::placeholders::_2),
                 std::bind(tree_ocp_qp_in_get_node_r, std::placeholders::_1, &qp_in_, std::placeholders::_2));
         }
@@ -215,7 +213,7 @@ namespace tmpc
 
         auto C()
         {
-            return detail::makeMatrixPropertyMap<OcpVertexDescriptor, DynamicMatrix<Kernel, columnMajor>>(vertexIndex(), size_C(size()), 
+            return detail::makeMatrixPropertyMap<OcpVertexDescriptor, DynamicMatrix<Kernel, columnMajor>>(vertexIndex(graph_), size_C(size()), 
                 std::bind(tree_ocp_qp_in_set_node_C_colmajor, std::placeholders::_1, std::placeholders::_2, &qp_in_, std::placeholders::_3),
                 std::bind(tree_ocp_qp_in_get_node_C_colmajor, std::placeholders::_1, std::placeholders::_2, &qp_in_, std::placeholders::_3));
         }
@@ -223,7 +221,7 @@ namespace tmpc
 
         auto D()
         {
-            return detail::makeMatrixPropertyMap<OcpVertexDescriptor, DynamicMatrix<Kernel, columnMajor>>(vertexIndex(), size_D(size()), 
+            return detail::makeMatrixPropertyMap<OcpVertexDescriptor, DynamicMatrix<Kernel, columnMajor>>(vertexIndex(graph_), size_D(size()), 
                 std::bind(tree_ocp_qp_in_set_node_D_colmajor, std::placeholders::_1, std::placeholders::_2, &qp_in_, std::placeholders::_3),
                 std::bind(tree_ocp_qp_in_get_node_D_colmajor, std::placeholders::_1, std::placeholders::_2, &qp_in_, std::placeholders::_3));
         }
@@ -231,7 +229,7 @@ namespace tmpc
 
         auto ld()
         {
-            return detail::makeVectorPropertyMap<OcpVertexDescriptor, DynamicVector<Kernel>>(vertexIndex(), size_d(size()), 
+            return detail::makeVectorPropertyMap<OcpVertexDescriptor, DynamicVector<Kernel>>(vertexIndex(graph_), size_d(size()), 
                 std::bind(tree_ocp_qp_in_set_node_dmin, std::placeholders::_1, &qp_in_, std::placeholders::_2),
                 std::bind(tree_ocp_qp_in_get_node_dmin, std::placeholders::_1, &qp_in_, std::placeholders::_2));
         }
@@ -239,7 +237,7 @@ namespace tmpc
 
         auto ud()
         {
-            return detail::makeVectorPropertyMap<OcpVertexDescriptor, DynamicVector<Kernel>>(vertexIndex(), size_d(size()), 
+            return detail::makeVectorPropertyMap<OcpVertexDescriptor, DynamicVector<Kernel>>(vertexIndex(graph_), size_d(size()), 
                 std::bind(tree_ocp_qp_in_set_node_dmax, std::placeholders::_1, &qp_in_, std::placeholders::_2),
                 std::bind(tree_ocp_qp_in_get_node_dmax, std::placeholders::_1, &qp_in_, std::placeholders::_2));
         }
@@ -249,7 +247,7 @@ namespace tmpc
         {
             // void tree_ocp_qp_in_set_node_xmin(const double * const xmin, tree_ocp_qp_in * const qp_in, const int indx);
             // void tree_ocp_qp_in_get_node_xmin(double * const xmin, const tree_ocp_qp_in * const qp_in, const int indx);
-            return detail::makeVectorPropertyMap<OcpVertexDescriptor, DynamicVector<Kernel>>(vertexIndex(), size_x(size()), 
+            return detail::makeVectorPropertyMap<OcpVertexDescriptor, DynamicVector<Kernel>>(vertexIndex(graph_), size_x(size()), 
                 std::bind(tree_ocp_qp_in_set_node_xmin, std::placeholders::_1, &qp_in_, std::placeholders::_2),
                 std::bind(tree_ocp_qp_in_get_node_xmin, std::placeholders::_1, &qp_in_, std::placeholders::_2));
         }
@@ -257,7 +255,7 @@ namespace tmpc
 
         auto ux()
         {
-            return detail::makeVectorPropertyMap<OcpVertexDescriptor, DynamicVector<Kernel>>(vertexIndex(), size_x(size()), 
+            return detail::makeVectorPropertyMap<OcpVertexDescriptor, DynamicVector<Kernel>>(vertexIndex(graph_), size_x(size()), 
                 std::bind(tree_ocp_qp_in_set_node_xmax, std::placeholders::_1, &qp_in_, std::placeholders::_2),
                 std::bind(tree_ocp_qp_in_get_node_xmax, std::placeholders::_1, &qp_in_, std::placeholders::_2));
         }
@@ -265,7 +263,7 @@ namespace tmpc
 
         auto lu()
         {
-            return detail::makeVectorPropertyMap<OcpVertexDescriptor, DynamicVector<Kernel>>(vertexIndex(), size_u(size()), 
+            return detail::makeVectorPropertyMap<OcpVertexDescriptor, DynamicVector<Kernel>>(vertexIndex(graph_), size_u(size()), 
                 std::bind(tree_ocp_qp_in_set_node_umin, std::placeholders::_1, &qp_in_, std::placeholders::_2),
                 std::bind(tree_ocp_qp_in_get_node_umin, std::placeholders::_1, &qp_in_, std::placeholders::_2));
         }
@@ -273,7 +271,7 @@ namespace tmpc
 
         auto uu()
         {
-            return detail::makeVectorPropertyMap<OcpVertexDescriptor, DynamicVector<Kernel>>(vertexIndex(), size_u(size()), 
+            return detail::makeVectorPropertyMap<OcpVertexDescriptor, DynamicVector<Kernel>>(vertexIndex(graph_), size_u(size()), 
                 std::bind(tree_ocp_qp_in_set_node_umax, std::placeholders::_1, &qp_in_, std::placeholders::_2),
                 std::bind(tree_ocp_qp_in_get_node_umax, std::placeholders::_1, &qp_in_, std::placeholders::_2));
         }
@@ -307,7 +305,7 @@ namespace tmpc
 
         auto x()
         {
-            return detail::makeVectorPropertyMap<OcpVertexDescriptor, DynamicVector<Kernel>>(vertexIndex(), size_x(size()), 
+            return detail::makeVectorPropertyMap<OcpVertexDescriptor, DynamicVector<Kernel>>(vertexIndex(graph_), size_x(size()), 
                 std::bind(tree_ocp_qp_out_set_node_x, std::placeholders::_1, &qp_out_, std::placeholders::_2),
                 std::bind(tree_ocp_qp_out_get_node_x, std::placeholders::_1, &qp_out_, std::placeholders::_2));
         }
@@ -315,7 +313,7 @@ namespace tmpc
 
         auto u()
         {
-            return detail::makeVectorPropertyMap<OcpVertexDescriptor, DynamicVector<Kernel>>(vertexIndex(), size_u(size()), 
+            return detail::makeVectorPropertyMap<OcpVertexDescriptor, DynamicVector<Kernel>>(vertexIndex(graph_), size_u(size()), 
                 std::bind(tree_ocp_qp_out_set_node_u, std::placeholders::_1, &qp_out_, std::placeholders::_2),
                 std::bind(tree_ocp_qp_out_get_node_u, std::placeholders::_1, &qp_out_, std::placeholders::_2));
         }

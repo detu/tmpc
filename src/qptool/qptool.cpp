@@ -8,7 +8,7 @@
 
 #include <tmpc/ocp/OcpGraph.hpp>
 #include <tmpc/ocp/OcpSize.hpp>
-#include <tmpc/core/IteratorRange.hpp>
+#include <tmpc/core/Range.hpp>
 //#include <tmpc/qp/HpmpcWorkspace.hpp>
 //#include <tmpc/qp/TreeQpWorkspaceAdaptor.hpp>
 #include <tmpc/qp/DualNewtonTreeWorkspace.hpp>
@@ -39,25 +39,11 @@ int main(int argc, char ** argv)
     else
         std::cin >> j;
 
-    auto const j_nodes = j["nodes"];
-
-    // Build OCP graph from json.
-    size_t const N = j_nodes.size();
-    OcpGraph g(N);
-
-    for (auto j_edge : j["edges"])
-        add_edge(j_edge["from"], j_edge["to"], g);
-
-    // Fill node sizes.
-    std::vector<OcpSize> sz(N);
-    std::transform(j_nodes.begin(), j_nodes.end(), sz.begin(), [] (auto const& j_v)
-    {
-        return OcpSize {j_v["q"].size(), j_v["r"].size(), j_v["ld"].size(), j_v["zl"].size()};
-    });
-
-
+    using K = BlazeKernel<double>;
+    JsonQp<K> json_qp(j);
+    
     // Create solver workspace.
-    DualNewtonTreeSolver solver {g, sz.begin()};
+    DualNewtonTreeSolver solver {json_qp.graph(), json_qp.size()};
     //HpmpcSolver solver {g};
 
     // Set problem properties from json.

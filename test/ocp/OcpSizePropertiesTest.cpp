@@ -1,5 +1,5 @@
 #include <tmpc/ocp/OcpSizeProperties.hpp>
-#include <tmpc/core/IteratorRange.hpp>
+#include <tmpc/core/Range.hpp>
 #include <tmpc/core/PropertyMap.hpp>
 
 #include <tmpc/test_tools.hpp>

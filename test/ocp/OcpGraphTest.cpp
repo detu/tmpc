@@ -1,5 +1,5 @@
 #include <tmpc/ocp/OcpGraph.hpp>
-#include <tmpc/core/IteratorRange.hpp>
+#include <tmpc/core/Range.hpp>
 #include <tmpc/core/PropertyMap.hpp>
 
 #include <tmpc/test_tools.hpp>
@@ -20,6 +20,7 @@ namespace tmpc :: testing
 		std::array<size_t, N> const ns = { 2, 1, 1, 0, 0, };
 
 		OcpGraph const g = ocpGraphFromOutDegree(ns.begin());
+		auto const edge_id = get(edge_index, g);
 	
 		EXPECT_EQ(num_vertices(g), N);
 		EXPECT_EQ(num_edges(g), N - 1);
@@ -34,6 +35,11 @@ namespace tmpc :: testing
 		EXPECT_EQ(adjacent_vertices(0, g).first[1], 2);
 		EXPECT_EQ(adjacent_vertices(1, g).first[0], 3);
 		EXPECT_EQ(adjacent_vertices(2, g).first[0], 4);
+
+		EXPECT_EQ(edge_id[out_edges(0, g).first[0]], 0);
+		EXPECT_EQ(edge_id[out_edges(0, g).first[1]], 1);
+		EXPECT_EQ(edge_id[out_edges(1, g).first[0]], 2);
+		EXPECT_EQ(edge_id[out_edges(2, g).first[0]], 3);
 	}
 
 
@@ -44,6 +50,7 @@ namespace tmpc :: testing
 	{
 		size_t const N = 4;
 		OcpGraph const g = ocpGraphLinear(N);
+		auto const edge_id = get(edge_index, g);
 	
 		EXPECT_EQ(num_vertices(g), N);
 		EXPECT_EQ(num_edges(g), N - 1);
@@ -61,5 +68,9 @@ namespace tmpc :: testing
 		EXPECT_EQ(adjacent_vertices(1, g).first + 1, adjacent_vertices(1, g).second);
 		EXPECT_EQ(adjacent_vertices(2, g).first + 1, adjacent_vertices(2, g).second);
 		EXPECT_EQ(adjacent_vertices(3, g).first, adjacent_vertices(3, g).second);
+
+		EXPECT_EQ(edge_id[*out_edges(0, g).first], 0);
+		EXPECT_EQ(edge_id[*out_edges(1, g).first], 1);
+		EXPECT_EQ(edge_id[*out_edges(2, g).first], 2);
 	}
 }

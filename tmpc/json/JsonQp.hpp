@@ -8,6 +8,8 @@
 #include <tmpc/qp/OcpQp.hpp>
 #include <tmpc/ocp/OcpSizeProperties.hpp>
 #include <tmpc/Matrix.hpp>
+#include <tmpc/core/PropertyMap.hpp>
+#include <tmpc/core/Range.hpp>
 
 #include "Json.hpp"
 
@@ -153,6 +155,57 @@ namespace tmpc
 
             using index_property_t = boost::edge_index_t;
         };
+
+
+        template <
+            typename Key, 
+            typename Value,
+            typename IndexMap
+        >
+        class JsonQpPropertyMap
+        {
+        public:
+            using key_type = Key; 
+            using value_type = Value;
+            using category = read_write_property_map_tag;
+
+            JsonQpPropertyMap(json& j, std::string const& name, IndexMap index_map) 
+            :   json_ {j}
+            ,   name_ {name}
+            ,   indexMap_ {index_map}
+            {
+            }
+
+
+            friend void put(JsonQpPropertyMap const& m, Key const& key, Value const& val)
+            {
+                m.json_.at(get(m.indexMap_, key))[m.name_] = val;
+            }
+
+
+            friend Value get(JsonQpPropertyMap const& m, Key const& key)
+            {
+                return m.json_.at(get(m.indexMap_, key)).at(m.name_);
+            }
+
+
+        private:
+            json& json_;
+            std::string const name_;
+            IndexMap indexMap_;
+        };
+
+
+
+        template <
+            typename Key, 
+            typename Value,
+            typename IndexMap
+        >
+        inline auto makeJsonQpPropertyMap(json& j, std::string const& name, IndexMap index_map)
+        {
+            return JsonQpPropertyMap<Key, Value, IndexMap>(j, name, index_map);
+        }
     }
 
 
@@ -164,14 +217,25 @@ namespace tmpc
         using edge_descriptor = OcpEdgeDescriptor;
 
 
-        JsonQp()
+        JsonQp(tmpc::json j)
+        :   json_(j)
         {
-        }
+            auto const j_nodes = j.at("nodes");
 
+            // Build OCP graph from json.
+            size_t const N = j_nodes.size();
+            graph_ = OcpGraph(N);
 
-        auto& graph()
-        {
-            return graph_;
+            // Add edges, with edge_index attribute equal to the index of an edge in "edges" json array.
+            for (auto j_edge : j.at("edges") | indexed())
+                add_edge(j_edge.value().at("from"), j_edge.value().at("to"), j_edge.index(), graph_);
+
+            // Fill node sizes.
+            size_.resize(N);
+            std::transform(j_nodes.begin(), j_nodes.end(), size_.begin(), [] (auto const& j_v)
+            {
+                return OcpSize {j_v.at("q").size(), j_v.at("r").size(), j_v.at("ld").size(), j_v.at("zl").size()};
+            });
         }
 
 
@@ -181,102 +245,138 @@ namespace tmpc
         }
 
 
-        auto const& json() const
+        auto const& get_json() const
         {
             return json_;
         }
 
 
-        template <typename KeyType, typename ValueType>
-        struct PropertyMap
+        auto size() const
         {
-            using key_type = KeyType; 
-            using value_type = ValueType;
-            using category = boost::read_write_property_map_tag;
-
-            PropertyMap(JsonQp& qp, std::string const& name) 
-            :   qp_{qp}
-            ,   name_{name}
-            {
-            }
-
-
-            JsonQp& qp_;
-            std::string const name_;
-        };
+            return iterator_property_map(size_.begin(), get(vertex_index, graph_));
+        }
 
 
         auto Q()
         {
-            return PropertyMap<vertex_descriptor, DynamicMatrix<Kernel>> {*this, "Q"};
+            return detail::makeJsonQpPropertyMap<OcpVertexDescriptor, DynamicMatrix<Kernel>>(
+                json_.at("nodes"), "Q", get(vertex_index, graph_));
         }
 
 
         auto R()
         {
-            return PropertyMap<vertex_descriptor, DynamicMatrix<Kernel>> {*this, "R"};
+            return detail::makeJsonQpPropertyMap<vertex_descriptor, DynamicMatrix<Kernel>>(
+                json_["nodes"], "R", get(vertex_index, graph_));
         }
 
 
         auto S()
         {
-            return PropertyMap<vertex_descriptor, DynamicMatrix<Kernel>> {*this, "S"};
+            return detail::makeJsonQpPropertyMap<vertex_descriptor, DynamicMatrix<Kernel>>(
+                json_["nodes"], "S", get(vertex_index, graph_));
         }
 
 
         auto q()
         {
-            return PropertyMap<vertex_descriptor, DynamicVector<Kernel>> {*this, "q"};
+            return detail::makeJsonQpPropertyMap<vertex_descriptor, DynamicVector<Kernel>>(
+                json_["nodes"], "q", get(vertex_index, graph_));
         }
 
 
         auto r()
         {
-            return PropertyMap<vertex_descriptor, DynamicVector<Kernel>> {*this, "r"};
+            return detail::makeJsonQpPropertyMap<vertex_descriptor, DynamicVector<Kernel>>(
+                json_["nodes"], "r", get(vertex_index, graph_));
+        }
+
+
+        auto lx()
+        {
+            return detail::makeJsonQpPropertyMap<vertex_descriptor, DynamicVector<Kernel>>(
+                json_["nodes"], "lx", get(vertex_index, graph_));
+        }
+
+
+        auto ux()
+        {
+            return detail::makeJsonQpPropertyMap<vertex_descriptor, DynamicVector<Kernel>>(
+                json_["nodes"], "ux", get(vertex_index, graph_));
+        }
+
+
+        auto lu()
+        {
+            return detail::makeJsonQpPropertyMap<vertex_descriptor, DynamicVector<Kernel>>(
+                json_["nodes"], "lu", get(vertex_index, graph_));
+        }
+
+
+        auto uu()
+        {
+            return detail::makeJsonQpPropertyMap<vertex_descriptor, DynamicVector<Kernel>>(
+                json_["nodes"], "uu", get(vertex_index, graph_));
+        }
+
+
+        auto C()
+        {
+            return detail::makeJsonQpPropertyMap<OcpVertexDescriptor, DynamicMatrix<Kernel>>(
+                json_.at("nodes"), "C", get(vertex_index, graph_));
+        }
+
+
+        auto D()
+        {
+            return detail::makeJsonQpPropertyMap<OcpVertexDescriptor, DynamicMatrix<Kernel>>(
+                json_.at("nodes"), "D", get(vertex_index, graph_));
+        }
+
+
+        auto ld()
+        {
+            return detail::makeJsonQpPropertyMap<vertex_descriptor, DynamicVector<Kernel>>(
+                json_["nodes"], "ld", get(vertex_index, graph_));
+        }
+
+
+        auto ud()
+        {
+            return detail::makeJsonQpPropertyMap<vertex_descriptor, DynamicVector<Kernel>>(
+                json_["nodes"], "ud", get(vertex_index, graph_));
         }
 
 
         auto A()
         {
-            return PropertyMap<edge_descriptor, DynamicMatrix<Kernel>> {*this, "A"};
+            return detail::makeJsonQpPropertyMap<edge_descriptor, DynamicMatrix<Kernel>>(
+                json_["edges"], "A", get(edge_index, graph_));
         }
 
 
         auto B()
         {
-            return PropertyMap<edge_descriptor, DynamicMatrix<Kernel>> {*this, "B"};
+            return detail::makeJsonQpPropertyMap<edge_descriptor, DynamicMatrix<Kernel>>(
+                json_["edges"], "B", get(edge_index, graph_));
         }
 
 
         auto b()
         {
-            return PropertyMap<edge_descriptor, DynamicVector<Kernel>> {*this, "b"};
-        }
-
-
-        template <typename KeyType, typename ValueType>
-        friend void put(PropertyMap<KeyType, ValueType> const& m, KeyType const& key, ValueType const& val)
-        {
-            using traits = detail::DescriptorTraits<KeyType>;
-            auto const top_key = traits::dictionaryKey();
-            auto const index = get(typename traits::index_property_t(), m.qp_.graph_);
-            m.qp_.json_[top_key][get(index, key)][m.name_] = val;
-        }
-
-
-        template <typename KeyType, typename ValueType>
-        friend ValueType get(PropertyMap<KeyType, ValueType> const& m, KeyType const& key)
-        {
-            using traits = detail::DescriptorTraits<KeyType>;
-            auto const top_key = traits::dictionaryKey();
-            auto const index = get(typename traits::index_property_t(), m.qp_.graph_);
-            
-            return m.qp_.json_[top_key][get(index, key)][m.name_];
+            return detail::makeJsonQpPropertyMap<edge_descriptor, DynamicVector<Kernel>>(
+                json_["edges"], "b", get(edge_index, graph_));
         }
 
 
     private:
+        // OCP graph
         OcpGraph graph_;
-        ::tmpc::json json_;
+
+        // OCP node sizes
+        std::vector<OcpSize> size_;
+
+        // OCP JSON
+        tmpc::json json_;
     };
 }

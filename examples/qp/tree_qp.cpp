@@ -7,7 +7,7 @@
 
 #include <tmpc/ocp/OcpGraph.hpp>
 #include <tmpc/ocp/OcpSize.hpp>
-#include <tmpc/core/IteratorRange.hpp>
+#include <tmpc/core/Range.hpp>
 #include <tmpc/core/PropertyMap.hpp>
 
 

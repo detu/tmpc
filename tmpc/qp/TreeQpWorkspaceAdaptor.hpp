@@ -1,7 +1,7 @@
 #pragma once
 
 #include <tmpc/ocp/OcpGraph.hpp>
-#include <tmpc/core/IteratorRange.hpp>
+#include <tmpc/core/Range.hpp>
 
 #include <boost/graph/copy.hpp>
 

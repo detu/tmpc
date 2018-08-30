@@ -7,7 +7,8 @@
 namespace tmpc
 {
     using OcpGraph = boost::adjacency_list<
-        boost::vecS, boost::vecS, boost::bidirectionalS
+        boost::vecS, boost::vecS, boost::bidirectionalS,
+        boost::no_property, boost::property<boost::edge_index_t, size_t>
     >;
 
 
@@ -47,7 +48,7 @@ namespace tmpc
         {
             for (size_t k = 0; k < *od; ++k)
             {
-                add_edge(u, v, g);
+                add_edge(u, v, v - 1 /* edge index */, g);
                 ++v;
             }
 

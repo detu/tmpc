@@ -1,6 +1,6 @@
 #pragma once
 
-#include <tmpc/core/IteratorRange.hpp>
+#include <tmpc/core/Range.hpp>
 
 
 namespace tmpc
