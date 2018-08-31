@@ -32,7 +32,7 @@ namespace tmpc
     inline auto size_S(SizePropertyMap size_map)
     {
         return transform_value_property_map(
-            [] (OcpSize const& sz) { return std::pair(sz.nx(), sz.nu()); }, size_map);
+            [] (OcpSize const& sz) { return std::pair(sz.nu(), sz.nx()); }, size_map);
     }
 
 

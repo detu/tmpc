@@ -78,7 +78,7 @@ namespace tmpc :: testing
 
             put(this->ws_.Q(), v, Q[v] = rand_matrix.generate(sz.nx(), sz.nx()));
             put(this->ws_.R(), v, R[v] = rand_matrix.generate(sz.nu(), sz.nu()));
-            put(this->ws_.S(), v, S[v] = rand_matrix.generate(sz.nx(), sz.nu()));
+            put(this->ws_.S(), v, S[v] = rand_matrix.generate(sz.nu(), sz.nx()));
             put(this->ws_.q(), v, q[v] = rand_vector.generate(sz.nx()));
             put(this->ws_.r(), v, r[v] = rand_vector.generate(sz.nu()));
 
@@ -143,8 +143,8 @@ namespace tmpc :: testing
 
             EXPECT_EQ(rows(get(this->ws_.R(), v)), s.nu());
             EXPECT_EQ(columns(get(this->ws_.R(), v)), s.nu());
-            EXPECT_EQ(rows(get(this->ws_.S(), v)), s.nx());
-            EXPECT_EQ(columns(get(this->ws_.S(), v)), s.nu());
+            EXPECT_EQ(rows(get(this->ws_.S(), v)), s.nu());
+            EXPECT_EQ(columns(get(this->ws_.S(), v)), s.nx());
             EXPECT_EQ(size(get(this->ws_.q(), v)), s.nx());
             EXPECT_EQ(size(get(this->ws_.r(), v)), s.nu());
 

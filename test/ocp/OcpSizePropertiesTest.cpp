@@ -59,7 +59,7 @@ namespace tmpc :: testing
 		auto const map = size_S(sizeMap_);
 	
 		for (auto v : make_iterator_range(vertices(g_)))
-			EXPECT_EQ(get(map, v), std::pair(sz_[v].nx(), sz_[v].nu()));
+			EXPECT_EQ(get(map, v), std::pair(sz_[v].nu(), sz_[v].nx()));
 	}
 
 

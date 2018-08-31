@@ -185,9 +185,8 @@ namespace tmpc
 
         auto S()
         {
-            // NOTE: treeQP assumes the size of S to be NU-by-NX, tmpc assumes it to be NX-by-NU.
-            // Treating a rowMajor matrix as column-major to treeQP actually transposes it.
-            return detail::makeMatrixPropertyMap<OcpVertexDescriptor, DynamicMatrix<Kernel, rowMajor>>(vertexIndex(graph_), size_S(size()), 
+            // NOTE: treeQP assumes the size of S to be NU-by-NX, tmpc now assumes the same!
+            return detail::makeMatrixPropertyMap<OcpVertexDescriptor, DynamicMatrix<Kernel, columnMajor>>(vertexIndex(graph_), size_S(size()), 
                 std::bind(tree_ocp_qp_in_set_node_S_colmajor, std::placeholders::_1, std::placeholders::_2, &qp_in_, std::placeholders::_3),
                 std::bind(tree_ocp_qp_in_get_node_S_colmajor, std::placeholders::_1, std::placeholders::_2, &qp_in_, std::placeholders::_3));
         }
