@@ -28,6 +28,39 @@ using Kernel = BlazeKernel<double>;
 using DualNewtonTreeSolver = DualNewtonTreeWorkspace<Kernel>;
 
 
+template <typename PropMapSrc, typename PropMapDst, typename KeyRange>
+inline void copyProperty(PropMapSrc src, PropMapDst dst, KeyRange keys)
+{
+    for (auto key : keys)
+        put(dst, key, get(src, key));
+}
+
+
+template <typename QpSrc, typename QpDst>
+inline void copyQpProperties(QpSrc src, QpDst dst)
+{
+    auto const vert = make_iterator_range(vertices(src.graph()));
+    copyProperty(src.Q(), dst.Q(), vert);
+    copyProperty(src.R(), dst.R(), vert);
+    copyProperty(src.S(), dst.S(), vert);
+    copyProperty(src.q(), dst.q(), vert);
+    copyProperty(src.r(), dst.r(), vert);
+    copyProperty(src.lx(), dst.lx(), vert);
+    copyProperty(src.ux(), dst.ux(), vert);
+    copyProperty(src.lu(), dst.lu(), vert);
+    copyProperty(src.uu(), dst.uu(), vert);
+    copyProperty(src.C(), dst.C(), vert);
+    copyProperty(src.D(), dst.D(), vert);
+    copyProperty(src.ld(), dst.ld(), vert);
+    copyProperty(src.ud(), dst.ud(), vert);
+    
+    auto const edg = make_iterator_range(edges(src.graph()));
+    copyProperty(src.A(), dst.A(), edg);
+    copyProperty(src.B(), dst.B(), edg);
+    copyProperty(src.b(), dst.b(), edg);
+}
+
+
 int main(int argc, char ** argv)
 {
     using nlohmann::json;
@@ -47,9 +80,34 @@ int main(int argc, char ** argv)
     // Create solver workspace.
     DualNewtonTreeSolver solver {json_qp.graph(), json_qp.size()};
 
+    // Copy QP to the solver workspace.
+    copyQpProperties(json_qp, solver);
+
     solver.print();
+
+    // Solve the QP
     solver.solve();
 
+    // Output the solution to json
+    json j_sol;
+
+    for (auto v : make_iterator_range(vertices(solver.graph())))
+    {
+        auto& node = j_sol["nodes"][v];
+        node["x"] = get(solver.x(), v);
+        node["u"] = get(solver.u(), v);
+
+        json const input_node = j["nodes"][v];
+
+        if (input_node.count("xopt"))
+            node["x_opt"] = input_node["xopt"];
+
+        if (input_node.count("uopt"))
+            node["u_opt"] = input_node["uopt"];
+    }
+
+    // Print json to stdout
+    std::cout << std::setw(4) << j_sol << std::endl;
 
     return EXIT_SUCCESS;
 }

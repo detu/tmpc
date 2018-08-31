@@ -80,4 +80,17 @@ namespace blaze
     {
         return std::pair(rows(m), columns(m));
     }
+
+
+    template< typename VT, bool TF >
+    bool isEmpty( const Vector<VT,TF>& v )
+    {
+        return (~v).size() == 0UL;
+    }
+
+    template< typename MT, bool SO >
+    bool isEmpty( const Matrix<MT,SO>& m )
+    {
+        return (~m).rows() == 0UL && (~m).columns() == 0UL;
+    }
 }

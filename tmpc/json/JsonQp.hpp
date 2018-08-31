@@ -129,47 +129,38 @@ namespace tmpc
 
     namespace detail
     {
-        template <typename Descriptor>
-        struct DescriptorTraits;
-
-        
-        template <>
-        struct DescriptorTraits<OcpVertexDescriptor>
-        {
-            static char const * dictionaryKey()
-            {
-                return "nodes";
-            }
-
-            using index_property_t = boost::vertex_index_t;
-        };
-
-
-        template <>
-        struct DescriptorTraits<OcpEdgeDescriptor>
-        {
-            static char const * dictionaryKey()
-            {
-                return "edges";
-            }
-
-            using index_property_t = boost::edge_index_t;
-        };
-
-
         template <typename Matrix>
-        void resizeIfEmpty(Matrix& val, std::pair<size_t, size_t> expected_dim)
+        inline void reshapeIfNeeded(Matrix& val, std::pair<size_t, size_t> expected_dim)
         {
+            // If both val and expected_dim are empty, resize val to match expected_dim.
             // There is no function to check for empty matrix, see https://bitbucket.org/blaze-lib/blaze/issues/198/add-isempty-function
             if ((rows(val) == 0 || columns(val) == 0) && (expected_dim.first == 0 || expected_dim.second == 0))
                 val.resize(expected_dim.first, expected_dim.second);
+
+            // If val is Nx1 and expected_dim is 1xN, transpose val to match expected_dim.
+            if (columns(val) == 1 && expected_dim.first == 1 && expected_dim.second == rows(val))
+                transpose(val);
         }
 
 
         template <typename Vector>
-        void resizeIfEmpty(Vector& val, size_t expected_dim)
+        inline void reshapeIfNeeded(Vector& val, size_t expected_dim)
         {
             // do nothing
+        }
+
+
+        template <typename Vector>
+        inline void resize(Vector& val, size_t n)
+        {
+            val.resize(n);
+        }
+
+
+        template <typename Matrix>
+        inline void resize(Matrix& val, std::pair<size_t, size_t> sz)
+        {
+            val.resize(sz.first, sz.second);
         }
 
 
@@ -212,11 +203,28 @@ namespace tmpc
 
                 Value val;
 
-                // Return empty value if the m.name_ key is not present in json object.
                 if (j_val != j_obj.end())
+                {
                     from_json(j_val.value(), val);
+                }
+                else
+                {
+                    // If one of lx, lu, ux, uu is not present, return +-inf of appropriate size.
+                    if (m.name_ == "lx" || m.name_ == "lu")
+                    {
+                        resize(val, expected_dim);
+                        val = -inf<Scalar>();
+                    }
+                    else if (m.name_ == "ux" || m.name_ == "uu")
+                    {
+                        resize(val, expected_dim);
+                        val = inf<Scalar>();
+                    }
 
-                resizeIfEmpty(val, expected_dim);
+                    // Return empty value if the m.name_ key is not present in json object.
+                }
+
+                reshapeIfNeeded(val, expected_dim);
 
                 if (dimensions(val) != expected_dim)
                     throw std::invalid_argument("Invalid matrix/vector dimensions detected while trying to get JsonQp property \"" + m.name_ + "\"");
@@ -226,6 +234,8 @@ namespace tmpc
 
 
         private:
+            using Scalar = typename Value::ElementType;
+
             json& json_;
             std::string const name_;
             IndexMap indexMap_;
