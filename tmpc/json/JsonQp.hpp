@@ -157,10 +157,27 @@ namespace tmpc
         };
 
 
+        template <typename Matrix>
+        void resizeIfEmpty(Matrix& val, std::pair<size_t, size_t> expected_dim)
+        {
+            // There is no function to check for empty matrix, see https://bitbucket.org/blaze-lib/blaze/issues/198/add-isempty-function
+            if ((rows(val) == 0 || columns(val) == 0) && (expected_dim.first == 0 || expected_dim.second == 0))
+                val.resize(expected_dim.first, expected_dim.second);
+        }
+
+
+        template <typename Vector>
+        void resizeIfEmpty(Vector& val, size_t expected_dim)
+        {
+            // do nothing
+        }
+
+
         template <
             typename Key, 
             typename Value,
-            typename IndexMap
+            typename IndexMap,
+            typename SizeMap
         >
         class JsonQpPropertyMap
         {
@@ -169,16 +186,20 @@ namespace tmpc
             using value_type = Value;
             using category = read_write_property_map_tag;
 
-            JsonQpPropertyMap(json& j, std::string const& name, IndexMap index_map) 
+            JsonQpPropertyMap(json& j, std::string const& name, IndexMap index_map, SizeMap size_map) 
             :   json_ {j}
             ,   name_ {name}
             ,   indexMap_ {index_map}
+            ,   sizeMap_ {size_map}
             {
             }
 
 
             friend void put(JsonQpPropertyMap const& m, Key const& key, Value const& val)
             {
+                if (dimensions(val) != get(m.sizeMap_, key))
+                    throw std::invalid_argument("Invalid matrix/vector dimensions detected while trying to set JsonQp property \"" + m.name_ + "\"");
+
                 m.json_.at(get(m.indexMap_, key))[m.name_] = val;
             }
 
@@ -187,9 +208,20 @@ namespace tmpc
             {
                 auto const j_obj = m.json_.at(get(m.indexMap_, key));
                 auto const j_val = j_obj.find(m.name_);
+                auto const expected_dim = get(m.sizeMap_, key);
+
+                Value val;
 
                 // Return empty value if the m.name_ key is not present in json object.
-                return j_val != j_obj.end() ? Value(j_val.value()) : Value();
+                if (j_val != j_obj.end())
+                    from_json(j_val.value(), val);
+
+                resizeIfEmpty(val, expected_dim);
+
+                if (dimensions(val) != expected_dim)
+                    throw std::invalid_argument("Invalid matrix/vector dimensions detected while trying to get JsonQp property \"" + m.name_ + "\"");
+
+                return val;
             }
 
 
@@ -197,6 +229,7 @@ namespace tmpc
             json& json_;
             std::string const name_;
             IndexMap indexMap_;
+            SizeMap sizeMap_;
         };
 
 
@@ -204,11 +237,12 @@ namespace tmpc
         template <
             typename Key, 
             typename Value,
-            typename IndexMap
+            typename IndexMap,
+            typename SizeMap
         >
-        inline auto makeJsonQpPropertyMap(json& j, std::string const& name, IndexMap index_map)
+        inline auto makeJsonQpPropertyMap(json& j, std::string const& name, IndexMap index_map, SizeMap size_map)
         {
-            return JsonQpPropertyMap<Key, Value, IndexMap>(j, name, index_map);
+            return JsonQpPropertyMap<Key, Value, IndexMap, SizeMap>(j, name, index_map, size_map);
         }
     }
 
@@ -268,112 +302,112 @@ namespace tmpc
         auto Q()
         {
             return detail::makeJsonQpPropertyMap<OcpVertexDescriptor, DynamicMatrix<Kernel>>(
-                json_.at("nodes"), "Q", get(vertex_index, graph_));
+                json_.at("nodes"), "Q", get(vertex_index, graph_), size_Q(size()));
         }
 
 
         auto R()
         {
             return detail::makeJsonQpPropertyMap<vertex_descriptor, DynamicMatrix<Kernel>>(
-                json_["nodes"], "R", get(vertex_index, graph_));
+                json_["nodes"], "R", get(vertex_index, graph_), size_R(size()));
         }
 
 
         auto S()
         {
             return detail::makeJsonQpPropertyMap<vertex_descriptor, DynamicMatrix<Kernel>>(
-                json_["nodes"], "S", get(vertex_index, graph_));
+                json_["nodes"], "S", get(vertex_index, graph_), size_S(size()));
         }
 
 
         auto q()
         {
             return detail::makeJsonQpPropertyMap<vertex_descriptor, DynamicVector<Kernel>>(
-                json_["nodes"], "q", get(vertex_index, graph_));
+                json_["nodes"], "q", get(vertex_index, graph_), size_x(size()));
         }
 
 
         auto r()
         {
             return detail::makeJsonQpPropertyMap<vertex_descriptor, DynamicVector<Kernel>>(
-                json_["nodes"], "r", get(vertex_index, graph_));
+                json_["nodes"], "r", get(vertex_index, graph_), size_u(size()));
         }
 
 
         auto lx()
         {
             return detail::makeJsonQpPropertyMap<vertex_descriptor, DynamicVector<Kernel>>(
-                json_["nodes"], "lx", get(vertex_index, graph_));
+                json_["nodes"], "lx", get(vertex_index, graph_), size_x(size()));
         }
 
 
         auto ux()
         {
             return detail::makeJsonQpPropertyMap<vertex_descriptor, DynamicVector<Kernel>>(
-                json_["nodes"], "ux", get(vertex_index, graph_));
+                json_["nodes"], "ux", get(vertex_index, graph_), size_x(size()));
         }
 
 
         auto lu()
         {
             return detail::makeJsonQpPropertyMap<vertex_descriptor, DynamicVector<Kernel>>(
-                json_["nodes"], "lu", get(vertex_index, graph_));
+                json_["nodes"], "lu", get(vertex_index, graph_), size_u(size()));
         }
 
 
         auto uu()
         {
             return detail::makeJsonQpPropertyMap<vertex_descriptor, DynamicVector<Kernel>>(
-                json_["nodes"], "uu", get(vertex_index, graph_));
+                json_["nodes"], "uu", get(vertex_index, graph_), size_u(size()));
         }
 
 
         auto C()
         {
             return detail::makeJsonQpPropertyMap<OcpVertexDescriptor, DynamicMatrix<Kernel>>(
-                json_.at("nodes"), "C", get(vertex_index, graph_));
+                json_.at("nodes"), "C", get(vertex_index, graph_), size_C(size()));
         }
 
 
         auto D()
         {
             return detail::makeJsonQpPropertyMap<OcpVertexDescriptor, DynamicMatrix<Kernel>>(
-                json_.at("nodes"), "D", get(vertex_index, graph_));
+                json_.at("nodes"), "D", get(vertex_index, graph_), size_D(size()));
         }
 
 
         auto ld()
         {
             return detail::makeJsonQpPropertyMap<vertex_descriptor, DynamicVector<Kernel>>(
-                json_["nodes"], "ld", get(vertex_index, graph_));
+                json_["nodes"], "ld", get(vertex_index, graph_), size_d(size()));
         }
 
 
         auto ud()
         {
             return detail::makeJsonQpPropertyMap<vertex_descriptor, DynamicVector<Kernel>>(
-                json_["nodes"], "ud", get(vertex_index, graph_));
+                json_["nodes"], "ud", get(vertex_index, graph_), size_d(size()));
         }
 
 
         auto A()
         {
             return detail::makeJsonQpPropertyMap<edge_descriptor, DynamicMatrix<Kernel>>(
-                json_["edges"], "A", get(edge_index, graph_));
+                json_["edges"], "A", get(edge_index, graph_), size_A(size(), graph_));
         }
 
 
         auto B()
         {
             return detail::makeJsonQpPropertyMap<edge_descriptor, DynamicMatrix<Kernel>>(
-                json_["edges"], "B", get(edge_index, graph_));
+                json_["edges"], "B", get(edge_index, graph_), size_B(size(), graph_));
         }
 
 
         auto b()
         {
             return detail::makeJsonQpPropertyMap<edge_descriptor, DynamicVector<Kernel>>(
-                json_["edges"], "b", get(edge_index, graph_));
+                json_["edges"], "b", get(edge_index, graph_), size_b(size(), graph_));
         }
 
 

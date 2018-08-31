@@ -45,4 +45,11 @@ namespace Eigen
     {
         return m.outerStride();
     }
+
+
+    template <typename MT>
+    inline std::pair<size_t, size_t> dimensions(MatrixBase<MT> const& m)
+    {
+        return std::pair(m.rows(), m.columns());
+    }
 }

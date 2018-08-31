@@ -26,7 +26,8 @@ namespace tmpc
     }
 
 
-    /// Property map returning the size of S matrix for a given vertex.
+    /// @brief Property map returning the size of S matrix for a given vertex.
+    ///
     template <typename SizePropertyMap>
     inline auto size_S(SizePropertyMap size_map)
     {

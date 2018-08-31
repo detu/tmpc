@@ -10,6 +10,17 @@
 
 namespace tmpc :: testing
 {
+    namespace
+    {
+        template <typename MT, bool SO>
+        auto resize(blaze::Matrix<MT, SO>&& m, std::pair<size_t, size_t> dims)
+        {
+            (~m).resize(dims.first, dims.second, true);
+            return ~m;
+        }
+    }
+
+
     TEST(JsonQpTest, test_ocpQpToFromJson)
     {
         using Kernel = BlazeKernel<double>;
@@ -168,7 +179,7 @@ namespace tmpc :: testing
         {
             EXPECT_EQ(get(json_qp.Q(), v), Mat(j["nodes"][v]["Q"]));
             EXPECT_EQ(get(json_qp.R(), v), Mat(j["nodes"][v]["R"]));
-            EXPECT_EQ(get(json_qp.S(), v), Mat(j["nodes"][v]["S"]));
+            EXPECT_EQ(get(json_qp.S(), v), resize(Mat(j["nodes"][v]["S"]), get(size_S(json_qp.size()), v)));
             EXPECT_EQ(get(json_qp.q(), v), Vec(j["nodes"][v]["q"]));
             EXPECT_EQ(get(json_qp.r(), v), Vec(j["nodes"][v]["r"]));
 
@@ -177,8 +188,8 @@ namespace tmpc :: testing
             EXPECT_EQ(get(json_qp.lu(), v), Vec(j["nodes"][v]["lu"]));
             EXPECT_EQ(get(json_qp.uu(), v), Vec(j["nodes"][v]["uu"]));
 
-            EXPECT_EQ(get(json_qp.C(), v), Mat(j["nodes"][v]["C"]));
-            EXPECT_EQ(get(json_qp.D(), v), Mat(j["nodes"][v]["D"]));
+            EXPECT_EQ(get(json_qp.C(), v), resize(Mat(j["nodes"][v]["C"]), get(size_C(json_qp.size()), v)));
+            EXPECT_EQ(get(json_qp.D(), v), resize(Mat(j["nodes"][v]["D"]), get(size_D(json_qp.size()), v)));
             EXPECT_EQ(get(json_qp.ld(), v), Vec(j["nodes"][v]["ld"]));
             EXPECT_EQ(get(json_qp.ud(), v), Vec(j["nodes"][v]["ud"]));
         }

@@ -42,4 +42,11 @@ namespace Eigen
     {
         return v.size();
     }
+
+
+    template <typename VT>
+    inline std::enable_if_t<::tmpc::eigen_adaptor::IsEigenMatrix<VT>::value, size_t> dimensions(VT const& v)
+    {
+        return v.size();
+    }
 }
