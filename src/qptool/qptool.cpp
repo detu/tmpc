@@ -15,7 +15,6 @@
 #include <tmpc/BlazeKernel.hpp>
 #include <tmpc/json/JsonBlaze.hpp>
 #include <tmpc/json/JsonQp.hpp>
-#include <tmpc/core/GraphTools.hpp>
 
 #include <boost/graph/graphviz.hpp>
 

@@ -5,7 +5,6 @@
 #pragma once
 
 #include <tmpc/ocp/OcpGraph.hpp>
-#include <tmpc/core/GraphTools.hpp>
 #include <tmpc/Matrix.hpp>
 
 #include <tmpc/test_tools.hpp>
@@ -72,7 +71,7 @@ namespace tmpc :: testing
         Rand<typename TestFixture::Kernel, typename TestFixture::Matrix> rand_matrix;
         Rand<typename TestFixture::Kernel, typename TestFixture::Vector> rand_vector;
 
-        for (auto v : verticesR(this->ws_.graph()))
+        for (auto v : vertices(this->ws_.graph()))
         {
             auto const& sz = get(this->ws_.size(), v);
 
@@ -90,7 +89,7 @@ namespace tmpc :: testing
             put(this->ws_.ud(), v, d_max[v] = rand_vector.generate(sz.nc()));
         }
 
-        for (auto e : edgesR(this->ws_.graph()))
+        for (auto e : edges(this->ws_.graph()))
         {
             auto const from = source(e, this->ws_.graph());
             auto const to = target(e, this->ws_.graph());
@@ -103,7 +102,7 @@ namespace tmpc :: testing
         }
 
         // Reading the data and checking that they are the same that we wrote
-        for (auto v : verticesR(this->ws_.graph()))
+        for (auto v : vertices(this->ws_.graph()))
         {
             EXPECT_EQ(print_wrap(get(this->ws_.Q(), v)), print_wrap(Q[v])) << "at v=" << v;
             
@@ -120,7 +119,7 @@ namespace tmpc :: testing
             EXPECT_EQ(print_wrap(get(this->ws_.ud(), v)), print_wrap(d_max[v])) << "at v=" << v;
         }
 
-        for (auto e : edgesR(this->ws_.graph()))
+        for (auto e : edges(this->ws_.graph()))
         {
             EXPECT_EQ(print_wrap(get(this->ws_.A(), e)), print_wrap(A[e])) << "at e=" << e;
             EXPECT_EQ(print_wrap(get(this->ws_.B(), e)), print_wrap(B[e])) << "at e=" << e;
@@ -133,7 +132,7 @@ namespace tmpc :: testing
     {
         auto const& ws = this->ws_;
 
-        for (auto v : verticesR(ws.graph()))
+        for (auto v : vertices(ws.graph()))
         {
             auto const& s = get(ws.size(), v);
             EXPECT_EQ(s, this->size_[v]);
@@ -156,7 +155,7 @@ namespace tmpc :: testing
             EXPECT_EQ(size(get(this->ws_.ud(), v)), s.nc());
         }
 
-        for (auto e : edgesR(ws.graph()))
+        for (auto e : edges(ws.graph()))
         {
             auto const from = source(e, ws.graph());
             auto const to = target(e, ws.graph());

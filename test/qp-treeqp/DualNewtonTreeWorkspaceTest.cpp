@@ -11,7 +11,6 @@
 */
 
 #include <tmpc/ocp/OcpGraph.hpp>
-#include <tmpc/core/GraphTools.hpp>
 #include <tmpc/Matrix.hpp>
 
 #include <tmpc/test_tools.hpp>

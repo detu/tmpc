@@ -43,8 +43,8 @@ namespace tmpc :: testing
 			auto const sz = mpcOcpSize(NT, NX, NU, NC, NCT);
 
 			Workspace ws {g, sz.begin()};
-			auto const e0 = *out_edges(0, g).first;
-			auto const e1 = *out_edges(1, g).first;
+			auto const e0 = out_edges(0, g).front();
+			auto const e1 = out_edges(1, g).front();
 
 			/*
 			auto qp = ws.problem();
@@ -312,10 +312,10 @@ namespace tmpc :: testing
 		put(ws.r(), 1, Vec {8.324233862851839e-01, 5.974901918725793e-01});
 		put(ws.r(), 2, Vec {1.750097373820796e-01, 1.635699097849932e-01});
 
-		auto const e1 = *in_edges(1, g).first;
-		auto const e2 = *in_edges(2, g).first;
-		auto const e3 = *in_edges(3, g).first;
-		auto const e4 = *in_edges(4, g).first;
+		auto const e1 = in_edges(1, g).front();
+		auto const e2 = in_edges(2, g).front();
+		auto const e3 = in_edges(3, g).front();
+		auto const e4 = in_edges(4, g).front();
 
 		put(ws.A(), e1, trans(Mat {
 			{1.844336677576532e-01, 2.120308425323207e-01}, 

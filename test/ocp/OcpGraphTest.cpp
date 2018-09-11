@@ -31,15 +31,15 @@ namespace tmpc :: testing
 		EXPECT_EQ(out_degree(3, g), 0);
 		EXPECT_EQ(out_degree(4, g), 0);
 
-		EXPECT_EQ(adjacent_vertices(0, g).first[0], 1);
-		EXPECT_EQ(adjacent_vertices(0, g).first[1], 2);
-		EXPECT_EQ(adjacent_vertices(1, g).first[0], 3);
-		EXPECT_EQ(adjacent_vertices(2, g).first[0], 4);
+		EXPECT_EQ(adjacent_vertices(0, g)[0], 1);
+		EXPECT_EQ(adjacent_vertices(0, g)[1], 2);
+		EXPECT_EQ(adjacent_vertices(1, g)[0], 3);
+		EXPECT_EQ(adjacent_vertices(2, g)[0], 4);
 
-		EXPECT_EQ(edge_id[out_edges(0, g).first[0]], 0);
-		EXPECT_EQ(edge_id[out_edges(0, g).first[1]], 1);
-		EXPECT_EQ(edge_id[out_edges(1, g).first[0]], 2);
-		EXPECT_EQ(edge_id[out_edges(2, g).first[0]], 3);
+		EXPECT_EQ(edge_id[out_edges(0, g)[0]], 0);
+		EXPECT_EQ(edge_id[out_edges(0, g)[1]], 1);
+		EXPECT_EQ(edge_id[out_edges(1, g)[0]], 2);
+		EXPECT_EQ(edge_id[out_edges(2, g)[0]], 3);
 	}
 
 
@@ -60,17 +60,17 @@ namespace tmpc :: testing
 		EXPECT_EQ(out_degree(2, g), 1);
 		EXPECT_EQ(out_degree(3, g), 0);
 
-		EXPECT_EQ(*adjacent_vertices(0, g).first, 1);
-		EXPECT_EQ(*adjacent_vertices(1, g).first, 2);
-		EXPECT_EQ(*adjacent_vertices(2, g).first, 3);
+		EXPECT_EQ(adjacent_vertices(0, g).front(), 1);
+		EXPECT_EQ(adjacent_vertices(1, g).front(), 2);
+		EXPECT_EQ(adjacent_vertices(2, g).front(), 3);
 
-		EXPECT_EQ(adjacent_vertices(0, g).first + 1, adjacent_vertices(0, g).second);
-		EXPECT_EQ(adjacent_vertices(1, g).first + 1, adjacent_vertices(1, g).second);
-		EXPECT_EQ(adjacent_vertices(2, g).first + 1, adjacent_vertices(2, g).second);
-		EXPECT_EQ(adjacent_vertices(3, g).first, adjacent_vertices(3, g).second);
+		EXPECT_EQ(adjacent_vertices(0, g).begin() + 1, adjacent_vertices(0, g).end());
+		EXPECT_EQ(adjacent_vertices(1, g).begin() + 1, adjacent_vertices(1, g).end());
+		EXPECT_EQ(adjacent_vertices(2, g).begin() + 1, adjacent_vertices(2, g).end());
+		EXPECT_EQ(adjacent_vertices(3, g).begin(), adjacent_vertices(3, g).end());
 
-		EXPECT_EQ(edge_id[*out_edges(0, g).first], 0);
-		EXPECT_EQ(edge_id[*out_edges(1, g).first], 1);
-		EXPECT_EQ(edge_id[*out_edges(2, g).first], 2);
+		EXPECT_EQ(edge_id[out_edges(0, g).front()], 0);
+		EXPECT_EQ(edge_id[out_edges(1, g).front()], 1);
+		EXPECT_EQ(edge_id[out_edges(2, g).front()], 2);
 	}
 }

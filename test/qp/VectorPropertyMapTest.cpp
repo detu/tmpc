@@ -1,6 +1,5 @@
 #include <tmpc/qp/detail/VectorPropertyMap.hpp>
 #include <tmpc/ocp/OcpSizeProperties.hpp>
-#include <tmpc/core/GraphTools.hpp>
 #include <tmpc/core/PropertyMap.hpp>
 
 #include <blaze/Blaze.h>
