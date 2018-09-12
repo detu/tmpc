@@ -107,8 +107,7 @@ if (TMPC_WITH_JSON)
     add_subdirectory(json)
 endif ()
 
-#GTEST_ADD_TESTS(test-tmpc "" AUTO)
-add_test(NAME test-tmpc COMMAND test-tmpc)
+gtest_discover_tests(test-tmpc)
 
 
 if (TMPC_WITH_qpOASES)

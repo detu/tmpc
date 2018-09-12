@@ -12,5 +12,4 @@ target_link_libraries(test-tmpc-qp-treeqp
     GTest::Main
 )
 
-#GTEST_ADD_TESTS(tmpc_test_qp "" AUTO)
-add_test(NAME test-tmpc-qp-treeqp COMMAND test-tmpc-qp-treeqp)
+gtest_discover_tests(test-tmpc-qp-treeqp)
