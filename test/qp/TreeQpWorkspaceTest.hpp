@@ -104,26 +104,26 @@ namespace tmpc :: testing
         // Reading the data and checking that they are the same that we wrote
         for (auto v : vertices(this->ws_.graph()))
         {
-            EXPECT_EQ(print_wrap(get(this->ws_.Q(), v)), print_wrap(Q[v])) << "at v=" << v;
+            EXPECT_EQ(forcePrint(get(this->ws_.Q(), v)), forcePrint(Q[v])) << "at v=" << v;
             
-            EXPECT_EQ(print_wrap(get(this->ws_.R(), v)), print_wrap(R[v])) << "at v=" << v;
-            EXPECT_EQ(print_wrap(get(this->ws_.S(), v)), print_wrap(S[v])) << "at v=" << v;
-            EXPECT_EQ(print_wrap(get(this->ws_.q(), v)), print_wrap(q[v])) << "at v=" << v;
-            EXPECT_EQ(print_wrap(get(this->ws_.r(), v)), print_wrap(r[v])) << "at v=" << v;
+            EXPECT_EQ(forcePrint(get(this->ws_.R(), v)), forcePrint(R[v])) << "at v=" << v;
+            EXPECT_EQ(forcePrint(get(this->ws_.S(), v)), forcePrint(S[v])) << "at v=" << v;
+            EXPECT_EQ(forcePrint(get(this->ws_.q(), v)), forcePrint(q[v])) << "at v=" << v;
+            EXPECT_EQ(forcePrint(get(this->ws_.r(), v)), forcePrint(r[v])) << "at v=" << v;
 
-            EXPECT_EQ(print_wrap(get(this->ws_.lx(), v)), print_wrap(x_min[v])) << "at v=" << v;
-            EXPECT_EQ(print_wrap(get(this->ws_.ux(), v)), print_wrap(x_max[v])) << "at v=" << v;
-            EXPECT_EQ(print_wrap(get(this->ws_.lu(), v)), print_wrap(u_min[v])) << "at v=" << v;
-            EXPECT_EQ(print_wrap(get(this->ws_.uu(), v)), print_wrap(u_max[v])) << "at v=" << v;
-            EXPECT_EQ(print_wrap(get(this->ws_.ld(), v)), print_wrap(d_min[v])) << "at v=" << v;
-            EXPECT_EQ(print_wrap(get(this->ws_.ud(), v)), print_wrap(d_max[v])) << "at v=" << v;
+            EXPECT_EQ(forcePrint(get(this->ws_.lx(), v)), forcePrint(x_min[v])) << "at v=" << v;
+            EXPECT_EQ(forcePrint(get(this->ws_.ux(), v)), forcePrint(x_max[v])) << "at v=" << v;
+            EXPECT_EQ(forcePrint(get(this->ws_.lu(), v)), forcePrint(u_min[v])) << "at v=" << v;
+            EXPECT_EQ(forcePrint(get(this->ws_.uu(), v)), forcePrint(u_max[v])) << "at v=" << v;
+            EXPECT_EQ(forcePrint(get(this->ws_.ld(), v)), forcePrint(d_min[v])) << "at v=" << v;
+            EXPECT_EQ(forcePrint(get(this->ws_.ud(), v)), forcePrint(d_max[v])) << "at v=" << v;
         }
 
         for (auto e : edges(this->ws_.graph()))
         {
-            EXPECT_EQ(print_wrap(get(this->ws_.A(), e)), print_wrap(A[e])) << "at e=" << e;
-            EXPECT_EQ(print_wrap(get(this->ws_.B(), e)), print_wrap(B[e])) << "at e=" << e;
-            EXPECT_EQ(print_wrap(get(this->ws_.b(), e)), print_wrap(b[e])) << "at e=" << e;
+            EXPECT_EQ(forcePrint(get(this->ws_.A(), e)), forcePrint(A[e])) << "at e=" << e;
+            EXPECT_EQ(forcePrint(get(this->ws_.B(), e)), forcePrint(B[e])) << "at e=" << e;
+            EXPECT_EQ(forcePrint(get(this->ws_.b(), e)), forcePrint(b[e])) << "at e=" << e;
         }
     }
 

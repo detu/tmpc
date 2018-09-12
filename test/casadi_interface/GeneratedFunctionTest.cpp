@@ -182,8 +182,8 @@ namespace tmpc :: testing
 		// Check if the results are the same.
 		for (size_t i = 0; i < N; ++i)
 		{
-			EXPECT_EQ(print_wrap(X[i]), print_wrap(X_ref[i])) << "at i=" << i;
-			EXPECT_EQ(print_wrap(Y[i]), print_wrap(Y_ref[i])) << "at i=" << i;
+			EXPECT_EQ(forcePrint(X[i]), forcePrint(X_ref[i])) << "at i=" << i;
+			EXPECT_EQ(forcePrint(Y[i]), forcePrint(Y_ref[i])) << "at i=" << i;
 		}
 	}
 
@@ -210,7 +210,7 @@ namespace tmpc :: testing
 
 		fun_({A, B, x}, {X, Y});
 
-		EXPECT_EQ(print_wrap(X), print_wrap((A * x) * B));
+		EXPECT_EQ(forcePrint(X), forcePrint((A * x) * B));
 		EXPECT_EQ(Y, (StaticVector<Kernel, 3, rowVector> {1., 1., 1.} * (A * B)));
 	}
 	*/

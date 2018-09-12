@@ -272,9 +272,9 @@ TEST_F(rk4_test, integrate_correct)
 		integrate(integrator_, ode_, p.t, p.x0, p.u, xplus, A, B);
 
 		/*
-		EXPECT_EQ(print_wrap(xplus), print_wrap(p.xplus));
-		EXPECT_EQ(print_wrap(A), print_wrap(p.A));
-		EXPECT_EQ(print_wrap(B), print_wrap(p.B));
+		EXPECT_EQ(forcePrint(xplus), forcePrint(p.xplus));
+		EXPECT_EQ(forcePrint(A), forcePrint(p.A));
+		EXPECT_EQ(forcePrint(B), forcePrint(p.B));
 		*/
 
 		MatrixApproxEquality const is_approx(1e-10);

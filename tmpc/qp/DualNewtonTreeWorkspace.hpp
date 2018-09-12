@@ -126,6 +126,12 @@ namespace tmpc
         }
 
 
+        void maxIter(size_t max_iter)
+        {
+            opts_.maxIter = max_iter;
+        }
+        
+
         void solve()
         {
             auto const ret = treeqp_tdunes_solve(&qp_in_, &qp_out_, &opts_, &work_);

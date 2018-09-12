@@ -54,12 +54,12 @@ namespace tmpc :: testing
                 dst[i] = index + i * 0.1;
         };
 
-        auto map = detail::makeVectorPropertyMap<OcpVertexDescriptor, Vector>(index_map, size_x(size_map), setter, getter);
+        auto map = tmpc::detail::makeVectorPropertyMap<OcpVertexDescriptor, Vector>(index_map, size_x(size_map), setter, getter);
         
         expected_index = 0;
-        EXPECT_EQ(print_wrap(get(map, 0)), (Vector {0.0, 0.1}));
+        EXPECT_EQ(forcePrint(get(map, 0)), (Vector {0.0, 0.1}));
 
         expected_index = 1;
-        EXPECT_EQ(print_wrap(get(map, 1)), (Vector {1.0, 1.1, 1.2, 1.3, 1.4}));
+        EXPECT_EQ(forcePrint(get(map, 1)), (Vector {1.0, 1.1, 1.2, 1.3, 1.4}));
     }
 }

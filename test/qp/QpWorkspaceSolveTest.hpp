@@ -445,7 +445,7 @@ namespace tmpc :: testing
 
 		workspace.solve();
 	
-		EXPECT_EQ(print_wrap(workspace.solution()[0].x()), print_wrap(DynamicVector<Kernel> {-1., -2., -42.}));
+		EXPECT_EQ(forcePrint(workspace.solution()[0].x()), forcePrint(DynamicVector<Kernel> {-1., -2., -42.}));
 	}
 
 	REGISTER_TYPED_TEST_CASE_P(QpWorkspaceSolveTest,
