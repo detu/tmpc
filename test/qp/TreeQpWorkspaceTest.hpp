@@ -6,8 +6,9 @@
 
 #include <tmpc/ocp/OcpGraph.hpp>
 #include <tmpc/Matrix.hpp>
-
+#include <tmpc/core/PropertyMap.hpp>
 #include <tmpc/test_tools.hpp>
+
 #include <gtest/gtest.h>
 
 #include <iostream>
@@ -42,7 +43,7 @@ namespace tmpc :: testing
             OcpSize {8, 7, 3}
         };
 
-        Workspace ws_ {graph_, size_.data()};
+        Workspace ws_ {graph_, iterator_property_map(size_.begin(), vertexIndex(graph_))};
     };
 
 

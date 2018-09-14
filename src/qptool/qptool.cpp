@@ -9,6 +9,7 @@
 #include <tmpc/ocp/OcpGraph.hpp>
 #include <tmpc/ocp/OcpSize.hpp>
 #include <tmpc/core/Range.hpp>
+#include <tmpc/core/PropertyMap.hpp>
 //#include <tmpc/qp/HpmpcWorkspace.hpp>
 //#include <tmpc/qp/TreeQpWorkspaceAdaptor.hpp>
 #include <tmpc/qp/DualNewtonTreeWorkspace.hpp>
@@ -25,14 +26,6 @@ using namespace tmpc;
 using Kernel = BlazeKernel<double>;
 //using HpmpcSolver = TreeQpWorkspaceAdaptor<HpmpcWorkspace<Kernel>>;
 using DualNewtonTreeSolver = DualNewtonTreeWorkspace<Kernel>;
-
-
-template <typename PropMapSrc, typename PropMapDst, typename KeyRange>
-inline void copyProperty(PropMapSrc src, PropMapDst dst, KeyRange keys)
-{
-    for (auto key : keys)
-        put(dst, key, get(src, key));
-}
 
 
 template <typename QpSrc, typename QpDst>

@@ -2,6 +2,7 @@
 
 namespace tmpc 
 {
+	// TODO: make obsolete
 	std::vector<OcpSize> mpcOcpSize(size_t nt, size_t nx, size_t nu, size_t nc, size_t nct)
 	{
 		std::vector<OcpSize> sz;
@@ -13,6 +14,8 @@ namespace tmpc
 		return sz;
 	}
 
+
+	// TODO: make obsolete
 	std::vector<OcpSize> mpcOcpSize(std::size_t nt, OcpSize const& first, OcpSize const& middle, OcpSize const& last)
 	{
 		std::vector<OcpSize> sz;		

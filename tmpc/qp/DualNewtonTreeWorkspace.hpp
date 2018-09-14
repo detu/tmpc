@@ -74,19 +74,21 @@ namespace tmpc
             auto const num_nodes = num_vertices(g);
             auto const vertex_id = get(vertex_index, g);
 
+            // Fill the own size_ array
+            copyProperty(sz, iterator_property_map(size_.begin(), vertex_id), vertices(g));
+
             // Fill size arrays.
             std::vector<int> nx(num_nodes), nu(num_nodes), nc(num_nodes), nk(num_nodes);
 
             for (auto v : vertices(g))
             {
                 auto const i = vertex_id[v];
-                size_[i] = sz[v];
                 nx[i] = size_[i].nx();
                 nu[i] = size_[i].nu();
                 nc[i] = size_[i].nc();
             }
             
-            // Fill the number of kids (out-degree) vector.
+            // Fill the number of kids vector with out-degrees of the nodes.
             breadth_first_search(g, vertex(0, g), visitor(OutDegreeVisitor {nk.begin()}));
 
             // Setup the tree.

@@ -3,7 +3,7 @@
 #include <tmpc/Matrix.hpp>
 #include <tmpc/Math.hpp>
 #include <tmpc/ocp/OcpGraph.hpp>
-#include <tmpc/mpc/MpcOcpSize.hpp>
+#include <tmpc/ocp/OcpSizeProperties.hpp>
 
 #include <tmpc/test_tools.hpp>
 
@@ -40,9 +40,7 @@ namespace tmpc :: testing
 
 			//const auto sz = ocpSizeGraphNominalMpc(NT, NX, NU, NC, NCT);
 			OcpGraph const g = ocpGraphLinear(NT + 1);
-			auto const sz = mpcOcpSize(NT, NX, NU, NC, NCT);
-
-			Workspace ws {g, sz.begin()};
+			Workspace ws {g, ocpSizeNominalMpc(NT, NX, NU, NC, 0, NCT)};
 			auto const e0 = out_edges(0, g).front();
 			auto const e1 = out_edges(1, g).front();
 
