@@ -77,7 +77,7 @@ namespace tmpc
             // Fill size arrays.
             std::vector<int> nx(num_nodes), nu(num_nodes), nc(num_nodes), nk(num_nodes);
 
-            for (auto v : make_iterator_range(vertices(g)))
+            for (auto v : vertices(g))
             {
                 auto const i = vertex_id[v];
                 size_[i] = sz[v];
