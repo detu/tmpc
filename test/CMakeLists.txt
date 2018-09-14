@@ -62,28 +62,32 @@ add_custom_command(
 )
 
 # ~~~~~~~~~~ Our tests ~~~~~~~~~~~~~~
-add_executable(tmpc_test
+add_executable(test-tmpc
     #rk4_test.cpp
     #mhe_test.cpp
+    ocp/SensitivityTupleTest.cpp
+    ocp/CondensedOcpSizeTest.cpp
+    ocp/OcpGraphTest.cpp
+    ocp/OcpSizePropertiesTest.cpp
 
     ${CMAKE_CURRENT_BINARY_DIR}/pendulum_ode_generated.h
     ${CMAKE_CURRENT_BINARY_DIR}/pendulum_ode_generated.c
 )
 
-target_compile_definitions(tmpc_test
+target_compile_definitions(test-tmpc
     PRIVATE TEST_DATA_PATH="${TEST_DATA_PATH}")
 
 #if (TMPC_WITH_QPOASES)
-#    target_sources(tmpc_test
+#    target_sources(test-tmpc
 #        PRIVATE RealtimeIterationTest.cpp
 #    )
 #endif()
 
-target_include_directories(tmpc_test
+target_include_directories(test-tmpc
     PRIVATE "${CMAKE_CURRENT_BINARY_DIR}"
 )
 
-target_link_libraries(tmpc_test PRIVATE
+target_link_libraries(test-tmpc PRIVATE
     tmpc
     GTest::GTest
     GTest::Main
@@ -92,7 +96,6 @@ target_link_libraries(tmpc_test PRIVATE
 )
 
 add_subdirectory(matrix)
-add_subdirectory(ocp)
 add_subdirectory(qp)
 add_subdirectory(integrator)
 
@@ -104,8 +107,7 @@ if (TMPC_WITH_JSON)
     add_subdirectory(json)
 endif ()
 
-#GTEST_ADD_TESTS(tmpc_test "" AUTO)
-add_test(NAME tmpc_test COMMAND tmpc_test)
+gtest_discover_tests(test-tmpc)
 
 
 if (TMPC_WITH_qpOASES)

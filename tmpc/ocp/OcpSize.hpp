@@ -28,7 +28,7 @@ namespace tmpc
 		{
 		}
 
-		OcpSize(size_t const nx, size_t const nu, size_t const nc, size_t ns = 0)
+		OcpSize(size_t const nx, size_t const nu, size_t const nc = 0, size_t ns = 0)
 		:	nx_ {nx}
 		,	nu_ {nu}
 		,	nc_ {nc}

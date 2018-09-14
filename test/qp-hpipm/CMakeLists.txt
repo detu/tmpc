@@ -12,5 +12,4 @@ target_link_libraries(test-tmpc-qp-hpipm
     GTest::Main
 )
 
-#GTEST_ADD_TESTS(tmpc_test_qp "" AUTO)
-add_test(NAME test-tmpc-qp-hpipm COMMAND test-tmpc-qp-hpipm)
+gtest_discover_tests(test-tmpc-qp-hpipm)

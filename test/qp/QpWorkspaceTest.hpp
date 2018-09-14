@@ -95,22 +95,22 @@ namespace tmpc :: testing
         {
             auto const& stage = this->ws_.problem()[i];
 
-            EXPECT_EQ(print_wrap(stage.Q()), print_wrap(Q[i])) << "at i=" << i;
-            EXPECT_EQ(print_wrap(stage.R()), print_wrap(R[i])) << "at i=" << i;
-            EXPECT_EQ(print_wrap(stage.S()), print_wrap(S[i]));
-            EXPECT_EQ(print_wrap(stage.q()), print_wrap(q[i]));
-            EXPECT_EQ(print_wrap(stage.r()), print_wrap(r[i]));
+            EXPECT_EQ(forcePrint(stage.Q()), forcePrint(Q[i])) << "at i=" << i;
+            EXPECT_EQ(forcePrint(stage.R()), forcePrint(R[i])) << "at i=" << i;
+            EXPECT_EQ(forcePrint(stage.S()), forcePrint(S[i]));
+            EXPECT_EQ(forcePrint(stage.q()), forcePrint(q[i]));
+            EXPECT_EQ(forcePrint(stage.r()), forcePrint(r[i]));
 
-            EXPECT_EQ(print_wrap(stage.A()), print_wrap(A[i]));
-            EXPECT_EQ(print_wrap(stage.B()), print_wrap(B[i]));
-            EXPECT_EQ(print_wrap(stage.b()), print_wrap(b[i]));
+            EXPECT_EQ(forcePrint(stage.A()), forcePrint(A[i]));
+            EXPECT_EQ(forcePrint(stage.B()), forcePrint(B[i]));
+            EXPECT_EQ(forcePrint(stage.b()), forcePrint(b[i]));
 
-            EXPECT_EQ(print_wrap(stage.lbx()), print_wrap(x_min[i]));
-            EXPECT_EQ(print_wrap(stage.ubx()), print_wrap(x_max[i]));
-            EXPECT_EQ(print_wrap(stage.lbu()), print_wrap(u_min[i]));
-            EXPECT_EQ(print_wrap(stage.ubu()), print_wrap(u_max[i]));
-            EXPECT_EQ(print_wrap(stage.lbd()), print_wrap(d_min[i]));
-            EXPECT_EQ(print_wrap(stage.ubd()), print_wrap(d_max[i]));
+            EXPECT_EQ(forcePrint(stage.lbx()), forcePrint(x_min[i]));
+            EXPECT_EQ(forcePrint(stage.ubx()), forcePrint(x_max[i]));
+            EXPECT_EQ(forcePrint(stage.lbu()), forcePrint(u_min[i]));
+            EXPECT_EQ(forcePrint(stage.ubu()), forcePrint(u_max[i]));
+            EXPECT_EQ(forcePrint(stage.lbd()), forcePrint(d_min[i]));
+            EXPECT_EQ(forcePrint(stage.ubd()), forcePrint(d_max[i]));
         }
     }
 

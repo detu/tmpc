@@ -12,5 +12,4 @@ target_link_libraries(test-tmpc-qp-qpoases
     GTest::Main
 )
 
-#GTEST_ADD_TESTS(tmpc_test_qp "" AUTO)
-add_test(NAME test-tmpc-qp-qpoases COMMAND test-tmpc-qp-qpoases)
+gtest_discover_tests(test-tmpc-qp-qpoases)

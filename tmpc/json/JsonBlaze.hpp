@@ -33,44 +33,54 @@ namespace blaze
 
 
     template <typename MT, bool SO>
-    void from_json(tmpc::json const& j, Matrix<MT, SO>& v)
+    void from_json(tmpc::json const& j, Matrix<MT, SO>& m)
     {
         using Scalar = typename MT::ElementType;
 
-        size_t const M = j.size();
-        size_t const N = M > 0 ? j[0].size() : 0;
-
-        (~v).resize(M, N);
-        
-        for (size_t ii = 0; ii < M; ++ii)
+        if (j.is_number())
         {
-            if (j[ii].size() != N)
-                throw std::invalid_argument("Non-equal number of columns in json matrix");
+            // Interpret number as a 1x1 matrix
+            (~m).resize(1, 1);
+            (~m)(0, 0) = j;
+        }
+        else
+        {
+            size_t const M = j.size();
+            size_t const N = M > 0 ? j[0].size() : 0;
 
-            for (size_t jj = 0; jj < N; ++jj)
+            (~m).resize(M, N);
+            
+            for (size_t ii = 0; ii < M; ++ii)
             {
-                auto const val = j[ii][jj];
-                auto numeric_val = std::numeric_limits<Scalar>::signaling_NaN();
+                if (j[ii].size() != N)
+                    throw std::invalid_argument("Non-equal number of columns in json matrix");
 
-                if (val.is_string())
+                size_t jj = 0;
+                for (auto val : j[ii])
                 {
-                    static auto constexpr inf = std::numeric_limits<Scalar>::infinity();
+                    auto numeric_val = std::numeric_limits<Scalar>::signaling_NaN();
 
-                    if (val == "-inf")
-                        numeric_val = -inf;
-                    else if (val == "inf")
-                        numeric_val = inf;
-                    else
+                    if (val.is_string())
                     {
-                        std::ostringstream msg;
-                        msg << "Invalid floating point value in json file: a number, a \"inf\" or a \"-inf\" was expected, but \"" << val << "\" found.";
-                        throw std::invalid_argument(msg.str());
-                    }
-                }
-                else
-                    numeric_val = val;
+                        static auto constexpr inf = std::numeric_limits<Scalar>::infinity();
 
-                (~v)(ii, jj) = numeric_val;
+                        if (val == "-inf")
+                            numeric_val = -inf;
+                        else if (val == "inf")
+                            numeric_val = inf;
+                        else
+                        {
+                            std::ostringstream msg;
+                            msg << "Invalid floating point value in json file: a number, a \"inf\" or a \"-inf\" was expected, but \"" << val << "\" found.";
+                            throw std::invalid_argument(msg.str());
+                        }
+                    }
+                    else
+                        numeric_val = val;
+
+                    (~m)(ii, jj) = numeric_val;
+                    ++jj;
+                }
             }
         }
     }
@@ -80,6 +90,15 @@ namespace blaze
     void from_json(tmpc::json const& j, Vector<VT, SO>& v) 
     {
         using Scalar = typename VT::ElementType;
+
+        /*
+        if (j.is_number())
+        {
+            // Interpret numbers as 1-dimensional vectors
+            (~v).resize(1);
+            (~v)[0] = j;
+        }
+        */
 
         (~v).resize(j.size());
         std::transform(j.begin(), j.end(), (~v).begin(), [] (tmpc::json const& val) -> Scalar

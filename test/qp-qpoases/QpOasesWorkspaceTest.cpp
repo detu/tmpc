@@ -146,13 +146,13 @@ namespace tmpc :: testing
 
 		ASSERT_EQ(ia, rows(A_expected));
 
-		EXPECT_EQ(print_wrap(ws.H()), print_wrap(H_expected));
-		EXPECT_EQ(print_wrap(ws.g()), print_wrap(g_expected));
-		EXPECT_EQ(print_wrap(ws.lb()), print_wrap(lb_expected));
-		EXPECT_EQ(print_wrap(ws.ub()), print_wrap(ub_expected));
-		EXPECT_EQ(print_wrap(ws.A()), print_wrap(A_expected));
-		EXPECT_EQ(print_wrap(ws.lbA()), print_wrap(lbA_expected));
-		EXPECT_EQ(print_wrap(ws.ubA()), print_wrap(ubA_expected));
+		EXPECT_EQ(forcePrint(ws.H()), forcePrint(H_expected));
+		EXPECT_EQ(forcePrint(ws.g()), forcePrint(g_expected));
+		EXPECT_EQ(forcePrint(ws.lb()), forcePrint(lb_expected));
+		EXPECT_EQ(forcePrint(ws.ub()), forcePrint(ub_expected));
+		EXPECT_EQ(forcePrint(ws.A()), forcePrint(A_expected));
+		EXPECT_EQ(forcePrint(ws.lbA()), forcePrint(lbA_expected));
+		EXPECT_EQ(forcePrint(ws.ubA()), forcePrint(ubA_expected));
 	}
 
 	INSTANTIATE_TYPED_TEST_CASE_P(QpOases_Eigen_double, QpWorkspaceTest, QpOasesWorkspace<EigenKernel<double>>);

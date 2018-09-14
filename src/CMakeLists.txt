@@ -15,6 +15,8 @@ set (SRC
 	${TMPC_INCLUDE_DIR}/qp/diagnostics.hpp
 	${TMPC_INCLUDE_DIR}/qp/QpSolverException.hpp
 
+    ocp/OcpGraph.cpp
+
     mpc/MpcOcpSize.cpp
 
     print/Exception.cpp
