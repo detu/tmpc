@@ -39,9 +39,6 @@ namespace tmpc
         template <typename T>
         using Rand = eigen_adaptor::Rand<T>;
     };
-
-    template <typename T>
-    using KernelOf = std::enable_if_t<std::is_base_of<Eigen::EigenBase<T>, T>::value, EigenKernel<typename T::Scalar>>;
 }
 
 

@@ -9,11 +9,6 @@
 
 namespace tmpc
 {
-    /*
-    template <typename T>
-    struct KernelOf;
-    */
-    
     template <typename Kernel, size_t N, TransposeFlag TF = defaultTransposeFlag>
     using StaticVector = typename Kernel::template StaticVector<N, TF>;
 

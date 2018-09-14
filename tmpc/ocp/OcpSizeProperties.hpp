@@ -125,13 +125,14 @@ namespace tmpc
 
 
 	/// @brief Property map returning OCP size of nominal MPC graph nodes.
-	inline auto ocpSizeNominalMpc(size_t num_intervals, size_t nx, size_t nu, size_t nc = 0, size_t ns = 0, size_t nct = 0)
+	inline auto ocpSizeNominalMpc(size_t num_intervals, size_t nx, size_t nu, size_t nc = 0, size_t ns = 0, size_t nct = 0, 
+        bool first_state_empty = true)
 	{
 		return make_function_property_map<OcpVertexDescriptor>(
-            [num_intervals, nx, nu, nc, ns, nct] (OcpVertexDescriptor v)
+            [num_intervals, nx, nu, nc, ns, nct, first_state_empty] (OcpVertexDescriptor v)
             {
                 if (v == 0)
-                    return OcpSize(0, nu, nc, ns);
+                    return OcpSize(first_state_empty ? 0 : nx, nu, nc, ns);
                 if (v < num_intervals)
                     return OcpSize(nx, nu, nc, ns);
                 if (v == num_intervals)

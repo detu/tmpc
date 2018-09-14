@@ -4,15 +4,15 @@
 #include <tmpc/Math.hpp>
 #include <tmpc/ocp/OcpGraph.hpp>
 #include <tmpc/ocp/OcpSizeProperties.hpp>
+#include <tmpc/Traits.hpp>
 
 #include <tmpc/test_tools.hpp>
 
 #include <gtest/gtest.h>
 
-#include <boost/range/iterator_range.hpp>
-
 #include <iostream>
 #include <fstream>
+
 
 namespace tmpc :: testing
 {
@@ -22,8 +22,8 @@ namespace tmpc :: testing
 	{
 	protected:
 		using Workspace = WS;
-		using Kernel = typename WS::Kernel;
-		using Real = typename Workspace::Real;
+		using Kernel = typename KernelOf<WS>::type;
+		using Real = typename RealOf<WS>::type;
 		using Vector = DynamicVector<Kernel>;
 		using Matrix = DynamicMatrix<Kernel>;
 
@@ -38,9 +38,8 @@ namespace tmpc :: testing
 
 			typedef StaticMatrix<Kernel, NZ, NZ> StageHessianMatrix;
 
-			//const auto sz = ocpSizeGraphNominalMpc(NT, NX, NU, NC, NCT);
 			OcpGraph const g = ocpGraphLinear(NT + 1);
-			Workspace ws {g, ocpSizeNominalMpc(NT, NX, NU, NC, 0, NCT)};
+			Workspace ws {g, ocpSizeNominalMpc(NT, NX, NU, NC, 0, NCT, false)};
 			auto const e0 = out_edges(0, g).front();
 			auto const e1 = out_edges(1, g).front();
 
@@ -76,8 +75,8 @@ namespace tmpc :: testing
 
 			const DynamicMatrix<Kernel> Q0 = submatrix(H0, 0, 0, NX, NX);
 			const DynamicMatrix<Kernel> R0 = submatrix(H0, NX, NX, NU, NU);
-			const DynamicMatrix<Kernel> S0 = submatrix(H0, 0, NX, NX, NU);
-			const DynamicMatrix<Kernel> S0T = submatrix(H0, NX, 0, NU, NX);
+			const DynamicMatrix<Kernel> S0T = submatrix(H0, 0, NX, NX, NU);
+			const DynamicMatrix<Kernel> S0 = submatrix(H0, NX, 0, NU, NX);
 
 			DynamicMatrix<Kernel> const A0 {{1., 1.}, {0., 1.}};
 			DynamicMatrix<Kernel> const B0 {{0.5}, {1.0}};
@@ -95,8 +94,8 @@ namespace tmpc :: testing
 
 			const DynamicMatrix<Kernel> Q1 = submatrix(H1, 0, 0, NX, NX);
 			const DynamicMatrix<Kernel> R1 = submatrix(H1, NX, NX, NU, NU);
-			const DynamicMatrix<Kernel> S1 = submatrix(H1, 0, NX, NX, NU);
-			const DynamicMatrix<Kernel> S1T = submatrix(H1, NX, 0, NU, NX);
+			const DynamicMatrix<Kernel> S1T = submatrix(H1, 0, NX, NX, NU);
+			const DynamicMatrix<Kernel> S1 = submatrix(H1, NX, 0, NU, NX);
 
 			DynamicMatrix<Kernel> const A1 {{1., 1.}, {0., 1.}};
 			DynamicMatrix<Kernel> const B1 {{0.5}, {1.0}};
@@ -124,12 +123,28 @@ namespace tmpc :: testing
 			qp[1].B(B1);		
 			qp[1].b(a1);
 			*/
-			put(ws.Q(), 0, Q0);	put(ws.R(), 0, R0);	put(ws.S(), 0, S0);	put(ws.q(), 0, q0);	put(ws.r(), 0, r0);
-			put(ws.Q(), 1, Q1);	put(ws.R(), 1, R1);	put(ws.S(), 1, S1);	put(ws.q(), 1, q1);	put(ws.r(), 1, r1);
-			put(ws.Q(), 2, Q2);	put(ws.q(), 2, q2);
+			put(ws.Q(), 0, Q0);	
+			put(ws.R(), 0, R0);	
+			put(ws.S(), 0, S0);	
+			put(ws.q(), 0, q0);	
+			put(ws.r(), 0, r0);
 
-			put(ws.A(), e0, A0);	put(ws.B(), e0, B0);	put(ws.b(), e0, a0);
-			put(ws.A(), e1, A1);	put(ws.B(), e1, B1);	put(ws.b(), e1, a1);
+			put(ws.Q(), 1, Q1);	
+			put(ws.R(), 1, R1);	
+			put(ws.S(), 1, S1);	
+			put(ws.q(), 1, q1);	
+			put(ws.r(), 1, r1);
+
+			put(ws.Q(), 2, Q2);	
+			put(ws.q(), 2, q2);
+
+			put(ws.A(), e0, A0);	
+			put(ws.B(), e0, B0);	
+			put(ws.b(), e0, a0);
+
+			put(ws.A(), e1, A1);	
+			put(ws.B(), e1, B1);	
+			put(ws.b(), e1, a1);
 
 			return std::move(ws);
 		}

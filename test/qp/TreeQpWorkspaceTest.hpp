@@ -7,6 +7,7 @@
 #include <tmpc/ocp/OcpGraph.hpp>
 #include <tmpc/Matrix.hpp>
 #include <tmpc/core/PropertyMap.hpp>
+#include <tmpc/Traits.hpp>
 #include <tmpc/test_tools.hpp>
 
 #include <gtest/gtest.h>
@@ -24,8 +25,8 @@ namespace tmpc :: testing
         using Workspace = WS;
 
     protected:
-        using Kernel = typename Workspace::Kernel;
-        using Real = typename Workspace::Real;
+        using Kernel = typename KernelOf<Workspace>::type;
+        using Real = typename RealOf<Workspace>::type;
         using Vector = DynamicVector<Kernel>;
         using Matrix = DynamicMatrix<Kernel>;
 

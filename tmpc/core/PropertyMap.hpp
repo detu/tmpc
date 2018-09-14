@@ -10,9 +10,13 @@ namespace tmpc
     using boost::iterator_property_map;
     using boost::function_property_map;
     using boost::associative_property_map;
+    using boost::const_associative_property_map;
     
     using boost::make_function_property_map;
     using boost::transform_value_property_map;
+    using boost::read_write_property_map_tag;
+
+    using boost::property_traits;
     using boost::read_write_property_map_tag;
 
 

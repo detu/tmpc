@@ -45,11 +45,6 @@ namespace tmpc
         template <typename T>
         using Rand = blaze::Rand<T>;
     };
-
-    /*
-    template <typename T>
-    using KernelOf = std::enable_if_t<std::is_base_of<blaze::Matrix<T>, T>, BlazeKernel<T::ElementType>>;
-    */
 }
 
 namespace blaze
@@ -79,6 +74,20 @@ namespace blaze
     inline auto dimensions(Matrix<M, SO> const& m)
     {
         return std::pair(rows(m), columns(m));
+    }
+
+
+    template <typename V, bool TF>
+    inline auto shape(Vector<V, TF> const& v)
+    {
+        return std::pair<size_t, bool>(size(v), TF);
+    }
+
+
+    template <typename M, bool SO>
+    inline auto shape(Matrix<M, SO> const& m)
+    {
+        return std::pair<size_t, size_t>(rows(m), columns(m));
     }
 
 
