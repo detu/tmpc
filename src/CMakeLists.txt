@@ -89,7 +89,13 @@ endif()
 # Link to nlohmann_json
 #
 if (TMPC_WITH_JSON)
-    target_link_libraries(tmpc
+    # Find Nlohmann json library
+    find_package(nlohmann_json REQUIRED)
+
+    add_library(tmpc-json)
+
+    target_link_libraries(tmpc-json
+        PUBLIC tmpc
         PUBLIC nlohmann_json
     )
 endif ()
