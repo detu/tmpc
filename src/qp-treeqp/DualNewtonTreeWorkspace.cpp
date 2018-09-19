@@ -41,4 +41,20 @@ namespace tmpc
 	,	_code(code)
 	{
 	}
+
+
+	DualNewtonTreeOptions::DualNewtonTreeOptions(size_t num_nodes)
+	:	mem_(new char[treeqp_tdunes_opts_calculate_size(num_nodes)])
+	{
+		treeqp_tdunes_opts_create(num_nodes, &opts_, mem_.get());
+		treeqp_tdunes_opts_set_default(num_nodes, &opts_);
+
+		for (int ii = 0; ii < num_nodes; ii++)
+		{
+			opts_.qp_solver[ii] = TREEQP_QPOASES_SOLVER;
+
+			// TODO: in theory, we should set opts->qp_solver[ii] based on the structure of the Hessian
+			// matrix for problem ii. But for now we simply use QPOASES because it must always work.
+		}
+	}
 }

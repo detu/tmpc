@@ -13,6 +13,7 @@
 #include <treeqp/utils/print.h>
 
 #include <vector>
+#include <memory>
 #include <stdexcept>
 #include <functional>
 
@@ -29,6 +30,57 @@ namespace tmpc
 	private:
 		return_t const _code;
 	};
+
+
+    /// @brief Encapsulates options for the treeQP Dual Newton solver.
+    class DualNewtonTreeOptions
+    {
+    public:
+        DualNewtonTreeOptions(size_t num_nodes);
+
+        
+        /// @brief Move ctor
+        DualNewtonTreeOptions(DualNewtonTreeOptions&&) = default;
+
+
+        DualNewtonTreeOptions& maxIter(size_t max_iter)
+        {
+            opts_.maxIter = max_iter;
+            return *this;
+        }
+
+
+        DualNewtonTreeOptions& stationarityTolerance(double val)
+        {
+            opts_.stationarityTolerance = val;
+            return *this;
+        }
+
+
+        DualNewtonTreeOptions& lineSearchMaxIter(size_t val)
+        {
+            opts_.lineSearchMaxIter = val;
+            return *this;
+        }
+
+
+        DualNewtonTreeOptions& lineSearchBeta(double val)
+        {
+            opts_.lineSearchBeta = 0.8;
+            return *this;
+        }
+
+
+        treeqp_tdunes_opts_t const& nativeOptions() const
+        {
+            return opts_;
+        }
+
+
+    private:
+        treeqp_tdunes_opts_t opts_;
+        std::unique_ptr<char []> mem_;
+    };
 
 
     /// Visitor that writes out-degree of each vertex to an output iterator.
@@ -67,9 +119,17 @@ namespace tmpc
 
         template <typename SizeMap>
         DualNewtonTreeWorkspace(OcpGraph const& g, SizeMap sz)
+        :   DualNewtonTreeWorkspace(g, sz, DualNewtonTreeOptions(num_vertices(g)))
+        {
+        }
+
+
+        template <typename SizeMap>
+        DualNewtonTreeWorkspace(OcpGraph const& g, SizeMap sz, DualNewtonTreeOptions&& options)
         :   graph_{g}
         ,   size_{num_vertices(g)}
         ,   tree_{num_vertices(g)}
+        ,   opts_(std::move(options))
         {
             auto const num_nodes = num_vertices(g);
             auto const vertex_id = get(vertex_index, g);
@@ -106,34 +166,23 @@ namespace tmpc
             tree_qp_out_create(num_nodes, nx.data(), nu.data(), nc.data(),
                 &qp_out_, qp_out_memory_.data());
 
-            auto const tdunes_opts_size = treeqp_tdunes_opts_calculate_size(num_nodes);
-            tdunes_opts_mem_.resize(tdunes_opts_size);
-            treeqp_tdunes_opts_create(num_nodes, &opts_, tdunes_opts_mem_.data());
-            treeqp_tdunes_opts_set_default(num_nodes, &opts_);
-
-            for (int ii = 0; ii < num_nodes; ii++)
-            {
-                opts_.qp_solver[ii] = TREEQP_QPOASES_SOLVER;
-
-                // TODO: in theory, we should set opts->qp_solver[ii] based on the structure of the Hessian
-                // matrix for problem ii. But for now we simply use QPOASES because it must always work.
-            }
-
-            auto const treeqp_size = treeqp_tdunes_calculate_size(&qp_in_, &opts_);
+            // Explicit removal of const, 
+            // see https://gitlab.syscop.de/dimitris.kouzoupis/treeQP-dev/issues/8#note_2520
+            treeqp_tdunes_opts_t * opts_ptr = const_cast<treeqp_tdunes_opts_t *>(&opts_.nativeOptions());
+            
+            auto const treeqp_size = treeqp_tdunes_calculate_size(&qp_in_, opts_ptr);
             qp_solver_memory_.resize(treeqp_size);
-            treeqp_tdunes_create(&qp_in_, &opts_, &work_, qp_solver_memory_.data());
+            treeqp_tdunes_create(&qp_in_, opts_ptr, &work_, qp_solver_memory_.data());
         }
 
-
-        void maxIter(size_t max_iter)
-        {
-            opts_.maxIter = max_iter;
-        }
-        
 
         void solve()
         {
-            auto const ret = treeqp_tdunes_solve(&qp_in_, &qp_out_, &opts_, &work_);
+            // Explicit removal of const, 
+            // see https://gitlab.syscop.de/dimitris.kouzoupis/treeQP-dev/issues/8#note_2520
+            treeqp_tdunes_opts_t * opts_ptr = const_cast<treeqp_tdunes_opts_t *>(&opts_.nativeOptions());
+            
+            auto const ret = treeqp_tdunes_solve(&qp_in_, &qp_out_, opts_ptr, &work_);
 
             if (ret != TREEQP_OPTIMAL_SOLUTION_FOUND)
                 throw DualNewtonTreeException(ret);
@@ -331,8 +380,7 @@ namespace tmpc
         std::vector<char> qp_in_memory_;
         tree_qp_out qp_out_;
         std::vector<char> qp_out_memory_;
-        treeqp_tdunes_opts_t opts_;
-        std::vector<char> tdunes_opts_mem_;
+        DualNewtonTreeOptions opts_;
         treeqp_tdunes_workspace work_;
         std::vector<char> qp_solver_memory_;
     };
