@@ -17,6 +17,7 @@ namespace tmpc
     using boost::read_write_property_map_tag;
 
     using boost::property_traits;
+    using boost::readable_property_map_tag;
     using boost::read_write_property_map_tag;
 
 

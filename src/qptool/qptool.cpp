@@ -29,9 +29,9 @@ using DualNewtonTreeSolver = DualNewtonTreeWorkspace<Kernel>;
 
 
 template <typename QpSrc, typename QpDst>
-inline void copyQpProperties(QpSrc src, QpDst dst)
+inline void copyQpProperties(QpSrc const& src, QpDst& dst)
 {
-    auto const vert = make_iterator_range(vertices(src.graph()));
+    auto const vert = vertices(src.graph());
     copyProperty(src.Q(), dst.Q(), vert);
     copyProperty(src.R(), dst.R(), vert);
     copyProperty(src.S(), dst.S(), vert);
@@ -46,7 +46,7 @@ inline void copyQpProperties(QpSrc src, QpDst dst)
     copyProperty(src.ld(), dst.ld(), vert);
     copyProperty(src.ud(), dst.ud(), vert);
     
-    auto const edg = make_iterator_range(edges(src.graph()));
+    auto const edg = edges(src.graph());
     copyProperty(src.A(), dst.A(), edg);
     copyProperty(src.B(), dst.B(), edg);
     copyProperty(src.b(), dst.b(), edg);
