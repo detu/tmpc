@@ -46,7 +46,7 @@ else()
 endif()
 
 
-find_package(blaze)
+find_package(blaze 3.5 REQUIRED)
 
 # Find boost.
 find_package(Boost REQUIRED COMPONENTS graph)

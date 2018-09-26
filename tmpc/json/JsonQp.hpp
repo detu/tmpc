@@ -133,8 +133,7 @@ namespace tmpc
         inline void reshapeIfNeeded(Matrix& val, std::pair<size_t, size_t> expected_dim)
         {
             // If both val and expected_dim are empty, resize val to match expected_dim.
-            // There is no function to check for empty matrix, see https://bitbucket.org/blaze-lib/blaze/issues/198/add-isempty-function
-            if ((rows(val) == 0 || columns(val) == 0) && (expected_dim.first == 0 || expected_dim.second == 0))
+            if (isEmpty(val) && (expected_dim.first == 0 || expected_dim.second == 0))
                 val.resize(expected_dim.first, expected_dim.second);
 
             // If val is Nx1 and expected_dim is 1xN, transpose val to match expected_dim.
