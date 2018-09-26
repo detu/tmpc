@@ -331,33 +331,31 @@ namespace tmpc
         :   graph_{g}
         ,   size_(num_vertices(g))
         ,   json_{
-            {"nodes", tmpc::json::array()}, 
-            {"edges", tmpc::json::array()}
+            {"nodes", json::array()}, 
+            {"edges", json::array()}
             }
         {
-            for (auto v : vertices(g))
-            {
-                auto const v_id = get(vertexIndex(g), v);
-                size_[v_id] = get(size_map, v);
-            }
+            auto const vert = vertices(g);
+            copyProperty(size_map, iterator_property_map(size_.begin(), vertexIndex(g)), vert);
 
-            Q().defaultInit(vertices(g));
-            R().defaultInit(vertices(g));
-            S().defaultInit(vertices(g));
-            q().defaultInit(vertices(g));
-            r().defaultInit(vertices(g));
-            lx().defaultInit(vertices(g));
-            ux().defaultInit(vertices(g));
-            lu().defaultInit(vertices(g));
-            uu().defaultInit(vertices(g));
-            C().defaultInit(vertices(g));
-            D().defaultInit(vertices(g));
-            ld().defaultInit(vertices(g));
-            ud().defaultInit(vertices(g));
+            Q().defaultInit(vert);
+            R().defaultInit(vert);
+            S().defaultInit(vert);
+            q().defaultInit(vert);
+            r().defaultInit(vert);
+            lx().defaultInit(vert);
+            ux().defaultInit(vert);
+            lu().defaultInit(vert);
+            uu().defaultInit(vert);
+            C().defaultInit(vert);
+            D().defaultInit(vert);
+            ld().defaultInit(vert);
+            ud().defaultInit(vert);
 
-            A().defaultInit(edges(g));
-            B().defaultInit(edges(g));
-            b().defaultInit(edges(g));
+            auto const edg = edges(g);
+            A().defaultInit(edg);
+            B().defaultInit(edg);
+            b().defaultInit(edg);
         }
 
 

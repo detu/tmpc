@@ -12,6 +12,7 @@
 #include <tmpc/core/PropertyMap.hpp>
 //#include <tmpc/qp/HpmpcWorkspace.hpp>
 //#include <tmpc/qp/TreeQpWorkspaceAdaptor.hpp>
+#include <tmpc/qp/OcpQp.hpp>
 #include <tmpc/qp/DualNewtonTreeWorkspace.hpp>
 #include <tmpc/BlazeKernel.hpp>
 #include <tmpc/json/JsonBlaze.hpp>
@@ -26,31 +27,6 @@ using namespace tmpc;
 using Kernel = BlazeKernel<double>;
 //using HpmpcSolver = TreeQpWorkspaceAdaptor<HpmpcWorkspace<Kernel>>;
 using DualNewtonTreeSolver = DualNewtonTreeWorkspace<Kernel>;
-
-
-template <typename QpSrc, typename QpDst>
-inline void copyQpProperties(QpSrc const& src, QpDst& dst)
-{
-    auto const vert = vertices(src.graph());
-    copyProperty(src.Q(), dst.Q(), vert);
-    copyProperty(src.R(), dst.R(), vert);
-    copyProperty(src.S(), dst.S(), vert);
-    copyProperty(src.q(), dst.q(), vert);
-    copyProperty(src.r(), dst.r(), vert);
-    copyProperty(src.lx(), dst.lx(), vert);
-    copyProperty(src.ux(), dst.ux(), vert);
-    copyProperty(src.lu(), dst.lu(), vert);
-    copyProperty(src.uu(), dst.uu(), vert);
-    copyProperty(src.C(), dst.C(), vert);
-    copyProperty(src.D(), dst.D(), vert);
-    copyProperty(src.ld(), dst.ld(), vert);
-    copyProperty(src.ud(), dst.ud(), vert);
-    
-    auto const edg = edges(src.graph());
-    copyProperty(src.A(), dst.A(), edg);
-    copyProperty(src.B(), dst.B(), edg);
-    copyProperty(src.b(), dst.b(), edg);
-}
 
 
 int main(int argc, char ** argv)
