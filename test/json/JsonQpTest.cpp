@@ -1,3 +1,5 @@
+#include "../qp/TreeQpWorkspaceTest.hpp"
+
 #include <tmpc/json/JsonQp.hpp>
 #include <tmpc/json/JsonBlaze.hpp>
 
@@ -37,8 +39,18 @@ namespace tmpc :: testing
         qp.push_back(stage1);
 
         json j = ocpQpToJson(qp);
+    }
 
-        std::cout << std::setw(4) << j << std::endl;
+
+    TEST(JsonQpTest, test_ctorFromGraph)
+    {
+        using K = BlazeKernel<double>;
+        size_t constexpr N = 2, NX = 3, NU = 2, NC = 1;
+
+        JsonQp<K> qp(ocpGraphLinear(N + 1), ocpSizeNominalMpc(N, NX, NU, NC));
+
+        EXPECT_EQ(num_vertices(qp.graph()), N + 1);
+        EXPECT_EQ(num_edges(qp.graph()), N);
     }
 
 
@@ -214,4 +226,7 @@ namespace tmpc :: testing
             EXPECT_EQ(get(json_qp.b(), e), Vec(j["edges"][edge_id]["b"]));
         }
     }
+
+    
+    INSTANTIATE_TYPED_TEST_CASE_P(JsonQp_Blaze_double, TreeQpWorkspaceTest, JsonQp<BlazeKernel<double>>);
 }

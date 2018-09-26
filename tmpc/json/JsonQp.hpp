@@ -10,6 +10,7 @@
 #include <tmpc/Matrix.hpp>
 #include <tmpc/core/PropertyMap.hpp>
 #include <tmpc/core/Range.hpp>
+#include <tmpc/Traits.hpp>
 
 #include "Json.hpp"
 
@@ -235,6 +236,26 @@ namespace tmpc
             }
 
 
+            template <typename Range>
+            void defaultInit(Range const& range)
+            {
+                std::vector<value_type> values(size(range));
+
+                for (auto key : range)
+                {
+                    value_type val;
+                    resize(val, get(sizeMap_, key));
+                    val = 0.;
+
+                    values.at(get(indexMap_, key)) = val;
+                    //j_tmp.at(get(indexMap_, key))[name_] = val;
+                }
+
+                for (auto v : boost::adaptors::index(values))
+                    json_[v.index()][name_] = v.value();
+            }
+
+
         private:
             using Scalar = typename Value::ElementType;
 
@@ -302,6 +323,41 @@ namespace tmpc
                     j_v.count("ld") ? j_v["ld"].size() : 0, 
                     j_v.count("zl") ? j_v["zl"].size() : 0};
             });
+        }
+
+
+        template <typename SizeMap>
+        JsonQp(OcpGraph const& g, SizeMap size_map)
+        :   graph_{g}
+        ,   size_(num_vertices(g))
+        ,   json_{
+            {"nodes", tmpc::json::array()}, 
+            {"edges", tmpc::json::array()}
+            }
+        {
+            for (auto v : vertices(g))
+            {
+                auto const v_id = get(vertexIndex(g), v);
+                size_[v_id] = get(size_map, v);
+            }
+
+            Q().defaultInit(vertices(g));
+            R().defaultInit(vertices(g));
+            S().defaultInit(vertices(g));
+            q().defaultInit(vertices(g));
+            r().defaultInit(vertices(g));
+            lx().defaultInit(vertices(g));
+            ux().defaultInit(vertices(g));
+            lu().defaultInit(vertices(g));
+            uu().defaultInit(vertices(g));
+            C().defaultInit(vertices(g));
+            D().defaultInit(vertices(g));
+            ld().defaultInit(vertices(g));
+            ud().defaultInit(vertices(g));
+
+            A().defaultInit(edges(g));
+            B().defaultInit(edges(g));
+            b().defaultInit(edges(g));
         }
 
 
@@ -556,5 +612,19 @@ namespace tmpc
 
         // OCP JSON
         tmpc::json json_;
+    };
+
+
+    template <typename Kernel>
+    struct KernelOf<JsonQp<Kernel>>
+    {
+        using type = Kernel;
+    };
+
+
+    template <typename Kernel>
+    struct RealOf<JsonQp<Kernel>>
+    {
+        using type = typename Kernel::Real;
     };
 }

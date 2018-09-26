@@ -5,6 +5,7 @@
 #pragma once
 
 #include <tmpc/ocp/OcpGraph.hpp>
+#include <tmpc/ocp/OcpSize.hpp>
 #include <tmpc/Matrix.hpp>
 #include <tmpc/core/PropertyMap.hpp>
 #include <tmpc/Traits.hpp>
