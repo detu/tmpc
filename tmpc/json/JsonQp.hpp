@@ -336,7 +336,8 @@ namespace tmpc
             }
         {
             auto const vert = vertices(g);
-            copyProperty(size_map, iterator_property_map(size_.begin(), vertexIndex(g)), vert);
+            auto const vertex_id = get(vertex_index, g);
+            copyProperty(size_map, iterator_property_map(size_.begin(), vertex_id), vert);
 
             Q().defaultInit(vert);
             R().defaultInit(vert);
@@ -356,6 +357,14 @@ namespace tmpc
             A().defaultInit(edg);
             B().defaultInit(edg);
             b().defaultInit(edg);
+
+            auto const edge_id = get(edge_index, graph_);
+            for (auto e : edg)
+            {
+                auto& j = json_["edges"][get(edge_id, e)];
+                j["from"] = get(vertex_id, source(e, graph_));
+                j["to"] = get(vertex_id, target(e, graph_));
+            }
         }
 
 
