@@ -2,6 +2,7 @@
 
 #include <tmpc/ocp/OcpGraph.hpp>
 
+#include <blaze/Math.h>
 
 namespace tmpc
 {
@@ -63,5 +64,14 @@ namespace tmpc
         // g = [q; r]
         put(qp.q(), v, trans(C) * res);
         put(qp.r(), v, trans(D) * res);
+    }
+
+
+    ///@brief Add Levenberg-Marquardt term to Q and R.
+    template <typename QP, typename Real>
+    inline void addLevenbergMarquardt(QP& qp, OcpVertexDescriptor v, Real levenberg_marquardt)
+    {
+        put(qp.Q(), v, get(qp.Q(), v) + levenberg_marquardt * blaze::IdentityMatrix<Real>(get(qp.size(), v).nx()));
+        put(qp.R(), v, get(qp.R(), v) + levenberg_marquardt * blaze::IdentityMatrix<Real>(get(qp.size(), v).nu()));
     }
 }
