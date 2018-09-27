@@ -12,14 +12,20 @@ namespace blaze
     {
         jsn = tmpc::json::array();
 
-        for (size_t i = 0; i < rows(m); ++i)
+        // Encoding empty matrices just as empty json arrays `[]`.
+        // Although the dimension information can be preserved for Nx0 matrices,
+        // for 0xN matrices it can not.
+        if (!isEmpty(m))
         {
-            tmpc::json row = tmpc::json::array();
+            for (size_t i = 0; i < rows(m); ++i)
+            {
+                tmpc::json row = tmpc::json::array();
 
-            for (size_t j = 0; j < columns(m); ++j)
-                row.push_back((~m)(i, j));
+                for (size_t j = 0; j < columns(m); ++j)
+                    row.push_back((~m)(i, j));
 
-            jsn.push_back(row);
+                jsn.push_back(row);
+            }
         }
     }
 
