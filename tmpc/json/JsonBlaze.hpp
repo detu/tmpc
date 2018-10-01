@@ -106,7 +106,7 @@ namespace blaze
         }
         */
 
-        (~v).resize(j.size());
+        resize(v, j.size());
         std::transform(j.begin(), j.end(), (~v).begin(), [] (tmpc::json const& val) -> Scalar
         {
             if (val.is_string())
