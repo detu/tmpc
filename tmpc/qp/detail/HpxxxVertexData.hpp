@@ -72,8 +72,8 @@ namespace tmpc :: detail
 			D_ = sNaN<Real>();
 			lb_ = sNaN<Real>();
 			ub_ = sNaN<Real>();
-			lb_internal_ = sNaN<Real>();
-			ub_internal_ = sNaN<Real>();
+			fill(lb_internal_.begin(), lb_internal_.end(), sNaN<Real>());
+			fill(ub_internal_.begin(), ub_internal_.end(), sNaN<Real>());
 			lbd_ = sNaN<Real>();
 			ubd_ = sNaN<Real>();
 			x_ = sNaN<Real>();
@@ -157,6 +157,28 @@ namespace tmpc :: detail
 		int const * idxs_data() const { return idxs_.data(); }
 		Real const * lbls_data() const { return lbls_.data(); }
 		Real const * lbus_data() const { return lbus_.data(); }
+
+
+		// ******************************************************
+		// Mutable pointers for accessing the data.
+		// ******************************************************
+		Real * Q_data() { return Q_.data(); }
+		Real * S_data() { return S_.data(); }
+		Real * R_data() { return R_.data(); }
+		Real * q_data() { return q_.data(); }
+		Real * r_data() { return r_.data(); }
+		//Real * lx_data() { return ; }
+		//Real * ux_data() { return ; }
+		Real * Zl_data() { return Zl_.data(); }
+		Real * Zu_data() { return Zu_.data(); }
+		Real * zl_data() { return zl_.data(); }
+		Real * zu_data() { return zu_.data(); }
+		Real * C_data() { return C_.data(); }
+		Real * D_data() { return D_.data(); }
+		Real * lg_data() { return lg_.data(); }
+		Real * ug_data() { return ug_.data(); }
+		
+
 		int nb() const { return idxb_.size(); }
 
 		

@@ -4,11 +4,13 @@
 
 #pragma once
 
-#include <tmpc/ocp/OcpSizeGraph.hpp>
-#include <tmpc/core/GraphTools.hpp>
+#include <tmpc/ocp/OcpGraph.hpp>
+#include <tmpc/ocp/OcpSize.hpp>
 #include <tmpc/Matrix.hpp>
-
+#include <tmpc/core/PropertyMap.hpp>
+#include <tmpc/Traits.hpp>
 #include <tmpc/test_tools.hpp>
+
 #include <gtest/gtest.h>
 
 #include <iostream>
@@ -24,36 +26,26 @@ namespace tmpc :: testing
         using Workspace = WS;
 
     protected:
-        using Kernel = typename Workspace::Kernel;
-        using Real = typename Workspace::Real;
+        using Kernel = typename KernelOf<Workspace>::type;
+        using Real = typename RealOf<Workspace>::type;
         using Vector = DynamicVector<Kernel>;
         using Matrix = DynamicMatrix<Kernel>;
 
 
         TreeQpWorkspaceTest()
-        :	size_ {initSizeGraph()}
-        ,	ws_ {size_}
         {
         }
 
 
-        OcpSizeGraph const size_;
-        Workspace ws_;
+        OcpGraph const graph_ = ocpGraphLinear(3);
 
+        std::vector<OcpSize> const size_ = {
+            OcpSize {2, 1, 1},
+            OcpSize {5, 4, 2},
+            OcpSize {8, 7, 3}
+        };
 
-        static OcpSizeGraph initSizeGraph()
-        {
-            OcpSizeGraph g(3);
-
-            g[0].size = OcpSize(2, 3, 4);
-            g[1].size = OcpSize(5, 6, 7);
-            g[2].size = OcpSize(8, 9, 10);
-            
-            add_edge(0, 1, 0, g);
-            add_edge(1, 2, 1, g);
-
-            return g;
-        }
+        Workspace ws_ {graph_, iterator_property_map(size_.begin(), vertexIndex(graph_))};
     };
 
 
@@ -62,85 +54,79 @@ namespace tmpc :: testing
 
     TYPED_TEST_P(TreeQpWorkspaceTest, testQpInterface)
     {
-        using graph_traits = boost::graph_traits<OcpSizeGraph>;
-
         auto const N = num_vertices(this->ws_.graph());
 
-        std::map<graph_traits::vertex_descriptor, typename TestFixture::Matrix> Q;
-        std::map<graph_traits::vertex_descriptor, typename TestFixture::Vector> q;
-        std::map<graph_traits::vertex_descriptor, typename TestFixture::Vector> r;
-        std::map<graph_traits::vertex_descriptor, typename TestFixture::Matrix> S;
-        std::map<graph_traits::vertex_descriptor, typename TestFixture::Matrix> R;
+        std::map<OcpVertexDescriptor, typename TestFixture::Matrix> Q;
+        std::map<OcpVertexDescriptor, typename TestFixture::Vector> q;
+        std::map<OcpVertexDescriptor, typename TestFixture::Vector> r;
+        std::map<OcpVertexDescriptor, typename TestFixture::Matrix> S;
+        std::map<OcpVertexDescriptor, typename TestFixture::Matrix> R;
 
-        std::map<graph_traits::edge_descriptor, typename TestFixture::Matrix> A;
-        std::map<graph_traits::edge_descriptor, typename TestFixture::Matrix> B;
-        std::map<graph_traits::edge_descriptor, typename TestFixture::Vector> b;
+        std::map<OcpEdgeDescriptor, typename TestFixture::Matrix> A;
+        std::map<OcpEdgeDescriptor, typename TestFixture::Matrix> B;
+        std::map<OcpEdgeDescriptor, typename TestFixture::Vector> b;
 
-        std::map<graph_traits::vertex_descriptor, typename TestFixture::Vector> x_min, x_max;
-        std::map<graph_traits::vertex_descriptor, typename TestFixture::Vector> u_min, u_max;
-        std::map<graph_traits::vertex_descriptor, typename TestFixture::Vector> d_min, d_max;
+        std::map<OcpVertexDescriptor, typename TestFixture::Vector> x_min, x_max;
+        std::map<OcpVertexDescriptor, typename TestFixture::Vector> u_min, u_max;
+        std::map<OcpVertexDescriptor, typename TestFixture::Vector> d_min, d_max;
 
         // Writing random data
         Rand<typename TestFixture::Kernel, typename TestFixture::Matrix> rand_matrix;
         Rand<typename TestFixture::Kernel, typename TestFixture::Vector> rand_vector;
 
-        for (auto v : verticesR(this->ws_.graph()))
+        for (auto v : vertices(this->ws_.graph()))
         {
             auto const& sz = get(this->ws_.size(), v);
-            auto& stage = get(this->ws_.problemVertex(), v);
 
-            stage.Q(Q[v] = rand_matrix.generate(sz.nx(), sz.nx()));
-            stage.R(R[v] = rand_matrix.generate(sz.nu(), sz.nu()));
-            stage.S(S[v] = rand_matrix.generate(sz.nx(), sz.nu()));
-            stage.q(q[v] = rand_vector.generate(sz.nx()));
-            stage.r(r[v] = rand_vector.generate(sz.nu()));
+            put(this->ws_.Q(), v, Q[v] = rand_matrix.generate(sz.nx(), sz.nx()));
+            put(this->ws_.R(), v, R[v] = rand_matrix.generate(sz.nu(), sz.nu()));
+            put(this->ws_.S(), v, S[v] = rand_matrix.generate(sz.nu(), sz.nx()));
+            put(this->ws_.q(), v, q[v] = rand_vector.generate(sz.nx()));
+            put(this->ws_.r(), v, r[v] = rand_vector.generate(sz.nu()));
 
-            stage.lbx(x_min[v] = rand_vector.generate(sz.nx()));
-            stage.ubx(x_max[v] = rand_vector.generate(sz.nx()));
-            stage.lbu(u_min[v] = rand_vector.generate(sz.nu()));
-            stage.ubu(u_max[v] = rand_vector.generate(sz.nu()));
-            stage.lbd(d_min[v] = rand_vector.generate(sz.nc()));
-            stage.ubd(d_max[v] = rand_vector.generate(sz.nc()));
+            put(this->ws_.lx(), v, x_min[v] = rand_vector.generate(sz.nx()));
+            put(this->ws_.ux(), v, x_max[v] = rand_vector.generate(sz.nx()));
+            put(this->ws_.lu(), v, u_min[v] = rand_vector.generate(sz.nu()));
+            put(this->ws_.uu(), v, u_max[v] = rand_vector.generate(sz.nu()));
+            put(this->ws_.ld(), v, d_min[v] = rand_vector.generate(sz.nc()));
+            put(this->ws_.ud(), v, d_max[v] = rand_vector.generate(sz.nc()));
         }
 
-        for (auto e : edgesR(this->ws_.graph()))
+        for (auto e : edges(this->ws_.graph()))
         {
             auto const from = source(e, this->ws_.graph());
             auto const to = target(e, this->ws_.graph());
             auto const& sz_from = get(this->ws_.size(), from);
             auto const& sz_to = get(this->ws_.size(), to);
-            auto& stage = get(this->ws_.problemEdge(), e);
 
-            stage.A(A[e] = rand_matrix.generate(sz_to.nx(), sz_from.nx()));
-            stage.B(B[e] = rand_matrix.generate(sz_to.nx(), sz_from.nu()));
-            stage.b(b[e] = rand_vector.generate(sz_to.nx()));
+            put(this->ws_.A(), e, A[e] = rand_matrix.generate(sz_to.nx(), sz_from.nx()));
+            put(this->ws_.B(), e, B[e] = rand_matrix.generate(sz_to.nx(), sz_from.nu()));
+            put(this->ws_.b(), e, b[e] = rand_vector.generate(sz_to.nx()));
         }
 
         // Reading the data and checking that they are the same that we wrote
-        for (auto v : verticesR(this->ws_.graph()))
+        for (auto v : vertices(this->ws_.graph()))
         {
-            auto const& stage = get(this->ws_.problemVertex(), v);
+            EXPECT_EQ(forcePrint(get(this->ws_.Q(), v)), forcePrint(Q[v])) << "at v=" << v;
+            
+            EXPECT_EQ(forcePrint(get(this->ws_.R(), v)), forcePrint(R[v])) << "at v=" << v;
+            EXPECT_EQ(forcePrint(get(this->ws_.S(), v)), forcePrint(S[v])) << "at v=" << v;
+            EXPECT_EQ(forcePrint(get(this->ws_.q(), v)), forcePrint(q[v])) << "at v=" << v;
+            EXPECT_EQ(forcePrint(get(this->ws_.r(), v)), forcePrint(r[v])) << "at v=" << v;
 
-            EXPECT_EQ(print_wrap(stage.Q()), print_wrap(Q[v])) << "at v=" << v;
-            EXPECT_EQ(print_wrap(stage.R()), print_wrap(R[v])) << "at v=" << v;
-            EXPECT_EQ(print_wrap(stage.S()), print_wrap(S[v])) << "at v=" << v;
-            EXPECT_EQ(print_wrap(stage.q()), print_wrap(q[v])) << "at v=" << v;
-            EXPECT_EQ(print_wrap(stage.r()), print_wrap(r[v])) << "at v=" << v;
-
-            EXPECT_EQ(print_wrap(stage.lbx()), print_wrap(x_min[v])) << "at v=" << v;
-            EXPECT_EQ(print_wrap(stage.ubx()), print_wrap(x_max[v])) << "at v=" << v;
-            EXPECT_EQ(print_wrap(stage.lbu()), print_wrap(u_min[v])) << "at v=" << v;
-            EXPECT_EQ(print_wrap(stage.ubu()), print_wrap(u_max[v])) << "at v=" << v;
-            EXPECT_EQ(print_wrap(stage.lbd()), print_wrap(d_min[v])) << "at v=" << v;
-            EXPECT_EQ(print_wrap(stage.ubd()), print_wrap(d_max[v])) << "at v=" << v;
+            EXPECT_EQ(forcePrint(get(this->ws_.lx(), v)), forcePrint(x_min[v])) << "at v=" << v;
+            EXPECT_EQ(forcePrint(get(this->ws_.ux(), v)), forcePrint(x_max[v])) << "at v=" << v;
+            EXPECT_EQ(forcePrint(get(this->ws_.lu(), v)), forcePrint(u_min[v])) << "at v=" << v;
+            EXPECT_EQ(forcePrint(get(this->ws_.uu(), v)), forcePrint(u_max[v])) << "at v=" << v;
+            EXPECT_EQ(forcePrint(get(this->ws_.ld(), v)), forcePrint(d_min[v])) << "at v=" << v;
+            EXPECT_EQ(forcePrint(get(this->ws_.ud(), v)), forcePrint(d_max[v])) << "at v=" << v;
         }
 
-        for (auto e : edgesR(this->ws_.graph()))
+        for (auto e : edges(this->ws_.graph()))
         {
-            auto const& stage = get(this->ws_.problemEdge(), e);
-            EXPECT_EQ(print_wrap(stage.A()), print_wrap(A[e])) << "at e=" << e;
-            EXPECT_EQ(print_wrap(stage.B()), print_wrap(B[e])) << "at e=" << e;
-            EXPECT_EQ(print_wrap(stage.b()), print_wrap(b[e])) << "at e=" << e;
+            EXPECT_EQ(forcePrint(get(this->ws_.A(), e)), forcePrint(A[e])) << "at e=" << e;
+            EXPECT_EQ(forcePrint(get(this->ws_.B(), e)), forcePrint(B[e])) << "at e=" << e;
+            EXPECT_EQ(forcePrint(get(this->ws_.b(), e)), forcePrint(b[e])) << "at e=" << e;
         }
     }
 
@@ -149,33 +135,30 @@ namespace tmpc :: testing
     {
         auto const& ws = this->ws_;
 
-        for (auto v : verticesR(ws.graph()))
+        for (auto v : vertices(ws.graph()))
         {
             auto const& s = get(ws.size(), v);
-            EXPECT_EQ(s, this->size_[v].size);
+            EXPECT_EQ(s, this->size_[v]);
 
-            auto const& stage = get(ws.problemVertex(), v);
+            EXPECT_EQ(rows(get(this->ws_.Q(), v)), s.nx());
+            EXPECT_EQ(columns(get(this->ws_.Q(), v)), s.nx());
 
-            EXPECT_EQ(rows   (stage.Q()), s.nx());
-            EXPECT_EQ(columns(stage.Q()), s.nx());
-            EXPECT_EQ(rows   (stage.R()), s.nu());
-            EXPECT_EQ(columns(stage.R()), s.nu());
-            EXPECT_EQ(rows   (stage.S()), s.nx());
-            EXPECT_EQ(columns(stage.S()), s.nu());
-            EXPECT_EQ(size   (stage.q()), s.nx());
-            EXPECT_EQ(size   (stage.r()), s.nu());
+            EXPECT_EQ(rows(get(this->ws_.R(), v)), s.nu());
+            EXPECT_EQ(columns(get(this->ws_.R(), v)), s.nu());
+            EXPECT_EQ(rows(get(this->ws_.S(), v)), s.nu());
+            EXPECT_EQ(columns(get(this->ws_.S(), v)), s.nx());
+            EXPECT_EQ(size(get(this->ws_.q(), v)), s.nx());
+            EXPECT_EQ(size(get(this->ws_.r(), v)), s.nu());
 
-            EXPECT_EQ(size(stage.lbx()), s.nx());
-            EXPECT_EQ(size(stage.ubx()), s.nx());
-            EXPECT_EQ(size(stage.lbu()), s.nu());
-            EXPECT_EQ(size(stage.ubu()), s.nu());
-            EXPECT_EQ(size(stage.lbd()), s.nc());
-            EXPECT_EQ(size(stage.ubd()), s.nc());
+            EXPECT_EQ(size(get(this->ws_.lx(), v)), s.nx());
+            EXPECT_EQ(size(get(this->ws_.ux(), v)), s.nx());
+            EXPECT_EQ(size(get(this->ws_.lu(), v)), s.nu());
+            EXPECT_EQ(size(get(this->ws_.uu(), v)), s.nu());
+            EXPECT_EQ(size(get(this->ws_.ld(), v)), s.nc());
+            EXPECT_EQ(size(get(this->ws_.ud(), v)), s.nc());
         }
 
-        auto edge_index = get(boost::edge_index, ws.graph());
-
-        for (auto e : edgesR(ws.graph()))
+        for (auto e : edges(ws.graph()))
         {
             auto const from = source(e, ws.graph());
             auto const to = target(e, ws.graph());
@@ -183,15 +166,15 @@ namespace tmpc :: testing
             auto const& sz_from = get(ws.size(), from);
             auto const& sz_to = get(ws.size(), to);
 
-            std::cout << "from=" << from << ", to=" << to << ", edge_index=" << edge_index(e) << std::endl;
+            //std::cout << "from=" << from << ", to=" << to << ", edge_index=" << edge_index(e) << std::endl;
 
-            auto const& problem_edge = get(ws.problemEdge(), e);
+            //auto const& problem_edge = get(ws.problemEdge(), e);
 
-            EXPECT_EQ(rows(problem_edge.A()), sz_to.nx());
-            EXPECT_EQ(columns(problem_edge.A()), sz_from.nx());
-            EXPECT_EQ(rows(problem_edge.B()), sz_to.nx());
-            EXPECT_EQ(columns(problem_edge.B()), sz_from.nu());
-            EXPECT_EQ(size(problem_edge.b()), sz_to.nx());
+            EXPECT_EQ(rows(get(this->ws_.A(), e)), sz_to.nx());
+            EXPECT_EQ(columns(get(this->ws_.A(), e)), sz_from.nx());
+            EXPECT_EQ(rows(get(this->ws_.B(), e)), sz_to.nx());
+            EXPECT_EQ(columns(get(this->ws_.B(), e)), sz_from.nu());
+            EXPECT_EQ(size(get(this->ws_.b(), e)), sz_to.nx());
         }
     }
 

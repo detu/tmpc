@@ -4,6 +4,7 @@
 
 #include <limits>
 
+
 namespace tmpc
 {
     template <typename T>
@@ -11,6 +12,7 @@ namespace tmpc
     {
         return std::numeric_limits<T>::infinity();
     }
+
 
     template <typename T>
     inline T constexpr sNaN()

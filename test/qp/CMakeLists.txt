@@ -1,6 +1,8 @@
 add_executable(test-tmpc-qp 
     CondensingN3Test.cpp
     CondensingN2Test.cpp
+    VectorPropertyMapTest.cpp
+    MpipmWorkspaceTest.cpp
 )
 
 target_link_libraries(test-tmpc-qp
@@ -9,5 +11,4 @@ target_link_libraries(test-tmpc-qp
     GTest::Main
 )
 
-#GTEST_ADD_TESTS(test-tmpc-qp "" AUTO)
-add_test(NAME test-tmpc-qp COMMAND test-tmpc-qp)
+gtest_discover_tests(test-tmpc-qp)

@@ -28,6 +28,9 @@ namespace tmpc
         template <AlignmentFlag AF, PaddingFlag PF, StorageOrder SO>
         using CustomMatrix = eigen_adaptor::CustomMatrix<Real, AF, PF, SO>;
 
+        template <AlignmentFlag AF, PaddingFlag PF, TransposeFlag TF>
+        using CustomVector = eigen_adaptor::CustomVector<Real, AF, PF, TF>;
+
         using IdentityMatrix = eigen_adaptor::IdentityMatrix<Real>;
 
         template <typename MT, AlignmentFlag AF>
@@ -39,9 +42,6 @@ namespace tmpc
         template <typename T>
         using Rand = eigen_adaptor::Rand<T>;
     };
-
-    template <typename T>
-    using KernelOf = std::enable_if_t<std::is_base_of<Eigen::EigenBase<T>, T>::value, EigenKernel<typename T::Scalar>>;
 }
 
 

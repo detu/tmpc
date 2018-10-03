@@ -33,6 +33,15 @@ namespace tmpc
             SO == columnMajor ? blaze::columnMajor : blaze::rowMajor
         >;
 
+
+        template <AlignmentFlag AF, PaddingFlag PF, TransposeFlag TF>
+        using CustomVector = blaze::CustomVector<
+            Real,
+            AF == aligned ? blaze::aligned : blaze::unaligned, 
+            PF == padded ? blaze::padded : blaze::unpadded,
+            TF == columnVector ? blaze::columnVector : blaze::rowVector
+        >;
+
         using IdentityMatrix = blaze::IdentityMatrix<Real>;
 
         template <typename MT, AlignmentFlag AF>
@@ -45,24 +54,48 @@ namespace tmpc
         template <typename T>
         using Rand = blaze::Rand<T>;
     };
-
-    /*
-    template <typename T>
-    using KernelOf = std::enable_if_t<std::is_base_of<blaze::Matrix<T>, T>, BlazeKernel<T::ElementType>>;
-    */
 }
 
 namespace blaze
 {
-    template <typename V, bool SO>
-    inline decltype(auto) noresize(Vector<V, SO>& v)
+    template <typename V, bool TF>
+    inline decltype(auto) noresize(Vector<V, TF>& v)
     {
         return subvector(v, 0, size(v));
     }
 
+    
     template <typename M, bool SO>
     inline decltype(auto) noresize(Matrix<M, SO>& m)
     {
         return submatrix(m, 0, 0, rows(m), columns(m));
+    }
+
+
+    template <typename V, bool TF>
+    inline auto dimensions(Vector<V, TF> const& v)
+    {
+        return size(v);
+    }
+
+
+    template <typename M, bool SO>
+    inline auto dimensions(Matrix<M, SO> const& m)
+    {
+        return std::pair(rows(m), columns(m));
+    }
+
+
+    template <typename V, bool TF>
+    inline auto shape(Vector<V, TF> const& v)
+    {
+        return std::pair<size_t, bool>(size(v), TF);
+    }
+
+
+    template <typename M, bool SO>
+    inline auto shape(Matrix<M, SO> const& m)
+    {
+        return std::pair<size_t, size_t>(rows(m), columns(m));
     }
 }

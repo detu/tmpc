@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 3.8)
+cmake_minimum_required (VERSION 3.10)   # Need at least 3.10 for gtest_discover_tests()
 project (tmpc)
 
 # Enable modern C++
@@ -46,7 +46,7 @@ else()
 endif()
 
 
-find_package(blaze)
+find_package(blaze 3.5 REQUIRED)
 
 # Find boost.
 find_package(Boost REQUIRED COMPONENTS graph)
@@ -65,11 +65,6 @@ endif ()
 
 # TMPC_WITH_JSON
 set(TMPC_WITH_JSON ON CACHE BOOL "Build tmpc with JSON support")
-
-if (TMPC_WITH_JSON)
-    # Find Nlohmann json library
-    find_package(nlohmann_json REQUIRED)
-endif ()
 
 add_subdirectory(src)
 add_subdirectory(examples)

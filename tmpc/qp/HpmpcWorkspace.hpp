@@ -1,23 +1,28 @@
 #pragma once
 
 #include "QpSolverException.hpp"
+//#include "detail/BundlePropertyMap.hpp"
+
 #include <tmpc/ocp/OcpSize.hpp>
+#include <tmpc/ocp/OcpGraph.hpp>
 #include <tmpc/ocp/OcpSolutionBase.hpp>
 #include <tmpc/qp/OcpQpBase.hpp>
-#include <tmpc/qp/QpWorkspaceBase.hpp>
+//#include <tmpc/qp/QpWorkspaceBase.hpp>
 
 #include <tmpc/Matrix.hpp>
 #include <tmpc/Math.hpp>
 
-#include "detail/HpxxxVertexData.hpp"
-#include "detail/HpxxxEdgeData.hpp"
-#include "TreeQpWorkspaceAdaptor.hpp"
+//#include "detail/HpxxxVertexData.hpp"
+//#include "detail/HpxxxEdgeData.hpp"
+#include "detail/VectorPtrPropertyMap.hpp"
+#include "detail/MatrixPtrPropertyMap.hpp"
+//#include "TreeQpWorkspaceAdaptor.hpp"
 //#include "OcpQpVertexElement.hpp"
+#include <tmpc/core/PropertyMap.hpp>
 
 #include <boost/range/iterator_range_core.hpp>
 #include <boost/iterator/iterator_adaptor.hpp>
 #include <boost/graph/breadth_first_search.hpp>
-#include <boost/property_map/property_map.hpp>
 
 #include <stdexcept>
 #include <algorithm>
@@ -71,11 +76,10 @@ namespace tmpc
 	 */
 	template <typename Kernel_>
 	class HpmpcWorkspace
-	:	public QpWorkspaceBase<HpmpcWorkspace<Kernel_>>
 	{
 	public:
 		using Kernel = Kernel_;
-		using SO = StorageOrder::rowMajor;
+		static StorageOrder constexpr SO = StorageOrder::rowMajor;
 		using Real = typename Kernel::Real;
 		
 		// Iteration statistics. HPMPC returns 5 Real numbers per iteration:
@@ -98,11 +102,13 @@ namespace tmpc
 		/**
 		 * \brief Takes QP problem size to preallocate workspace.
 		 */
-		template <typename InputIterator>
-		explicit HpmpcWorkspace(OcpSizeGraph const& graph, unsigned max_iter = 100)
+		template <typename SizeMap>
+		explicit HpmpcWorkspace(OcpGraph const& graph, SizeMap size, unsigned max_iter = 100)
 		:	graph_ {graph}
+		,	size_(num_vertices(graph))
 		,	stat_ {max_iter}
 		{
+			copyProperty(size, iterator_property_map(size_.begin(), get(vertex_index, graph_)), vertices(graph_));
 			std::fill(infNormRes_.begin(), infNormRes_.end(), sNaN<Real>());
 
 			auto const nv = num_vertices(graph_);
@@ -114,9 +120,15 @@ namespace tmpc
 			if (ne + 1 != num_vertices(graph_))
 				throw std::invalid_argument("Number of edges in HPMPC size graph must be 1 less than the number of vertices");
 
-			// Preallocate arrays holding QP vertex data.
-			vertexData_.reserve(nv);
-	
+			// Calculate total number of int and Real elements to be allocated.
+			size_t count_real = 0, count_int = 0;
+			breadth_first_search(graph_, vertex(0, graph_), visitor(ElementCountVisitor(this->size(), count_real, count_int)));
+
+			// Allocate memory pools
+			realPool_.resize(count_real, sNaN<Real>());
+			intPool_.resize(count_int, -1);
+
+			// Preallocate arrays holding QP vertex data pointers.
 			nx_.reserve(nv);
 			nu_.reserve(nv);
 			nb_.reserve(nv);
@@ -133,6 +145,10 @@ namespace tmpc
 			r_ .reserve(nv);
 			lb_.reserve(nv);
 			ub_.reserve(nv);
+			lx_.reserve(nv);
+			ux_.reserve(nv);
+			lu_.reserve(nv);
+			uu_.reserve(nv);
 			C_ .reserve(nv);
 			D_ .reserve(nv);
 			lg_.reserve(nv);
@@ -143,15 +159,13 @@ namespace tmpc
 			pi_.reserve(nv);
 			lam_.reserve(nv);
 
-			// Preallocate arrays holding QP edge data.
-			edgeData_.reserve(ne);
-	
+			// Preallocate arrays holding QP edge data pointers.
 			A_ .reserve(ne);
 			B_ .reserve(ne);
 			b_ .reserve(ne);
 			pi_.reserve(ne);
 
-			// Traverse the graph and init vertex and edge data.
+			// Traverse the graph and init vertex and edge data pointers.
 			breadth_first_search(graph_, vertex(0, graph_), visitor(InitVisitor(*this)));
 
 			// Allocate HPMPC working memory
@@ -179,16 +193,31 @@ namespace tmpc
 		HpmpcWorkspace& operator= (HpmpcWorkspace &&) = delete;
 
 
-		void impl_solve()
+		void solve()
 		{
-			// Recalculate bounds indices of each stage, as the bounds might have changed.				
-			// Update the nb_ array.
-			auto const vd = make_iterator_range(vertices(graph_));
-			std::transform(vd.begin(), vd.end(), nb_.begin(), [] (auto& s) -> int
+			auto const vertex_id = get(vertex_index, graph_);
+
+			// Recalculate bounds indices of each vertex, as the bounds might have changed.				
+			// Update lb_, ub_, hidxb_, nb_.
+			for(auto v : vertices(graph_))
 			{
-				s.adjustBoundsIndex();
-				return s.nb();
-			});
+				auto const v_i = get(vertex_id, v);
+				auto const& sz = get(size(), v);
+
+				auto const& lx = lx_[v_i];
+				auto const& ux = ux_[v_i];
+				auto const& lu = lu_[v_i];
+				auto const& uu = uu_[v_i];
+
+				PopulateBounds pb(lb_[v_i], ub_[v_i], hidxb_[v_i], nb_[v_i]);
+
+				// Cycle through the bounds and check for infinities
+				for (size_t i = 0; i < sz.nu(); ++i)
+					pb(lu[i], uu[i]);
+
+				for (size_t i = 0; i < sz.nx(); ++i)
+					pb(lx[i], ux[i]);
+			}
 
 			// Number of QP steps for HPMPC
 			auto const N = num_vertices(graph_) - 1;
@@ -243,301 +272,166 @@ namespace tmpc
 		}
 
 
-		using VertexPropertyMap = boost::iterator_property_map<
-			std::vector<VertexData>::iterator, 
-
-
-		class VertexPropertyMap
+		auto size() const
 		{
-		public:
-			VertexPropertyMap(HpmpcWorkspace& ws)
-			:	ws_ {ws}
-			{				
-			}
+			return iterator_property_map(size_.begin(), get(vertex_index, graph_));
+		}
 
 
-			VertexData& at(OcpVertexDescriptor k) const
-			{
-				return ws_.vertexData_.at(k);
-			}
-
-
-		private:
-			HpmpcWorkspace& ws_;
-		};
-
-
-		class EdgePropertyMap
+		auto const& graph() const
 		{
-		public:
-			EdgePropertyMap(HpmpcWorkspace& ws)
-			:	ws_ {ws}
-			{				
-			}
+			return graph_;
+		}
 
 
-			EdgeData& at(OcpEdgeDescriptor k) const
-			{
-				return ws_.edgeData_.at(EDGE_INDEX(k));
-			}
+		auto Q()
+		{
+			return detail::makeMatrixPtrPropertyMap<OcpVertexDescriptor, CustomMatrix<Kernel, unaligned, unpadded, SO>>(
+				make_iterator_property_map(Q_.begin(), get(vertex_index, graph_)), size_Q(size()));
+		}
 
 
-		private:
-			HpmpcWorkspace& ws_;
-		};
+		auto R()
+		{
+			return detail::makeMatrixPtrPropertyMap<OcpVertexDescriptor, CustomMatrix<Kernel, unaligned, unpadded, SO>>(
+				make_iterator_property_map(R_.begin(), get(vertex_index, graph_)), size_R(size()));
+		}
 
 
-		template <
-			typename EdgeOrVectorPropertyMap,
-            Real * (VertexData::* PtrFunc)(),
-            std::pair<size_t, size_t> (* SizeFunc)(OcpSizeGraph const&, OcpVertexDescriptor),
-			StorageOrder SO = HpmpcWorkspace::SO
-        >
-		class VertexMatrixPropertyMap
-        {
-        public:
-            VertexMatrixPropertyMap(HpmpcWorkspace& ws)
-            :   ws_{ws}
-            {
-            }
+		auto S()
+		{
+			return detail::makeMatrixPtrPropertyMap<OcpVertexDescriptor, CustomMatrix<Kernel, unaligned, unpadded, SO>>(
+				make_iterator_property_map(S_.begin(), get(vertex_index, graph_)), size_S(size()));
+		}
 
 
-			template <typename T>
-            friend void put(VertexMatrixPropertyMap const& pm, OcpVertexDescriptor k, T const& val)
-            {
-                pm.put(k, val);
-            }
+		auto q()
+		{
+			return detail::makeVectorPtrPropertyMap<OcpVertexDescriptor, CustomVector<Kernel, unaligned, unpadded>>(
+				make_iterator_property_map(q_.begin(), get(vertex_index, graph_)), size_x(size()));
+		}
 
 
-            friend decltype(auto) get(VertexMatrixPropertyMap const& pm, OcpVertexDescriptor k)
-            {
-                return pm.get(k);
-            }
+		auto r()
+		{
+			return detail::makeVectorPtrPropertyMap<OcpVertexDescriptor, CustomVector<Kernel, unaligned, unpadded>>(
+				make_iterator_property_map(r_.begin(), get(vertex_index, graph_)), size_u(size()));
+		}
 
 
-        private:
-			template <typename T>
-            void put(OcpVertexDescriptor k, T const& val) const
-            {
-                auto const sz = SizeFunc(ws_.graph_, k);
-				
-				CustomMatrix<Real, unaligned, unpadded, SO> lhs(
-					(ws_.vertexData_.at(k).*PtrFunc)(), sz.first, sz.second);
-
-                noresize(lhs) = val;
-            }
+		auto lx()
+		{
+			// TODO: check size of put()
+			return make_iterator_property_map(lx_.begin(), get(vertex_index, graph_));
+		}
 
 
-            auto get(OcpVertexDescriptor k) const
-            {
-                auto const sz = SizeFunc(ws_.graph_, k);
-                
-                CustomMatrix<Real const, unaligned, unpadded, SO> m(
-					(ws_.vertexData_.at(k).*PtrFunc)(), sz.first, sz.second);
-
-                return m;
-            }
+		auto ux()
+		{
+			// TODO: check size of put()
+			return make_iterator_property_map(ux_.begin(), get(vertex_index, graph_));
+		}
 
 
-            HpmpcWorkspace& ws_;
-        };
+		auto lu()
+		{
+			// TODO: check size of put()
+			return make_iterator_property_map(lu_.begin(), get(vertex_index, graph_));
+		}
 
 
-		template <
-            Real * (VertexData::* PtrFunc)(),
-            size_t (* SizeFunc)(OcpSizeGraph const&, OcpVertexDescriptor)
-        >
-		class VertexVectorPropertyMap
-        {
-        public:
-            VertexVectorPropertyMap(HpmpcWorkspace& ws)
-            :   ws_{ws}
-            {
-            }
+		auto uu()
+		{
+			// TODO: check size of put()
+			return make_iterator_property_map(uu_.begin(), get(vertex_index, graph_));
+		}
 
 
-			template <typename T>
-            friend void put(VertexVectorPropertyMap const& pm, OcpVertexDescriptor k, T const& val)
-            {
-                pm.put(k, val);
-            }
+		auto ld()
+		{
+			return detail::makeVectorPtrPropertyMap<OcpVertexDescriptor, CustomVector<Kernel, unaligned, unpadded>>(
+				make_iterator_property_map(lg_.begin(), get(vertex_index, graph_)), size_d(size()));
+		}
 
 
-            friend decltype(auto) get(VertexVectorPropertyMap const& pm, OcpVertexDescriptor k)
-            {
-                return pm.get(k);
-            }
+		auto ud()
+		{
+			return detail::makeVectorPtrPropertyMap<OcpVertexDescriptor, CustomVector<Kernel, unaligned, unpadded>>(
+				make_iterator_property_map(ug_.begin(), get(vertex_index, graph_)), size_d(size()));
+		}
 
 
-        private:
-			template <typename T>
-            void put(OcpVertexDescriptor k, T const& val) const
-            {
-                auto const sz = SizeFunc(ws_.graph_, k);
-				
-				CustomVector<Real, unaligned, unpadded, columnVector> lhs(
-					(ws_.vertexData_.at(k).*PtrFunc)(), sz);
-
-                noresize(lhs) = val;
-            }
+		auto A()
+		{
+			return detail::makeMatrixPtrPropertyMap<OcpEdgeDescriptor, CustomMatrix<Kernel, unaligned, unpadded, SO>>(
+				make_iterator_property_map(A_.begin(), get(edge_index, graph_)), size_A(size(), graph_));
+		}
 
 
-            auto get(OcpVertexDescriptor k) const
-            {
-                auto const sz = SizeFunc(ws_.graph_, k);
-                
-                CustomVector<Real const, unaligned, unpadded, columnVector> val(
-					(ws_.vertexData_.at(k).*PtrFunc)(), sz);
-
-                return val;
-            }
+		auto B()
+		{
+			return detail::makeMatrixPtrPropertyMap<OcpEdgeDescriptor, CustomMatrix<Kernel, unaligned, unpadded, SO>>(
+				make_iterator_property_map(B_.begin(), get(edge_index, graph_)), size_B(size(), graph_));
+		}
 
 
-            HpmpcWorkspace& ws_;
-        };
+		auto b()
+		{
+			return detail::makeVectorPtrPropertyMap<OcpEdgeDescriptor, CustomVector<Kernel, unaligned, unpadded>>(
+				make_iterator_property_map(b_.begin(), get(edge_index, graph_)), size_b(size(), graph_));
+		}
 
 
-		template <
-            Real * (EdgeData::* PtrFunc)(),
-            std::pair<size_t, size_t> (* SizeFunc)(OcpSizeGraph const&, OcpEdgeDescriptor),
-			StorageOrder SO = HpmpcWorkspace::SO
-        >
-		class EdgeMatrixPropertyMap
-        {
-        public:
-            EdgeMatrixPropertyMap(HpmpcWorkspace& ws)
-            :   ws_{ws}
-            {
-            }
+		auto x() const
+		{
+			return detail::makeVectorPtrPropertyMap<OcpVertexDescriptor, CustomVector<Kernel, unaligned, unpadded>>(
+				make_iterator_property_map(x_.begin(), get(vertex_index, graph_)), size_x(size()));
+		}
 
 
-			template <typename T>
-            friend void put(EdgeMatrixPropertyMap const& pm, OcpEdgeDescriptor k, T const& val)
-            {
-                pm.put(k, val);
-            }
-
-
-            friend decltype(auto) get(EdgeMatrixPropertyMap const& pm, OcpEdgeDescriptor k)
-            {
-                return pm.get(k);
-            }
-
-
-        private:
-			template <typename T>
-            void put(OcpEdgeDescriptor k, T const& val) const
-            {
-                auto const sz = SizeFunc(ws_.graph_, k);
-				
-				CustomMatrix<Real, unaligned, unpadded, SO> lhs(
-					(ws_.edgeData_.at(k).*PtrFunc)(), sz.first, sz.second);
-
-                noresize(lhs) = val;
-            }
-
-
-            auto get(OcpEdgeDescriptor k) const
-            {
-                auto const sz = SizeFunc(ws_.graph_, k);
-                
-                CustomMatrix<Real const, unaligned, unpadded, SO> m(
-					(ws_.edgeData_.at(k).*PtrFunc)(), sz.first, sz.second);
-
-                return m;
-            }
-
-
-            HpmpcWorkspace& ws_;
-        };
-
-
-		template <
-            Real * (VertexData::* PtrFunc)(),
-            size_t (* SizeFunc)(OcpSizeGraph const&, Key)
-        >
-		class EdgeVectorPropertyMap
-        {
-        public:
-            EdgeVectorPropertyMap(HpmpcWorkspace& ws)
-            :   ws_{ws}
-            {
-            }
-
-
-			template <typename T>
-            friend void put(EdgeVectorPropertyMap const& pm, OcpEdgeDescriptor k, T const& val)
-            {
-                pm.put(k, val);
-            }
-
-
-            friend decltype(auto) get(EdgeVectorPropertyMap const& pm, OcpEdgeDescriptor k)
-            {
-                return pm.get(k);
-            }
-
-
-        private:
-			template <typename T>
-            void put(OcpEdgeDescriptor k, T const& val) const
-            {
-                auto const sz = SizeFunc(ws_.graph_, k);
-				
-				CustomVector<Real, unaligned, unpadded, columnVector> lhs(
-					(ws_.edgeData_.at(k).*PtrFunc)(), sz);
-
-                noresize(lhs) = val;
-            }
-
-
-            auto get(OcpEdgeDescriptor k) const
-            {
-                auto const sz = SizeFunc(ws_.graph_, k);
-                
-                CustomVector<Real const, unaligned, unpadded, columnVector> val(
-					(ws_.edgeData_.at(k).*PtrFunc)(), sz);
-
-                return val;
-            }
-
-
-            HpmpcWorkspace& ws_;
-        };
+		auto u() const
+		{
+			return detail::makeVectorPtrPropertyMap<OcpVertexDescriptor, CustomVector<Kernel, unaligned, unpadded>>(
+				make_iterator_property_map(u_.begin(), get(vertex_index, graph_)), size_u(size()));
+		}
 
 		
 	private:
-		using VertexData = detail::HpxxxVertexData<Kernel, SO>;
-		using EdgeData = detail::HpxxxEdgeData<Kernel, SO>;
+		OcpGraph graph_;
+		std::vector<OcpSize> size_;
 
-		OcpSizeGraph graph_;
-		std::vector<VertexData> vertexData_;
-		std::vector<EdgeData> edgeData_;
+		std::vector<Real> realPool_;
+		std::vector<int> intPool_;
 
 		// --------------------------------
 		//
 		// HPMPC QP problem data
 		//
 		// --------------------------------
-		std::vector<Real const *> A_;
-		std::vector<Real const *> B_;
-		std::vector<Real const *> b_;
-		std::vector<Real const *> Q_;
-		std::vector<Real const *> S_;
-		std::vector<Real const *> R_;
-		std::vector<Real const *> q_;
-		std::vector<Real const *> r_;
-		std::vector<Real const *> lb_;
-		std::vector<Real const *> ub_;
-		std::vector<Real const *> C_;
-		std::vector<Real const *> D_;
-		std::vector<Real const *> lg_;
-		std::vector<Real const *> ug_;
+		std::vector<Real *> A_;
+		std::vector<Real *> B_;
+		std::vector<Real *> b_;
+		std::vector<Real *> Q_;
+		std::vector<Real *> S_;
+		std::vector<Real *> R_;
+		std::vector<Real *> q_;
+		std::vector<Real *> r_;
+		std::vector<Real *> lb_;
+		std::vector<Real *> ub_;
+		std::vector<Real *> C_;
+		std::vector<Real *> D_;
+		std::vector<Real *> lg_;
+		std::vector<Real *> ug_;
 		std::vector<int> nx_;
 		std::vector<int> nu_;
 		std::vector<int> nb_;
 		std::vector<int> ng_;
-		std::vector<int const *> hidxb_;
+		std::vector<int *> hidxb_;
+
+		std::vector<DynamicVector<Kernel>> lx_;
+		std::vector<DynamicVector<Kernel>> ux_;
+		std::vector<DynamicVector<Kernel>> lu_;
+		std::vector<DynamicVector<Kernel>> uu_;
 
 		// --------------------------------
 		//
@@ -573,68 +467,140 @@ namespace tmpc
 		bool _warmStart = false;
 
 
+		// This visitor calculates the total number of elements needed
+		// for all arrays passed to and returned from HPMPC.
+		template <typename SizeMap>
+		class ElementCountVisitor
+        :   public boost::default_bfs_visitor 
+        {
+        public:
+            ElementCountVisitor(SizeMap size_map, size_t& real_count, size_t& int_count)
+            :   sizeMap_{size_map}
+			,	realCount_{real_count}
+			,	intCount_{int_count}
+            {
+				realCount_ = 0;
+				intCount_ = 0;
+            }
+
+        
+            void discover_vertex(OcpVertexDescriptor u, OcpGraph const& g)
+            {
+				auto const& sz = get(sizeMap_, u);
+				auto const max_nb = sz.nu() + sz.nx();
+
+				intCount_ += max_nb;	// idxb
+                
+				realCount_ += sz.nx() * sz.nx();	// Q
+				realCount_ += sz.nu() * sz.nx();	// S
+				realCount_ += sz.nu() * sz.nu();	// R 
+				realCount_ += sz.nx();	// q
+				realCount_ += sz.nu();	// r
+				realCount_ += max_nb;	// lb
+				realCount_ += max_nb;	// ub
+
+				realCount_ += sz.nc() * sz.nx();	// C
+				realCount_ += sz.nc() * sz.nu();	// D
+				realCount_ += sz.nc();	// lg
+				realCount_ += sz.nc();	// ug
+
+				realCount_ += sz.nx();	// x
+				realCount_ += sz.nu();	// u
+				realCount_ += 2 * sz.nc() + 2 * max_nb;	// lam
+            }
+
+
+			void tree_edge(OcpEdgeDescriptor e, OcpGraph const& g)
+			{
+				auto const& sz_u = get(sizeMap_, source(e, g));
+				auto const& sz_v = get(sizeMap_, target(e, g));
+
+				realCount_ += sz_v.nx() * sz_u.nx();	// A
+				realCount_ += sz_v.nx() * sz_u.nu();	// B
+				realCount_ += sz_v.nx();	// b
+				realCount_ += sz_v.nx();	// pi
+			}
+
+        
+        private:
+            SizeMap sizeMap_;
+			size_t& realCount_;
+			size_t& intCount_;
+        };
+
+
 		class InitVisitor
         :   public boost::default_bfs_visitor 
         {
         public:
             InitVisitor(HpmpcWorkspace& ws)
             :   ws_{ws}
-            {                
+            {
             }
 
         
-            void discover_vertex(OcpVertexDescriptor u, OcpSizeGraph const& g)
+            void discover_vertex(OcpVertexDescriptor u, OcpGraph const& g)
             {
-				auto const& sz = g[u].size;
+				auto const& sz = get(ws_.size(), u);
+				auto const max_nb = sz.nu() + sz.nx();
 
-                ws_.vertexData_.emplace_back(sz);
-				auto& vd = vertexData_.back();
-
-				ws_.nx_.push_back(sz.nx());
+                ws_.nx_.push_back(sz.nx());
 				ws_.nu_.push_back(sz.nu());
-				ws_.nb_.push_back(vd.nb());
+				ws_.nb_.push_back(max_nb);	// this will be updated during solve()
 				ws_.ng_.push_back(sz.nc());
 				
-				ws_.hidxb_.push_back(vd.hidxb_data());
+				// Allocate idxb array. It will be properly initialized in solve().
+				int * const idxb = allocInt(max_nb);
+				ws_.hidxb_.push_back(idxb);
 
-				ws_.Q_.push_back(vd.Q_data());
-				ws_.S_.push_back(vd.S_data());
-				ws_.R_.push_back(vd.R_data());
-				ws_.q_.push_back(vd.q_data());
-				ws_.r_.push_back(vd.r_data());
-				ws_.lb_.push_back(vd.lb_data());
-				ws_.ub_.push_back(vd.ub_data());
+				// Init idxb to 0,1,2,... s.t. maximum necessary workspace size is returned.
+				for (int i = 0; i < max_nb; ++i)
+					idxb[i] = i;
 
-				ws_.C_ .push_back(vd.C_data());
-				ws_.D_ .push_back(vd.D_data());
-				ws_.lg_.push_back(vd.lg_data());
-				ws_.ug_.push_back(vd.ug_data());
+				ws_.Q_.push_back(allocReal(sz.nx() * sz.nx()));
+				ws_.S_.push_back(allocReal(sz.nu() * sz.nx()));
+				ws_.R_.push_back(allocReal(sz.nu() * sz.nu()));
+				ws_.q_.push_back(allocReal(sz.nx()));
+				ws_.r_.push_back(allocReal(sz.nu()));
 
-				ws_.x_.push_back(vd.x_data());
-				ws_.u_.push_back(vd.u_data());
-				ws_.lam_.push_back(vd.lam_data());
+				ws_.lb_.push_back(allocReal(max_nb));	// the array will be updated during solve()
+				ws_.lu_.emplace_back(sz.nu(), -inf<Real>());
+				ws_.lx_.emplace_back(sz.nx(), -inf<Real>());
+
+				ws_.ub_.push_back(allocReal(max_nb));	// the array will be updated during solve()
+				ws_.uu_.emplace_back(sz.nu(), inf<Real>());			
+				ws_.ux_.emplace_back(sz.nx(), inf<Real>());
+
+				ws_.C_ .push_back(allocReal(sz.nc() * sz.nx()));
+				ws_.D_ .push_back(allocReal(sz.nc() * sz.nu()));
+				ws_.lg_.push_back(allocReal(sz.nc()));
+				ws_.ug_.push_back(allocReal(sz.nc()));
+
+				ws_.x_.push_back(allocReal(sz.nx()));
+				ws_.u_.push_back(allocReal(sz.nu()));
+				ws_.lam_.push_back(allocReal(2 * sz.nc() + 2 * max_nb));
             }
 
 
-			void tree_edge(OcpEdgeDescriptor e, OcpSizeGraph const& g)
+			void tree_edge(OcpEdgeDescriptor e, OcpGraph const& g)
 			{
-				auto const vertex_from = source(e, g);
-				auto const vertex_to = target(e, g);
+				auto const u = source(e, g);
+				auto const v = target(e, g);
 
-				if (vertex_to != vertex_from + 1)
+				if (v != u + 1)
 					throw std::invalid_argument("Invalid tree structure in HpmpcWorkspace ctor:	vertices are not sequentially connected");
 
-				ws_.edgeData_.emplace_back(g[source(e, g)].size, g[target(e, g)].size);
-				auto& ed = vertexData_.back();
+				auto const& sz_u = get(ws_.size(), u);
+				auto const& sz_v = get(ws_.size(), v);
 
-				ws_.A_.push_back(ed.A_data());
-				ws_.B_.push_back(ed.B_data());
-				ws_.b_.push_back(ed.b_data());
-				ws_.pi_.push_back(ed.pi_data());
+				ws_.A_.push_back(allocReal(sz_v.nx() * sz_u.nx()));
+				ws_.B_.push_back(allocReal(sz_v.nx() * sz_u.nu()));
+				ws_.b_.push_back(allocReal(sz_v.nx()));
+				ws_.pi_.push_back(allocReal(sz_v.nx()));
 			}
 
 
-			void non_tree_edge(OcpEdgeDescriptor e, OcpSizeGraph const& g)
+			void non_tree_edge(OcpEdgeDescriptor e, OcpGraph const& g)
 			{
 				throw std::invalid_argument("Invalid tree structure in HpmpcWorkspace ctor:	non-tree graph structure detected.");
 			}
@@ -642,7 +608,78 @@ namespace tmpc
         
         private:
             HpmpcWorkspace& ws_;
+			size_t allocatedReal_ = 0;
+			size_t allocatedInt_ = 0;
+
+
+			Real * allocReal(size_t n)
+			{
+				if (allocatedReal_ + n > ws_.realPool_.size())
+					throw std::bad_alloc();
+
+				Real * const ptr = ws_.realPool_.data() + allocatedReal_;
+				allocatedReal_ += n;
+
+				return ptr;
+			}
+
+
+			int * allocInt(size_t n)
+			{
+				if (allocatedInt_ + n > ws_.intPool_.size())
+					throw std::bad_alloc();
+
+				int * const ptr = ws_.intPool_.data() + allocatedInt_;
+				allocatedInt_ += n;
+
+				return ptr;
+			}
         };
+
+
+		class PopulateBounds
+		{
+		public:
+			PopulateBounds(Real * lb, Real * ub, int * idxb, int& nb)
+			:	lb_(lb)
+			,	ub_(ub)
+			,	idxb_(idxb)
+			,	nb_(nb)
+			{
+				nb_ = 0;
+			}
+
+
+			void operator()(Real l, Real u)
+			{
+				if (std::isfinite(l) && std::isfinite(u))
+				{
+					// If both bounds are finite, add i to the bounds index,
+					// and copy values to the lb_internal_ and ub_internal_.
+					*idxb_++ = count_;
+					*lb_++ = l;
+					*ub_++ = u;
+					++nb_;
+				}
+				else 
+				{
+					// Otherwise, check that the values are [-inf, inf]
+					if (!(l == -inf<Real>() && u == inf<Real>()))
+						throw std::invalid_argument("An invalid QP bound is found. For HPMPC/HPIPM, "
+							"the bounds should be either both finite or [-inf, inf]");
+				}
+
+				++count_;
+			}
+
+
+		private:
+			Real * lb_;
+			Real * ub_;
+			int * idxb_;
+			int& nb_;
+			int count_ = 0;
+		};
 
 
 		// Allocate soverWorkspace_ according to nx, nu, nb, ng etc.

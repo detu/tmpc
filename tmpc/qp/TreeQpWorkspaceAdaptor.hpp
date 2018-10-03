@@ -1,46 +1,13 @@
 #pragma once
 
-#include <tmpc/ocp/OcpSizeGraph.hpp>
-#include <tmpc/core/IteratorRange.hpp>
+#include <tmpc/ocp/OcpGraph.hpp>
+#include <tmpc/core/Range.hpp>
 
 #include <boost/graph/copy.hpp>
 
 
 namespace tmpc
 {
-    namespace detail
-    {
-        template <typename Graph>
-        inline std::vector<OcpSize> sizeGraphToSizeVector(Graph const& graph)
-        {
-            auto const n_stages = num_vertices(graph);
-            auto const vert = make_iterator_range(vertices(graph));
-
-            std::vector<OcpSize> size_vec;
-            size_vec.reserve(n_stages);
-
-            size_t vertex_index = 0;
-            for (auto v = vert.begin(); v != vert.end(); ++v, ++vertex_index)
-            {
-                auto adj_vert = make_iterator_range(adjacent_vertices(*v, graph));
-
-                if (adj_vert.size() > 1)
-                    throw std::invalid_argument("TreeQpWorkspaceAdaptor does not support tree QP structures");
-
-                if (adj_vert.size() == 0 && std::next(v) != vert.end())
-                    throw std::invalid_argument("TreeQpWorkspaceAdaptor does not support disconnected graphs");
-                
-                if (adj_vert.size() == 1 && adj_vert.front() != vertex_index + 1)
-                    throw std::invalid_argument("TreeQpWorkspaceAdaptor: graph nodes must be sequentially connected");
-
-                size_vec.push_back(graph[*v].size);
-            }
-
-            return size_vec;
-        }
-    }
-
-
     template <typename QpWorkspace>
     class TreeQpWorkspaceAdaptor
     {

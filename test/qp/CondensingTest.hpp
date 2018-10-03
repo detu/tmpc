@@ -162,15 +162,15 @@ namespace tmpc :: testing
 		typename TestFixture::CondensingAlgorithm condensing(sizeBegin(this->qp), sizeEnd(this->qp));
 		OcpQp<Kernel> const condensed = condensing(this->qp.begin(), this->qp.end());
 
-		EXPECT_EQ(print_wrap(condensed.Q()), print_wrap(this->Qc_expected));
-		EXPECT_EQ(print_wrap(condensed.R()), print_wrap(this->Rc_expected));
-		EXPECT_EQ(print_wrap(condensed.S()), print_wrap(this->Sc_expected));
-		EXPECT_EQ(print_wrap(condensed.q()), print_wrap(this->qc_expected));
-		EXPECT_EQ(print_wrap(condensed.r()), print_wrap(this->rc_expected));
-		EXPECT_EQ(print_wrap(condensed.lbx()), print_wrap(this->lbx_expected));
-		EXPECT_EQ(print_wrap(condensed.ubx()), print_wrap(this->ubx_expected));
-		EXPECT_EQ(print_wrap(condensed.lbu()), print_wrap(this->lbu_expected));
-		EXPECT_EQ(print_wrap(condensed.ubu()), print_wrap(this->ubu_expected));
+		EXPECT_EQ(forcePrint(condensed.Q()), forcePrint(this->Qc_expected));
+		EXPECT_EQ(forcePrint(condensed.R()), forcePrint(this->Rc_expected));
+		EXPECT_EQ(forcePrint(condensed.S()), forcePrint(this->Sc_expected));
+		EXPECT_EQ(forcePrint(condensed.q()), forcePrint(this->qc_expected));
+		EXPECT_EQ(forcePrint(condensed.r()), forcePrint(this->rc_expected));
+		EXPECT_EQ(forcePrint(condensed.lbx()), forcePrint(this->lbx_expected));
+		EXPECT_EQ(forcePrint(condensed.ubx()), forcePrint(this->ubx_expected));
+		EXPECT_EQ(forcePrint(condensed.lbu()), forcePrint(this->lbu_expected));
+		EXPECT_EQ(forcePrint(condensed.ubu()), forcePrint(this->ubu_expected));
 	}
 	
 
