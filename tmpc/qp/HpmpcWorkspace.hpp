@@ -135,9 +135,6 @@ namespace tmpc
 			ng_.reserve(nv);
 			hidxb_.reserve(nv);
 	
-			A_ .reserve(nv);
-			B_ .reserve(nv);
-			b_ .reserve(nv);
 			Q_ .reserve(nv);
 			S_ .reserve(nv);
 			R_ .reserve(nv);
@@ -156,7 +153,6 @@ namespace tmpc
 			
 			x_.reserve(nv);
 			u_.reserve(nv);
-			pi_.reserve(nv);
 			lam_.reserve(nv);
 
 			// Preallocate arrays holding QP edge data pointers.
