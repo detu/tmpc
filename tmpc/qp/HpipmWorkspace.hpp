@@ -10,6 +10,7 @@
 #include <hpipm_d_ocp_qp.h>
 #include <hpipm_d_ocp_qp_sol.h>
 #include <hpipm_d_ocp_qp_ipm.h>
+#include <hpipm_d_ocp_qp_kkt.h>
 
 #include "detail/VectorPtrPropertyMap.hpp"
 #include "detail/MatrixPtrPropertyMap.hpp"
@@ -212,64 +213,9 @@ namespace tmpc
 
 		void solve()
 		{
-			auto const vertex_id = get(vertex_index, graph_);
-
 			if (num_vertices(graph_) > 1)
 			{
-				// Recalculate bounds indices of each stage, as the bounds might have changed.				
-				// Update the nb_ array.
-				for(auto v : vertices(graph_))
-				{
-					auto const v_i = get(vertex_id, v);
-					auto const& sz = get(size(), v);
-
-					int nbx = 0, nbu = 0;
-					PopulateBounds pb(lb_[v_i], ub_[v_i], hidxb_[v_i]);
-					
-					// Cycle through the bounds and check for infinities
-					{
-						auto const& lu = lu_[v_i];
-						auto const& uu = uu_[v_i];
-						
-						for (size_t i = 0; i < sz.nu(); ++i)
-							if (pb(lu[i], uu[i]))
-								++nbu;
-					}
-
-					{
-						auto const& lx = lx_[v_i];
-						auto const& ux = ux_[v_i];
-					
-						for (size_t i = 0; i < sz.nx(); ++i)
-							if (pb(lx[i], ux[i]))
-								++nbx;
-					}
-						
-					nb_[v_i] = nbx + nbu;
-					nbx_[v_i] = nbx;
-					nbu_[v_i] = nbu;
-				
-					// Cycle through the soft bounds and count number of soft state bounds (nsbx),
-					// number of soft input bounds (nsbu) and number of soft general bounds (nsg).
-					int nsbx = 0, nsbu = 0, nsg = 0;
-					int const * const idxs = idxs_[v_i];
-					
-					for (size_t i = 0; i < sz.ns(); ++i)
-					{
-						if (sz.nu() <= idxs[i] && idxs[i] < sz.nu() + sz.nx())
-							++nsbx;
-							
-						if (idxs[i] < sz.nu())
-							++nsbu;
-							
-						if (idxs[i] >= sz.nu() + sz.nx())
-							++nsg;
-					}
-					
-					nsbx_[v_i] = nsbx;
-					nsbu_[v_i] = nsbu;
-					nsg_[v_i] = nsg;
-				}
+				updateBounds();
 	
 				// Number of QP steps for HPIPM
 				auto const N = num_vertices(graph_) - 1;
@@ -311,8 +257,50 @@ namespace tmpc
 			}
 		}
 
-		std::size_t maxIter() const noexcept { return solverArg_.iter_max; }
 
+		void solveUnconstrained()
+		{
+			updateBounds();
+			
+			// Init HPIPM structures. Since the nb_, nbx_, nbu_, might change if the bounds change, 
+			// we need to do it every time, sorry.
+			// Hopefully these operations are not expensive compared to actual solving.
+			typename Hpipm::ocp_qp qp;
+			Hpipm::create_ocp_qp(&ocpQpDim_, &qp, ocpQpMem_.data());
+
+			typename Hpipm::ocp_qp_sol sol;
+			Hpipm::create_ocp_qp_sol(&ocpQpDim_, &sol, ocpQpSolMem_.data());
+
+			typename Hpipm::ocp_qp_ipm_workspace solver_workspace;
+			Hpipm::create_ocp_qp_ipm(&ocpQpDim_, &solverArg_, &solver_workspace, solverWorkspaceMem_.data());
+
+			// Convert the problem
+			Hpipm::cvt_colmaj_to_ocp_qp(
+				A_.data(), B_.data(), b_.data(), 
+				Q_.data(), S_.data(), R_.data(), q_.data(), r_.data(), 
+				hidxb_.data(), lb_.data(), ub_.data(), 
+				C_.data(), D_.data(), lg_.data(), ug_.data(), 
+				Zl_.data(), Zu_.data(), zl_.data(), zu_.data(), idxs_.data(),
+				lbls_.data(), lbus_.data(),
+				&qp);
+			
+			// Call HPIPM
+			d_fact_solve_kkt_unconstr_ocp_qp(&qp, &sol, &solverArg_, &solver_workspace);
+
+			// Convert the solution
+			Hpipm::cvt_ocp_qp_sol_to_colmaj(&sol, 
+				u_.data(), x_.data(), ls_.data(), us_.data(),
+				pi_.data(), lam_lb_.data(), lam_ub_.data(), lam_lg_.data(), lam_ug_.data(),
+				lam_ls_.data(), lam_us_.data());
+		}
+
+
+		size_t maxIter() const noexcept 
+		{ 
+			return solverArg_.iter_max; 
+		}
+
+		
 		void maxIter(size_t val) 
 		{ 
 			if (val != solverArg_.iter_max)
@@ -321,6 +309,7 @@ namespace tmpc
 				resizeSolverWorkspace();
 			}
 		}
+
 
 		/// \brief Get number of iterations performed by the QP solver.
 		unsigned numIter() const { return numIter_; }
@@ -895,6 +884,67 @@ namespace tmpc
 		void resizeSolverWorkspace()
 		{
 			solverWorkspaceMem_.resize(Hpipm::memsize_ocp_qp_ipm(&ocpQpDim_, &solverArg_));
+		}
+
+
+		/// @brief Recalculate bounds indices of each stage, as the bounds might have changed.
+		void updateBounds()
+		{
+			auto const vertex_id = get(vertex_index, graph_);
+				
+			// Update the nb_ array.
+			for(auto v : vertices(graph_))
+			{
+				auto const v_i = get(vertex_id, v);
+				auto const& sz = get(size(), v);
+
+				int nbx = 0, nbu = 0;
+				PopulateBounds pb(lb_[v_i], ub_[v_i], hidxb_[v_i]);
+				
+				// Cycle through the bounds and check for infinities
+				{
+					auto const& lu = lu_[v_i];
+					auto const& uu = uu_[v_i];
+					
+					for (size_t i = 0; i < sz.nu(); ++i)
+						if (pb(lu[i], uu[i]))
+							++nbu;
+				}
+
+				{
+					auto const& lx = lx_[v_i];
+					auto const& ux = ux_[v_i];
+				
+					for (size_t i = 0; i < sz.nx(); ++i)
+						if (pb(lx[i], ux[i]))
+							++nbx;
+				}
+					
+				nb_[v_i] = nbx + nbu;
+				nbx_[v_i] = nbx;
+				nbu_[v_i] = nbu;
+			
+				// Cycle through the soft bounds and count number of soft state bounds (nsbx),
+				// number of soft input bounds (nsbu) and number of soft general bounds (nsg).
+				int nsbx = 0, nsbu = 0, nsg = 0;
+				int const * const idxs = idxs_[v_i];
+				
+				for (size_t i = 0; i < sz.ns(); ++i)
+				{
+					if (sz.nu() <= idxs[i] && idxs[i] < sz.nu() + sz.nx())
+						++nsbx;
+						
+					if (idxs[i] < sz.nu())
+						++nsbu;
+						
+					if (idxs[i] >= sz.nu() + sz.nx())
+						++nsg;
+				}
+				
+				nsbx_[v_i] = nsbx;
+				nsbu_[v_i] = nsbu;
+				nsg_[v_i] = nsg;
+			}
 		}
 	};
 }
