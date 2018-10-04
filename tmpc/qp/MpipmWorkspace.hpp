@@ -33,10 +33,7 @@ namespace tmpc
             // Populate edgeIndex_ and allocate edge properties of appropriate size
             edgeProperties_.reserve(num_edges(graph_));
             for (auto e : edges(graph_))
-            {
-                edgeIndex_[e] = edgeProperties_.size();
                 edgeProperties_.emplace_back(get(size_map, source(e, g)), get(size_map, target(e, g)));
-            }
         }
 
 
@@ -217,16 +214,13 @@ namespace tmpc
 
         auto edgeIndex() const
         {
-            return const_associative_property_map(edgeIndex_);
+            return get(edge_index, graph_);
         }
 
 
         OcpGraph graph_;
         std::vector<OcpSize> size_;
         std::vector<VertexPropertyBundle> vertexProperties_;
-
-        // TODO: use a data structure with O(1) access time for edgeIndex_.
-        std::map<OcpEdgeDescriptor, size_t> edgeIndex_;
         std::vector<EdgePropertyBundle> edgeProperties_;
     };
 
