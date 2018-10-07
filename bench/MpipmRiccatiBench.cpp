@@ -4,7 +4,7 @@
 #include <tmpc/qp/OcpQp.hpp>
 #include <tmpc/BlazeKernel.hpp>
 
-#include <benchmark/benchmark.h>
+#include "RiccatiBench.hpp"
 
 
 namespace tmpc :: benchmark
@@ -23,17 +23,7 @@ namespace tmpc :: benchmark
     }
 
 
-    // static void BenchmarkArguments(benchmark::internal::Benchmark* b) 
-    // {
-    //     for (int nx : {2, 5, 10})
-    //         for (int nu : {1, 2})
-    //             b->Args({100, nx, nu});
-    // }
+    BENCHMARK(BM_MpipmRiccati)->Apply(riccatiBenchArguments);
 
-
-    
-    // BENCHMARK(BM_HpipmRiccati)->Apply(BenchmarkArguments);
-
-
-    BENCHMARK(BM_MpipmRiccati)->Args({100, 10, 5});
+    //BENCHMARK(BM_MpipmRiccati)->Args({100, 10, 5});
 }

@@ -3,7 +3,7 @@
 #include <tmpc/ocp/OcpSizeProperties.hpp>
 #include <tmpc/BlazeKernel.hpp>
 
-#include <benchmark/benchmark.h>
+#include "RiccatiBench.hpp"
 
 
 namespace tmpc :: benchmark
@@ -22,17 +22,8 @@ namespace tmpc :: benchmark
             ws.solveUnconstrainedInternal();
     }
 
-    // static void BenchmarkArguments(benchmark::internal::Benchmark* b) 
-    // {
-    //     for (int nx : {2, 5, 10})
-    //         for (int nu : {1, 2})
-    //             b->Args({100, nx, nu});
-    // }
 
+    BENCHMARK(BM_HpipmRiccati)->Apply(riccatiBenchArguments);
 
-    
-    // BENCHMARK(BM_HpipmRiccati)->Apply(BenchmarkArguments);
-
-
-    BENCHMARK(BM_HpipmRiccati)->Args({100, 10, 5});
+    //BENCHMARK(BM_HpipmRiccati)->Args({100, 10, 5});
 }
