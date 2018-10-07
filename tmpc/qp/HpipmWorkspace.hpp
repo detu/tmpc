@@ -444,6 +444,20 @@ namespace tmpc
 		}
 
 
+		auto C()
+		{
+			return detail::makeMatrixPtrPropertyMap<OcpVertexDescriptor, CustomMatrix<Kernel, unaligned, unpadded, SO>>(
+				make_iterator_property_map(C_.begin(), get(vertex_index, graph_)), size_C(size()));
+		}
+
+
+		auto D()
+		{
+			return detail::makeMatrixPtrPropertyMap<OcpVertexDescriptor, CustomMatrix<Kernel, unaligned, unpadded, SO>>(
+				make_iterator_property_map(D_.begin(), get(vertex_index, graph_)), size_D(size()));
+		}
+
+
 		auto ld()
 		{
 			return detail::makeVectorPtrPropertyMap<OcpVertexDescriptor, CustomVector<Kernel, unaligned, unpadded>>(

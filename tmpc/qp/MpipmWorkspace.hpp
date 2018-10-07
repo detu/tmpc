@@ -3,6 +3,7 @@
 #include "detail/BundlePropertyMap.hpp"
 
 #include <tmpc/ocp/OcpGraph.hpp>
+#include <tmpc/ocp/OcpSize.hpp>
 #include <tmpc/core/PropertyMap.hpp>
 #include <tmpc/core/Graph.hpp>
 #include <tmpc/BlazeKernel.hpp>

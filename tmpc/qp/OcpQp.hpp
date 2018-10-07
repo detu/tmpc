@@ -1,9 +1,12 @@
 #pragma once
 
+#include <tmpc/Traits.hpp>
 #include <tmpc/ocp/OcpSize.hpp>
 #include <tmpc/qp/OcpQpBase.hpp>
 
 #include <tmpc/Matrix.hpp>
+
+#include <blaze/Math.h>
 
 #include <vector>
 #include <initializer_list>
@@ -425,5 +428,84 @@ namespace tmpc
 		copyProperty(src.A(), dst.A(), edg);
 		copyProperty(src.B(), dst.B(), edg);
 		copyProperty(src.b(), dst.b(), edg);
+	}
+
+
+	template <typename Qp>
+	inline void randomizeQp(Qp& qp)
+	{
+		using Real = typename RealOf<Qp>::type;
+		using DynamicMatrix = blaze::DynamicMatrix<Real>;
+		using DynamicVector = blaze::DynamicVector<Real>;
+		typename blaze::Rand<DynamicMatrix> rand_matrix;
+		typename blaze::Rand<DynamicVector> rand_vector;
+		
+		auto const vert = vertices(qp.graph());
+		for (auto v : vert)
+		{
+			auto const sz = get(qp.size(), v);
+
+			{
+				DynamicMatrix H = rand_matrix.generate(sz.nx() + sz.nu(), sz.nx() + sz.nu());
+				H *= ctrans(H);
+
+				put(qp.Q(), v, submatrix(H, 0, 0, sz.nx(), sz.nx()));
+				put(qp.R(), v, submatrix(H, sz.nx(), sz.nx(), sz.nu(), sz.nu()));
+				put(qp.S(), v, submatrix(H, sz.nx(), 0, sz.nu(), sz.nx()));
+			}
+
+			put(qp.q(), v, rand_vector.generate(sz.nx()));
+			put(qp.r(), v, rand_vector.generate(sz.nu()));
+			put(qp.C(), v, rand_matrix.generate(sz.ns(), sz.nx()));
+			put(qp.D(), v, rand_matrix.generate(sz.ns(), sz.nu()));
+
+			{
+				DynamicVector const lbd = rand_vector.generate(sz.ns());
+				DynamicVector const ubd = rand_vector.generate(sz.ns());
+				put(qp.ld(), v, min(lbd, ubd));
+				put(qp.ud(), v, max(lbd, ubd));
+			}
+
+			{
+				DynamicVector const lbx = rand_vector.generate(sz.nx());
+				DynamicVector const ubx = rand_vector.generate(sz.nx());
+				put(qp.lx(), v, min(lbx, ubx));
+				put(qp.ux(), v, max(lbx, ubx));
+			}
+
+			{
+				DynamicVector const lbu = rand_vector.generate(sz.nu());
+				DynamicVector const ubu = rand_vector.generate(sz.nu());
+				put(qp.lu(), v, min(lbu, ubu));
+				put(qp.uu(), v, max(lbu, ubu));
+			}
+
+			// {
+			// 	DynamicMatrix const Z = rand_matrix.generate(sz.ns(), sz.ns());
+			// 	put(qp.Zl(ctrans(Z) * Z);
+			// }
+
+			// {
+			// 	DynamicMatrix const Z = rand_matrix.generate(sz.ns(), sz.ns());
+			// 	put(qp.Zu(ctrans(Z) * Z);
+			// }
+				
+			// put(qp.zl(rand_vector.generate(sz.ns()));
+			// put(qp.zu(rand_vector.generate(sz.ns()));
+		}
+		
+		for (auto e : edges(qp.graph()))
+		{
+			auto const sz_u = get(qp.size(), source(e, qp.graph()));
+			auto const sz_v = get(qp.size(), target(e, qp.graph()));
+
+			put(qp.A(), e, rand_matrix.generate(sz_v.nx(), sz_u.nx()));
+			put(qp.B(), e, rand_matrix.generate(sz_v.nx(), sz_u.nu()));
+			put(qp.b(), e, rand_vector.generate(sz_v.nx()));
+			
+			// copyProperty(src.A(), dst.A(), edg);
+			// copyProperty(src.B(), dst.B(), edg);
+			// copyProperty(src.b(), dst.b(), edg);
+		}
 	}
 }

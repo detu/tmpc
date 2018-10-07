@@ -6,6 +6,7 @@ find_package(Threads REQUIRED)
 add_executable(tmpc_bench
     CondensingBench.cpp
     MathBench.cpp
+    MpipmRiccatiBench.cpp
 )
 
 
@@ -25,6 +26,17 @@ endif ()
 if (TMPC_WITH_BLASFEO)
     target_sources(tmpc_bench
         PRIVATE BlasfeoMathBench.cpp
+    )
+endif ()
+
+
+if (TMPC_WITH_HPIPM)
+    target_sources(tmpc_bench
+        PRIVATE HpipmRiccatiBench.cpp
+    )
+
+    target_link_libraries(tmpc_bench
+        tmpc-qp-hpipm
     )
 endif ()
 
