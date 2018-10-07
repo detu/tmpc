@@ -492,6 +492,13 @@ namespace tmpc
 				make_iterator_property_map(u_.begin(), get(vertex_index, graph_)), size_u(size()));
 		}
 
+
+		auto pi() const
+		{
+			return detail::makeVectorPtrPropertyMap<OcpEdgeDescriptor, CustomVector<Kernel, unaligned, unpadded>>(
+				make_iterator_property_map(pi_.begin(), get(edge_index, graph_)), size_b(size(), graph_));
+		}
+
 		
 	private:
 		using Hpipm = detail::HpipmApi<Real>;
@@ -575,6 +582,12 @@ namespace tmpc
 		std::vector<DynamicVector<Kernel>> ux_;
 		std::vector<DynamicVector<Kernel>> lu_;
 		std::vector<DynamicVector<Kernel>> uu_;
+
+		// Full lambda multipliers for lower and upper state and input bounds
+		std::vector<DynamicVector<Kernel>> lam_lx_;
+		std::vector<DynamicVector<Kernel>> lam_ux_;
+		std::vector<DynamicVector<Kernel>> lam_lu_;
+		std::vector<DynamicVector<Kernel>> lam_uu_;
 
 		// --------------------------------
 		//
@@ -777,6 +790,11 @@ namespace tmpc
 				ws_.lam_ug_.push_back(allocReal(sz.nc()));
 				ws_.lam_ls_.push_back(allocReal(sz.ns()));
 				ws_.lam_us_.push_back(allocReal(sz.ns()));
+
+				ws_.lam_lx_.emplace_back(sz.nx(), sNaN<Real>());
+				ws_.lam_ux_.emplace_back(sz.nx(), sNaN<Real>());
+				ws_.lam_lu_.emplace_back(sz.nx(), sNaN<Real>());
+				ws_.lam_uu_.emplace_back(sz.nx(), sNaN<Real>());
             }
 
 

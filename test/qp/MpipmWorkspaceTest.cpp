@@ -1,6 +1,7 @@
 #include "TreeQpWorkspaceSolveTest.hpp"
 #include "TreeQpWorkspaceTest.hpp"
 //#include "QpWorkspaceSolveTest.hpp"
+#include "../qp/SolveUnconstrainedTest.hpp"
 
 #include <tmpc/qp/MpipmWorkspace.hpp>
 
@@ -11,6 +12,8 @@ namespace tmpc :: testing
 {
 	INSTANTIATE_TYPED_TEST_CASE_P(Mpipm_double, TreeQpWorkspaceTest, MpipmWorkspace<double>);
 	//INSTANTIATE_TYPED_TEST_CASE_P(Mpipm_double, TreeQpWorkspaceSolveTest, MpipmWorkspace<double>);
+	INSTANTIATE_TYPED_TEST_CASE_P(Mpipm_double, SolveUnconstrainedTest, MpipmWorkspace<double>);	
+
 
 	TEST(Mpipm_double, testCtor)
 	{

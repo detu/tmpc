@@ -28,6 +28,11 @@ target_include_directories(tmpc
     PUBLIC ${PROJECT_INCLUDE_DIR}
 )
 
+
+target_link_libraries(tmpc
+    PUBLIC ${LAPACK_LIBRARIES}
+)
+
 #
 # Add CasADi interface
 #
