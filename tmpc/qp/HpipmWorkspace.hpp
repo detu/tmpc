@@ -215,32 +215,7 @@ namespace tmpc
 		{
 			if (num_vertices(graph_) > 1)
 			{
-				updateBounds();
-	
-				// Number of QP steps for HPIPM
-				auto const N = num_vertices(graph_) - 1;
-	
-				// Init HPIPM structures. Since the nb_, nbx_, nbu_, might change if the bounds change, 
-				// we need to do it every time, sorry.
-				// Hopefully these operations are not expensive compared to actual solving.
-				typename Hpipm::ocp_qp qp;
-				Hpipm::create_ocp_qp(&ocpQpDim_, &qp, ocpQpMem_.data());
-	
-				typename Hpipm::ocp_qp_sol sol;
-				Hpipm::create_ocp_qp_sol(&ocpQpDim_, &sol, ocpQpSolMem_.data());
-	
-				typename Hpipm::ocp_qp_ipm_workspace solver_workspace;
-				Hpipm::create_ocp_qp_ipm(&ocpQpDim_, &solverArg_, &solver_workspace, solverWorkspaceMem_.data());
-	
-				// Convert the problem
-				Hpipm::cvt_colmaj_to_ocp_qp(
-					A_.data(), B_.data(), b_.data(), 
-					Q_.data(), S_.data(), R_.data(), q_.data(), r_.data(), 
-					hidxb_.data(), lb_.data(), ub_.data(), 
-					C_.data(), D_.data(), lg_.data(), ug_.data(), 
-					Zl_.data(), Zu_.data(), zl_.data(), zu_.data(), idxs_.data(),
-					lbls_.data(), lbus_.data(),
-					&qp);
+				convertProblem();
 	
 				// Call HPIPM
 				auto const ret = Hpipm::solve_ocp_qp_ipm(&qp, &sol, &solverArg_, &solver_workspace);
@@ -249,29 +224,37 @@ namespace tmpc
 				if (ret != 0)
 					throw HpipmException(ret);
 
-				// Convert the solution
-				Hpipm::cvt_ocp_qp_sol_to_colmaj(&sol, 
-					u_.data(), x_.data(), ls_.data(), us_.data(),
-					pi_.data(), lam_lb_.data(), lam_ub_.data(), lam_lg_.data(), lam_ug_.data(),
-					lam_ls_.data(), lam_us_.data());
+				convertSolution();
 			}
 		}
 
 
 		void solveUnconstrained()
 		{
+			convertProblem();
+			solveUnconstrainedInternal();
+			convertSolution();
+		}
+
+
+		/// @brief Call HPIPM to solve an (unconstrained) QP which has already been copied to HPIPM structures
+		/// by a previous call to convertProblem().
+		void solveUnconstrainedInternal()
+		{
+			d_fact_solve_kkt_unconstr_ocp_qp(&qp, &sol, &solverArg_, &solver_workspace);
+		}
+
+
+		/// @brief Copy QP to HPIPM data structures.
+		void convertProblem()
+		{
 			updateBounds();
 			
 			// Init HPIPM structures. Since the nb_, nbx_, nbu_, might change if the bounds change, 
 			// we need to do it every time, sorry.
 			// Hopefully these operations are not expensive compared to actual solving.
-			typename Hpipm::ocp_qp qp;
 			Hpipm::create_ocp_qp(&ocpQpDim_, &qp, ocpQpMem_.data());
-
-			typename Hpipm::ocp_qp_sol sol;
 			Hpipm::create_ocp_qp_sol(&ocpQpDim_, &sol, ocpQpSolMem_.data());
-
-			typename Hpipm::ocp_qp_ipm_workspace solver_workspace;
 			Hpipm::create_ocp_qp_ipm(&ocpQpDim_, &solverArg_, &solver_workspace, solverWorkspaceMem_.data());
 
 			// Convert the problem
@@ -283,10 +266,12 @@ namespace tmpc
 				Zl_.data(), Zu_.data(), zl_.data(), zu_.data(), idxs_.data(),
 				lbls_.data(), lbus_.data(),
 				&qp);
-			
-			// Call HPIPM
-			d_fact_solve_kkt_unconstr_ocp_qp(&qp, &sol, &solverArg_, &solver_workspace);
+		}
 
+
+		/// @brief Copy QP solution from HPIPM data structures.
+		void convertSolution()
+		{
 			// Convert the solution
 			Hpipm::cvt_ocp_qp_sol_to_colmaj(&sol, 
 				u_.data(), x_.data(), ls_.data(), us_.data(),
@@ -635,6 +620,9 @@ namespace tmpc
 
 		typename Hpipm::ocp_qp_dim ocpQpDim_;
 		typename Hpipm::ocp_qp_ipm_arg solverArg_;
+		typename Hpipm::ocp_qp qp {};
+		typename Hpipm::ocp_qp_sol sol {};
+		typename Hpipm::ocp_qp_ipm_workspace solver_workspace {};
 
 
 		// Warmstarting disabled on purpose.
