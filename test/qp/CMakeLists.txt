@@ -3,6 +3,7 @@ add_executable(test-tmpc-qp
     CondensingN2Test.cpp
     VectorPropertyMapTest.cpp
     MpipmWorkspaceTest.cpp
+    RiccatiTest.cpp
 )
 
 target_link_libraries(test-tmpc-qp

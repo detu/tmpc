@@ -38,7 +38,7 @@ namespace tmpc :: detail
         }
 
 
-        friend Value& get(BundlePropertyMap const& pm, key_type k)
+        friend auto& get(BundlePropertyMap const& pm, key_type k)
         {
             return pm.bundleMap_[k].*pm.field_;
         }

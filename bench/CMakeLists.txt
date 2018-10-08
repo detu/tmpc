@@ -7,7 +7,7 @@ add_executable(tmpc_bench
     CondensingBench.cpp
     MathBench.cpp
     RiccatiBench.cpp
-    MpipmRiccatiBench.cpp
+    ClassicalRiccatiBench.cpp
 )
 
 
