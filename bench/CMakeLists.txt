@@ -6,6 +6,7 @@ find_package(Threads REQUIRED)
 add_executable(tmpc_bench
     CondensingBench.cpp
     MathBench.cpp
+    RiccatiBench.cpp
     MpipmRiccatiBench.cpp
 )
 
