@@ -30,6 +30,27 @@ namespace tmpc
             vertexProperties_.reserve(num_vertices(graph_));
             for (auto const& sz : size_)
                 vertexProperties_.emplace_back(sz);
+
+            // Allocate edge properties of appropriate size
+            auto const ne = num_edges(graph_);
+            PA_.resize(ne);
+            PB_.resize(ne);
+            BPA_.resize(ne);
+            BPB_.resize(ne);
+            APA_.resize(ne);
+
+            auto const edge_id = get(edge_index, graph_);
+            for (auto e : edges(graph_))
+            {
+                auto const sz_u = get(size_map, source(e, g));
+                auto const sz_v = get(size_map, target(e, g));
+                
+                PA_[get(edge_id, e)].resize(sz_v.nx(), sz_u.nx());
+                PB_[get(edge_id, e)].resize(sz_v.nx(), sz_u.nu());
+                BPA_[get(edge_id, e)].resize(sz_u.nu(), sz_u.nx());
+                BPB_[get(edge_id, e)].resize(sz_u.nu(), sz_u.nu());
+                APA_[get(edge_id, e)].resize(sz_u.nx(), sz_u.nx());
+            }
         }
 
 
@@ -130,16 +151,22 @@ namespace tmpc
                         auto const e = out_e.front();
                         auto const v = target(e, g);
 
+                        auto& PA = get(ws_.PA(), e);
+                        auto& PB = get(ws_.PB(), e);
+                        auto& BPA = get(ws_.BPA(), e);
+                        auto& BPB = get(ws_.BPB(), e);
+                        auto& APA = get(ws_.APA(), e);                        
+
                         // Alg 1 line 3
-                        blaze::DynamicMatrix<Real> PA = trans(get(ws_.P(), v)) * get(qp_.A(), e);
-                        blaze::DynamicMatrix<Real> PB = trans(get(ws_.P(), v)) * get(qp_.B(), e);
+                        PA = trans(get(ws_.P(), v)) * get(qp_.A(), e);
+                        PB = trans(get(ws_.P(), v)) * get(qp_.B(), e);
 
                         // Alg 1 line 4
-                        blaze::DynamicMatrix<Real> BPA = trans(get(qp_.B(), e)) * PA;
-                        blaze::DynamicMatrix<Real> BPB = trans(get(qp_.B(), e)) * PB;
+                        BPA = trans(get(qp_.B(), e)) * PA;
+                        BPB = trans(get(qp_.B(), e)) * PB;
 
                         // Alg 1 line 5
-                        blaze::DynamicMatrix<Real> APA = trans(get(qp_.A(), e)) * PA;
+                        APA = trans(get(qp_.A(), e)) * PA;
                         
                         // Alg 1 line 6
                         // llh() or potrf()?
@@ -283,9 +310,44 @@ namespace tmpc
         }
 
 
+        auto PA()
+        {
+            return make_iterator_property_map(PA_.begin(), get(edge_index, graph_));
+        }
+
+
+        auto PB()
+        {
+            return make_iterator_property_map(PB_.begin(), get(edge_index, graph_));
+        }
+
+
+        auto BPA()
+        {
+            return make_iterator_property_map(BPA_.begin(), get(edge_index, graph_));
+        }
+
+
+        auto BPB()
+        {
+            return make_iterator_property_map(BPB_.begin(), get(edge_index, graph_));
+        }
+
+
+        auto APA()
+        {
+            return make_iterator_property_map(APA_.begin(), get(edge_index, graph_));
+        }
+
+
         OcpGraph graph_;
         std::vector<OcpSize> size_;
         std::vector<VertexPropertyBundle> vertexProperties_;
+        std::vector<blaze::DynamicMatrix<Real>> PA_;
+        std::vector<blaze::DynamicMatrix<Real>> PB_;
+        std::vector<blaze::DynamicMatrix<Real>> BPA_;
+        std::vector<blaze::DynamicMatrix<Real>> BPB_;
+        std::vector<blaze::DynamicMatrix<Real>> APA_;
     };
 
 
