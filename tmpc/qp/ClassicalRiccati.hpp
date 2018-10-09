@@ -38,6 +38,7 @@ namespace tmpc
             BPA_.resize(ne);
             BPB_.resize(ne);
             APA_.resize(ne);
+            Pb_p_.resize(ne);
 
             auto const edge_id = get(edge_index, graph_);
             for (auto e : edges(graph_))
@@ -50,6 +51,7 @@ namespace tmpc
                 BPA_[get(edge_id, e)].resize(sz_u.nu(), sz_u.nx());
                 BPB_[get(edge_id, e)].resize(sz_u.nu(), sz_u.nu());
                 APA_[get(edge_id, e)].resize(sz_u.nx(), sz_u.nx());
+                Pb_p_[get(edge_id, e)].resize(sz_v.nx());
             }
         }
 
@@ -183,18 +185,25 @@ namespace tmpc
                             trsm(get(ws_.Lambda(), u), get(ws_.L(), u), CblasLeft, CblasLower, 1.);
                         
                         // Alg 1 line 8
-                        put(ws_.P(), u, get(qp_.Q(), u) + APA - trans(get(ws_.L(), u)) * get(ws_.L(), u));
+                        put(ws_.P(), u, get(qp_.Q(), u) + APA);
+                        get(ws_.P(), u) -= trans(get(ws_.L(), u)) * get(ws_.L(), u);
 
                         // Alg 1 line 9
-                        put(ws_.P(), u, 0.5 * (get(ws_.P(), u) + trans(get(ws_.P(), u))));
+                        //put(ws_.P(), u, 0.5 * (get(ws_.P(), u) + trans(get(ws_.P(), u))));
 
                         // Alg 2 line 3
-                        put(ws_.l(), u, get(qp_.r(), u) + trans(get(qp_.B(), e)) * (trans(get(ws_.P(), v)) * get(qp_.b(), e) + get(ws_.p(), v)));
+                        put(ws_.Pb_p(), e, trans(get(ws_.P(), v)) * get(qp_.b(), e));
+                        get(ws_.Pb_p(), e) += get(ws_.p(), v);
+
+                        put(ws_.l(), u, get(qp_.r(), u));
+                        get(ws_.l(), u) += trans(get(qp_.B(), e)) * get(ws_.Pb_p(), e);
+                        
                         trsv(get(ws_.Lambda(), u), get(ws_.l(), u), 'L', 'N', 'N');
 
                         // Alg 2 line 4
-                        put(ws_.p(), u, get(qp_.q(), u) + trans(get(qp_.A(), e)) * (trans(get(ws_.P(), v)) * get(qp_.b(), e) + get(ws_.p(), v)) 
-                            - trans(get(ws_.L(), u)) * get(ws_.l(), u));
+                        put(ws_.p(), u, get(qp_.q(), u));
+                        get(ws_.p(), u) += trans(get(qp_.A(), e)) * get(ws_.Pb_p(), e);
+                        get(ws_.p(), u) -= trans(get(ws_.L(), u)) * get(ws_.l(), u);
                     }
                     else
                     {
@@ -241,7 +250,8 @@ namespace tmpc
                 }
 
                 // Alg 2 line 8
-                put(sol_.u(), u, -(get(ws_.L(), u) * get(sol_.x(), u) + get(ws_.l(), u)));
+                put(sol_.u(), u, -get(ws_.L(), u) * get(sol_.x(), u));
+                get(sol_.u(), u) -= get(ws_.l(), u);
                 trsv(get(ws_.Lambda(), u), get(sol_.u(), u), 'L', 'T', 'N');
 
                 /*
@@ -258,7 +268,9 @@ namespace tmpc
                 auto const v = target(e, g);
 
                 // Alg 2 line 9
-                put(sol_.x(), v, get(qp_.A(), e) * get(sol_.x(), u) + get(qp_.B(), e) * get(sol_.u(), u) + get(qp_.b(), e));
+                put(sol_.x(), v, get(qp_.A(), e) * get(sol_.x(), u));
+                get(sol_.x(), v) += get(qp_.B(), e) * get(sol_.u(), u);
+                get(sol_.x(), v) += get(qp_.b(), e);
 
                 // Alg 2 line 10
                 put(sol_.pi(), e, trans(get(ws_.P(), v)) * get(sol_.x(), v) + get(ws_.p(), v));
@@ -340,6 +352,12 @@ namespace tmpc
         }
 
 
+        auto Pb_p()
+        {
+            return make_iterator_property_map(Pb_p_.begin(), get(edge_index, graph_));
+        }
+
+
         OcpGraph graph_;
         std::vector<OcpSize> size_;
         std::vector<VertexPropertyBundle> vertexProperties_;
@@ -348,6 +366,7 @@ namespace tmpc
         std::vector<blaze::DynamicMatrix<Real>> BPA_;
         std::vector<blaze::DynamicMatrix<Real>> BPB_;
         std::vector<blaze::DynamicMatrix<Real>> APA_;
+        std::vector<blaze::DynamicVector<Real>> Pb_p_;
     };
 
 
