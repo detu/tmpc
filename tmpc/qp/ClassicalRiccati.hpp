@@ -6,6 +6,7 @@
 #include <tmpc/ocp/OcpSize.hpp>
 #include <tmpc/core/PropertyMap.hpp>
 #include <tmpc/core/Graph.hpp>
+#include <tmpc/core/Range.hpp>
 #include <tmpc/Traits.hpp>
 
 #include <blaze/Math.h>
@@ -27,9 +28,29 @@ namespace tmpc
             copyProperty(size_map, make_iterator_property_map(size_.begin(), vertexIndex(graph_)), vertices(graph_));
 
             // Allocate vertex properties of appropriate size
-            vertexProperties_.reserve(num_vertices(graph_));
-            for (auto const& sz : size_)
-                vertexProperties_.emplace_back(sz);
+            auto const nv = num_vertices(graph_);
+            P_.resize(nv);
+            Lambda_.resize(nv);
+            L_.resize(nv);
+            p_.resize(nv);
+            l_.resize(nv);
+            
+            // vertexProperties_.reserve(num_vertices(graph_));
+            // for (auto const& sz : size_)
+            //     vertexProperties_.emplace_back(sz);
+
+            auto const vertex_id = get(vertex_index, graph_);
+            for (auto v : vertices(graph_))
+            {
+                auto const& sz = get(size(), v);
+                auto v_id = get(vertex_id, v);
+
+                P_[v_id].resize(sz.nx(), sz.nx());
+                Lambda_[v_id].resize(sz.nu(), sz.nu());
+                L_[v_id].resize(sz.nu(), sz.nx());
+                p_[v_id].resize(sz.nx());
+                l_[v_id].resize(sz.nu());
+            }
 
             // Allocate edge properties of appropriate size
             auto const ne = num_edges(graph_);
@@ -39,7 +60,7 @@ namespace tmpc
             BPB_.resize(ne);
             APA_.resize(ne);
             Pb_p_.resize(ne);
-
+            
             auto const edge_id = get(edge_index, graph_);
             for (auto e : edges(graph_))
             {
@@ -84,6 +105,27 @@ namespace tmpc
                 }
             }
             */
+            {
+                //RiccatiBackwardVisitor vis(*this, qp, sol);
+
+                for (auto v : reverse(vertices(graph_)))
+                    //vis.finish_vertex(v, graph_);
+                    vertexBackward(v, qp);
+            }
+
+            {
+                RiccatiForwardVisitor vis(*this, qp, sol);
+
+                for (auto v : vertices(graph_))
+                {
+                    vis.discover_vertex(v, graph_);
+
+                    for (auto e : out_edges(v, graph_))
+                        vis.tree_edge(e, graph_);
+                }
+            }
+
+            /*
             std::vector<boost::default_color_type> color(num_vertices(graph_));
 
             depth_first_search(graph_,
@@ -95,6 +137,7 @@ namespace tmpc
                 RiccatiForwardVisitor(*this, qp, sol), 
                 make_iterator_property_map(color.begin(), get(vertex_index, graph_)), 
                 vertex(0, graph_));
+            */
         }
 
 
@@ -247,6 +290,12 @@ namespace tmpc
                 {
                     // Root vertex
                     put(sol_.x(), u, -inv(get(ws_.P(), u)) * get(ws_.p(), u));
+
+                    /*
+                    potrf(get(ws_.P(), u), 'L');
+                    put(sol_.x(), u, -get(ws_.p(), u));
+                    trsv(get(ws_.P(), u), get(sol_.x(), u), 'L', 'N', 'N');
+                    */
                 }
 
                 // Alg 2 line 8
@@ -286,39 +335,125 @@ namespace tmpc
         };
 
 
-        auto vertexProperties()
+        template <typename Qp>
+        void vertexBackward(OcpVertexDescriptor u, Qp const& qp)
         {
-            return make_iterator_property_map(vertexProperties_.begin(), vertexIndex(graph_));
+            // std::clog << "Backward, Vertex " << u << std::endl;
+            auto const& g = graph_;
+
+            if (out_degree(u, g) == 0)
+            {
+                // Alg 1 line 1
+                P_[u] = get(qp.Q(), u);
+
+                // Alg 2 line 1
+                p_[u] = get(qp.q(), u);
+            }
+            else
+            {
+                auto const out_e = out_edges(u, g);
+
+                if (out_e.size() == 1)
+                {
+                    auto const e = out_e.front();
+                    auto const e_id = get(get(edge_index, g), e);
+                    auto const v = target(e, g);
+
+                    // Alg 1 line 3
+                    PA_[e_id] = trans(P_[v]) * get(qp.A(), e);
+                    PB_[e_id] = trans(P_[v]) * get(qp.B(), e);
+
+                    // Alg 1 line 4
+                    BPA_[e_id] = trans(get(qp.B(), e)) * PA_[e_id];
+                    BPB_[e_id] = trans(get(qp.B(), e)) * PB_[e_id];
+
+                    // Alg 1 line 5
+                    APA_[e_id] = trans(get(qp.A(), e)) * PA_[e_id];
+                    
+                    // Alg 1 line 6
+                    // llh() or potrf()?
+                    // TODO: llh() can be used with adaptors. See if using blaze::SymmetricMatrix improves the performance.
+                    // https://bitbucket.org/blaze-lib/blaze/wiki/Matrix%20Operations#!cholesky-decomposition
+                    //llh(get(Lambda(), u), get(Lambda(), u));
+                    Lambda_[u] = get(qp.R(), u) + BPB_[e_id];
+                    potrf(Lambda_[u], 'L');
+
+                    // Alg 1 line 7
+                    L_[u] = get(qp.S(), u) + BPA_[e_id];
+
+                    if (!isEmpty(L_[u]))  // prevent trsm() from complaining about lda=0
+                        trsm(Lambda_[u], L_[u], CblasLeft, CblasLower, 1.);
+                    
+                    // Alg 1 line 8
+                    P_[u] = get(qp.Q(), u) + APA_[e_id];
+                    P_[u] -= trans(L_[u]) * L_[u];
+
+                    // Alg 1 line 9
+                    P_[u] = 0.5 * (P_[u] + trans(P_[u]));
+                    //P_[u] += trans(P_[u]);
+                    //P_[u] *= 0.5;
+
+                    // Alg 2 line 3
+                    Pb_p_[e_id] = trans(P_[v]) * get(qp.b(), e);
+                    Pb_p_[e_id] += p_[v];
+
+                    l_[u] = get(qp.r(), u);
+                    l_[u] += trans(get(qp.B(), e)) * Pb_p_[e_id];
+                    
+                    trsv(Lambda_[u], l_[u], 'L', 'N', 'N');
+
+                    // Alg 2 line 4
+                    p_[u] = get(qp.q(), u);
+                    p_[u] += trans(get(qp.A(), e)) * Pb_p_[e_id];
+                    p_[u] -= trans(L_[u]) * l_[u];
+                }
+                else
+                {
+                    throw std::invalid_argument("ClassicalRiccati solver is not implemented on tree QPs yet");
+                }
+            }
+
+            // std::clog << "Lambda = " << std::endl << get(Lambda(), u) << std::endl;
+            // std::clog << "L = " << std::endl << get(L(), u) << std::endl;
+            // std::clog << "l = " << std::endl << get(l(), u) << std::endl;
+            // std::clog << "P = " << std::endl << get(P(), u) << std::endl;
+            // std::clog << "p = " << std::endl << get(p(), u) << std::endl;
         }
+
+
+        // auto vertexProperties()
+        // {
+        //     return make_iterator_property_map(vertexProperties_.begin(), vertexIndex(graph_));
+        // }
 
 
         auto P()
         {
-            return detail::BundlePropertyMap(&VertexPropertyBundle::P_, vertexProperties());
+            return make_iterator_property_map(P_.begin(), vertexIndex(graph_));
         }
 
 
         auto Lambda()
         {
-            return detail::BundlePropertyMap(&VertexPropertyBundle::Lambda_, vertexProperties());
+            return make_iterator_property_map(Lambda_.begin(), vertexIndex(graph_));
         }
 
 
         auto L()
         {
-            return detail::BundlePropertyMap(&VertexPropertyBundle::L_, vertexProperties());
+            return make_iterator_property_map(L_.begin(), vertexIndex(graph_));
         }
 
 
         auto p()
         {
-            return detail::BundlePropertyMap(&VertexPropertyBundle::p_, vertexProperties());
+            return make_iterator_property_map(p_.begin(), vertexIndex(graph_));
         }
 
 
         auto l()
         {
-            return detail::BundlePropertyMap(&VertexPropertyBundle::l_, vertexProperties());
+            return make_iterator_property_map(l_.begin(), vertexIndex(graph_));
         }
 
 
@@ -360,7 +495,13 @@ namespace tmpc
 
         OcpGraph graph_;
         std::vector<OcpSize> size_;
-        std::vector<VertexPropertyBundle> vertexProperties_;
+        //std::vector<VertexPropertyBundle> vertexProperties_;
+        std::vector<blaze::DynamicMatrix<Real>> P_;
+        std::vector<blaze::DynamicVector<Real>> p_;
+        std::vector<blaze::DynamicMatrix<Real>> Lambda_;
+        std::vector<blaze::DynamicMatrix<Real>> L_;
+        std::vector<blaze::DynamicVector<Real>> l_;
+
         std::vector<blaze::DynamicMatrix<Real>> PA_;
         std::vector<blaze::DynamicMatrix<Real>> PB_;
         std::vector<blaze::DynamicMatrix<Real>> BPA_;
