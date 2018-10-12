@@ -21,6 +21,9 @@ namespace tmpc :: benchmark
 
         randomizeQp(ws);
 
+        // Disable openblas multithreading
+        openblas_set_num_threads(1);
+
         for (auto _ : state)
             riccati(ws, ws);
     }
@@ -28,5 +31,5 @@ namespace tmpc :: benchmark
 
     BENCHMARK(BM_ClassicalRiccati)->Apply(riccatiBenchArguments);
 
-    //BENCHMARK(BM_ClassicalRiccati)->Args({100, 10, 5});
+    //BENCHMARK(BM_ClassicalRiccati)->Args({1, 2, 1});
 }

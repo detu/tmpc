@@ -3,15 +3,20 @@ function analyze_bench_riccati(filename)
 
     data = jsondecode(fileread(filename));
     c = cell2mat(arrayfun(@parse_benchmark, data.benchmarks, 'UniformOutput', false));
+    
+    algs = unique({c.alg});
 
     for nu = unique([c.nu])
         figure();
         hold('on');
 
-        algs = {'Hpipm', 'Mpipm'};
         for alg = algs
             ind = strcmp({c.alg}, alg{:}) & strcmp({c.flag}, 'mean') & [c.nu] == nu;
-            plot([c(ind).nx], [c(ind).cpu_time]);
+            plot([c(ind).nx], [c(ind).cpu_time], 'LineWidth', 2);
+            
+            ind_ci = strcmp({c.alg}, alg{:}) & strcmp({c.flag}, 'stddev') & [c.nu] == nu;
+%             ci = 3 * [c(ind_ci).cpu_time];
+%             ciplot(([c(ind).cpu_time] - ci).', ([c(ind).cpu_time] + ci).', [c(ind).nx], 'g');
         end
 
         legend(algs);
