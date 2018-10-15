@@ -30,6 +30,9 @@ target_include_directories(tmpc
 
 
 target_link_libraries(tmpc
+    # TODO: this should be unnecessary since we link to Blaze, and Blaze already does this:
+    # target_link_libraries(blaze INTERFACE $<BUILD_INTERFACE:${LAPACK_LIBRARIES}>)
+    # But for some reason it does not work.
     PUBLIC ${LAPACK_LIBRARIES}
 )
 
