@@ -24,6 +24,9 @@ namespace tmpc
     template <typename Kernel, AlignmentFlag AF, PaddingFlag PF, StorageOrder SO = defaultStorageOrder>
     using CustomMatrix = typename Kernel::template CustomMatrix<AF, PF, SO>;
 
+    template <typename Kernel, AlignmentFlag AF, PaddingFlag PF, TransposeFlag TF = defaultTransposeFlag>
+    using CustomVector = typename Kernel::template CustomVector<AF, PF, TF>;
+
     template <typename Kernel>
     using IdentityMatrix = typename Kernel::IdentityMatrix;
 

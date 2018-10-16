@@ -16,6 +16,7 @@ int main(int, char **)
 	using Kernel = BlazeKernel<double>;
 	using Workspace = HpipmWorkspace<Kernel>;
 
+    /*
 	Workspace workspace {OcpSize {1, 0, 0, 1}, OcpSize {1, 0, 0}};	
     auto problem = workspace.problem();
     
@@ -41,6 +42,7 @@ int main(int, char **)
     std::cout << "==== Solution ====" << std::endl;
     for (int i = 0; i < problem.size(); ++i)
         std::cout << "STAGE " << i << ":" << std::endl << solution[i] << std::endl;
+    */
 
 	return 0;
 }

@@ -33,6 +33,15 @@ namespace tmpc
             SO == columnMajor ? blaze::columnMajor : blaze::rowMajor
         >;
 
+
+        template <AlignmentFlag AF, PaddingFlag PF, TransposeFlag TF>
+        using CustomVector = blaze::CustomVector<
+            Real,
+            AF == aligned ? blaze::aligned : blaze::unaligned, 
+            PF == padded ? blaze::padded : blaze::unpadded,
+            TF == columnVector ? blaze::columnVector : blaze::rowVector
+        >;
+
         using IdentityMatrix = blaze::IdentityMatrix<Real>;
 
         template <typename MT, AlignmentFlag AF>

@@ -1,23 +1,19 @@
 #pragma once
 
-#include "QpSolverException.hpp"
 #include <tmpc/ocp/OcpSize.hpp>
-#include <tmpc/ocp/OcpSolutionBase.hpp>
-#include <tmpc/qp/OcpQpBase.hpp>
-#include <tmpc/qp/QpWorkspaceBase.hpp>
+#include <tmpc/ocp/OcpGraph.hpp>
+#include <tmpc/core/PropertyMap.hpp>
 
 #include <tmpc/Matrix.hpp>
 #include <tmpc/Math.hpp>
 
-#include "detail/HpxxxStage.hpp"
-
 #include <hpipm_d_ocp_qp.h>
 #include <hpipm_d_ocp_qp_sol.h>
 #include <hpipm_d_ocp_qp_ipm.h>
+#include <hpipm_d_ocp_qp_kkt.h>
 
-#include <boost/range/iterator_range_core.hpp>
-#include <boost/iterator/iterator_adaptor.hpp>
-#include <boost/range/adaptor/indexed.hpp>
+#include "detail/VectorPtrPropertyMap.hpp"
+#include "detail/MatrixPtrPropertyMap.hpp"
 
 #include <limits>
 #include <stdexcept>
@@ -75,71 +71,12 @@ namespace tmpc
 	 */
 	template <typename Kernel_>
 	class HpipmWorkspace
-	:	public QpWorkspaceBase<HpipmWorkspace<Kernel_>>
 	{
 	public:
 		using Kernel = Kernel_;
+		static StorageOrder constexpr SO = StorageOrder::columnMajor;
 		using Real = typename Kernel::Real;
 		
-	private:
-		using Stage = detail::HpxxxStage<Kernel, StorageOrder::columnMajor>;
-
-	public:
-
-		class ProblemIterator
-		:	public boost::iterator_adaptor<
-				ProblemIterator	// derived
-			,	typename std::vector<Stage>::iterator	// base
-			,	OcpQpBase<Stage>&	// value
-			,	boost::random_access_traversal_tag	// category of traversal
-			,	OcpQpBase<Stage>&	// reference
-			>
-		{
-		public:
-			ProblemIterator() = default;
-			
-			ProblemIterator(typename ProblemIterator::base_type const& p)
-			:	ProblemIterator::iterator_adaptor_(p)
-			{			
-			}
-		};
-
-		class ConstProblemIterator
-		:	public boost::iterator_adaptor<
-				ConstProblemIterator	// derived
-			,	typename std::vector<Stage>::const_iterator	// base
-			,	OcpQpBase<Stage> const&	// value
-			,	boost::random_access_traversal_tag	// category of traversal
-			,	OcpQpBase<Stage> const&	// reference
-			>
-		{
-		public:
-			ConstProblemIterator() = default;
-			
-			ConstProblemIterator(typename ConstProblemIterator::base_type const& p)
-			:	ConstProblemIterator::iterator_adaptor_(p)
-			{			
-			}
-		};
-	
-		class ConstSolutionIterator
-		:	public boost::iterator_adaptor<
-				ConstSolutionIterator	// derived
-			,	typename std::vector<Stage>::const_iterator	// base
-			,	OcpSolutionBase<Stage> const&	// value
-			,	boost::random_access_traversal_tag	// category of traversal
-			,	OcpSolutionBase<Stage> const&	// reference
-			>
-		{
-		public:
-			ConstSolutionIterator() = default;
-			
-			ConstSolutionIterator(typename ConstSolutionIterator::base_type const& p)
-			:	ConstSolutionIterator::iterator_adaptor_(p)
-			{			
-			}
-		};
-
 
 		std::string impl_solverName() const
 		{
@@ -147,32 +84,27 @@ namespace tmpc
 		}
 
 	
-		boost::iterator_range<ProblemIterator> problem()
-		{
-			return boost::iterator_range<ProblemIterator>(stage_.begin(), stage_.end());
-		}
-
-	
-		boost::iterator_range<ConstProblemIterator> problem() const
-		{
-			return boost::iterator_range<ConstProblemIterator>(stage_.begin(), stage_.end());
-		}
-
-	
-		boost::iterator_range<ConstSolutionIterator> impl_solution() const
-		{
-			return boost::iterator_range<ConstSolutionIterator>(stage_.begin(), stage_.end());
-		}
-
-
 		/**
 		 * \brief Takes QP problem size to preallocate workspace.
 		 */
-		template <typename InputIterator>
-		HpipmWorkspace(InputIterator size_first, InputIterator size_last, int max_iter = 100)
-		:	ocpQpDim_ {}
+		template <typename SizeMap>
+		HpipmWorkspace(OcpGraph const& graph, SizeMap size, unsigned max_iter = 100)
+		:	graph_ {graph}
+		,	size_(num_vertices(graph))
+		,	ocpQpDim_ {}
 		,	solverArg_ {}
 		{
+			copyProperty(size, iterator_property_map(size_.begin(), get(vertex_index, graph_)), vertices(graph_));
+			
+			auto const nv = num_vertices(graph_);
+			auto const ne = num_edges(graph_);
+
+			if (nv < 2)
+				throw std::invalid_argument("HPIPM needs an at least 2-stages problem");
+
+			if (ne + 1 != num_vertices(graph_))
+				throw std::invalid_argument("Number of edges in HPIPM size graph must be 1 less than the number of vertices");
+
 			solverArg_.alpha_min = 1e-8;
 			solverArg_.res_g_max = 1e-8;
 			solverArg_.res_b_max = 1e-8;
@@ -182,112 +114,64 @@ namespace tmpc
 			solverArg_.iter_max = max_iter;
 			solverArg_.stat_max = 100;
 			solverArg_.pred_corr = 1;
-
-			auto const nt = std::distance(size_first, size_last);
 			
-			// Preallocate arrays holding QP stage data.
-			stage_.reserve(nt);
-	
-			nx_.reserve(nt);
-			nu_.reserve(nt);
-			nb_.reserve(nt);
-			nbx_.reserve(nt);
-			nbu_.reserve(nt);
-			ng_.reserve(nt);
-			ns_.reserve(nt);
-			nsbx_.reserve(nt);
-			nsbu_.reserve(nt);
-			nsg_.reserve(nt);
-			lbls_.reserve(nt);
-			lbus_.reserve(nt);
-			hidxb_.reserve(nt);
-			idxs_.reserve(nt);
-	
-			A_ .reserve(nt);
-			B_ .reserve(nt);
-			b_ .reserve(nt);
-			Q_ .reserve(nt);
-			S_ .reserve(nt);
-			R_ .reserve(nt);
-			q_ .reserve(nt);
-			r_ .reserve(nt);
-			Zl_.reserve(nt);
-			Zu_.reserve(nt);
-			zl_.reserve(nt);
-			zu_.reserve(nt);
-			lb_.reserve(nt);
-			ub_.reserve(nt);
-			C_ .reserve(nt);
-			D_ .reserve(nt);
-			lg_.reserve(nt);
-			ug_.reserve(nt);
+			// Calculate total number of int and Real elements to be allocated.
+			size_t count_real = 0, count_int = 0;
+			breadth_first_search(graph_, vertex(0, graph_), visitor(ElementCountVisitor(this->size(), count_real, count_int)));
+
+			// Allocate memory pools
+			realPool_.resize(count_real, sNaN<Real>());
+			intPool_.resize(count_int, -1);
 			
-			x_.reserve(nt);
-			u_.reserve(nt);
-			pi_.reserve(nt);
-			lam_lb_.reserve(nt);
-			lam_ub_.reserve(nt);
-			lam_lg_.reserve(nt);
-			lam_ug_.reserve(nt);
+			// Preallocate arrays holding QP vertex data pointers.
+			nx_.reserve(nv);
+			nu_.reserve(nv);
+			nb_.reserve(nv);
+			nbx_.reserve(nv);
+			nbu_.reserve(nv);
+			ng_.reserve(nv);
+			ns_.reserve(nv);
+			nsbx_.reserve(nv);
+			nsbu_.reserve(nv);
+			nsg_.reserve(nv);
+			lbls_.reserve(nv);
+			lbus_.reserve(nv);
+			hidxb_.reserve(nv);
+			idxs_.reserve(nv);
+	
+			Q_ .reserve(nv);
+			S_ .reserve(nv);
+			R_ .reserve(nv);
+			q_ .reserve(nv);
+			r_ .reserve(nv);
+			Zl_.reserve(nv);
+			Zu_.reserve(nv);
+			zl_.reserve(nv);
+			zu_.reserve(nv);
+			lb_.reserve(nv);
+			ub_.reserve(nv);
+			C_ .reserve(nv);
+			D_ .reserve(nv);
+			lg_.reserve(nv);
+			ug_.reserve(nv);
+			
+			x_.reserve(nv);
+			u_.reserve(nv);
+			lam_lb_.reserve(nv);
+			lam_ub_.reserve(nv);
+			lam_lg_.reserve(nv);
+			lam_ug_.reserve(nv);
 
-			for (auto sz = size_first; sz != size_last; ++sz)
-			{
-				auto const nx_next = sz + 1 != size_last ? sz[1].nx() : 0;
+			// Preallocate arrays holding QP edge data pointers.
+			A_ .reserve(ne);
+			B_ .reserve(ne);
+			b_ .reserve(ne);
+			pi_.reserve(ne);
 
-				stage_.emplace_back(*sz, nx_next);
-				auto& st = stage_.back();
-		
-				nx_.push_back(sz->nx());
-				nu_.push_back(sz->nu());
-				nb_.push_back(sz->nx() + sz->nu());	// upper estimate
-				nbx_.push_back(sz->nx());	// upper estimate
-				nbu_.push_back(sz->nu());	// upper estimate
-				ng_.push_back(sz->nc());
-				ns_.push_back(sz->ns());
-				nsbx_.push_back(sz->nx());	// upper estimate
-				nsbu_.push_back(sz->nu());	// upper estimate
-				nsg_.push_back(sz->nc());	// upper estimate
-				
-				hidxb_.push_back(st.hidxb_data());
-				idxs_.push_back(st.idxs_data());
-		
-				A_.push_back(st.A_data());
-				B_.push_back(st.B_data());
-				b_.push_back(st.b_data());
-		
-				Q_.push_back(st.Q_data());
-				S_.push_back(st.S_data());
-				R_.push_back(st.R_data());
-				q_.push_back(st.q_data());
-				r_.push_back(st.r_data());
-				Zl_.push_back(st.Zl_data());
-				Zu_.push_back(st.Zu_data());
-				zl_.push_back(st.zl_data());
-				zu_.push_back(st.zu_data());
-				lb_.push_back(st.lb_data());
-				ub_.push_back(st.ub_data());
-				lbls_.push_back(st.lbls_data());
-				lbus_.push_back(st.lbus_data());
-		
-				C_ .push_back(st.C_data());
-				D_ .push_back(st.D_data());
-				lg_.push_back(st.lg_data());
-				ug_.push_back(st.ug_data());
-		
-				x_.push_back(st.x_data());
-				u_.push_back(st.u_data());
-				ls_.push_back(st.ls_data());
-				us_.push_back(st.us_data());
-				pi_.push_back(st.pi_data());
-				lam_lb_.push_back(st.lam_lb_data());
-				lam_ub_.push_back(st.lam_ub_data());
-				lam_lg_.push_back(st.lam_lg_data());
-				lam_ug_.push_back(st.lam_ug_data());
-				lam_ls_.push_back(st.lam_ls_data());
-				lam_us_.push_back(st.lam_us_data());
-			}
+			// Traverse the graph and init vertex and edge data pointers.
+			breadth_first_search(graph_, vertex(0, graph_), visitor(InitVisitor(*this)));
 
-			ocpQpDim_.N = stage_.size() - 1;
+			ocpQpDim_.N = nv - 1;
 			ocpQpDim_.nx = nx_.data();
 			ocpQpDim_.nu = nu_.data();
 			ocpQpDim_.nb = nb_.data();
@@ -299,7 +183,7 @@ namespace tmpc
 			ocpQpDim_.nsbu = nsbu_.data();
 			ocpQpDim_.nsg = nsg_.data();
 				
-			if (stage_.size() > 1)
+			if (nv > 1)
 			{
 				// Allocate big enough memory pools for Qp, QpSol and SolverWorkspace.
 				// nb_ is set to nx+nu at this point, which ensures maximum capacity.
@@ -309,16 +193,6 @@ namespace tmpc
 			}
 		}
 
-		template <typename IteratorRange>
-		explicit HpipmWorkspace(IteratorRange sz, int max_iter = 100)
-		:	HpipmWorkspace(sz.begin(), sz.end(), max_iter)
-		{
-		}
-
-		explicit HpipmWorkspace(std::initializer_list<OcpSize> sz, int max_iter = 100)
-		:	HpipmWorkspace(sz.begin(), sz.end(), max_iter)
-		{
-		}
 
 		/**
 		 * \brief Copy constructor
@@ -337,27 +211,14 @@ namespace tmpc
 		HpipmWorkspace& operator= (HpipmWorkspace const&) = delete;
 		HpipmWorkspace& operator= (HpipmWorkspace &&) = delete;
 
-		void impl_solve()
+		void solve()
 		{
-			using boost::adaptors::index;
-
-			if (stage_.size() > 1)
+			if (num_vertices(graph_) > 1)
 			{
-				// Recalculate bounds indices of each stage, as the bounds might have changed.				
-				// Update the nb_ array.
-				for (auto const& s : index(stage_))
-				{
-					s.value().adjustBoundsIndex();
-					nb_[s.index()] = s.value().nb();
-					nbx_[s.index()] = s.value().nbx();
-					nbu_[s.index()] = s.value().nbu();
-					nsbx_[s.index()] = s.value().nsbx();
-					nsbu_[s.index()] = s.value().nsbu();
-					nsg_[s.index()] = s.value().nsg();
-				}
+				updateBounds();
 	
 				// Number of QP steps for HPIPM
-				auto const N = stage_.size() - 1;
+				auto const N = num_vertices(graph_) - 1;
 	
 				// Init HPIPM structures. Since the nb_, nbx_, nbu_, might change if the bounds change, 
 				// we need to do it every time, sorry.
@@ -373,12 +234,12 @@ namespace tmpc
 	
 				// Convert the problem
 				Hpipm::cvt_colmaj_to_ocp_qp(
-					const_cast<Real **>(A_.data()), const_cast<Real **>(B_.data()), const_cast<Real **>(b_.data()), 
-					const_cast<Real **>(Q_.data()), const_cast<Real **>(S_.data()), const_cast<Real **>(R_.data()), const_cast<Real **>(q_.data()), const_cast<Real **>(r_.data()), 
-					const_cast<int **>(hidxb_.data()), const_cast<Real **>(lb_.data()), const_cast<Real **>(ub_.data()), 
-					const_cast<Real **>(C_.data()), const_cast<Real **>(D_.data()), const_cast<Real **>(lg_.data()), const_cast<Real **>(ug_.data()), 
-					const_cast<Real **>(Zl_.data()), const_cast<Real **>(Zu_.data()), const_cast<Real **>(zl_.data()), const_cast<Real **>(zu_.data()), const_cast<int **>(idxs_.data()),
-					const_cast<Real **>(lbls_.data()), const_cast<Real **>(lbus_.data()),
+					A_.data(), B_.data(), b_.data(), 
+					Q_.data(), S_.data(), R_.data(), q_.data(), r_.data(), 
+					hidxb_.data(), lb_.data(), ub_.data(), 
+					C_.data(), D_.data(), lg_.data(), ug_.data(), 
+					Zl_.data(), Zu_.data(), zl_.data(), zu_.data(), idxs_.data(),
+					lbls_.data(), lbus_.data(),
 					&qp);
 	
 				// Call HPIPM
@@ -386,9 +247,7 @@ namespace tmpc
 				numIter_ = solver_workspace.iter;
 	
 				if (ret != 0)
-				{
 					throw HpipmException(ret);
-				}
 
 				// Convert the solution
 				Hpipm::cvt_ocp_qp_sol_to_colmaj(&sol, 
@@ -398,8 +257,50 @@ namespace tmpc
 			}
 		}
 
-		std::size_t maxIter() const noexcept { return solverArg_.iter_max; }
 
+		void solveUnconstrained()
+		{
+			updateBounds();
+			
+			// Init HPIPM structures. Since the nb_, nbx_, nbu_, might change if the bounds change, 
+			// we need to do it every time, sorry.
+			// Hopefully these operations are not expensive compared to actual solving.
+			typename Hpipm::ocp_qp qp;
+			Hpipm::create_ocp_qp(&ocpQpDim_, &qp, ocpQpMem_.data());
+
+			typename Hpipm::ocp_qp_sol sol;
+			Hpipm::create_ocp_qp_sol(&ocpQpDim_, &sol, ocpQpSolMem_.data());
+
+			typename Hpipm::ocp_qp_ipm_workspace solver_workspace;
+			Hpipm::create_ocp_qp_ipm(&ocpQpDim_, &solverArg_, &solver_workspace, solverWorkspaceMem_.data());
+
+			// Convert the problem
+			Hpipm::cvt_colmaj_to_ocp_qp(
+				A_.data(), B_.data(), b_.data(), 
+				Q_.data(), S_.data(), R_.data(), q_.data(), r_.data(), 
+				hidxb_.data(), lb_.data(), ub_.data(), 
+				C_.data(), D_.data(), lg_.data(), ug_.data(), 
+				Zl_.data(), Zu_.data(), zl_.data(), zu_.data(), idxs_.data(),
+				lbls_.data(), lbus_.data(),
+				&qp);
+			
+			// Call HPIPM
+			d_fact_solve_kkt_unconstr_ocp_qp(&qp, &sol, &solverArg_, &solver_workspace);
+
+			// Convert the solution
+			Hpipm::cvt_ocp_qp_sol_to_colmaj(&sol, 
+				u_.data(), x_.data(), ls_.data(), us_.data(),
+				pi_.data(), lam_lb_.data(), lam_ub_.data(), lam_lg_.data(), lam_ug_.data(),
+				lam_ls_.data(), lam_us_.data());
+		}
+
+
+		size_t maxIter() const noexcept 
+		{ 
+			return solverArg_.iter_max; 
+		}
+
+		
 		void maxIter(size_t val) 
 		{ 
 			if (val != solverArg_.iter_max)
@@ -408,6 +309,7 @@ namespace tmpc
 				resizeSolverWorkspace();
 			}
 		}
+
 
 		/// \brief Get number of iterations performed by the QP solver.
 		unsigned numIter() const { return numIter_; }
@@ -465,66 +367,166 @@ namespace tmpc
 		
 			solverArg_.mu0 = val;
 		}
+		
+		
+		auto size() const
+		{
+			return iterator_property_map(size_.begin(), get(vertex_index, graph_));
+		}
+
+
+		auto const& graph() const
+		{
+			return graph_;
+		}
+
+
+		auto Q()
+		{
+			return detail::makeMatrixPtrPropertyMap<OcpVertexDescriptor, CustomMatrix<Kernel, unaligned, unpadded, SO>>(
+				make_iterator_property_map(Q_.begin(), get(vertex_index, graph_)), size_Q(size()));
+		}
+
+
+		auto R()
+		{
+			return detail::makeMatrixPtrPropertyMap<OcpVertexDescriptor, CustomMatrix<Kernel, unaligned, unpadded, SO>>(
+				make_iterator_property_map(R_.begin(), get(vertex_index, graph_)), size_R(size()));
+		}
+
+
+		auto S()
+		{
+			return detail::makeMatrixPtrPropertyMap<OcpVertexDescriptor, CustomMatrix<Kernel, unaligned, unpadded, SO>>(
+				make_iterator_property_map(S_.begin(), get(vertex_index, graph_)), size_S(size()));
+		}
+
+
+		auto q()
+		{
+			return detail::makeVectorPtrPropertyMap<OcpVertexDescriptor, CustomVector<Kernel, unaligned, unpadded>>(
+				make_iterator_property_map(q_.begin(), get(vertex_index, graph_)), size_x(size()));
+		}
+
+
+		auto r()
+		{
+			return detail::makeVectorPtrPropertyMap<OcpVertexDescriptor, CustomVector<Kernel, unaligned, unpadded>>(
+				make_iterator_property_map(r_.begin(), get(vertex_index, graph_)), size_u(size()));
+		}
+
+
+		auto lx()
+		{
+			// TODO: check size of put()
+			return make_iterator_property_map(lx_.begin(), get(vertex_index, graph_));
+		}
+
+
+		auto ux()
+		{
+			// TODO: check size of put()
+			return make_iterator_property_map(ux_.begin(), get(vertex_index, graph_));
+		}
+
+
+		auto lu()
+		{
+			// TODO: check size of put()
+			return make_iterator_property_map(lu_.begin(), get(vertex_index, graph_));
+		}
+
+
+		auto uu()
+		{
+			// TODO: check size of put()
+			return make_iterator_property_map(uu_.begin(), get(vertex_index, graph_));
+		}
+
+
+		auto ld()
+		{
+			return detail::makeVectorPtrPropertyMap<OcpVertexDescriptor, CustomVector<Kernel, unaligned, unpadded>>(
+				make_iterator_property_map(lg_.begin(), get(vertex_index, graph_)), size_d(size()));
+		}
+
+
+		auto ud()
+		{
+			return detail::makeVectorPtrPropertyMap<OcpVertexDescriptor, CustomVector<Kernel, unaligned, unpadded>>(
+				make_iterator_property_map(ug_.begin(), get(vertex_index, graph_)), size_d(size()));
+		}
+
+
+		auto A()
+		{
+			return detail::makeMatrixPtrPropertyMap<OcpEdgeDescriptor, CustomMatrix<Kernel, unaligned, unpadded, SO>>(
+				make_iterator_property_map(A_.begin(), get(edge_index, graph_)), size_A(size(), graph_));
+		}
+
+
+		auto B()
+		{
+			return detail::makeMatrixPtrPropertyMap<OcpEdgeDescriptor, CustomMatrix<Kernel, unaligned, unpadded, SO>>(
+				make_iterator_property_map(B_.begin(), get(edge_index, graph_)), size_B(size(), graph_));
+		}
+
+
+		auto b()
+		{
+			return detail::makeVectorPtrPropertyMap<OcpEdgeDescriptor, CustomVector<Kernel, unaligned, unpadded>>(
+				make_iterator_property_map(b_.begin(), get(edge_index, graph_)), size_b(size(), graph_));
+		}
+
+
+		auto x() const
+		{
+			return detail::makeVectorPtrPropertyMap<OcpVertexDescriptor, CustomVector<Kernel, unaligned, unpadded>>(
+				make_iterator_property_map(x_.begin(), get(vertex_index, graph_)), size_x(size()));
+		}
+
+
+		auto u() const
+		{
+			return detail::makeVectorPtrPropertyMap<OcpVertexDescriptor, CustomVector<Kernel, unaligned, unpadded>>(
+				make_iterator_property_map(u_.begin(), get(vertex_index, graph_)), size_u(size()));
+		}
 
 		
 	private:
 		using Hpipm = detail::HpipmApi<Real>;
+		
+		OcpGraph graph_;
+		std::vector<OcpSize> size_;
+
+		std::vector<Real> realPool_;
+		std::vector<int> intPool_;
 
 		// --------------------------------
 		//
 		// QP problem data
 		//
 		// --------------------------------
+		std::vector<Real *> A_;
+		std::vector<Real *> B_;
+		std::vector<Real *> b_;
+		std::vector<Real *> Q_;
+		std::vector<Real *> S_;
+		std::vector<Real *> R_;
+		std::vector<Real *> q_;
+		std::vector<Real *> r_;
 
-		// Stores stage data
-		std::vector<Stage> stage_;
+		std::vector<Real *> Zl_;
+		std::vector<Real *> Zu_;
+		std::vector<Real *> zl_;
+		std::vector<Real *> zu_;
 
-		// "A" data array for HPIPM
-		std::vector<Real const *> A_;
-
-		// "B" data array for HPIPM
-		std::vector<Real const *> B_;
-
-		// "b" data array for HPIPM
-		std::vector<Real const *> b_;
-
-		// "Q" data array for HPIPM
-		std::vector<Real const *> Q_;
-
-		// "S" data array for HPIPM
-		std::vector<Real const *> S_;
-
-		// "R" data array for HPIPM
-		std::vector<Real const *> R_;
-
-		// "q" data array for HPIPM
-		std::vector<Real const *> q_;
-
-		// "r" data array for HPIPM
-		std::vector<Real const *> r_;
-
-		std::vector<Real const *> Zl_;
-		std::vector<Real const *> Zu_;
-		std::vector<Real const *> zl_;
-		std::vector<Real const *> zu_;
-
-		// "lb" data array for HPIPM
-		std::vector<Real const *> lb_;
-
-		// "ub" data array for HPIPM
-		std::vector<Real const *> ub_;
-
-		// "C" data array for HPIPM
-		std::vector<Real const *> C_;
-
-		// "D" data array for HPIPM
-		std::vector<Real const *> D_;
-
-		// "lg" data array for HPIPM
-		std::vector<Real const *> lg_;
-
-		// "ug" data array for HPIPM
-		std::vector<Real const *> ug_;
+		std::vector<Real *> lb_;
+		std::vector<Real *> ub_;
+		std::vector<Real *> C_;
+		std::vector<Real *> D_;
+		std::vector<Real *> lg_;
+		std::vector<Real *> ug_;
 
 		// Array of NX sizes
 		std::vector<int> nx_;
@@ -557,16 +559,22 @@ namespace tmpc
 		std::vector<int> nsg_;
 
 		// Lower bound of lower slack.
-		std::vector<Real const *> lbls_;
+		std::vector<Real *> lbls_;
 
 		// Upper bound of upper slack.
-		std::vector<Real const *> lbus_;
+		std::vector<Real *> lbus_;
 
 		// Hard constraints index
-		std::vector<int const *> hidxb_;
+		std::vector<int *> hidxb_;
 
 		// Soft constraints index
-		std::vector<int const *> idxs_;
+		std::vector<int *> idxs_;
+		
+		// Full lower and upper state and input bounds (can contain +-infs)
+		std::vector<DynamicVector<Kernel>> lx_;
+		std::vector<DynamicVector<Kernel>> ux_;
+		std::vector<DynamicVector<Kernel>> lu_;
+		std::vector<DynamicVector<Kernel>> uu_;
 
 		// --------------------------------
 		//
@@ -607,15 +615,336 @@ namespace tmpc
 		// FASTER (9ms vs 14ms per time step) than with warmstarting. I am curious why.
 		bool _warmStart = false;
 
-		static Real constexpr sNaN()
+
+		// This visitor calculates the total number of elements needed
+		// for all arrays passed to and returned from HPMPC.
+		template <typename SizeMap>
+		class ElementCountVisitor
+        :   public boost::default_bfs_visitor 
+        {
+        public:
+            ElementCountVisitor(SizeMap size_map, size_t& real_count, size_t& int_count)
+            :   sizeMap_{size_map}
+			,	realCount_{real_count}
+			,	intCount_{int_count}
+            {
+				realCount_ = 0;
+				intCount_ = 0;
+            }
+
+        
+            void discover_vertex(OcpVertexDescriptor u, OcpGraph const& g)
+            {
+				auto const& sz = get(sizeMap_, u);
+				auto const max_nb = sz.nu() + sz.nx();
+
+				intCount_ += max_nb;	// idxb
+				intCount_ += sz.ns();	// idxs
+                
+				realCount_ += sz.nx() * sz.nx();	// Q
+				realCount_ += sz.nu() * sz.nx();	// S
+				realCount_ += sz.nu() * sz.nu();	// R 
+				realCount_ += sz.nx();	// q
+				realCount_ += sz.nu();	// r
+				realCount_ += sz.ns() * sz.ns();	// Zl
+				realCount_ += sz.ns() * sz.ns();	// Zu
+				realCount_ += sz.ns();	// zl
+				realCount_ += sz.ns();	// zu
+				realCount_ += max_nb;	// lb
+				realCount_ += max_nb;	// ub
+				realCount_ += sz.ns();	// lbls
+				realCount_ += sz.ns();	// lbus
+
+				realCount_ += sz.nc() * sz.nx();	// C
+				realCount_ += sz.nc() * sz.nu();	// D
+				realCount_ += sz.nc();	// lg
+				realCount_ += sz.nc();	// ug
+
+				realCount_ += sz.nx();	// x
+				realCount_ += sz.nu();	// u
+				realCount_ += sz.ns();	// ls
+				realCount_ += sz.ns();	// us
+				
+				realCount_ += max_nb;	// lam_lb
+				realCount_ += max_nb;	// lam_ub
+				realCount_ += sz.nc();	// lam_lg
+				realCount_ += sz.nc();	// lam_ug
+				
+				realCount_ += sz.ns();	// lam_ls
+				realCount_ += sz.ns();	// lam_us
+            }
+
+
+			void tree_edge(OcpEdgeDescriptor e, OcpGraph const& g)
+			{
+				auto const& sz_u = get(sizeMap_, source(e, g));
+				auto const& sz_v = get(sizeMap_, target(e, g));
+
+				realCount_ += sz_v.nx() * sz_u.nx();	// A
+				realCount_ += sz_v.nx() * sz_u.nu();	// B
+				realCount_ += sz_v.nx();	// b
+				realCount_ += sz_v.nx();	// pi
+			}
+
+        
+        private:
+            SizeMap sizeMap_;
+			size_t& realCount_;
+			size_t& intCount_;
+        };
+
+
+		class InitVisitor
+        :   public boost::default_bfs_visitor 
+        {
+        public:
+            InitVisitor(HpipmWorkspace& ws)
+            :   ws_{ws}
+            {
+            }
+
+        
+            void discover_vertex(OcpVertexDescriptor u, OcpGraph const& g)
+            {
+				auto const& sz = get(ws_.size(), u);
+				auto const max_nb = sz.nu() + sz.nx();
+
+				ws_.nx_.push_back(sz.nx());
+				ws_.nu_.push_back(sz.nu());
+				ws_.nb_.push_back(max_nb);	// upper estimate
+				ws_.nbx_.push_back(sz.nx());	// upper estimate
+				ws_.nbu_.push_back(sz.nu());	// upper estimate
+				ws_.ng_.push_back(sz.nc());
+				ws_.ns_.push_back(sz.ns());
+				ws_.nsbx_.push_back(sz.nx());	// upper estimate
+				ws_.nsbu_.push_back(sz.nu());	// upper estimate
+				ws_.nsg_.push_back(sz.nc());	// upper estimate
+				
+				{
+					// Allocate idxb array. It will be properly initialized in solve().
+					int * const idxb = allocInt(max_nb);
+					ws_.hidxb_.push_back(idxb);
+
+					// Init idxb to 0,1,2,... s.t. maximum necessary workspace size is returned.
+					for (int i = 0; i < max_nb; ++i)
+						idxb[i] = i;
+				}
+					
+				{
+					// Allocate idxs array.				
+					int * const idxs = allocInt(sz.ns());
+					ws_.idxs_.push_back(idxs);
+				
+					// Initialize idxs to 0,1,2, ... .
+					for (int i = 0; i < sz.ns(); ++i)
+						idxs[i] = i;
+				}
+
+				ws_.Q_.push_back(allocReal(sz.nx() * sz.nx()));
+				ws_.S_.push_back(allocReal(sz.nu() * sz.nx()));
+				ws_.R_.push_back(allocReal(sz.nu() * sz.nu()));
+				ws_.q_.push_back(allocReal(sz.nx()));
+				ws_.r_.push_back(allocReal(sz.nu()));
+				ws_.Zl_.push_back(allocReal(sz.ns() * sz.ns()));
+				ws_.Zu_.push_back(allocReal(sz.ns() * sz.ns()));
+				ws_.zl_.push_back(allocReal(sz.ns()));
+				ws_.zu_.push_back(allocReal(sz.ns()));				
+
+				ws_.lb_.push_back(allocReal(max_nb));	// the array will be updated during solve()
+				ws_.lu_.emplace_back(sz.nu(), -inf<Real>());
+				ws_.lx_.emplace_back(sz.nx(), -inf<Real>());
+
+				ws_.ub_.push_back(allocReal(max_nb));	// the array will be updated during solve()
+				ws_.uu_.emplace_back(sz.nu(), inf<Real>());			
+				ws_.ux_.emplace_back(sz.nx(), inf<Real>());
+				
+				ws_.lbls_.push_back(allocReal(sz.ns()));
+				ws_.lbus_.push_back(allocReal(sz.ns()));
+
+				ws_.C_ .push_back(allocReal(sz.nc() * sz.nx()));
+				ws_.D_ .push_back(allocReal(sz.nc() * sz.nu()));
+				ws_.lg_.push_back(allocReal(sz.nc()));
+				ws_.ug_.push_back(allocReal(sz.nc()));
+
+				ws_.x_.push_back(allocReal(sz.nx()));
+				ws_.u_.push_back(allocReal(sz.nu()));
+				ws_.ls_.push_back(allocReal(sz.ns()));
+				ws_.us_.push_back(allocReal(sz.ns()));
+				
+				ws_.lam_lb_.push_back(allocReal(max_nb));
+				ws_.lam_ub_.push_back(allocReal(max_nb));
+				ws_.lam_lg_.push_back(allocReal(sz.nc()));
+				ws_.lam_ug_.push_back(allocReal(sz.nc()));
+				ws_.lam_ls_.push_back(allocReal(sz.ns()));
+				ws_.lam_us_.push_back(allocReal(sz.ns()));
+            }
+
+
+			void tree_edge(OcpEdgeDescriptor e, OcpGraph const& g)
+			{
+				auto const u = source(e, g);
+				auto const v = target(e, g);
+
+				if (v != u + 1)
+					throw std::invalid_argument("Invalid tree structure in HpipmWorkspace ctor:	vertices are not sequentially connected");
+
+				auto const& sz_u = get(ws_.size(), u);
+				auto const& sz_v = get(ws_.size(), v);
+
+				ws_.A_.push_back(allocReal(sz_v.nx() * sz_u.nx()));
+				ws_.B_.push_back(allocReal(sz_v.nx() * sz_u.nu()));
+				ws_.b_.push_back(allocReal(sz_v.nx()));
+				ws_.pi_.push_back(allocReal(sz_v.nx()));
+			}
+
+
+			void non_tree_edge(OcpEdgeDescriptor e, OcpGraph const& g)
+			{
+				throw std::invalid_argument("Invalid tree structure in HpipmWorkspace ctor:	non-tree graph structure detected.");
+			}
+
+        
+        private:
+            HpipmWorkspace& ws_;
+			size_t allocatedReal_ = 0;
+			size_t allocatedInt_ = 0;
+
+
+			Real * allocReal(size_t n)
+			{
+				if (allocatedReal_ + n > ws_.realPool_.size())
+					throw std::bad_alloc();
+
+				Real * const ptr = ws_.realPool_.data() + allocatedReal_;
+				allocatedReal_ += n;
+
+				return ptr;
+			}
+
+
+			int * allocInt(size_t n)
+			{
+				if (allocatedInt_ + n > ws_.intPool_.size())
+					throw std::bad_alloc();
+
+				int * const ptr = ws_.intPool_.data() + allocatedInt_;
+				allocatedInt_ += n;
+
+				return ptr;
+			}
+        };
+
+
+		class PopulateBounds
 		{
-			return std::numeric_limits<Real>::signaling_NaN();
-		}
+		public:
+			PopulateBounds(Real * lb, Real * ub, int * idxb)
+			:	lb_(lb)
+			,	ub_(ub)
+			,	idxb_(idxb)
+			{
+			}
+
+
+			bool operator()(Real l, Real u)
+			{
+				bool bounded = false;
+				
+				if (std::isfinite(l) && std::isfinite(u))
+				{
+					// If both bounds are finite, add i to the bounds index,
+					// and copy values to the lb_internal_ and ub_internal_.
+					*idxb_++ = count_;
+					*lb_++ = l;
+					*ub_++ = u;
+					bounded = true;
+				}
+				else 
+				{
+					// Otherwise, check that the values are [-inf, inf]
+					if (!(l == -inf<Real>() && u == inf<Real>()))
+						throw std::invalid_argument("An invalid QP bound is found. For HPMPC/HPIPM, "
+							"the bounds should be either both finite or [-inf, inf]");
+				}
+
+				++count_;
+				
+				return bounded;
+			}
+
+
+		private:
+			Real * lb_;
+			Real * ub_;
+			int * idxb_;
+			int count_ = 0;
+		};
 
 
 		void resizeSolverWorkspace()
 		{
 			solverWorkspaceMem_.resize(Hpipm::memsize_ocp_qp_ipm(&ocpQpDim_, &solverArg_));
+		}
+
+
+		/// @brief Recalculate bounds indices of each stage, as the bounds might have changed.
+		void updateBounds()
+		{
+			auto const vertex_id = get(vertex_index, graph_);
+				
+			// Update the nb_ array.
+			for(auto v : vertices(graph_))
+			{
+				auto const v_i = get(vertex_id, v);
+				auto const& sz = get(size(), v);
+
+				int nbx = 0, nbu = 0;
+				PopulateBounds pb(lb_[v_i], ub_[v_i], hidxb_[v_i]);
+				
+				// Cycle through the bounds and check for infinities
+				{
+					auto const& lu = lu_[v_i];
+					auto const& uu = uu_[v_i];
+					
+					for (size_t i = 0; i < sz.nu(); ++i)
+						if (pb(lu[i], uu[i]))
+							++nbu;
+				}
+
+				{
+					auto const& lx = lx_[v_i];
+					auto const& ux = ux_[v_i];
+				
+					for (size_t i = 0; i < sz.nx(); ++i)
+						if (pb(lx[i], ux[i]))
+							++nbx;
+				}
+					
+				nb_[v_i] = nbx + nbu;
+				nbx_[v_i] = nbx;
+				nbu_[v_i] = nbu;
+			
+				// Cycle through the soft bounds and count number of soft state bounds (nsbx),
+				// number of soft input bounds (nsbu) and number of soft general bounds (nsg).
+				int nsbx = 0, nsbu = 0, nsg = 0;
+				int const * const idxs = idxs_[v_i];
+				
+				for (size_t i = 0; i < sz.ns(); ++i)
+				{
+					if (sz.nu() <= idxs[i] && idxs[i] < sz.nu() + sz.nx())
+						++nsbx;
+						
+					if (idxs[i] < sz.nu())
+						++nsbu;
+						
+					if (idxs[i] >= sz.nu() + sz.nx())
+						++nsg;
+				}
+				
+				nsbx_[v_i] = nsbx;
+				nsbu_[v_i] = nsbu;
+				nsg_[v_i] = nsg;
+			}
 		}
 	};
 }

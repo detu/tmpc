@@ -149,6 +149,130 @@ namespace tmpc :: testing
 			return std::move(ws);
 		}
 
+
+		static Workspace problem_0_unconstrained()
+		{
+			unsigned const NX = 2;
+			unsigned const NU = 1;
+			unsigned const NZ = NX + NU;
+			unsigned const NC = 0;
+			unsigned const NCT = 0;
+			unsigned const NT = 2;
+
+			typedef StaticMatrix<Kernel, NZ, NZ> StageHessianMatrix;
+
+			OcpGraph const g = ocpGraphLinear(NT + 1);
+			Workspace ws {g, ocpSizeNominalMpc(NT, NX, NU, NC, 0, NCT, false)};
+			auto const e0 = out_edges(0, g).front();
+			auto const e1 = out_edges(1, g).front();
+
+			/*
+			auto qp = ws.problem();
+			qp[0].lbx(-1.);	qp[0].lbu(-1.);	qp[0].ubx(1.);	qp[0].ubu(1.);
+			qp[1].lbx(-1.);	qp[1].lbu(-1.);	qp[1].ubx(1.);	qp[1].ubu(1.);
+			qp[2].lbx(-1.);					qp[2].ubx(1.);
+			*/
+			
+			put(ws.lx(), 0, DynamicVector<Kernel>(NX, -inf<Real>()));
+			put(ws.lu(), 0, DynamicVector<Kernel>(NU, -inf<Real>()));
+			put(ws.ux(), 0, DynamicVector<Kernel>(NX, inf<Real>()));
+			put(ws.uu(), 0, DynamicVector<Kernel>(NU, inf<Real>()));
+
+			put(ws.lx(), 1, DynamicVector<Kernel>(NX, -inf<Real>()));
+			put(ws.lu(), 1, DynamicVector<Kernel>(NU, -inf<Real>()));
+			put(ws.ux(), 1, DynamicVector<Kernel>(NX, inf<Real>()));
+			put(ws.uu(), 1, DynamicVector<Kernel>(NU, inf<Real>()));
+
+			put(ws.lx(), 2, DynamicVector<Kernel>(NX, -inf<Real>()));
+			put(ws.ux(), 2, DynamicVector<Kernel>(NX, inf<Real>()));
+			
+			// Stage 0
+			StageHessianMatrix H0 {
+				{67,   78,   90},
+				{78,   94,  108},
+				{90,  108,  127}
+			};
+
+			StaticVector<Kernel, NX> const q0 {0., 0.};
+			StaticVector<Kernel, NU> const r0 {0.};
+
+			const DynamicMatrix<Kernel> Q0 = submatrix(H0, 0, 0, NX, NX);
+			const DynamicMatrix<Kernel> R0 = submatrix(H0, NX, NX, NU, NU);
+			const DynamicMatrix<Kernel> S0T = submatrix(H0, 0, NX, NX, NU);
+			const DynamicMatrix<Kernel> S0 = submatrix(H0, NX, 0, NU, NX);
+
+			DynamicMatrix<Kernel> const A0 {{1., 1.}, {0., 1.}};
+			DynamicMatrix<Kernel> const B0 {{0.5}, {1.0}};
+			Vector a0 {1., 2.};
+
+			// Stage 1
+			StageHessianMatrix H1 {
+				{67,   78,   90},
+				{78,   94,  108},
+				{90,  108,  127}
+			};
+
+			StaticVector<Kernel, NX> const q1 {0., 0.};
+			StaticVector<Kernel, NU> const r1 {0.};
+
+			const DynamicMatrix<Kernel> Q1 = submatrix(H1, 0, 0, NX, NX);
+			const DynamicMatrix<Kernel> R1 = submatrix(H1, NX, NX, NU, NU);
+			const DynamicMatrix<Kernel> S1T = submatrix(H1, 0, NX, NX, NU);
+			const DynamicMatrix<Kernel> S1 = submatrix(H1, NX, 0, NU, NX);
+
+			DynamicMatrix<Kernel> const A1 {{1., 1.}, {0., 1.}};
+			DynamicMatrix<Kernel> const B1 {{0.5}, {1.0}};
+			Vector const a1 {1., 2.};
+
+			// Stage 2
+			DynamicMatrix<Kernel> H2 {{1., 2.}, {3., 4.}};
+			H2 = trans(H2) * H2;	// Make positive definite.
+
+			StaticVector<Kernel, NX> const q2 {0., 0.};
+
+			const DynamicMatrix<Kernel> Q2 = submatrix(H2, 0, 0, NX, NX);
+
+			// Setup QP
+			/*
+			qp[0].Q(Q0);	qp[0].R(R0);	qp[0].S(S0);	qp[0].q(q0);	qp[0].r(r0);
+			qp[1].Q(Q1);	qp[1].R(R1);	qp[1].S(S1);	qp[1].q(q1);	qp[1].r(r1);
+			qp[2].Q(Q2);									qp[2].q(q2);
+
+			qp[0].A(A0);	
+			qp[0].B(B0);		
+			qp[0].b(a0);
+			
+			qp[1].A(A1);	
+			qp[1].B(B1);		
+			qp[1].b(a1);
+			*/
+			put(ws.Q(), 0, Q0);	
+			put(ws.R(), 0, R0);	
+			put(ws.S(), 0, S0);	
+			put(ws.q(), 0, q0);	
+			put(ws.r(), 0, r0);
+
+			put(ws.Q(), 1, Q1);	
+			put(ws.R(), 1, R1);	
+			put(ws.S(), 1, S1);	
+			put(ws.q(), 1, q1);	
+			put(ws.r(), 1, r1);
+
+			put(ws.Q(), 2, Q2);	
+			put(ws.q(), 2, q2);
+
+			put(ws.A(), e0, A0);	
+			put(ws.B(), e0, B0);	
+			put(ws.b(), e0, a0);
+
+			put(ws.A(), e1, A1);	
+			put(ws.B(), e1, B1);	
+			put(ws.b(), e1, a1);
+
+			return std::move(ws);
+		}
+
+
 		/*
 		static Workspace problem_1()
 		{
@@ -200,6 +324,21 @@ namespace tmpc :: testing
 		EXPECT_PRED2(MatrixApproxEquality(1e-6), get(ws.u(), 1), (DynamicVector<typename TestFixture::Kernel> {-1.}));
 
 		EXPECT_PRED2(MatrixApproxEquality(1e-6), get(ws.x(), 2), (DynamicVector<typename TestFixture::Kernel> {1., 1.}));
+	}
+
+
+	TYPED_TEST_P(TreeQpWorkspaceSolveTest, testSolve0Unconstrained)
+	{
+		auto ws = TestFixture::problem_0_unconstrained();
+		ws.solve();
+
+		EXPECT_PRED2(MatrixApproxEquality(1e-6), get(ws.x(), 0), (DynamicVector<typename TestFixture::Kernel> {4.2376727217537882, -3.2166970575479454}));
+		EXPECT_PRED2(MatrixApproxEquality(1e-6), get(ws.u(), 0), (DynamicVector<typename TestFixture::Kernel> {-0.34889319983994238}));
+
+		EXPECT_PRED2(MatrixApproxEquality(1e-6), get(ws.x(), 1), (DynamicVector<typename TestFixture::Kernel> {1.8465290642858716, -1.5655902573878877}));
+		EXPECT_PRED2(MatrixApproxEquality(1e-6), get(ws.u(), 1), (DynamicVector<typename TestFixture::Kernel> {-0.20287931724419153}));
+
+		EXPECT_PRED2(MatrixApproxEquality(1e-6), get(ws.x(), 2), (DynamicVector<typename TestFixture::Kernel> {1.1794991482758881, 0.23153042536792068}));
 	}
 
 
@@ -683,6 +822,7 @@ namespace tmpc :: testing
 	REGISTER_TYPED_TEST_CASE_P(TreeQpWorkspaceSolveTest,
 		//testMoveConstructor, 
 		testSolve0
+		, testSolve0Unconstrained
 		, testSolveDimitrisRandom
 		//,testSolve1
 		//DISABLED_testSolve1stage1d, 
