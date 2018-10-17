@@ -1,18 +1,18 @@
 #pragma once
 
-#include <boost/graph/adjacency_list.hpp>
+//#include <boost/graph/adjacency_list.hpp>
+#include <boost/graph/compressed_sparse_row_graph.hpp>
 #include <boost/graph/breadth_first_search.hpp>
 #include <boost/graph/depth_first_search.hpp>
 #include <boost/graph/copy.hpp>
 #include <boost/range/iterator_range.hpp>
 
 
-namespace tmpc
+namespace tmpc :: graph
 {
     /*
     using boost::adjacency_list;
     using boost::vecS;
-    using boost::bidirectionalS;
     using boost::edge_index_t;
     using boost::property;
     using boost::no_property;
@@ -22,7 +22,10 @@ namespace tmpc
     using boost::edge_index;
     using boost::default_bfs_visitor;
     using boost::default_dfs_visitor;
-
+    using boost::compressed_sparse_row_graph;
+    using boost::directedS;
+    using boost::bidirectionalS;
+    
 
     template <typename Graph>
     inline auto edges(Graph const& g)

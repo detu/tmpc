@@ -5,7 +5,7 @@
 #include <tmpc/ocp/OcpGraph.hpp>
 #include <tmpc/ocp/OcpSize.hpp>
 #include <tmpc/core/PropertyMap.hpp>
-#include <tmpc/core/Graph.hpp>
+#include <tmpc/graph/Graph.hpp>
 #include <tmpc/core/Range.hpp>
 #include <tmpc/Traits.hpp>
 
@@ -25,7 +25,7 @@ namespace tmpc
         :   graph_(g)
         ,   size_(num_vertices(g))
         {
-            copyProperty(size_map, make_iterator_property_map(size_.begin(), vertexIndex(graph_)), vertices(graph_));
+            copyProperty(size_map, make_iterator_property_map(size_.begin(), vertexIndex(graph_)), graph::vertices(graph_));
 
             // Allocate vertex properties of appropriate size
             auto const nv = num_vertices(graph_);
@@ -39,8 +39,8 @@ namespace tmpc
             // for (auto const& sz : size_)
             //     vertexProperties_.emplace_back(sz);
 
-            auto const vertex_id = get(vertex_index, graph_);
-            for (auto v : vertices(graph_))
+            auto const vertex_id = get(graph::vertex_index, graph_);
+            for (auto v : graph::vertices(graph_))
             {
                 auto const& sz = get(size(), v);
                 auto v_id = get(vertex_id, v);
@@ -61,8 +61,8 @@ namespace tmpc
             APA_.resize(ne);
             Pb_p_.resize(ne);
             
-            auto const edge_id = get(edge_index, graph_);
-            for (auto e : edges(graph_))
+            auto const edge_id = get(graph::edge_index, graph_);
+            for (auto e : graph::edges(graph_))
             {
                 auto const sz_u = get(size_map, source(e, g));
                 auto const sz_v = get(size_map, target(e, g));
@@ -116,11 +116,11 @@ namespace tmpc
             {
                 RiccatiForwardVisitor vis(*this, qp, sol);
 
-                for (auto v : vertices(graph_))
+                for (auto v : graph::vertices(graph_))
                 {
                     vis.discover_vertex(v, graph_);
 
-                    for (auto e : out_edges(v, graph_))
+                    for (auto e : graph::out_edges(v, graph_))
                         vis.tree_edge(e, graph_);
                 }
             }
@@ -130,12 +130,12 @@ namespace tmpc
 
             depth_first_search(graph_,
                 RiccatiBackwardVisitor(*this, qp, sol), 
-                make_iterator_property_map(color.begin(), get(vertex_index, graph_)), 
+                make_iterator_property_map(color.begin(), get(graph::vertex_index, graph_)), 
                 vertex(0, graph_));
 
             depth_first_search(graph_,
                 RiccatiForwardVisitor(*this, qp, sol), 
-                make_iterator_property_map(color.begin(), get(vertex_index, graph_)), 
+                make_iterator_property_map(color.begin(), get(graph::vertex_index, graph_)), 
                 vertex(0, graph_));
             */
         }
@@ -164,7 +164,7 @@ namespace tmpc
 
         template <typename Qp, typename QpSol>
         class RiccatiBackwardVisitor
-        :   public default_dfs_visitor 
+        :   public graph::default_dfs_visitor 
         {
         public:
             RiccatiBackwardVisitor(ClassicalRiccati& ws, Qp const& qp, QpSol& sol)
@@ -189,7 +189,7 @@ namespace tmpc
                 }
                 else
                 {
-                    auto const out_e = out_edges(u, g);
+                    auto const out_e = graph::out_edges(u, g);
 
                     if (out_e.size() == 1)
                     {
@@ -271,7 +271,7 @@ namespace tmpc
 
         template <typename Qp, typename QpSol>
         class RiccatiForwardVisitor
-        :   public default_dfs_visitor 
+        :   public graph::default_dfs_visitor 
         {
         public:
             RiccatiForwardVisitor(ClassicalRiccati& ws, Qp const& qp, QpSol& sol)
@@ -351,12 +351,12 @@ namespace tmpc
             }
             else
             {
-                auto const out_e = out_edges(u, g);
+                auto const out_e = graph::out_edges(u, g);
 
                 if (out_e.size() == 1)
                 {
                     auto const e = out_e.front();
-                    auto const e_id = get(get(edge_index, g), e);
+                    auto const e_id = get(get(graph::edge_index, g), e);
                     auto const v = target(e, g);
 
                     // Alg 1 line 3
@@ -459,37 +459,37 @@ namespace tmpc
 
         auto PA()
         {
-            return make_iterator_property_map(PA_.begin(), get(edge_index, graph_));
+            return make_iterator_property_map(PA_.begin(), get(graph::edge_index, graph_));
         }
 
 
         auto PB()
         {
-            return make_iterator_property_map(PB_.begin(), get(edge_index, graph_));
+            return make_iterator_property_map(PB_.begin(), get(graph::edge_index, graph_));
         }
 
 
         auto BPA()
         {
-            return make_iterator_property_map(BPA_.begin(), get(edge_index, graph_));
+            return make_iterator_property_map(BPA_.begin(), get(graph::edge_index, graph_));
         }
 
 
         auto BPB()
         {
-            return make_iterator_property_map(BPB_.begin(), get(edge_index, graph_));
+            return make_iterator_property_map(BPB_.begin(), get(graph::edge_index, graph_));
         }
 
 
         auto APA()
         {
-            return make_iterator_property_map(APA_.begin(), get(edge_index, graph_));
+            return make_iterator_property_map(APA_.begin(), get(graph::edge_index, graph_));
         }
 
 
         auto Pb_p()
         {
-            return make_iterator_property_map(Pb_p_.begin(), get(edge_index, graph_));
+            return make_iterator_property_map(Pb_p_.begin(), get(graph::edge_index, graph_));
         }
 
 

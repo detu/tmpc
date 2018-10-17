@@ -41,8 +41,8 @@ namespace tmpc :: testing
 
 		OcpGraph const g = ocpGraphLinear(NT + 1);
 		Workspace ws {g, ocpSizeNominalMpc(NT, NX, NU, NC, 0, NCT, false)};
-		auto const e0 = out_edges(0, g).front();
-		auto const e1 = out_edges(1, g).front();
+		auto const e0 = graph::out_edges(0, g).front();
+		auto const e1 = graph::out_edges(1, g).front();
 		
 		put(ws.lx(), 0, DynamicVector<double>(NX, -1.));
 		put(ws.lu(), 0, DynamicVector<double>(NU, -1.));
@@ -159,8 +159,8 @@ namespace tmpc :: testing
 
 		OcpGraph const g = ocpGraphLinear(NT + 1);
 		Workspace ws {g, ocpSizeNominalMpc(NT, NX, NU, NC, 0, NCT, true)};
-		auto const e0 = out_edges(0, g).front();
-		auto const e1 = out_edges(1, g).front();
+		auto const e0 = graph::out_edges(0, g).front();
+		auto const e1 = graph::out_edges(1, g).front();
 		
 		put(ws.lx(), 0, DynamicVector<double>(0, -1.));
 		put(ws.lu(), 0, DynamicVector<double>(NU, -1.));

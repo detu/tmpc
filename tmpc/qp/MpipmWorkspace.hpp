@@ -5,7 +5,7 @@
 #include <tmpc/ocp/OcpGraph.hpp>
 #include <tmpc/ocp/OcpSize.hpp>
 #include <tmpc/core/PropertyMap.hpp>
-#include <tmpc/core/Graph.hpp>
+#include <tmpc/graph/Graph.hpp>
 #include <tmpc/BlazeKernel.hpp>
 #include <tmpc/Traits.hpp>
 
@@ -26,7 +26,7 @@ namespace tmpc
         :   graph_(g)
         ,   size_(num_vertices(g))
         {
-            copyProperty(size_map, make_iterator_property_map(size_.begin(), vertexIndex(graph_)), vertices(graph_));
+            copyProperty(size_map, make_iterator_property_map(size_.begin(), vertexIndex(graph_)), graph::vertices(graph_));
 
             // Allocate vertex properties of appropriate size
             vertexProperties_.reserve(num_vertices(graph_));
@@ -35,7 +35,7 @@ namespace tmpc
 
             // Populate edgeIndex_ and allocate edge properties of appropriate size
             edgeProperties_.reserve(num_edges(graph_));
-            for (auto e : edges(graph_))
+            for (auto e : graph::edges(graph_))
                 edgeProperties_.emplace_back(get(size_map, source(e, g)), get(size_map, target(e, g)));
         }
 
@@ -452,7 +452,7 @@ namespace tmpc
 
         auto edgeIndex() const
         {
-            return get(edge_index, graph_);
+            return get(graph::edge_index, graph_);
         }
 
 

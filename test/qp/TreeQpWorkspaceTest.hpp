@@ -54,7 +54,8 @@ namespace tmpc :: testing
 
     TYPED_TEST_P(TreeQpWorkspaceTest, testQpInterface)
     {
-        auto const N = num_vertices(this->ws_.graph());
+        auto& g = this->ws_.graph();
+        auto const N = num_vertices(g);
 
         std::map<OcpVertexDescriptor, typename TestFixture::Matrix> Q;
         std::map<OcpVertexDescriptor, typename TestFixture::Vector> q;
@@ -74,7 +75,7 @@ namespace tmpc :: testing
         Rand<typename TestFixture::Kernel, typename TestFixture::Matrix> rand_matrix;
         Rand<typename TestFixture::Kernel, typename TestFixture::Vector> rand_vector;
 
-        for (auto v : vertices(this->ws_.graph()))
+        for (auto v : graph::vertices(g))
         {
             auto const& sz = get(this->ws_.size(), v);
 
@@ -92,10 +93,10 @@ namespace tmpc :: testing
             put(this->ws_.ud(), v, d_max[v] = rand_vector.generate(sz.nc()));
         }
 
-        for (auto e : edges(this->ws_.graph()))
+        for (auto e : graph::edges(g))
         {
-            auto const from = source(e, this->ws_.graph());
-            auto const to = target(e, this->ws_.graph());
+            auto const from = source(e, g);
+            auto const to = target(e, g);
             auto const& sz_from = get(this->ws_.size(), from);
             auto const& sz_to = get(this->ws_.size(), to);
 
@@ -105,7 +106,7 @@ namespace tmpc :: testing
         }
 
         // Reading the data and checking that they are the same that we wrote
-        for (auto v : vertices(this->ws_.graph()))
+        for (auto v : graph::vertices(g))
         {
             EXPECT_EQ(forcePrint(get(this->ws_.Q(), v)), forcePrint(Q[v])) << "at v=" << v;
             
@@ -122,11 +123,11 @@ namespace tmpc :: testing
             EXPECT_EQ(forcePrint(get(this->ws_.ud(), v)), forcePrint(d_max[v])) << "at v=" << v;
         }
 
-        for (auto e : edges(this->ws_.graph()))
+        for (auto e : graph::edges(g))
         {
-            EXPECT_EQ(forcePrint(get(this->ws_.A(), e)), forcePrint(A[e])) << "at e=" << e;
-            EXPECT_EQ(forcePrint(get(this->ws_.B(), e)), forcePrint(B[e])) << "at e=" << e;
-            EXPECT_EQ(forcePrint(get(this->ws_.b(), e)), forcePrint(b[e])) << "at e=" << e;
+            EXPECT_EQ(forcePrint(get(this->ws_.A(), e)), forcePrint(A[e])) << "at e=" << get(graph::edge_index, g, e);
+            EXPECT_EQ(forcePrint(get(this->ws_.B(), e)), forcePrint(B[e])) << "at e=" << get(graph::edge_index, g, e);
+            EXPECT_EQ(forcePrint(get(this->ws_.b(), e)), forcePrint(b[e])) << "at e=" << get(graph::edge_index, g, e);
         }
     }
 
@@ -135,7 +136,7 @@ namespace tmpc :: testing
     {
         auto const& ws = this->ws_;
 
-        for (auto v : vertices(ws.graph()))
+        for (auto v : graph::vertices(ws.graph()))
         {
             auto const& s = get(ws.size(), v);
             EXPECT_EQ(s, this->size_[v]);
@@ -158,7 +159,7 @@ namespace tmpc :: testing
             EXPECT_EQ(size(get(this->ws_.ud(), v)), s.nc());
         }
 
-        for (auto e : edges(ws.graph()))
+        for (auto e : graph::edges(ws.graph()))
         {
             auto const from = source(e, ws.graph());
             auto const to = target(e, ws.graph());

@@ -307,11 +307,16 @@ namespace tmpc
 
             // Build OCP graph from json.
             size_t const N = j_nodes.size();
-            graph_ = OcpGraph(N);
-
+            
             // Add edges, with edge_index attribute equal to the index of an edge in "edges" json array.
-            for (auto j_edge : j.at("edges") | indexed())
-                add_edge(j_edge.value().at("from"), j_edge.value().at("to"), j_edge.index(), graph_);
+            {
+                std::vector<std::pair<size_t, size_t>> edge_list;
+                edge_list.reserve(j.at("edges").size());
+                for (auto j_edge : j.at("edges"))
+                    edge_list.emplace_back(j_edge.at("from"), j_edge.at("to"));
+                
+                graph_ = OcpGraph(edge_list.begin(), edge_list.end(), N);
+            }
 
             // Fill node sizes.
             size_.resize(N);
@@ -335,8 +340,8 @@ namespace tmpc
             {"edges", json::array()}
             }
         {
-            auto const vert = vertices(g);
-            auto const vertex_id = get(vertex_index, g);
+            auto const vert = graph::vertices(g);
+            auto const vertex_id = get(graph::vertex_index, g);
             copyProperty(size_map, iterator_property_map(size_.begin(), vertex_id), vert);
 
             Q().defaultInit(vert);
@@ -353,12 +358,12 @@ namespace tmpc
             ld().defaultInit(vert);
             ud().defaultInit(vert);
 
-            auto const edg = edges(g);
+            auto const edg = graph::edges(g);
             A().defaultInit(edg);
             B().defaultInit(edg);
             b().defaultInit(edg);
 
-            auto const edge_id = get(edge_index, graph_);
+            auto const edge_id = get(graph::edge_index, graph_);
             for (auto e : edg)
             {
                 auto& j = json_["edges"][get(edge_id, e)];
@@ -382,231 +387,231 @@ namespace tmpc
 
         auto size() const
         {
-            return iterator_property_map(size_.begin(), get(vertex_index, graph_));
+            return iterator_property_map(size_.begin(), get(graph::vertex_index, graph_));
         }
 
 
         auto Q()
         {
             return detail::makeJsonQpPropertyMap<OcpVertexDescriptor, DynamicMatrix<Kernel>>(
-                json_.at("nodes"), "Q", get(vertex_index, graph_), size_Q(size()));
+                json_.at("nodes"), "Q", get(graph::vertex_index, graph_), size_Q(size()));
         }
 
 
         auto Q() const
         {
             return detail::makeJsonQpPropertyMap<OcpVertexDescriptor, DynamicMatrix<Kernel>>(
-                json_.at("nodes"), "Q", get(vertex_index, graph_), size_Q(size()));
+                json_.at("nodes"), "Q", get(graph::vertex_index, graph_), size_Q(size()));
         }
 
 
         auto R()
         {
             return detail::makeJsonQpPropertyMap<vertex_descriptor, DynamicMatrix<Kernel>>(
-                json_.at("nodes"), "R", get(vertex_index, graph_), size_R(size()));
+                json_.at("nodes"), "R", get(graph::vertex_index, graph_), size_R(size()));
         }
 
 
         auto R() const
         {
             return detail::makeJsonQpPropertyMap<vertex_descriptor, DynamicMatrix<Kernel>>(
-                json_.at("nodes"), "R", get(vertex_index, graph_), size_R(size()));
+                json_.at("nodes"), "R", get(graph::vertex_index, graph_), size_R(size()));
         }
 
 
         auto S()
         {
             return detail::makeJsonQpPropertyMap<vertex_descriptor, DynamicMatrix<Kernel>>(
-                json_.at("nodes"), "S", get(vertex_index, graph_), size_S(size()));
+                json_.at("nodes"), "S", get(graph::vertex_index, graph_), size_S(size()));
         }
 
 
         auto S() const
         {
             return detail::makeJsonQpPropertyMap<vertex_descriptor, DynamicMatrix<Kernel>>(
-                json_.at("nodes"), "S", get(vertex_index, graph_), size_S(size()));
+                json_.at("nodes"), "S", get(graph::vertex_index, graph_), size_S(size()));
         }
 
 
         auto q()
         {
             return detail::makeJsonQpPropertyMap<vertex_descriptor, DynamicVector<Kernel>>(
-                json_.at("nodes"), "q", get(vertex_index, graph_), size_x(size()));
+                json_.at("nodes"), "q", get(graph::vertex_index, graph_), size_x(size()));
         }
 
 
         auto q() const
         {
             return detail::makeJsonQpPropertyMap<vertex_descriptor, DynamicVector<Kernel>>(
-                json_.at("nodes"), "q", get(vertex_index, graph_), size_x(size()));
+                json_.at("nodes"), "q", get(graph::vertex_index, graph_), size_x(size()));
         }
 
 
         auto r()
         {
             return detail::makeJsonQpPropertyMap<vertex_descriptor, DynamicVector<Kernel>>(
-                json_.at("nodes"), "r", get(vertex_index, graph_), size_u(size()));
+                json_.at("nodes"), "r", get(graph::vertex_index, graph_), size_u(size()));
         }
 
 
         auto r() const
         {
             return detail::makeJsonQpPropertyMap<vertex_descriptor, DynamicVector<Kernel>>(
-                json_.at("nodes"), "r", get(vertex_index, graph_), size_u(size()));
+                json_.at("nodes"), "r", get(graph::vertex_index, graph_), size_u(size()));
         }
 
 
         auto lx()
         {
             return detail::makeJsonQpPropertyMap<vertex_descriptor, DynamicVector<Kernel>>(
-                json_.at("nodes"), "lx", get(vertex_index, graph_), size_x(size()));
+                json_.at("nodes"), "lx", get(graph::vertex_index, graph_), size_x(size()));
         }
 
 
         auto lx() const
         {
             return detail::makeJsonQpPropertyMap<vertex_descriptor, DynamicVector<Kernel>>(
-                json_.at("nodes"), "lx", get(vertex_index, graph_), size_x(size()));
+                json_.at("nodes"), "lx", get(graph::vertex_index, graph_), size_x(size()));
         }
 
 
         auto ux()
         {
             return detail::makeJsonQpPropertyMap<vertex_descriptor, DynamicVector<Kernel>>(
-                json_.at("nodes"), "ux", get(vertex_index, graph_), size_x(size()));
+                json_.at("nodes"), "ux", get(graph::vertex_index, graph_), size_x(size()));
         }
 
 
         auto ux() const
         {
             return detail::makeJsonQpPropertyMap<vertex_descriptor, DynamicVector<Kernel>>(
-                json_.at("nodes"), "ux", get(vertex_index, graph_), size_x(size()));
+                json_.at("nodes"), "ux", get(graph::vertex_index, graph_), size_x(size()));
         }
 
 
         auto lu()
         {
             return detail::makeJsonQpPropertyMap<vertex_descriptor, DynamicVector<Kernel>>(
-                json_.at("nodes"), "lu", get(vertex_index, graph_), size_u(size()));
+                json_.at("nodes"), "lu", get(graph::vertex_index, graph_), size_u(size()));
         }
 
 
         auto lu() const
         {
             return detail::makeJsonQpPropertyMap<vertex_descriptor, DynamicVector<Kernel>>(
-                json_.at("nodes"), "lu", get(vertex_index, graph_), size_u(size()));
+                json_.at("nodes"), "lu", get(graph::vertex_index, graph_), size_u(size()));
         }
 
 
         auto uu()
         {
             return detail::makeJsonQpPropertyMap<vertex_descriptor, DynamicVector<Kernel>>(
-                json_.at("nodes"), "uu", get(vertex_index, graph_), size_u(size()));
+                json_.at("nodes"), "uu", get(graph::vertex_index, graph_), size_u(size()));
         }
 
 
         auto uu() const
         {
             return detail::makeJsonQpPropertyMap<vertex_descriptor, DynamicVector<Kernel>>(
-                json_.at("nodes"), "uu", get(vertex_index, graph_), size_u(size()));
+                json_.at("nodes"), "uu", get(graph::vertex_index, graph_), size_u(size()));
         }
 
 
         auto C()
         {
             return detail::makeJsonQpPropertyMap<OcpVertexDescriptor, DynamicMatrix<Kernel>>(
-                json_.at("nodes"), "C", get(vertex_index, graph_), size_C(size()));
+                json_.at("nodes"), "C", get(graph::vertex_index, graph_), size_C(size()));
         }
 
 
         auto C() const
         {
             return detail::makeJsonQpPropertyMap<OcpVertexDescriptor, DynamicMatrix<Kernel>>(
-                json_.at("nodes"), "C", get(vertex_index, graph_), size_C(size()));
+                json_.at("nodes"), "C", get(graph::vertex_index, graph_), size_C(size()));
         }
 
 
         auto D()
         {
             return detail::makeJsonQpPropertyMap<OcpVertexDescriptor, DynamicMatrix<Kernel>>(
-                json_.at("nodes"), "D", get(vertex_index, graph_), size_D(size()));
+                json_.at("nodes"), "D", get(graph::vertex_index, graph_), size_D(size()));
         }
 
 
         auto D() const
         {
             return detail::makeJsonQpPropertyMap<OcpVertexDescriptor, DynamicMatrix<Kernel>>(
-                json_.at("nodes"), "D", get(vertex_index, graph_), size_D(size()));
+                json_.at("nodes"), "D", get(graph::vertex_index, graph_), size_D(size()));
         }
 
 
         auto ld()
         {
             return detail::makeJsonQpPropertyMap<vertex_descriptor, DynamicVector<Kernel>>(
-                json_.at("nodes"), "ld", get(vertex_index, graph_), size_d(size()));
+                json_.at("nodes"), "ld", get(graph::vertex_index, graph_), size_d(size()));
         }
 
 
         auto ld() const
         {
             return detail::makeJsonQpPropertyMap<vertex_descriptor, DynamicVector<Kernel>>(
-                json_.at("nodes"), "ld", get(vertex_index, graph_), size_d(size()));
+                json_.at("nodes"), "ld", get(graph::vertex_index, graph_), size_d(size()));
         }
 
 
         auto ud()
         {
             return detail::makeJsonQpPropertyMap<vertex_descriptor, DynamicVector<Kernel>>(
-                json_.at("nodes"), "ud", get(vertex_index, graph_), size_d(size()));
+                json_.at("nodes"), "ud", get(graph::vertex_index, graph_), size_d(size()));
         }
 
 
         auto ud() const
         {
             return detail::makeJsonQpPropertyMap<vertex_descriptor, DynamicVector<Kernel>>(
-                json_.at("nodes"), "ud", get(vertex_index, graph_), size_d(size()));
+                json_.at("nodes"), "ud", get(graph::vertex_index, graph_), size_d(size()));
         }
 
 
         auto A()
         {
             return detail::makeJsonQpPropertyMap<edge_descriptor, DynamicMatrix<Kernel>>(
-                json_["edges"], "A", get(edge_index, graph_), size_A(size(), graph_));
+                json_["edges"], "A", get(graph::edge_index, graph_), size_A(size(), graph_));
         }
 
 
         auto A() const
         {
             return detail::makeJsonQpPropertyMap<edge_descriptor, DynamicMatrix<Kernel>>(
-                json_["edges"], "A", get(edge_index, graph_), size_A(size(), graph_));
+                json_["edges"], "A", get(graph::edge_index, graph_), size_A(size(), graph_));
         }
 
 
         auto B()
         {
             return detail::makeJsonQpPropertyMap<edge_descriptor, DynamicMatrix<Kernel>>(
-                json_["edges"], "B", get(edge_index, graph_), size_B(size(), graph_));
+                json_["edges"], "B", get(graph::edge_index, graph_), size_B(size(), graph_));
         }
 
 
         auto B() const
         {
             return detail::makeJsonQpPropertyMap<edge_descriptor, DynamicMatrix<Kernel>>(
-                json_["edges"], "B", get(edge_index, graph_), size_B(size(), graph_));
+                json_["edges"], "B", get(graph::edge_index, graph_), size_B(size(), graph_));
         }
 
 
         auto b()
         {
             return detail::makeJsonQpPropertyMap<edge_descriptor, DynamicVector<Kernel>>(
-                json_["edges"], "b", get(edge_index, graph_), size_b(size(), graph_));
+                json_["edges"], "b", get(graph::edge_index, graph_), size_b(size(), graph_));
         }
 
 
         auto b() const
         {
             return detail::makeJsonQpPropertyMap<edge_descriptor, DynamicVector<Kernel>>(
-                json_["edges"], "b", get(edge_index, graph_), size_b(size(), graph_));
+                json_["edges"], "b", get(graph::edge_index, graph_), size_b(size(), graph_));
         }
 
 

@@ -5,7 +5,7 @@
 namespace tmpc :: benchmark
 {
     class BfsBenchmarkVisitor
-    :   public boost::default_bfs_visitor 
+    :   public graph::default_bfs_visitor 
     {
     public:
         BfsBenchmarkVisitor(size_t& vertex_count, size_t& edge_count)
@@ -38,7 +38,7 @@ namespace tmpc :: benchmark
 
 
     class DfsBenchmarkVisitor
-    :   public boost::default_dfs_visitor 
+    :   public graph::default_dfs_visitor 
     {
     public:
         DfsBenchmarkVisitor(size_t& vertex_count, size_t& edge_count)
@@ -102,7 +102,7 @@ namespace tmpc :: benchmark
         size_t nv = 0;
 
         for (auto _ : state)
-            for(auto v : vertices(g))
+            for(auto v : graph::vertices(g))
                 ++nv;
     }
 
@@ -115,7 +115,7 @@ namespace tmpc :: benchmark
         size_t ne = 0;
 
         for (auto _ : state)
-            for(auto e : edges(g))
+            for(auto e : graph::edges(g))
                 ++ne;
     }
 
@@ -128,7 +128,7 @@ namespace tmpc :: benchmark
         OcpVertexDescriptor u;
 
         for (auto _ : state)
-            for(auto e : edges(g))
+            for(auto e : graph::edges(g))
                 u = source(e, g);
     }
 
@@ -141,7 +141,7 @@ namespace tmpc :: benchmark
         OcpVertexDescriptor v;
 
         for (auto _ : state)
-            for(auto e : edges(g))
+            for(auto e : graph::edges(g))
                 v = target(e, g);
     }
 

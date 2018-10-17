@@ -3,7 +3,7 @@
 #include <tmpc/Traits.hpp>
 #include <tmpc/ocp/OcpSize.hpp>
 #include <tmpc/qp/OcpQpBase.hpp>
-
+#include <tmpc/graph/Graph.hpp>
 #include <tmpc/Matrix.hpp>
 
 #include <blaze/Math.h>
@@ -409,7 +409,7 @@ namespace tmpc
 	template <typename QpSrc, typename QpDst>
 	inline void copyQpProperties(QpSrc const& src, QpDst& dst)
 	{
-		auto const vert = vertices(src.graph());
+		auto const vert = graph::vertices(src.graph());
 		copyProperty(src.Q(), dst.Q(), vert);
 		copyProperty(src.R(), dst.R(), vert);
 		copyProperty(src.S(), dst.S(), vert);
@@ -424,7 +424,7 @@ namespace tmpc
 		copyProperty(src.ld(), dst.ld(), vert);
 		copyProperty(src.ud(), dst.ud(), vert);
 		
-		auto const edg = edges(src.graph());
+		auto const edg = graph::edges(src.graph());
 		copyProperty(src.A(), dst.A(), edg);
 		copyProperty(src.B(), dst.B(), edg);
 		copyProperty(src.b(), dst.b(), edg);
@@ -440,7 +440,7 @@ namespace tmpc
 		typename blaze::Rand<DynamicMatrix> rand_matrix;
 		typename blaze::Rand<DynamicVector> rand_vector;
 		
-		auto const vert = vertices(qp.graph());
+		auto const vert = graph::vertices(qp.graph());
 		for (auto v : vert)
 		{
 			auto const sz = get(qp.size(), v);
@@ -494,7 +494,7 @@ namespace tmpc
 			// put(qp.zu(rand_vector.generate(sz.ns()));
 		}
 		
-		for (auto e : edges(qp.graph()))
+		for (auto e : graph::edges(qp.graph()))
 		{
 			auto const sz_u = get(qp.size(), source(e, qp.graph()));
 			auto const sz_v = get(qp.size(), target(e, qp.graph()));

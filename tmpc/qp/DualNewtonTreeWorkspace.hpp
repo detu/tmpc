@@ -2,7 +2,7 @@
 #include <tmpc/ocp/OcpSizeProperties.hpp>
 #include <tmpc/Matrix.hpp>
 #include <tmpc/core/PropertyMap.hpp>
-#include <tmpc/core/Graph.hpp>
+#include <tmpc/graph/Graph.hpp>
 #include <tmpc/core/Range.hpp>
 #include <tmpc/qp/detail/MatrixPropertyMap.hpp>
 #include <tmpc/qp/detail/VectorPropertyMap.hpp>
@@ -88,7 +88,7 @@ namespace tmpc
     ///
     template <typename OutIter>
     class OutDegreeVisitor
-    :   public boost::default_bfs_visitor 
+    :   public graph::default_bfs_visitor 
     {
     public:
         OutDegreeVisitor(OutIter iter)
@@ -132,15 +132,15 @@ namespace tmpc
         ,   opts_(std::move(options))
         {
             auto const num_nodes = num_vertices(g);
-            auto const vertex_id = get(vertex_index, g);
+            auto const vertex_id = get(graph::vertex_index, g);
 
             // Fill the own size_ array
-            copyProperty(sz, iterator_property_map(size_.begin(), vertex_id), vertices(g));
+            copyProperty(sz, iterator_property_map(size_.begin(), vertex_id), graph::vertices(g));
 
             // Fill size arrays.
             std::vector<int> nx(num_nodes), nu(num_nodes), nc(num_nodes), nk(num_nodes);
 
-            for (auto v : vertices(g))
+            for (auto v : graph::vertices(g))
             {
                 auto const i = vertex_id[v];
                 nx[i] = size_[i].nx();
@@ -523,7 +523,7 @@ namespace tmpc
 
         auto pi() const
         {
-            return detail::makeVectorPropertyMap<OcpEdgeDescriptor, DynamicVector<Kernel>>(get(edge_index, graph_), size_b(size(), graph_), 
+            return detail::makeVectorPropertyMap<OcpEdgeDescriptor, DynamicVector<Kernel>>(get(graph::edge_index, graph_), size_b(size(), graph_), 
                 std::bind(tree_qp_out_set_edge_lam, std::placeholders::_1, &qp_out_, std::placeholders::_2),
                 std::bind(tree_qp_out_get_edge_lam, std::placeholders::_1, &qp_out_, std::placeholders::_2));
         }
