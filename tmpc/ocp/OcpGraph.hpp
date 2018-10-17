@@ -3,9 +3,14 @@
 #include <tmpc/SizeT.hpp>
 #include <tmpc/core/Graph.hpp>
 
+#include <boost/graph/adjacency_list.hpp>
+//#include <boost/graph/compressed_sparse_row_graph.hpp>
+
 
 namespace tmpc
 {
+    //using OcpGraph = boost::compressed_sparse_row_graph<boost::bidirectionalS>;
+
     using OcpGraph = boost::adjacency_list<
         boost::vecS, boost::vecS, boost::bidirectionalS,
         boost::no_property, boost::property<boost::edge_index_t, size_t>

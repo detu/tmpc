@@ -2,6 +2,7 @@
 
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/breadth_first_search.hpp>
+#include <boost/graph/depth_first_search.hpp>
 #include <boost/graph/copy.hpp>
 #include <boost/range/iterator_range.hpp>
 
@@ -19,6 +20,8 @@ namespace tmpc
 
     using boost::vertex_index;
     using boost::edge_index;
+    using boost::default_bfs_visitor;
+    using boost::default_dfs_visitor;
 
 
     template <typename Graph>
