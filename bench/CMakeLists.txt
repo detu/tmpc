@@ -8,6 +8,7 @@ add_executable(tmpc_bench
     MathBench.cpp
     RiccatiBench.cpp
     ClassicalRiccatiBench.cpp
+    OcpGraphBench.cpp
 )
 
 
