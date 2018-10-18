@@ -131,14 +131,31 @@ namespace tmpc
 		return make_function_property_map<OcpVertexDescriptor>(
             [num_intervals, nx, nu, nc, ns, nct, first_state_empty] (OcpVertexDescriptor v)
             {
-                if (v == 0)
-                    return OcpSize(first_state_empty ? 0 : nx, nu, nc, ns);
-                if (v < num_intervals)
-                    return OcpSize(nx, nu, nc, ns);
-                if (v == num_intervals)
-                    return OcpSize(nx, 0, nct, ns);
+                if (v > num_intervals)
+                    throw std::out_of_range("Vertex index out of range for nominal MPC! (ocpSizeNominalMpc())");
 
-                throw std::out_of_range("Vertex index out of range for nominal MPC! (ocpSizeNominalMpc())");
+                size_t const actual_nx = v == 0 && first_state_empty ? 0 : nx;
+                size_t const actual_nu = v == num_intervals ? 0 : nu;
+                size_t const actual_nc = v == num_intervals ? nct : nc;
+                
+                return OcpSize(actual_nx, actual_nu, actual_nc, ns);                
+            }
+        );
+	}
+
+
+    /// @brief Property map returning OCP size of robust MPC graph nodes.
+	inline auto ocpSizeRobustMpc(OcpGraph const& g, size_t nx, size_t nu, size_t nc = 0, size_t ns = 0, size_t nct = 0, 
+        bool first_state_empty = true)
+	{
+		return make_function_property_map<OcpVertexDescriptor>(
+            [&g, nx, nu, nc, ns, nct, first_state_empty] (OcpVertexDescriptor v)
+            {
+                size_t const actual_nx = in_degree(v, g) == 0 && first_state_empty ? 0 : nx;
+                size_t const actual_nu = out_degree(v, g) == 0 ? 0 : nu;
+                size_t const actual_nc = out_degree(v, g) == 0 ? nct : nc;
+
+                return OcpSize(actual_nx, actual_nu, actual_nc, ns);
             }
         );
 	}

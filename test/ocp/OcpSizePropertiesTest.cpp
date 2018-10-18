@@ -145,4 +145,46 @@ namespace tmpc :: testing
 			EXPECT_EQ(get(map, e), sz_[v].nx());
 		}
 	}
+
+
+	TEST(OcpSizeTest, test_ocpSizeNominalMpc)
+	{
+		OcpGraph const g = ocpGraphLinear(4);
+
+		size_t const nx = 5, nu = 4, nc = 3, ns = 2, nct = 1;
+		auto const size_map = ocpSizeNominalMpc(num_vertices(g) - 1, nx, nu, nc, ns, nct, true);
+
+		OcpSize const size_root(0, nu, nc, ns);
+		OcpSize const size_leaf(nx, 0, nct, ns);
+		OcpSize const size_other(nx, nu, nc, ns);
+
+		EXPECT_EQ(get(size_map, vertex(0, g)), size_root);
+
+		for (size_t i = 1; i < 3; ++i)
+			EXPECT_EQ(get(size_map, vertex(i, g)), size_other) << i;
+
+		for (size_t i = 3; i < 4; ++i)
+			EXPECT_EQ(get(size_map, vertex(i, g)), size_leaf) << i;
+	}
+
+
+	TEST(OcpSizeTest, test_ocpSizeRobustMpc)
+	{
+		OcpGraph const g = ocpGraphRobustMpc(4, 2, 2);
+
+		size_t const nx = 5, nu = 4, nc = 3, ns = 2, nct = 1;
+		auto const size_map = ocpSizeRobustMpc(g, nx, nu, nc, ns, nct, true);
+
+		OcpSize const size_root(0, nu, nc, ns);
+		OcpSize const size_leaf(nx, 0, nct, ns);
+		OcpSize const size_other(nx, nu, nc, ns);
+
+		EXPECT_EQ(get(size_map, vertex(0, g)), size_root);
+
+		for (size_t i = 1; i < 7; ++i)
+			EXPECT_EQ(get(size_map, vertex(i, g)), size_other) << i;
+
+		for (size_t i = 7; i < 11; ++i)
+			EXPECT_EQ(get(size_map, vertex(i, g)), size_leaf) << i;
+	}
 }
