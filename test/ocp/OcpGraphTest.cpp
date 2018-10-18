@@ -85,4 +85,28 @@ namespace tmpc :: testing
 		EXPECT_EQ(get(graph::edge_index, g, graph::out_edges(1, g).front()), 1);
 		EXPECT_EQ(get(graph::edge_index, g, graph::out_edges(2, g).front()), 2);
 	}
+
+
+	// Build a robust MPC tree
+	TEST(OcpGraphTest, test_ocpGraphRobustMpc)
+	{
+		OcpGraph const g = ocpGraphRobustMpc(4, 2, 2);
+
+		std::vector<std::pair<size_t, size_t>> expected_edges = {
+			{0, 1}, {0, 2},
+			{1, 3}, {1, 4}, {2, 5}, {2, 6},
+			{3, 7}, {4, 8}, {5, 9}, {6, 10}
+		};
+	
+		ASSERT_EQ(num_vertices(g), expected_edges.size() + 1);
+		ASSERT_EQ(num_edges(g), expected_edges.size());
+
+		auto expected_edge = expected_edges.begin();
+		for (auto e : graph::edges(g))
+		{
+			EXPECT_EQ(source(e, g), expected_edge->first);
+			EXPECT_EQ(target(e, g), expected_edge->second);
+			++expected_edge;
+		}
+	}
 }

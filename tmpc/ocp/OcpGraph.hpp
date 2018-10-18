@@ -85,18 +85,6 @@ namespace tmpc
 
             void increment() 
             { 
-                // while (u < v)
-                // {
-                //     for (size_t k = 0; k < *od; ++k)
-                //     {
-                //         add_edge(u, v, v - 1 /* edge index */, g);
-                //         ++v;
-                //     }
-
-                //     ++u;
-                //     ++od;
-                // }
-
                 if (k_ == 0)
                     throw std::logic_error("Incrementing an end-of-sequence OutDegreeListToEdgesIterator");
 
@@ -139,9 +127,20 @@ namespace tmpc
     }
 
 
-    /// Create a linear OcpGraph with n_nodes nodes.
+    /// @brief Create a linear OcpGraph with n_nodes nodes.
     ///
     OcpGraph ocpGraphLinear(size_t n_nodes);
+
+
+    /// @brief Create a robust MPC OcpGraph.
+    ///
+    /// @param depth depth of the graph. It is equal to number of control intervals + 1.
+    /// depth = 0 means no nodes; depth = 1 means one layer of nodes (consisting of the root node only);
+    /// depth = 2 means the root node and 1 layer of nodes after it (1 time step) and so on.
+    /// @param branching how many children each parent node has within the robust horizon
+    /// @param robust_horizon time step after which branching stops. robust_horizon = 0 means
+    /// no branching, robust_horizon = 1 means branching only at the root node.
+    OcpGraph ocpGraphRobustMpc(size_t depth, size_t branching, size_t robust_horizon);
 
 
     /// Vertex index property map.
@@ -151,6 +150,9 @@ namespace tmpc
     }
 
 
+    /// @brief Input degree of a node.
+    ///
+    /// Since OcpGraph is always a tree, in_degree() is 0 for the root and 1 for all other nodes.
     inline OcpGraph::edges_size_type in_degree(OcpVertexDescriptor v, OcpGraph const& g)
     {
         return get(graph::vertex_index, g, v) == 0 ? 0 : 1;
