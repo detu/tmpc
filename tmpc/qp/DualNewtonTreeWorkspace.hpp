@@ -166,23 +166,26 @@ namespace tmpc
             tree_qp_out_create(num_nodes, nx.data(), nu.data(), nc.data(),
                 &qp_out_, qp_out_memory_.data());
 
-            // Explicit removal of const, 
-            // see https://gitlab.syscop.de/dimitris.kouzoupis/treeQP-dev/issues/8#note_2520
-            treeqp_tdunes_opts_t * opts_ptr = const_cast<treeqp_tdunes_opts_t *>(&opts_.nativeOptions());
-            
-            auto const treeqp_size = treeqp_tdunes_calculate_size(&qp_in_, opts_ptr);
+            auto const treeqp_size = treeqp_tdunes_calculate_size(&qp_in_, &opts_.nativeOptions());
             qp_solver_memory_.resize(treeqp_size);
-            treeqp_tdunes_create(&qp_in_, opts_ptr, &work_, qp_solver_memory_.data());
+            treeqp_tdunes_create(&qp_in_, &opts_.nativeOptions(), &work_, qp_solver_memory_.data());
         }
 
 
         void solve()
         {
-            // Explicit removal of const, 
-            // see https://gitlab.syscop.de/dimitris.kouzoupis/treeQP-dev/issues/8#note_2520
-            treeqp_tdunes_opts_t * opts_ptr = const_cast<treeqp_tdunes_opts_t *>(&opts_.nativeOptions());
+            // A workaround for this issue: https://gitlab.syscop.de/dimitris.kouzoupis/hangover/issues/6
+            if (true)
+            {
+                size_t sum_nx = 0;
+                for (auto v : graph::vertices(graph_))
+                    sum_nx += get(size(), v).nx();
+
+                std::vector<Real> lambda(sum_nx);
+                treeqp_tdunes_set_dual_initialization(lambda.data(), &work_);
+            }
             
-            auto const ret = treeqp_tdunes_solve(&qp_in_, &qp_out_, opts_ptr, &work_);
+            auto const ret = treeqp_tdunes_solve(&qp_in_, &qp_out_, &opts_.nativeOptions(), &work_);
 
             if (ret != TREEQP_OPTIMAL_SOLUTION_FOUND)
                 throw DualNewtonTreeException(ret);
