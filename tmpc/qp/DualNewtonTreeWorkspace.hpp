@@ -66,7 +66,7 @@ namespace tmpc
 
         DualNewtonTreeOptions& lineSearchBeta(double val)
         {
-            opts_.lineSearchBeta = 0.8;
+            opts_.lineSearchBeta = val;
             return *this;
         }
 
