@@ -188,21 +188,21 @@ namespace tmpc :: testing
 
         for (auto v : make_iterator_range(vertices(json_qp.graph())))
         {
-            EXPECT_EQ(get(json_qp.Q(), v), Mat(j["nodes"][v]["Q"]));
-            EXPECT_EQ(get(json_qp.R(), v), Mat(j["nodes"][v]["R"]));
-            EXPECT_EQ(get(json_qp.S(), v), resize(Mat(j["nodes"][v]["S"]), get(size_S(json_qp.size()), v)));
-            EXPECT_EQ(get(json_qp.q(), v), Vec(j["nodes"][v]["q"]));
-            EXPECT_EQ(get(json_qp.r(), v), Vec(j["nodes"][v]["r"]));
+            EXPECT_EQ(get(json_qp.Q(), v), j["nodes"][v]["Q"].get<Mat>());
+            EXPECT_EQ(get(json_qp.R(), v), j["nodes"][v]["R"].get<Mat>());
+            EXPECT_EQ(get(json_qp.S(), v), resize(j["nodes"][v]["S"].get<Mat>(), get(size_S(json_qp.size()), v)));
+            EXPECT_EQ(get(json_qp.q(), v), j["nodes"][v]["q"].get<Vec>());
+            EXPECT_EQ(get(json_qp.r(), v), j["nodes"][v]["r"].get<Vec>());
 
-            EXPECT_EQ(get(json_qp.lx(), v), Vec(j["nodes"][v]["lx"]));
-            EXPECT_EQ(get(json_qp.ux(), v), Vec(j["nodes"][v]["ux"]));
-            EXPECT_EQ(get(json_qp.lu(), v), Vec(j["nodes"][v]["lu"]));
-            EXPECT_EQ(get(json_qp.uu(), v), Vec(j["nodes"][v]["uu"]));
+            EXPECT_EQ(get(json_qp.lx(), v), j["nodes"][v]["lx"].get<Vec>());
+            EXPECT_EQ(get(json_qp.ux(), v), j["nodes"][v]["ux"].get<Vec>());
+            EXPECT_EQ(get(json_qp.lu(), v), j["nodes"][v]["lu"].get<Vec>());
+            EXPECT_EQ(get(json_qp.uu(), v), j["nodes"][v]["uu"].get<Vec>());
 
-            EXPECT_EQ(get(json_qp.C(), v), resize(Mat(j["nodes"][v]["C"]), get(size_C(json_qp.size()), v)));
-            EXPECT_EQ(get(json_qp.D(), v), resize(Mat(j["nodes"][v]["D"]), get(size_D(json_qp.size()), v)));
-            EXPECT_EQ(get(json_qp.ld(), v), Vec(j["nodes"][v]["ld"]));
-            EXPECT_EQ(get(json_qp.ud(), v), Vec(j["nodes"][v]["ud"]));
+            EXPECT_EQ(get(json_qp.C(), v), resize(j["nodes"][v]["C"].get<Mat>(), get(size_C(json_qp.size()), v)));
+            EXPECT_EQ(get(json_qp.D(), v), resize(j["nodes"][v]["D"].get<Mat>(), get(size_D(json_qp.size()), v)));
+            EXPECT_EQ(get(json_qp.ld(), v), j["nodes"][v]["ld"].get<Vec>());
+            EXPECT_EQ(get(json_qp.ud(), v), j["nodes"][v]["ud"].get<Vec>());
         }
 
         
@@ -221,9 +221,9 @@ namespace tmpc :: testing
             auto const edge_id = std::distance(j_edges.begin(), j_edge);
 
             // Check values
-            EXPECT_EQ(get(json_qp.A(), e), Mat(j["edges"][edge_id]["A"]));
-            EXPECT_EQ(get(json_qp.B(), e), Mat(j["edges"][edge_id]["B"]));
-            EXPECT_EQ(get(json_qp.b(), e), Vec(j["edges"][edge_id]["b"]));
+            EXPECT_EQ(get(json_qp.A(), e), j["edges"][edge_id]["A"].get<Mat>());
+            EXPECT_EQ(get(json_qp.B(), e), j["edges"][edge_id]["B"].get<Mat>());
+            EXPECT_EQ(get(json_qp.b(), e), j["edges"][edge_id]["b"].get<Vec>());
         }
     }
 
