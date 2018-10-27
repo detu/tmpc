@@ -71,6 +71,13 @@ namespace tmpc
         }
 
 
+        DualNewtonTreeOptions& lineSearchGamma(double val)
+        {
+            opts_.lineSearchGamma = val;
+            return *this;
+        }
+
+
         treeqp_tdunes_opts_t const& nativeOptions() const
         {
             return opts_;
