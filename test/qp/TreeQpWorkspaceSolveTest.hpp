@@ -40,8 +40,8 @@ namespace tmpc :: testing
 
 			OcpGraph const g = ocpGraphLinear(NT + 1);
 			Workspace ws {g, ocpSizeNominalMpc(NT, NX, NU, NC, 0, NCT, false)};
-			auto const e0 = out_edges(0, g).front();
-			auto const e1 = out_edges(1, g).front();
+			auto const e0 = graph::out_edges(0, g).front();
+			auto const e1 = graph::out_edges(1, g).front();
 
 			/*
 			auto qp = ws.problem();
@@ -163,8 +163,8 @@ namespace tmpc :: testing
 
 			OcpGraph const g = ocpGraphLinear(NT + 1);
 			Workspace ws {g, ocpSizeNominalMpc(NT, NX, NU, NC, 0, NCT, false)};
-			auto const e0 = out_edges(0, g).front();
-			auto const e1 = out_edges(1, g).front();
+			auto const e0 = graph::out_edges(0, g).front();
+			auto const e1 = graph::out_edges(1, g).front();
 
 			/*
 			auto qp = ws.problem();
@@ -396,78 +396,84 @@ namespace tmpc :: testing
 			put(ws.lu(), v, Vec(sz[v].nu(), -inf<Real>()));
 			put(ws.ux(), v, Vec(sz[v].nx(), inf<Real>()));
 			put(ws.uu(), v, Vec(sz[v].nu(), inf<Real>()));
-		}		
+		}
 
-		put(ws.Q(), 0, Mat {
+		auto const v0 = vertex(0, g);
+		auto const v1 = vertex(1, g);
+		auto const v2 = vertex(2, g);
+		auto const v3 = vertex(3, g);
+		auto const v4 = vertex(4, g);
+
+		put(ws.Q(), v0, Mat {
 			{5.319913229393722e+00, 5.393412800510404e-01}, 
 			{5.393412800510404e-01, 1.811101907422479e+00}
 		});
 
-		put(ws.Q(), 1, Mat {
+		put(ws.Q(), v1, Mat {
 			{7.011392692676973e+00, 3.272957846025784e-01}, 
 			{3.272957846025784e-01, 4.097878096538557e+00}
 		});
 
-		put(ws.Q(), 2, Mat {
+		put(ws.Q(), v2, Mat {
 			{9.593793256757216e+00, 3.038529240149768e-01}, 
 			{3.038529240149768e-01, 1.001099886181528e+01}
 		});
 
-		put(ws.Q(), 3, Mat {
+		put(ws.Q(), v3, Mat {
 			{6.362297882301013e+00}
 		});
 
-		put(ws.Q(), 4, Mat {
+		put(ws.Q(), v4, Mat {
 			{6.614227625326206e+00, 7.596379523220123e-01, 3.238588878651922e-01, 4.393634301462749e-01},
 			{7.596379523220123e-01, 1.018014633913789e+01, 5.529872984950073e-01, 7.155671716864053e-01}, 
 			{3.238588878651922e-01, 5.529872984950073e-01, 5.255781653063426e+00, 5.848458769998477e-01}, 
 			{4.393634301462749e-01, 7.155671716864053e-01, 5.848458769998477e-01, 1.105824815366516e+00}
 		});
 
-		put(ws.R(), 0, Mat {
+		put(ws.R(), v0, Mat {
 			{9.158208703923456e-01, 1.304015848214388e-01}, 
 			{1.304015848214388e-01, 4.350966896940532e-01}
 		});
 
-		put(ws.R(), 1, Mat {
+		put(ws.R(), v1, Mat {
 			{1.745525610282895e+00, 5.114279662110315e-01}, 
 			{5.114279662110315e-01, 4.766377491779941e-01}
 		});
 
-		put(ws.R(), 2, Mat {
+		put(ws.R(), v2, Mat {
 			{1.939182463811595e+00, 5.021881705592814e-01}, 
 			{5.021881705592814e-01, 2.246704066105748e+00}
 		});
 
-		put(ws.S(), 0, trans(Mat {
+		put(ws.S(), v0, trans(Mat {
 			{1.962489222569553e-01, 3.174797751494354e-01}, 
 			{3.164289991462910e-01, 2.175633094228206e-01}
 		}));
 
-		put(ws.S(), 1, trans(Mat {
+		put(ws.S(), v1, trans(Mat {
 			{7.581124313274186e-01, 8.711111219153892e-01}, 
 			{3.507767448858926e-01, 6.855357087475372e-01}
 		}));
 
-		put(ws.S(), 2, trans(Mat {
+		put(ws.S(), v2, trans(Mat {
 			{1.059204167327653e-01, 6.815604304703157e-01}, 
 			{4.632605785937192e-01, 2.121632052549344e-01}
 		}));
 
-		put(ws.q(), 0, Vec {2.510418460157361e-01, 8.929224052859770e-01});
-		put(ws.q(), 1, Vec {2.941486337678496e-01, 5.306293038568856e-01});
-		put(ws.q(), 2, Vec {9.851873768810837e-02, 8.235744739278386e-01});
-		put(ws.q(), 3, Vec {6.797338982104669e-01});
-		put(ws.q(), 4, Vec {8.667498969993187e-01, 6.311887342690112e-01, 3.550736518788490e-01, 9.970032716066477e-01});
+		put(ws.q(), v0, Vec {2.510418460157361e-01, 8.929224052859770e-01});
+		put(ws.q(), v1, Vec {2.941486337678496e-01, 5.306293038568856e-01});
+		put(ws.q(), v2, Vec {9.851873768810837e-02, 8.235744739278386e-01});
+		put(ws.q(), v3, Vec {6.797338982104669e-01});
+		put(ws.q(), v4, Vec {8.667498969993187e-01, 6.311887342690112e-01, 3.550736518788490e-01, 9.970032716066477e-01});
 
-		put(ws.r(), 0, Vec {7.032232245562910e-01, 5.557379427193866e-01});
-		put(ws.r(), 1, Vec {8.324233862851839e-01, 5.974901918725793e-01});
-		put(ws.r(), 2, Vec {1.750097373820796e-01, 1.635699097849932e-01});
+		put(ws.r(), v0, Vec {7.032232245562910e-01, 5.557379427193866e-01});
+		put(ws.r(), v1, Vec {8.324233862851839e-01, 5.974901918725793e-01});
+		put(ws.r(), v2, Vec {1.750097373820796e-01, 1.635699097849932e-01});
 
-		auto const e1 = in_edges(1, g).front();
-		auto const e2 = in_edges(2, g).front();
-		auto const e3 = in_edges(3, g).front();
-		auto const e4 = in_edges(4, g).front();
+		auto const e1 = edge(v0, v1, g).first;
+		auto const e2 = edge(v0, v2, g).first;
+		auto const e3 = edge(v1, v3, g).first;
+		auto const e4 = edge(v2, v4, g).first;
 
 		put(ws.A(), e1, trans(Mat {
 			{1.844336677576532e-01, 2.120308425323207e-01}, 

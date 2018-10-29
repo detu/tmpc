@@ -16,18 +16,16 @@ int main()
     using namespace tmpc;
 
     size_t const N = 4;
-    OcpGraph g(N);
-    add_edge(0, 1, g);
-    add_edge(1, 2, g);
-    add_edge(0, 3, g);
+    std::vector<std::pair<size_t, size_t>> edge_list {{0, 1}, {1, 2}, {0, 3}};
+    OcpGraph g(edge_list.begin(), edge_list.end(), N);
 
     auto index_map = vertexIndex(g);
 
-    for (auto i : tmpc::vertices(g))
+    for (auto i : graph::vertices(g))
     {
         std::cout << get(index_map, i);
 
-        auto adj_vert = tmpc::adjacent_vertices(i, g);
+        auto adj_vert = graph::adjacent_vertices(i, g);
         if (adj_vert.size() == 0)
             std::cout << " has no children";
         else
@@ -51,7 +49,7 @@ int main()
 
     auto const size_map = iterator_property_map(size.begin(), index_map);
 
-    for (auto v : tmpc::vertices(g))
+    for (auto v : graph::vertices(g))
     {
         auto const& sz = size_map[v];
         std::cout << "Vertex " << v << ", index=" << get(index_map, v)
@@ -60,17 +58,8 @@ int main()
 
     std::cout << "Max wavefront = " << max_wavefront(g) << std::endl;
 
-    remove_vertex(0, g);
-    std::cout << "After removing vertex 0:" << std::endl;
-    for (auto v : tmpc::vertices(g))
-    {
-        auto const& sz = size_map[v];
-        std::cout << "Vertex " << v << ", index=" << get(index_map, v)
-            << ", nx=" << sz.nx() << ", nu=" << sz.nu() << ", nc=" << sz.nc() << ", ns=" << sz.ns() << std::endl;
-    }
-
-    for (auto e : tmpc::edges(g))
-        std::cout << "Edge " << e << std::endl;
+    for (auto e : graph::edges(g))
+        std::cout << "Edge " << get(graph::edge_index, g, e) << std::endl;
 
     return EXIT_SUCCESS;
 }

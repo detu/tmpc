@@ -44,8 +44,8 @@ namespace tmpc :: testing
 		auto const sz = ocpSizeNominalMpc(NT, NX, NU, NC, 0, NCT, false);
 		Workspace ws {g, sz};
 
-		auto const e0 = out_edges(0, g).front();
-		auto const e1 = out_edges(1, g).front();
+		auto const e0 = graph::out_edges(0, g).front();
+		auto const e1 = graph::out_edges(1, g).front();
 		
 		put(ws.lx(), 0, DynamicVector<double>(NX, -1.));
 		put(ws.lu(), 0, DynamicVector<double>(NU, -1.));
@@ -165,8 +165,8 @@ namespace tmpc :: testing
 		auto const sz = ocpSizeNominalMpc(NT, NX, NU, NC, 0, NCT, true);
 		Workspace ws {g, sz};
 
-		auto const e0 = out_edges(0, g).front();
-		auto const e1 = out_edges(1, g).front();
+		auto const e0 = graph::out_edges(0, g).front();
+		auto const e1 = graph::out_edges(1, g).front();
 		
 		put(ws.lx(), 0, DynamicVector<double>(0, -1.));
 		put(ws.lu(), 0, DynamicVector<double>(NU, -1.));

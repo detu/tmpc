@@ -2,7 +2,7 @@
 #include <tmpc/ocp/OcpSizeProperties.hpp>
 #include <tmpc/Matrix.hpp>
 #include <tmpc/core/PropertyMap.hpp>
-#include <tmpc/core/Graph.hpp>
+#include <tmpc/graph/Graph.hpp>
 #include <tmpc/core/Range.hpp>
 #include <tmpc/qp/detail/MatrixPropertyMap.hpp>
 #include <tmpc/qp/detail/VectorPropertyMap.hpp>
@@ -66,7 +66,14 @@ namespace tmpc
 
         DualNewtonTreeOptions& lineSearchBeta(double val)
         {
-            opts_.lineSearchBeta = 0.8;
+            opts_.lineSearchBeta = val;
+            return *this;
+        }
+
+
+        DualNewtonTreeOptions& lineSearchGamma(double val)
+        {
+            opts_.lineSearchGamma = val;
             return *this;
         }
 
@@ -88,7 +95,7 @@ namespace tmpc
     ///
     template <typename OutIter>
     class OutDegreeVisitor
-    :   public boost::default_bfs_visitor 
+    :   public graph::default_bfs_visitor 
     {
     public:
         OutDegreeVisitor(OutIter iter)
@@ -132,15 +139,15 @@ namespace tmpc
         ,   opts_(std::move(options))
         {
             auto const num_nodes = num_vertices(g);
-            auto const vertex_id = get(vertex_index, g);
+            auto const vertex_id = get(graph::vertex_index, g);
 
             // Fill the own size_ array
-            copyProperty(sz, iterator_property_map(size_.begin(), vertex_id), vertices(g));
+            copyProperty(sz, iterator_property_map(size_.begin(), vertex_id), graph::vertices(g));
 
             // Fill size arrays.
             std::vector<int> nx(num_nodes), nu(num_nodes), nc(num_nodes), nk(num_nodes);
 
-            for (auto v : vertices(g))
+            for (auto v : graph::vertices(g))
             {
                 auto const i = vertex_id[v];
                 nx[i] = size_[i].nx();
@@ -166,23 +173,26 @@ namespace tmpc
             tree_qp_out_create(num_nodes, nx.data(), nu.data(), nc.data(),
                 &qp_out_, qp_out_memory_.data());
 
-            // Explicit removal of const, 
-            // see https://gitlab.syscop.de/dimitris.kouzoupis/treeQP-dev/issues/8#note_2520
-            treeqp_tdunes_opts_t * opts_ptr = const_cast<treeqp_tdunes_opts_t *>(&opts_.nativeOptions());
-            
-            auto const treeqp_size = treeqp_tdunes_calculate_size(&qp_in_, opts_ptr);
+            auto const treeqp_size = treeqp_tdunes_calculate_size(&qp_in_, &opts_.nativeOptions());
             qp_solver_memory_.resize(treeqp_size);
-            treeqp_tdunes_create(&qp_in_, opts_ptr, &work_, qp_solver_memory_.data());
+            treeqp_tdunes_create(&qp_in_, &opts_.nativeOptions(), &work_, qp_solver_memory_.data());
         }
 
 
         void solve()
         {
-            // Explicit removal of const, 
-            // see https://gitlab.syscop.de/dimitris.kouzoupis/treeQP-dev/issues/8#note_2520
-            treeqp_tdunes_opts_t * opts_ptr = const_cast<treeqp_tdunes_opts_t *>(&opts_.nativeOptions());
+            // A workaround for this issue: https://gitlab.syscop.de/dimitris.kouzoupis/hangover/issues/6
+            if (true)
+            {
+                size_t sum_nx = 0;
+                for (auto v : graph::vertices(graph_))
+                    sum_nx += get(size(), v).nx();
+
+                std::vector<Real> lambda(sum_nx);
+                treeqp_tdunes_set_dual_initialization(lambda.data(), &work_);
+            }
             
-            auto const ret = treeqp_tdunes_solve(&qp_in_, &qp_out_, opts_ptr, &work_);
+            auto const ret = treeqp_tdunes_solve(&qp_in_, &qp_out_, &opts_.nativeOptions(), &work_);
 
             if (ret != TREEQP_OPTIMAL_SOLUTION_FOUND)
                 throw DualNewtonTreeException(ret);
@@ -494,6 +504,38 @@ namespace tmpc
             return detail::makeVectorPropertyMap<OcpVertexDescriptor, DynamicVector<Kernel>>(vertexIndex(graph_), size_u(size()), 
                 std::bind(tree_qp_out_set_node_u, std::placeholders::_1, &qp_out_, std::placeholders::_2),
                 std::bind(tree_qp_out_get_node_u, std::placeholders::_1, &qp_out_, std::placeholders::_2));
+        }
+
+
+        auto mu_x() const
+        {
+            return detail::makeVectorPropertyMap<OcpVertexDescriptor, DynamicVector<Kernel>>(vertexIndex(graph_), size_x(size()), 
+                std::bind(tree_qp_out_set_node_mu_x, std::placeholders::_1, &qp_out_, std::placeholders::_2),
+                std::bind(tree_qp_out_get_node_mu_x, std::placeholders::_1, &qp_out_, std::placeholders::_2));
+        }
+
+
+        auto mu_u() const
+        {
+            return detail::makeVectorPropertyMap<OcpVertexDescriptor, DynamicVector<Kernel>>(vertexIndex(graph_), size_u(size()), 
+                std::bind(tree_qp_out_set_node_mu_u, std::placeholders::_1, &qp_out_, std::placeholders::_2),
+                std::bind(tree_qp_out_get_node_mu_u, std::placeholders::_1, &qp_out_, std::placeholders::_2));
+        }
+
+
+        auto mu_d() const
+        {
+            return detail::makeVectorPropertyMap<OcpVertexDescriptor, DynamicVector<Kernel>>(vertexIndex(graph_), size_d(size()), 
+                std::bind(tree_qp_out_set_node_mu_d, std::placeholders::_1, &qp_out_, std::placeholders::_2),
+                std::bind(tree_qp_out_get_node_mu_d, std::placeholders::_1, &qp_out_, std::placeholders::_2));
+        }
+
+
+        auto pi() const
+        {
+            return detail::makeVectorPropertyMap<OcpEdgeDescriptor, DynamicVector<Kernel>>(get(graph::edge_index, graph_), size_b(size(), graph_), 
+                std::bind(tree_qp_out_set_edge_lam, std::placeholders::_1, &qp_out_, std::placeholders::_2),
+                std::bind(tree_qp_out_get_edge_lam, std::placeholders::_1, &qp_out_, std::placeholders::_2));
         }
         
 

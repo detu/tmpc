@@ -108,7 +108,7 @@ namespace tmpc
 		,	size_(num_vertices(graph))
 		,	stat_ {max_iter}
 		{
-			copyProperty(size, iterator_property_map(size_.begin(), get(vertex_index, graph_)), vertices(graph_));
+			copyProperty(size, iterator_property_map(size_.begin(), get(graph::vertex_index, graph_)), graph::vertices(graph_));
 			std::fill(infNormRes_.begin(), infNormRes_.end(), sNaN<Real>());
 
 			auto const nv = num_vertices(graph_);
@@ -191,13 +191,11 @@ namespace tmpc
 
 		void solve()
 		{
-			auto const vertex_id = get(vertex_index, graph_);
-
 			// Recalculate bounds indices of each vertex, as the bounds might have changed.				
 			// Update lb_, ub_, hidxb_, nb_.
-			for(auto v : vertices(graph_))
+			for(auto v : graph::vertices(graph_))
 			{
-				auto const v_i = get(vertex_id, v);
+				auto const v_i = get(graph::vertex_index, graph_, v);
 				auto const& sz = get(size(), v);
 
 				auto const& lx = lx_[v_i];
@@ -270,7 +268,7 @@ namespace tmpc
 
 		auto size() const
 		{
-			return iterator_property_map(size_.begin(), get(vertex_index, graph_));
+			return iterator_property_map(size_.begin(), get(graph::vertex_index, graph_));
 		}
 
 
@@ -283,112 +281,112 @@ namespace tmpc
 		auto Q()
 		{
 			return detail::makeMatrixPtrPropertyMap<OcpVertexDescriptor, CustomMatrix<Kernel, unaligned, unpadded, SO>>(
-				make_iterator_property_map(Q_.begin(), get(vertex_index, graph_)), size_Q(size()));
+				make_iterator_property_map(Q_.begin(), get(graph::vertex_index, graph_)), size_Q(size()));
 		}
 
 
 		auto R()
 		{
 			return detail::makeMatrixPtrPropertyMap<OcpVertexDescriptor, CustomMatrix<Kernel, unaligned, unpadded, SO>>(
-				make_iterator_property_map(R_.begin(), get(vertex_index, graph_)), size_R(size()));
+				make_iterator_property_map(R_.begin(), get(graph::vertex_index, graph_)), size_R(size()));
 		}
 
 
 		auto S()
 		{
 			return detail::makeMatrixPtrPropertyMap<OcpVertexDescriptor, CustomMatrix<Kernel, unaligned, unpadded, SO>>(
-				make_iterator_property_map(S_.begin(), get(vertex_index, graph_)), size_S(size()));
+				make_iterator_property_map(S_.begin(), get(graph::vertex_index, graph_)), size_S(size()));
 		}
 
 
 		auto q()
 		{
 			return detail::makeVectorPtrPropertyMap<OcpVertexDescriptor, CustomVector<Kernel, unaligned, unpadded>>(
-				make_iterator_property_map(q_.begin(), get(vertex_index, graph_)), size_x(size()));
+				make_iterator_property_map(q_.begin(), get(graph::vertex_index, graph_)), size_x(size()));
 		}
 
 
 		auto r()
 		{
 			return detail::makeVectorPtrPropertyMap<OcpVertexDescriptor, CustomVector<Kernel, unaligned, unpadded>>(
-				make_iterator_property_map(r_.begin(), get(vertex_index, graph_)), size_u(size()));
+				make_iterator_property_map(r_.begin(), get(graph::vertex_index, graph_)), size_u(size()));
 		}
 
 
 		auto lx()
 		{
 			// TODO: check size of put()
-			return make_iterator_property_map(lx_.begin(), get(vertex_index, graph_));
+			return make_iterator_property_map(lx_.begin(), get(graph::vertex_index, graph_));
 		}
 
 
 		auto ux()
 		{
 			// TODO: check size of put()
-			return make_iterator_property_map(ux_.begin(), get(vertex_index, graph_));
+			return make_iterator_property_map(ux_.begin(), get(graph::vertex_index, graph_));
 		}
 
 
 		auto lu()
 		{
 			// TODO: check size of put()
-			return make_iterator_property_map(lu_.begin(), get(vertex_index, graph_));
+			return make_iterator_property_map(lu_.begin(), get(graph::vertex_index, graph_));
 		}
 
 
 		auto uu()
 		{
 			// TODO: check size of put()
-			return make_iterator_property_map(uu_.begin(), get(vertex_index, graph_));
+			return make_iterator_property_map(uu_.begin(), get(graph::vertex_index, graph_));
 		}
 
 
 		auto ld()
 		{
 			return detail::makeVectorPtrPropertyMap<OcpVertexDescriptor, CustomVector<Kernel, unaligned, unpadded>>(
-				make_iterator_property_map(lg_.begin(), get(vertex_index, graph_)), size_d(size()));
+				make_iterator_property_map(lg_.begin(), get(graph::vertex_index, graph_)), size_d(size()));
 		}
 
 
 		auto ud()
 		{
 			return detail::makeVectorPtrPropertyMap<OcpVertexDescriptor, CustomVector<Kernel, unaligned, unpadded>>(
-				make_iterator_property_map(ug_.begin(), get(vertex_index, graph_)), size_d(size()));
+				make_iterator_property_map(ug_.begin(), get(graph::vertex_index, graph_)), size_d(size()));
 		}
 
 
 		auto A()
 		{
 			return detail::makeMatrixPtrPropertyMap<OcpEdgeDescriptor, CustomMatrix<Kernel, unaligned, unpadded, SO>>(
-				make_iterator_property_map(A_.begin(), get(edge_index, graph_)), size_A(size(), graph_));
+				make_iterator_property_map(A_.begin(), get(graph::edge_index, graph_)), size_A(size(), graph_));
 		}
 
 
 		auto B()
 		{
 			return detail::makeMatrixPtrPropertyMap<OcpEdgeDescriptor, CustomMatrix<Kernel, unaligned, unpadded, SO>>(
-				make_iterator_property_map(B_.begin(), get(edge_index, graph_)), size_B(size(), graph_));
+				make_iterator_property_map(B_.begin(), get(graph::edge_index, graph_)), size_B(size(), graph_));
 		}
 
 
 		auto b()
 		{
 			return detail::makeVectorPtrPropertyMap<OcpEdgeDescriptor, CustomVector<Kernel, unaligned, unpadded>>(
-				make_iterator_property_map(b_.begin(), get(edge_index, graph_)), size_b(size(), graph_));
+				make_iterator_property_map(b_.begin(), get(graph::edge_index, graph_)), size_b(size(), graph_));
 		}
 
 
 		auto x() const
 		{
 			return detail::makeVectorPtrPropertyMap<OcpVertexDescriptor, CustomVector<Kernel, unaligned, unpadded>>(
-				make_iterator_property_map(x_.begin(), get(vertex_index, graph_)), size_x(size()));
+				make_iterator_property_map(x_.begin(), get(graph::vertex_index, graph_)), size_x(size()));
 		}
 
 
 		auto u() const
 		{
 			return detail::makeVectorPtrPropertyMap<OcpVertexDescriptor, CustomVector<Kernel, unaligned, unpadded>>(
-				make_iterator_property_map(u_.begin(), get(vertex_index, graph_)), size_u(size()));
+				make_iterator_property_map(u_.begin(), get(graph::vertex_index, graph_)), size_u(size()));
 		}
 
 		
@@ -467,7 +465,7 @@ namespace tmpc
 		// for all arrays passed to and returned from HPMPC.
 		template <typename SizeMap>
 		class ElementCountVisitor
-        :   public boost::default_bfs_visitor 
+        :   public graph::default_bfs_visitor 
         {
         public:
             ElementCountVisitor(SizeMap size_map, size_t& real_count, size_t& int_count)
@@ -526,7 +524,7 @@ namespace tmpc
 
 
 		class InitVisitor
-        :   public boost::default_bfs_visitor 
+        :   public graph::default_bfs_visitor 
         {
         public:
             InitVisitor(HpmpcWorkspace& ws)

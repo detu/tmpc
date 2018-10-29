@@ -5,7 +5,7 @@ MESSAGE( STATUS "Looking for treeQP package: \n" )
 #
 MESSAGE( STATUS "Looking for treeQP include directories" )
 
-FIND_PATH(treeQP_INCLUDE_DIR "treeqp/src/tree_ocp_qp_common.h"
+FIND_PATH(treeQP_INCLUDE_DIR "treeqp/src/tree_qp_common.h"
 	HINTS "${treeQP_DIR}" "$ENV{treeQP_DIR}"				
 )
 IF( treeQP_INCLUDE_DIR )

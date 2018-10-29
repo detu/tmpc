@@ -100,11 +100,11 @@ if (TMPC_WITH_JSON)
     # Find Nlohmann json library
     find_package(nlohmann_json REQUIRED)
 
-    add_library(tmpc-json)
+    add_library(tmpc-json INTERFACE)
 
     target_link_libraries(tmpc-json
-        PUBLIC tmpc
-        PUBLIC nlohmann_json
+        INTERFACE tmpc
+        INTERFACE nlohmann_json
     )
 endif ()
 
