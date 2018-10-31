@@ -106,6 +106,7 @@ namespace tmpc :: testing
 		{
 			EXPECT_EQ(source(e, g), expected_edge->first);
 			EXPECT_EQ(target(e, g), expected_edge->second);
+			EXPECT_EQ(get(graph::edge_index, g, e), get(graph::vertex_index, g, target(e, g)) - 1);
 			++expected_edge;
 		}
 	}

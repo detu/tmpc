@@ -7,6 +7,9 @@
 #include "matrix/PaddingFlag.hpp"
 #include "matrix/BlockMatrixView.hpp"
 
+#include <blaze/Math.h>
+
+
 namespace tmpc
 {
     template <typename Kernel, size_t N, TransposeFlag TF = defaultTransposeFlag>
