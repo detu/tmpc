@@ -9,11 +9,13 @@
 //#include <boost/graph/breadth_first_search.hpp>
 //#include <boost/graph/depth_first_search.hpp>
 
+#include <optional>
+
 
 namespace tmpc
 {
     class OcpGraph
-    :   public graph::compressed_sparse_row_graph<graph::directedS>
+    :   public graph::compressed_sparse_row_graph<graph::bidirectionalS>
     {
     public:
         OcpGraph() = default;
@@ -21,13 +23,13 @@ namespace tmpc
 
         template <typename InputIterator>
         OcpGraph(InputIterator first, InputIterator last, vertices_size_type numverts)
-        :   Base(boost::edges_are_sorted, first, last, numverts)
+        :   Base(boost::edges_are_unsorted_multi_pass, first, last, numverts)
         {
         }
 
 
     private:
-        using Base = boost::compressed_sparse_row_graph<boost::directedS>;
+        using Base = boost::compressed_sparse_row_graph<boost::bidirectionalS>;
     };
 
     // using OcpGraph = boost::adjacency_list<
@@ -156,5 +158,37 @@ namespace tmpc
     inline OcpGraph::edges_size_type in_degree(OcpVertexDescriptor v, OcpGraph const& g)
     {
         return get(graph::vertex_index, g, v) == 0 ? 0 : 1;
+    }
+
+
+    /// @brief Parent of a node.
+    ///
+    /// Since OcpGraph is always a tree, parent() is empty for the root 
+    /// and equals to source(in_edges(v, g), g) for non-root nodes.
+    inline std::optional<OcpVertexDescriptor> parent(OcpVertexDescriptor v, OcpGraph const& g)
+    {
+        std::optional<OcpVertexDescriptor> p;
+
+        auto const in_edg = tmpc::graph::in_edges(v, g);
+        if (size(in_edg) == 1)
+            p = source(in_edg.front(), g);
+
+        return p;
+    }
+
+
+    /// @brief Siblings of a vertex.
+    ///
+    /// Siblings of v is the set of vertices u such as parent(u, g) == parent(v, g).
+    inline auto siblings(OcpVertexDescriptor v, OcpGraph const& g)
+    {
+        auto const p = parent(v, g);
+
+        decltype(graph::adjacent_vertices(*p, g)) sb;
+
+        if (p)
+            sb = graph::adjacent_vertices(*p, g);
+
+        return sb;
     }
 }

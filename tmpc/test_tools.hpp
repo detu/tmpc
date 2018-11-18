@@ -13,6 +13,9 @@
 
 namespace tmpc :: testing
 {
+	using namespace ::testing;
+	
+
 	namespace detail
 	{
 		template <typename T>

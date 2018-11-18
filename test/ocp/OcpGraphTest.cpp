@@ -110,4 +110,34 @@ namespace tmpc :: testing
 			++expected_edge;
 		}
 	}
+
+
+	TEST(OcpGraphTest, test_parent)
+	{
+		OcpGraph const g = ocpGraphRobustMpc(3, 2, 1);
+
+		ASSERT_EQ(num_vertices(g), 5);
+		ASSERT_EQ(num_edges(g), 4);
+
+		EXPECT_FALSE(parent(0, g).has_value());
+		EXPECT_EQ(parent(1, g), 0);
+		EXPECT_EQ(parent(2, g), 0);
+		EXPECT_EQ(parent(3, g), 1);
+		EXPECT_EQ(parent(4, g), 2);
+	}
+
+
+	TEST(OcpGraphTest, test_siblings)
+	{
+		OcpGraph const g = ocpGraphRobustMpc(3, 2, 1);
+
+		ASSERT_EQ(num_vertices(g), 5);
+		ASSERT_EQ(num_edges(g), 4);
+
+		EXPECT_THAT(siblings(0, g), ElementsAre());
+		EXPECT_THAT(siblings(1, g), ElementsAre(1, 2));
+		EXPECT_THAT(siblings(2, g), ElementsAre(1, 2));
+		EXPECT_THAT(siblings(3, g), ElementsAre(3));
+		EXPECT_THAT(siblings(4, g), ElementsAre(4));
+	}
 }
