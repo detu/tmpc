@@ -140,4 +140,19 @@ namespace tmpc :: testing
 		EXPECT_THAT(siblings(3, g), ElementsAre(3));
 		EXPECT_THAT(siblings(4, g), ElementsAre(4));
 	}
+
+
+	TEST(OcpGraphTest, test_impact)
+	{
+		OcpGraph const g = ocpGraphRobustMpc(3, 2, 1);
+
+		ASSERT_EQ(num_vertices(g), 5);
+		ASSERT_EQ(num_edges(g), 4);
+
+		EXPECT_EQ(get(g.impact(), 0), 2);
+		EXPECT_EQ(get(g.impact(), 1), 1);
+		EXPECT_EQ(get(g.impact(), 2), 1);
+		EXPECT_EQ(get(g.impact(), 3), 1);
+		EXPECT_EQ(get(g.impact(), 4), 1);
+	}
 }

@@ -2,10 +2,12 @@
 
 #include <tmpc/SizeT.hpp>
 #include <tmpc/graph/Graph.hpp>
+#include <tmpc/core/PropertyMap.hpp>
 
 //#include <boost/graph/adjacency_list.hpp>
 //#include <boost/graph/compressed_sparse_row_graph.hpp>
 #include <boost/iterator/iterator_facade.hpp>
+#include <boost/range/adaptor/reversed.hpp>
 //#include <boost/graph/breadth_first_search.hpp>
 //#include <boost/graph/depth_first_search.hpp>
 
@@ -24,12 +26,38 @@ namespace tmpc
         template <typename InputIterator>
         OcpGraph(InputIterator first, InputIterator last, vertices_size_type numverts)
         :   Base(boost::edges_are_unsorted_multi_pass, first, last, numverts)
+        ,   impact_(numverts)
         {
+            for (auto u : graph::vertices(*this) | boost::adaptors::reversed)
+            {
+                auto const u_idx = get(graph::vertex_index, *this, u);
+                auto const children = graph::adjacent_vertices(u, *this);
+
+                if (children.empty())
+                    impact_[u_idx] = 1;
+                else
+                {                    
+                    size_t n = 0;
+                    for (auto v : children)
+                        n += impact_[get(graph::vertex_index, *this, v)];
+
+                    impact_[u_idx] = n;
+                }
+            }
+        }
+
+
+        auto impact() const
+        {
+            return iterator_property_map(impact_.begin(), get(graph::vertex_index, *this));
         }
 
 
     private:
         using Base = boost::compressed_sparse_row_graph<boost::bidirectionalS>;
+
+
+        std::vector<size_t> impact_;
     };
 
     // using OcpGraph = boost::adjacency_list<
@@ -152,15 +180,6 @@ namespace tmpc
     }
 
 
-    /// @brief Input degree of a node.
-    ///
-    /// Since OcpGraph is always a tree, in_degree() is 0 for the root and 1 for all other nodes.
-    inline OcpGraph::edges_size_type in_degree(OcpVertexDescriptor v, OcpGraph const& g)
-    {
-        return get(graph::vertex_index, g, v) == 0 ? 0 : 1;
-    }
-
-
     /// @brief Parent of a node.
     ///
     /// Since OcpGraph is always a tree, parent() is empty for the root 
@@ -190,5 +209,12 @@ namespace tmpc
             sb = graph::adjacent_vertices(*p, g);
 
         return sb;
+    }
+
+
+    /// @brief Root of the graph.
+    inline auto root(OcpGraph const& g)
+    {
+        return vertex(0, g);
     }
 }
