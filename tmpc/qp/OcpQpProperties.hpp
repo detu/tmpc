@@ -67,6 +67,26 @@ namespace tmpc
     }
 
 
+    /// @brief Set the scaled Gauss-Newton approximation of the hessian Hessian and the gradient.
+    template <typename QP, typename ResidualVector, typename CMatrix, typename DMatrix, typename Real>
+    inline void gaussNewtonCostApproximation(QP& qp, OcpVertexDescriptor v, ResidualVector const& res, CMatrix const& C, DMatrix const& D, Real scale)
+    {
+        // H = G^T G
+        //   = [Q S^T
+        //      S R]
+        //
+
+        put(qp.Q(), v, scale * trans(C) * C);
+        put(qp.R(), v, scale * trans(D) * D);
+        put(qp.S(), v, scale * trans(D) * C);
+
+        // g = 2 * (y_bar - y_hat)^T * W * G
+        // g = [q; r]
+        put(qp.q(), v, scale * trans(C) * res);
+        put(qp.r(), v, scale * trans(D) * res);
+    }
+
+
     ///@brief Add Levenberg-Marquardt term to Q and R.
     template <typename QP, typename Real>
     inline void addLevenbergMarquardt(QP& qp, OcpVertexDescriptor v, Real levenberg_marquardt)
