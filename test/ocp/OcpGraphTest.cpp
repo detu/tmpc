@@ -1,6 +1,8 @@
 #include <tmpc/ocp/OcpGraph.hpp>
 #include <tmpc/core/Range.hpp>
 #include <tmpc/core/PropertyMap.hpp>
+#include <tmpc/graph/ImpactRecorder.hpp>
+#include <tmpc/graph/DepthFirstSearch.hpp>
 
 #include <tmpc/test_tools.hpp>
 
@@ -20,6 +22,12 @@ namespace tmpc :: testing
 		//for (; first != last; ++first)
 		//	std::cout << first->first << ", " << first->second << std::endl;
 		EXPECT_EQ(std::distance(first, last), N - 1);
+		EXPECT_THAT(make_iterator_range(first, last), ElementsAre(
+			std::pair(0, 1),
+			std::pair(0, 2),
+			std::pair(1, 3),
+			std::pair(2, 4)
+		));
 	}
 
 
@@ -44,15 +52,17 @@ namespace tmpc :: testing
 		EXPECT_EQ(out_degree(vertex(3, g), g), 0);
 		EXPECT_EQ(out_degree(vertex(4, g), g), 0);
 
-		EXPECT_EQ(graph::adjacent_vertices(vertex(0, g), g)[0], 1);
-		EXPECT_EQ(graph::adjacent_vertices(vertex(0, g), g)[1], 2);
-		EXPECT_EQ(graph::adjacent_vertices(vertex(1, g), g)[0], 3);
-		EXPECT_EQ(graph::adjacent_vertices(vertex(2, g), g)[0], 4);
+		EXPECT_EQ(graph::adjacent_vertices(vertex(0, g), g)(0), 1);
+		EXPECT_EQ(graph::adjacent_vertices(vertex(0, g), g)(1), 2);
+		EXPECT_EQ(graph::adjacent_vertices(vertex(1, g), g)(0), 3);
+		EXPECT_EQ(graph::adjacent_vertices(vertex(2, g), g)(0), 4);
 
-		EXPECT_EQ(get(graph::edge_index, g, graph::out_edges(vertex(0, g), g)[0]), 0);
-		EXPECT_EQ(get(graph::edge_index, g, graph::out_edges(vertex(0, g), g)[1]), 1);
-		EXPECT_EQ(get(graph::edge_index, g, graph::out_edges(vertex(1, g), g)[0]), 2);
-		EXPECT_EQ(get(graph::edge_index, g, graph::out_edges(vertex(2, g), g)[0]), 3);
+		// NOTE: use () instead of [] for indexing, because of this:
+		/// https://github.com/boostorg/range/issues/83
+		EXPECT_EQ(get(graph::edge_index, g, graph::out_edges(vertex(0, g), g)(0)), 0);
+		EXPECT_EQ(get(graph::edge_index, g, graph::out_edges(vertex(0, g), g)(1)), 1);
+		EXPECT_EQ(get(graph::edge_index, g, graph::out_edges(vertex(1, g), g)(0)), 2);
+		EXPECT_EQ(get(graph::edge_index, g, graph::out_edges(vertex(2, g), g)(0)), 3);
 	}
 
 
@@ -149,10 +159,24 @@ namespace tmpc :: testing
 		ASSERT_EQ(num_vertices(g), 5);
 		ASSERT_EQ(num_edges(g), 4);
 
+		std::vector<size_t> v_impact(num_vertices(g));
+		iterator_property_map impact(v_impact.begin(), get(graph::vertex_index, g));
+		std::vector<boost::default_color_type> color(num_vertices(g));
+
+		depth_first_visit(g, root(g), graph::dfs_visitor(graph::ImpactRecorder(impact)), 
+			make_iterator_property_map(color.begin(), get(graph::vertex_index, g)));
+		// graph::recordImpact(g, impact, make_iterator_property_map(color.begin(), get(graph::vertex_index, g)));
+
 		EXPECT_EQ(get(g.impact(), 0), 2);
 		EXPECT_EQ(get(g.impact(), 1), 1);
 		EXPECT_EQ(get(g.impact(), 2), 1);
 		EXPECT_EQ(get(g.impact(), 3), 1);
 		EXPECT_EQ(get(g.impact(), 4), 1);
+
+		EXPECT_EQ(get(impact, 0), 2);
+		EXPECT_EQ(get(impact, 1), 1);
+		EXPECT_EQ(get(impact, 2), 1);
+		EXPECT_EQ(get(impact, 3), 1);
+		EXPECT_EQ(get(impact, 4), 1);
 	}
 }

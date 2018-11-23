@@ -3,7 +3,6 @@
 //#include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/compressed_sparse_row_graph.hpp>
 #include <boost/graph/breadth_first_search.hpp>
-#include <boost/graph/depth_first_search.hpp>
 #include <boost/graph/copy.hpp>
 #include <boost/range/iterator_range.hpp>
 
@@ -20,9 +19,12 @@ namespace tmpc :: graph
 
     using boost::vertex_index;
     using boost::edge_index;
+
+    using boost::bfs_visitor;
     using boost::default_bfs_visitor;
-    using boost::default_dfs_visitor;
+        
     using boost::compressed_sparse_row_graph;
+    
     using boost::directedS;
     using boost::bidirectionalS;
     

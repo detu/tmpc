@@ -92,40 +92,6 @@ namespace tmpc
         template <typename Qp, typename QpSol>
         void operator()(Qp const& qp, QpSol& sol)
         {
-            /*
-            auto const N = num_vertices(graph_);
-
-            if (N > 0)
-            {
-                vertexProperties_[N - 1].P_ = 
-
-                for (size_t i = N; i-- > 0; )
-                {
-
-                }
-            }
-            */
-            {
-                //RiccatiBackwardVisitor vis(*this, qp, sol);
-
-                for (auto v : reverse(vertices(graph_)))
-                    //vis.finish_vertex(v, graph_);
-                    vertexBackward(v, qp);
-            }
-
-            {
-                RiccatiForwardVisitor vis(*this, qp, sol);
-
-                for (auto v : graph::vertices(graph_))
-                {
-                    vis.discover_vertex(v, graph_);
-
-                    for (auto e : graph::out_edges(v, graph_))
-                        vis.tree_edge(e, graph_);
-                }
-            }
-
-            /*
             std::vector<boost::default_color_type> color(num_vertices(graph_));
 
             depth_first_search(graph_,
@@ -137,7 +103,6 @@ namespace tmpc
                 RiccatiForwardVisitor(*this, qp, sol), 
                 make_iterator_property_map(color.begin(), get(graph::vertex_index, graph_)), 
                 vertex(0, graph_));
-            */
         }
 
 

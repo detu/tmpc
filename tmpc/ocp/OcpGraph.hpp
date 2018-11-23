@@ -2,16 +2,14 @@
 
 #include <tmpc/SizeT.hpp>
 #include <tmpc/graph/Graph.hpp>
+#include <tmpc/graph/DepthFirstSearch.hpp>
+#include <tmpc/graph/ImpactRecorder.hpp>
 #include <tmpc/core/PropertyMap.hpp>
 
-//#include <boost/graph/adjacency_list.hpp>
-//#include <boost/graph/compressed_sparse_row_graph.hpp>
 #include <boost/iterator/iterator_facade.hpp>
-#include <boost/range/adaptor/reversed.hpp>
-//#include <boost/graph/breadth_first_search.hpp>
-//#include <boost/graph/depth_first_search.hpp>
 
 #include <optional>
+#include <iostream>
 
 
 namespace tmpc
@@ -24,27 +22,7 @@ namespace tmpc
 
 
         template <typename InputIterator>
-        OcpGraph(InputIterator first, InputIterator last, vertices_size_type numverts)
-        :   Base(boost::edges_are_unsorted_multi_pass, first, last, numverts)
-        ,   impact_(numverts)
-        {
-            for (auto u : graph::vertices(*this) | boost::adaptors::reversed)
-            {
-                auto const u_idx = get(graph::vertex_index, *this, u);
-                auto const children = graph::adjacent_vertices(u, *this);
-
-                if (children.empty())
-                    impact_[u_idx] = 1;
-                else
-                {                    
-                    size_t n = 0;
-                    for (auto v : children)
-                        n += impact_[get(graph::vertex_index, *this, v)];
-
-                    impact_[u_idx] = n;
-                }
-            }
-        }
+        OcpGraph(InputIterator first, InputIterator last, vertices_size_type numverts);
 
 
         auto impact() const
@@ -213,8 +191,39 @@ namespace tmpc
 
 
     /// @brief Root of the graph.
-    inline auto root(OcpGraph const& g)
+    inline OcpVertexDescriptor root(OcpGraph const& g)
     {
         return vertex(0, g);
     }
+
+
+    template <typename InputIterator>
+    inline OcpGraph::OcpGraph(InputIterator first, InputIterator last, vertices_size_type numverts)
+    :   Base(boost::edges_are_unsorted_multi_pass, first, last, numverts)
+    ,   impact_(numverts)
+    {
+        iterator_property_map impact(impact_.begin(), get(graph::vertex_index, *this));
+        
+        std::vector<boost::default_color_type> color_array(numverts);
+        iterator_property_map color(color_array.begin(), get(graph::vertex_index, *this));
+
+        depth_first_visit(*this, root(*this), graph::dfs_visitor(graph::ImpactRecorder(impact)), color);
+    }
+
+
+    // template <typename Graph, typename ImpactMap, typename ColorMap>
+    // inline void recordImpact(Graph const& g, ImpactMap impact, ColorMap color)
+    // {
+    //     depth_first_visit(g, root(g), dfs_visitor(ImpactRecorder(impact)), color);
+    // }
+
+
+    // template <typename Graph, typename ImpactMap>
+    // inline void recordImpact(Graph const& g, ImpactMap impact)
+    // {
+    //     std::vector<boost::default_color_type> color(num_vertices(g));
+
+    //     depth_first_visit(g, root(g), dfs_visitor(ImpactRecorder(impact)), 
+    //         make_iterator_property_map(color.begin(), get(graph::vertex_index, g)));
+    // }
 }
