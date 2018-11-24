@@ -10,6 +10,12 @@
 #include <tmpc/Traits.hpp>
 #include <tmpc/BlazeKernel.hpp>
 
+#define USE_HPMPC
+
+#ifdef USE_HPMPC
+#include <treeqp/src/hpmpc_tree.h>
+#endif
+
 #include <treeqp/src/tree_qp_common.h>
 #include <treeqp/src/dual_Newton_tree.h>
 #include <treeqp/utils/tree.h>
@@ -52,6 +58,7 @@ namespace tmpc
             return *this;
         }
 
+        #ifndef USE_HPMPC
 
         DualNewtonTreeOptions& stationarityTolerance(double val)
         {
@@ -88,14 +95,60 @@ namespace tmpc
         }
 
 
+        DualNewtonTreeOptions& lineSearchRestartTrigger(int val)
+        {
+            opts_.lineSearchRestartTrigger = val;
+            return *this;
+        }
+
+
+        DualNewtonTreeOptions& regType(std::string val)
+        {
+            if (val == "TREEQP_ALWAYS_LEVENBERG_MARQUARDT")
+                opts_.regType = TREEQP_ALWAYS_LEVENBERG_MARQUARDT;
+            else if (val == "TREEQP_ON_THE_FLY_LEVENBERG_MARQUARDT")
+                opts_.regType = TREEQP_ON_THE_FLY_LEVENBERG_MARQUARDT;
+            else
+                opts_.regType = TREEQP_NO_REGULARIZATION;
+
+            return *this;
+        }
+
+
+        DualNewtonTreeOptions& regTol(double val)
+        {
+            opts_.regTol = val;
+            return *this;
+        }
+
+
+        DualNewtonTreeOptions& regValue(double val)
+        {
+            opts_.regValue = val;
+            return *this;
+        }
+
+        #endif
+
+        #ifdef USE_HPMPC
+        treeqp_hpmpc_opts_t const& nativeOptions() const
+        {
+            return opts_;
+        }
+        #else
         treeqp_tdunes_opts_t const& nativeOptions() const
         {
             return opts_;
         }
-
+        #endif
 
     private:
+
+        #ifdef USE_HPMPC
+        treeqp_hpmpc_opts_t opts_;
+        #else
         treeqp_tdunes_opts_t opts_;
+        #endif
         std::unique_ptr<char []> mem_;
     };
 
@@ -474,7 +527,11 @@ namespace tmpc
         tree_qp_out qp_out_;
         std::vector<char> qp_out_memory_;
         DualNewtonTreeOptions opts_;
+        #ifdef USE_HPMPC
+        treeqp_hpmpc_workspace work_;
+        #else
         treeqp_tdunes_workspace work_;
+        #endif
         std::vector<char> qp_solver_memory_;
 
         void init();
