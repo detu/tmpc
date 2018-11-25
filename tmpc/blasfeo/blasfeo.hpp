@@ -5,9 +5,18 @@
 
 #include <tmpc/SizeT.hpp>
 
+#include <memory>
+
 
 namespace tmpc :: blasfeo
 {
+    /// \brief Alignment for BLASFEO data arrays
+    inline static size_t constexpr alignment()
+    {
+        return 64;
+    }
+
+
     namespace detail
     {
         template <typename Real>
@@ -21,6 +30,25 @@ namespace tmpc :: blasfeo
             using vec_t = blasfeo_dvec;
 
             static auto constexpr create_mat = blasfeo_create_dmat;
+        };
+
+
+        /// \bried Aligned uninitialized array allocation
+        template <typename T>
+        T * alignedAlloc(size_t n)
+        {
+            return reinterpret_cast<T *>(std::aligned_alloc(alignment(), n * sizeof(T)));
+        }
+
+
+        /// \brief Deleter for aligned data arrays
+        struct AlignedDeleter
+        {
+            template <typename T>
+            void operator()(T * data)
+            {
+                std::free(data);
+            }
         };
     }
 
@@ -40,6 +68,13 @@ namespace tmpc :: blasfeo
 
 
     /// \brief Const matrix element access
+    inline double const& element(blasfeo_dmat const& m, int i, int j)
+    {
+        return BLASFEO_DMATEL(&m, i, j);
+    }
+
+
+    /// \brief Const matrix element access
     inline float const& element(blasfeo_smat const& m, int i, int j)
     {
         return BLASFEO_SMATEL(&m, i, j);
@@ -50,6 +85,13 @@ namespace tmpc :: blasfeo
     class CustomMatrix
     {
     public:
+        /// \brief Create a 0-by-0 matrix.
+        CustomMatrix()
+        {
+            Traits::create_mat(0, 0, &mat_, nullptr);
+        }
+
+        
         CustomMatrix(Real * data, size_t m, size_t n)
         {
             Traits::create_mat(m, n, &mat_, data);
@@ -70,10 +112,35 @@ namespace tmpc :: blasfeo
         }
 
 
+        /// \brief Set new pointer and dimensions.
+        /// Use with care!
+        void reset(Real * data, size_t m, size_t n)
+        {
+            Traits::create_mat(m, n, &mat_, data);
+        }
+
+
     private:
         using Traits = detail::BlasfeoTraits<Real>;
 
         typename Traits::mat_t mat_;
+    };
+
+
+    template <typename Real>
+    class DynamicMatrix
+    :   public CustomMatrix<Real>
+    {
+    public:
+        DynamicMatrix(size_t m, size_t n)
+        :   data_(detail::alignedAlloc<Real>(m * n))
+        {
+            this->reset(data_.get(), m, n);
+        }
+
+
+    private:
+        std::unique_ptr<Real[], detail::AlignedDeleter> data_;
     };
 
 
