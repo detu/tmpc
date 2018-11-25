@@ -30,7 +30,8 @@ endforeach ()
 #
 set (treeQP_STATIC_LIBS)
 
-foreach (LIB "treeqp" "blasfeo" "qpoases" "hpmpc")
+# NOTE: hpmpc must go before blasfeo in linker args, otherwise we get linker error!
+foreach (LIB "treeqp" "hpmpc" "blasfeo" "qpoases")
 	FIND_LIBRARY( treeQP_${LIB}_STATIC_LIB ${LIB} 
 		HINTS "${treeQP_DIR}/lib" "$ENV{treeQP_DIR}/lib" "/opt/treeqp/lib"
 	)
