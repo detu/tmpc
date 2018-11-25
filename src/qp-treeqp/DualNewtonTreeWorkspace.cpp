@@ -70,13 +70,13 @@ namespace tmpc
 
 
 	DualNewtonTreeOptions::DualNewtonTreeOptions(size_t num_nodes)
-	#ifdef USE_HPMPC
+	#ifdef TMPC_TREEQP_USE_HPMPC
 	:	mem_(new char[treeqp_hpmpc_opts_calculate_size(num_nodes)])
 	#else
 	:	mem_(new char[treeqp_tdunes_opts_calculate_size(num_nodes)])
 	#endif
 	{
-		#ifdef USE_HPMPC
+		#ifdef TMPC_TREEQP_USE_HPMPC
 		treeqp_hpmpc_opts_create(num_nodes, &opts_, mem_.get());
 		treeqp_hpmpc_opts_set_default(num_nodes, &opts_);
 		#else
@@ -128,7 +128,7 @@ namespace tmpc
 		tree_qp_out_create(num_nodes, nx.data(), nu.data(), nc.data(),
 			&qp_out_, qp_out_memory_.data());
 
-		#ifdef USE_HPMPC
+		#ifdef TMPC_TREEQP_USE_HPMPC
 		auto const treeqp_size = treeqp_hpmpc_calculate_size(&qp_in_, &opts_.nativeOptions());
 		qp_solver_memory_.resize(treeqp_size);
 		treeqp_hpmpc_create(&qp_in_, &opts_.nativeOptions(), &work_, qp_solver_memory_.data());
@@ -149,7 +149,7 @@ namespace tmpc
 
 	void DualNewtonTreeWorkspace::solve()
 	{
-		#ifdef USE_HPMPC
+		#ifdef TMPC_TREEQP_USE_HPMPC
 		auto const ret = treeqp_hpmpc_solve(&qp_in_, &qp_out_, &opts_.nativeOptions(), &work_);
 		#else
 		// A workaround for this issue: https://gitlab.syscop.de/dimitris.kouzoupis/hangover/issues/6

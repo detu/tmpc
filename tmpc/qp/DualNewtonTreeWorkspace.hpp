@@ -1,3 +1,5 @@
+#pragma once
+
 #include <tmpc/ocp/OcpGraph.hpp>
 #include <tmpc/ocp/OcpSizeProperties.hpp>
 #include <tmpc/Matrix.hpp>
@@ -10,9 +12,9 @@
 #include <tmpc/Traits.hpp>
 #include <tmpc/BlazeKernel.hpp>
 
-#define USE_HPMPC
+#define TMPC_TREEQP_USE_HPMPC
 
-#ifdef USE_HPMPC
+#ifdef TMPC_TREEQP_USE_HPMPC
 #include <treeqp/src/hpmpc_tree.h>
 #endif
 
@@ -58,7 +60,7 @@ namespace tmpc
             return *this;
         }
 
-        #ifndef USE_HPMPC
+        #ifndef TMPC_TREEQP_USE_HPMPC
 
         DualNewtonTreeOptions& stationarityTolerance(double val)
         {
@@ -130,7 +132,7 @@ namespace tmpc
 
         #endif
 
-        #ifdef USE_HPMPC
+        #ifdef TMPC_TREEQP_USE_HPMPC
         treeqp_hpmpc_opts_t const& nativeOptions() const
         {
             return opts_;
@@ -144,7 +146,7 @@ namespace tmpc
 
     private:
 
-        #ifdef USE_HPMPC
+        #ifdef TMPC_TREEQP_USE_HPMPC
         treeqp_hpmpc_opts_t opts_;
         #else
         treeqp_tdunes_opts_t opts_;
@@ -527,7 +529,7 @@ namespace tmpc
         tree_qp_out qp_out_;
         std::vector<char> qp_out_memory_;
         DualNewtonTreeOptions opts_;
-        #ifdef USE_HPMPC
+        #ifdef TMPC_TREEQP_USE_HPMPC
         treeqp_hpmpc_workspace work_;
         #else
         treeqp_tdunes_workspace work_;
