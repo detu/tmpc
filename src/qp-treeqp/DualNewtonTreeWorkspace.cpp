@@ -120,6 +120,36 @@ namespace tmpc
 		qp_in_memory_.resize(qp_in_size);
 		tree_qp_in_create(num_nodes, nx.data(), nu.data(), nc.data(), nk.data(),
 			&qp_in_, qp_in_memory_.data());
+	
+		// Adding bounds everywhere for HPMPC
+		const double inf_val = TREEQP_INF/10.;
+
+		int max_dim = 0;
+		for (int ii = 0; ii < num_nodes; ii++)
+		{
+			if (max_dim < nx[ii]) max_dim = nx[ii];
+			if (max_dim < nu[ii]) max_dim = nu[ii];
+		}
+		double *almost_inf = new double [max_dim];
+		double *almost_minus_inf = new double [max_dim];
+
+		for (int ii =0; ii < max_dim; ii++)
+		{
+			almost_inf[ii] = inf_val;
+			almost_minus_inf[ii] = -inf_val;
+		}
+
+		for (int ii =0; ii < num_nodes; ii++)
+		{
+			tree_qp_in_set_node_xmin(almost_minus_inf, &qp_in_, ii);
+			tree_qp_in_set_node_xmax(almost_inf, &qp_in_, ii);
+			tree_qp_in_set_node_umin(almost_minus_inf, &qp_in_, ii);
+			tree_qp_in_set_node_umax(almost_inf, &qp_in_, ii);
+
+		}
+
+		delete[] almost_inf;
+		delete[] almost_minus_inf;
 
 		auto const qp_out_size = tree_qp_out_calculate_size(
 			num_nodes, nx.data(), nu.data(), nc.data());
