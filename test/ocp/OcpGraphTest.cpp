@@ -179,4 +179,24 @@ namespace tmpc :: testing
 		EXPECT_EQ(get(impact, 3), 1);
 		EXPECT_EQ(get(impact, 4), 1);
 	}
+
+
+	TEST(OcpGraphTest, test_distanceToRoot)
+	{
+		OcpGraph const g = ocpGraphRobustMpc(3, 2, 1);
+
+		ASSERT_EQ(num_vertices(g), 5);
+		ASSERT_EQ(num_edges(g), 4);
+
+		std::vector<size_t> v_distance(num_vertices(g));
+		iterator_property_map distance(v_distance.begin(), get(graph::vertex_index, g));
+		
+		recordDistance(g, distance, root(g));
+
+		EXPECT_EQ(get(distance, 0), 0);
+		EXPECT_EQ(get(distance, 1), 1);
+		EXPECT_EQ(get(distance, 2), 1);
+		EXPECT_EQ(get(distance, 3), 2);
+		EXPECT_EQ(get(distance, 4), 2);
+	}
 }

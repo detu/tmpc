@@ -2,6 +2,7 @@
 
 #include <tmpc/SizeT.hpp>
 #include <tmpc/graph/Graph.hpp>
+#include <tmpc/graph/GraphTraits.hpp>
 #include <tmpc/graph/DepthFirstSearch.hpp>
 #include <tmpc/graph/ImpactRecorder.hpp>
 #include <tmpc/core/PropertyMap.hpp>
@@ -226,4 +227,17 @@ namespace tmpc
     //     depth_first_visit(g, root(g), dfs_visitor(ImpactRecorder(impact)), 
     //         make_iterator_property_map(color.begin(), get(graph::vertex_index, g)));
     // }
+
+
+    /// @brief Record distance to a given node for all nodes
+    template <typename Graph, typename DistanceMap>
+    inline void recordDistance(Graph const& g, DistanceMap distance, typename graph::graph_traits<Graph>::vertex_descriptor source)
+    {
+        std::vector<boost::default_color_type> color(num_vertices(g));
+                
+        depth_first_search(g, 
+            graph::dfs_visitor(graph::record_distances(distance, graph::on_tree_edge())), 
+            make_iterator_property_map(color.begin(), get(graph::vertex_index, g)),
+            source);
+    }
 }
