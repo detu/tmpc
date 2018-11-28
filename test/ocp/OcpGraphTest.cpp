@@ -161,17 +161,8 @@ namespace tmpc :: testing
 
 		std::vector<size_t> v_impact(num_vertices(g));
 		iterator_property_map impact(v_impact.begin(), get(graph::vertex_index, g));
-		std::vector<boost::default_color_type> color(num_vertices(g));
 
-		depth_first_visit(g, root(g), graph::dfs_visitor(graph::ImpactRecorder(impact)), 
-			make_iterator_property_map(color.begin(), get(graph::vertex_index, g)));
-		// graph::recordImpact(g, impact, make_iterator_property_map(color.begin(), get(graph::vertex_index, g)));
-
-		EXPECT_EQ(get(g.impact(), 0), 2);
-		EXPECT_EQ(get(g.impact(), 1), 1);
-		EXPECT_EQ(get(g.impact(), 2), 1);
-		EXPECT_EQ(get(g.impact(), 3), 1);
-		EXPECT_EQ(get(g.impact(), 4), 1);
+		recordImpact(g, impact);
 
 		EXPECT_EQ(get(impact, 0), 2);
 		EXPECT_EQ(get(impact, 1), 1);

@@ -26,17 +26,8 @@ namespace tmpc
         OcpGraph(InputIterator first, InputIterator last, vertices_size_type numverts);
 
 
-        auto impact() const
-        {
-            return iterator_property_map(impact_.begin(), get(graph::vertex_index, *this));
-        }
-
-
     private:
         using Base = boost::compressed_sparse_row_graph<boost::bidirectionalS>;
-
-
-        std::vector<size_t> impact_;
     };
 
     // using OcpGraph = boost::adjacency_list<
@@ -201,14 +192,7 @@ namespace tmpc
     template <typename InputIterator>
     inline OcpGraph::OcpGraph(InputIterator first, InputIterator last, vertices_size_type numverts)
     :   Base(boost::edges_are_unsorted_multi_pass, first, last, numverts)
-    ,   impact_(numverts)
     {
-        iterator_property_map impact(impact_.begin(), get(graph::vertex_index, *this));
-        
-        std::vector<boost::default_color_type> color_array(numverts);
-        iterator_property_map color(color_array.begin(), get(graph::vertex_index, *this));
-
-        depth_first_visit(*this, root(*this), graph::dfs_visitor(graph::ImpactRecorder(impact)), color);
     }
 
 
@@ -219,14 +203,14 @@ namespace tmpc
     // }
 
 
-    // template <typename Graph, typename ImpactMap>
-    // inline void recordImpact(Graph const& g, ImpactMap impact)
-    // {
-    //     std::vector<boost::default_color_type> color(num_vertices(g));
+    template <typename Graph, typename ImpactMap>
+    inline void recordImpact(Graph const& g, ImpactMap impact)
+    {
+        std::vector<boost::default_color_type> color(num_vertices(g));
 
-    //     depth_first_visit(g, root(g), dfs_visitor(ImpactRecorder(impact)), 
-    //         make_iterator_property_map(color.begin(), get(graph::vertex_index, g)));
-    // }
+        depth_first_search(g, graph::dfs_visitor(graph::ImpactRecorder(impact)), 
+            make_iterator_property_map(color.begin(), get(graph::vertex_index, g)), root(g));
+    }
 
 
     /// @brief Record distance to a given node for all nodes
