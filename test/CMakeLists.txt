@@ -70,6 +70,8 @@ add_executable(test-tmpc
     ocp/OcpGraphTest.cpp
     ocp/OcpSizePropertiesTest.cpp
 
+    matrix/MatrixTest.cpp
+
     ${CMAKE_CURRENT_BINARY_DIR}/pendulum_ode_generated.h
     ${CMAKE_CURRENT_BINARY_DIR}/pendulum_ode_generated.c
 )

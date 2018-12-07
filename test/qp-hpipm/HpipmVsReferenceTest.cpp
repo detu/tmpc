@@ -19,7 +19,7 @@ namespace tmpc :: testing
 
 	TEST(HpipmVsReferenceTest, testRiccati)
 	{
-		size_t const N = 1, nx = 2, nu = 1;
+		size_t const N = 5, nx = 3, nu = 2;
 
         OcpGraph const g = ocpGraphLinear(N + 1);
         auto const sz = ocpSizeNominalMpc(N, nx, nu, 0, 0, 0, true);
@@ -28,17 +28,16 @@ namespace tmpc :: testing
         MpipmWorkspace<double> ws_mpipm(g, sz);
         ClassicalRiccati<double> riccati(g, sz);
 
-        randomizeQp(ws_hpipm);
-
-        // Disable openblas multithreading
-        openblas_set_num_threads(1);
+        randomizeQp(ws_mpipm);        
+        copyQpProperties(ws_mpipm, ws_hpipm);
 
         ws_hpipm.solveUnconstrained();
-        riccati(ws_hpipm, ws_mpipm);
+        riccati(ws_mpipm, ws_mpipm);
 
         for (auto v : graph::vertices(g))
         {
-            EXPECT_EQ(forcePrint(get(ws_mpipm.x(), v)), forcePrint(get(ws_hpipm.x(), v)));
+            EXPECT_EQ(forcePrint(get(ws_mpipm.x(), v)), forcePrint(get(ws_hpipm.x(), v))) << " at node " << get(graph::vertex_index, g, v);
+            EXPECT_EQ(forcePrint(get(ws_mpipm.u(), v)), forcePrint(get(ws_hpipm.u(), v))) << " at node " << get(graph::vertex_index, g, v);
         }
 	}
 }

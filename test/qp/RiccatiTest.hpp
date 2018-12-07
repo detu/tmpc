@@ -268,8 +268,35 @@ namespace tmpc :: testing
 	}
 
 
+	TYPED_TEST_P(RiccatiTest, testSingleStageNoState)
+	{
+		size_t const N = 1, nx = 0, nu = 2;
+
+        OcpGraph const g = ocpGraphLinear(N + 1);
+        auto const sz = ocpSizeNominalMpc(N, nx, nu, 0, 0, 0, true);
+        
+        MpipmWorkspace<double> ws_mpipm(g, sz);
+        typename TestFixture::RiccatiImpl riccati(g, sz);
+
+        put(ws_mpipm.R(), vertex(0, g), blaze::DynamicMatrix<double> {
+            {0.444923,    0.598522}, 
+            {0.598522,     1.11451}
+        });
+
+        put(ws_mpipm.r(), vertex(0, g), blaze::DynamicVector<double> {
+            0.131991, 0.585785
+        });
+
+        riccati(ws_mpipm, ws_mpipm);
+
+        auto const v = vertex(0, g);
+		EXPECT_PRED2(MatrixApproxEquality(1e-4), forcePrint(get(ws_mpipm.u(), v)), forcePrint(blaze::DynamicVector {1.4785, -1.3196}));
+	}
+
+
     REGISTER_TYPED_TEST_CASE_P(RiccatiTest
         , test_riccati0
 		, test_riccati1
+		, testSingleStageNoState
     );
 }
