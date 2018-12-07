@@ -1,5 +1,6 @@
 add_executable(test-tmpc-qp-hpipm
     HpipmWorkspaceTest.cpp
+    HpipmVsReferenceTest.cpp
 )
 
 target_include_directories(test-tmpc-qp-hpipm

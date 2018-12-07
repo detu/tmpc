@@ -374,7 +374,21 @@ namespace tmpc
 		}
 
 
+		auto Q() const
+		{
+			return detail::makeMatrixPtrPropertyMap<OcpVertexDescriptor, CustomMatrix<Kernel, unaligned, unpadded, SO>>(
+				make_iterator_property_map(Q_.begin(), get(graph::vertex_index, graph_)), size_Q(size()));
+		}
+
+
 		auto R()
+		{
+			return detail::makeMatrixPtrPropertyMap<OcpVertexDescriptor, CustomMatrix<Kernel, unaligned, unpadded, SO>>(
+				make_iterator_property_map(R_.begin(), get(graph::vertex_index, graph_)), size_R(size()));
+		}
+
+
+		auto R() const
 		{
 			return detail::makeMatrixPtrPropertyMap<OcpVertexDescriptor, CustomMatrix<Kernel, unaligned, unpadded, SO>>(
 				make_iterator_property_map(R_.begin(), get(graph::vertex_index, graph_)), size_R(size()));
@@ -388,7 +402,21 @@ namespace tmpc
 		}
 
 
+		auto S() const
+		{
+			return detail::makeMatrixPtrPropertyMap<OcpVertexDescriptor, CustomMatrix<Kernel, unaligned, unpadded, SO>>(
+				make_iterator_property_map(S_.begin(), get(graph::vertex_index, graph_)), size_S(size()));
+		}
+
+
 		auto q()
+		{
+			return detail::makeVectorPtrPropertyMap<OcpVertexDescriptor, CustomVector<Kernel, unaligned, unpadded>>(
+				make_iterator_property_map(q_.begin(), get(graph::vertex_index, graph_)), size_x(size()));
+		}
+
+
+		auto q() const
 		{
 			return detail::makeVectorPtrPropertyMap<OcpVertexDescriptor, CustomVector<Kernel, unaligned, unpadded>>(
 				make_iterator_property_map(q_.begin(), get(graph::vertex_index, graph_)), size_x(size()));
@@ -402,7 +430,21 @@ namespace tmpc
 		}
 
 
+		auto r() const
+		{
+			return detail::makeVectorPtrPropertyMap<OcpVertexDescriptor, CustomVector<Kernel, unaligned, unpadded>>(
+				make_iterator_property_map(r_.begin(), get(graph::vertex_index, graph_)), size_u(size()));
+		}
+
+
 		auto lx()
+		{
+			// TODO: check size of put()
+			return make_iterator_property_map(lx_.begin(), get(graph::vertex_index, graph_));
+		}
+
+
+		auto lx() const
 		{
 			// TODO: check size of put()
 			return make_iterator_property_map(lx_.begin(), get(graph::vertex_index, graph_));
@@ -416,7 +458,21 @@ namespace tmpc
 		}
 
 
+		auto ux() const
+		{
+			// TODO: check size of put()
+			return make_iterator_property_map(ux_.begin(), get(graph::vertex_index, graph_));
+		}
+
+
 		auto lu()
+		{
+			// TODO: check size of put()
+			return make_iterator_property_map(lu_.begin(), get(graph::vertex_index, graph_));
+		}
+
+
+		auto lu() const
 		{
 			// TODO: check size of put()
 			return make_iterator_property_map(lu_.begin(), get(graph::vertex_index, graph_));
@@ -430,7 +486,21 @@ namespace tmpc
 		}
 
 
+		auto uu() const
+		{
+			// TODO: check size of put()
+			return make_iterator_property_map(uu_.begin(), get(graph::vertex_index, graph_));
+		}
+
+
 		auto C()
+		{
+			return detail::makeMatrixPtrPropertyMap<OcpVertexDescriptor, CustomMatrix<Kernel, unaligned, unpadded, SO>>(
+				make_iterator_property_map(C_.begin(), get(graph::vertex_index, graph_)), size_C(size()));
+		}
+
+
+		auto C() const
 		{
 			return detail::makeMatrixPtrPropertyMap<OcpVertexDescriptor, CustomMatrix<Kernel, unaligned, unpadded, SO>>(
 				make_iterator_property_map(C_.begin(), get(graph::vertex_index, graph_)), size_C(size()));
@@ -444,7 +514,21 @@ namespace tmpc
 		}
 
 
+		auto D() const
+		{
+			return detail::makeMatrixPtrPropertyMap<OcpVertexDescriptor, CustomMatrix<Kernel, unaligned, unpadded, SO>>(
+				make_iterator_property_map(D_.begin(), get(graph::vertex_index, graph_)), size_D(size()));
+		}
+
+
 		auto ld()
+		{
+			return detail::makeVectorPtrPropertyMap<OcpVertexDescriptor, CustomVector<Kernel, unaligned, unpadded>>(
+				make_iterator_property_map(lg_.begin(), get(graph::vertex_index, graph_)), size_d(size()));
+		}
+
+
+		auto ld() const
 		{
 			return detail::makeVectorPtrPropertyMap<OcpVertexDescriptor, CustomVector<Kernel, unaligned, unpadded>>(
 				make_iterator_property_map(lg_.begin(), get(graph::vertex_index, graph_)), size_d(size()));
@@ -458,7 +542,21 @@ namespace tmpc
 		}
 
 
+		auto ud() const
+		{
+			return detail::makeVectorPtrPropertyMap<OcpVertexDescriptor, CustomVector<Kernel, unaligned, unpadded>>(
+				make_iterator_property_map(ug_.begin(), get(graph::vertex_index, graph_)), size_d(size()));
+		}
+
+
 		auto A()
+		{
+			return detail::makeMatrixPtrPropertyMap<OcpEdgeDescriptor, CustomMatrix<Kernel, unaligned, unpadded, SO>>(
+				make_iterator_property_map(A_.begin(), get(graph::edge_index, graph_)), size_A(size(), graph_));
+		}
+
+
+		auto A() const
 		{
 			return detail::makeMatrixPtrPropertyMap<OcpEdgeDescriptor, CustomMatrix<Kernel, unaligned, unpadded, SO>>(
 				make_iterator_property_map(A_.begin(), get(graph::edge_index, graph_)), size_A(size(), graph_));
@@ -472,7 +570,21 @@ namespace tmpc
 		}
 
 
+		auto B() const
+		{
+			return detail::makeMatrixPtrPropertyMap<OcpEdgeDescriptor, CustomMatrix<Kernel, unaligned, unpadded, SO>>(
+				make_iterator_property_map(B_.begin(), get(graph::edge_index, graph_)), size_B(size(), graph_));
+		}
+
+
 		auto b()
+		{
+			return detail::makeVectorPtrPropertyMap<OcpEdgeDescriptor, CustomVector<Kernel, unaligned, unpadded>>(
+				make_iterator_property_map(b_.begin(), get(graph::edge_index, graph_)), size_b(size(), graph_));
+		}
+
+
+		auto b() const
 		{
 			return detail::makeVectorPtrPropertyMap<OcpEdgeDescriptor, CustomVector<Kernel, unaligned, unpadded>>(
 				make_iterator_property_map(b_.begin(), get(graph::edge_index, graph_)), size_b(size(), graph_));

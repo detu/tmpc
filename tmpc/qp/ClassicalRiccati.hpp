@@ -299,9 +299,13 @@ namespace tmpc
                 }
 
                 // Alg 2 line 8
-                put(sol_.u(), u, -get(ws_.L(), u) * get(sol_.x(), u));
-                get(sol_.u(), u) -= get(ws_.l(), u);
-                trsv(get(ws_.Lambda(), u), get(sol_.u(), u), 'L', 'T', 'N');
+                // put(sol_.u(), u, -get(ws_.L(), u) * get(sol_.x(), u));
+                // get(sol_.u(), u) -= get(ws_.l(), u);
+                // trsv(get(ws_.Lambda(), u), get(sol_.u(), u), 'L', 'T', 'N');
+
+                blaze::DynamicVector<Real> u_tmp = -get(ws_.L(), u) * get(sol_.x(), u) - get(ws_.l(), u);
+                trsv(get(ws_.Lambda(), u), u_tmp, 'L', 'T', 'N');
+                put(sol_.u(), u, u_tmp);
 
                 /*
                 std::clog << "u = " << std::endl << get(sol_.u(), u) << std::endl;
