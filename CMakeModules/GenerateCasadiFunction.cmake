@@ -7,7 +7,7 @@ function(tmpc_generate_casadi_function SRCS HDRS PYTHON_FILES)
     return()
   endif()
 
-  set(TMPC_GENERATE_CASADI_FUNCTION_SCRIPT "${CMAKE_SOURCE_DIR}/python/generate_casadi_function.py")
+  set(TMPC_GENERATE_CASADI_FUNCTION_SCRIPT "${PROJECT_SOURCE_DIR}/python/generate_casadi_function.py")
 
 
   foreach(FIL ${PYTHON_FILES})
@@ -28,7 +28,7 @@ function(tmpc_generate_casadi_function SRCS HDRS PYTHON_FILES)
             "${_casadi_c_src}"
             "${_casadi_c_hdr}"
         COMMAND 
-            ${PYTHON_EXECUTABLE}
+            ${Python3_EXECUTABLE}
         ARGS
             ${TMPC_GENERATE_CASADI_FUNCTION_SCRIPT}
             ${ABS_FIL}

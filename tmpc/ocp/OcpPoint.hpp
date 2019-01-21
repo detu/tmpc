@@ -56,6 +56,6 @@ namespace tmpc
 	template <typename Kernel>
 	inline std::ostream& operator<<(std::ostream& os, OcpPoint<Kernel> const& p)
 	{
-		os << "x=" << trans(p.x()) << "\tu=" << trans(p.u());
+		return os << "x=" << trans(p.x()) << "\tu=" << trans(p.u());
 	}
 }
