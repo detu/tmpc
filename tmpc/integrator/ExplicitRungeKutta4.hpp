@@ -2,6 +2,8 @@
 
 #include <blaze/Math.h>
 
+#include <tmpc/SizeT.hpp>
+
 
 namespace tmpc
 {
