@@ -27,7 +27,12 @@ namespace tmpc :: testing
 
     /// @brief Test trsv() for row-major matrices.
     ///
-    /// Reprodces the following Blaze bug: https://bitbucket.org/blaze-lib/blaze/issues/216
+    /// Note that depending on the storage order of the system matrix and the given right-hand side 
+    /// the trsv() function solves different equation systems:
+    ///     Single right-hand side:
+    ///     A *x=b if A is column-major
+    ///     A^T*x=b if A is row-major
+    /// (see https://bitbucket.org/blaze-lib/blaze/wiki/LAPACK%20Functions#!linear-system-solver)
     TEST(MatrixTest, testTrsvRowMajor)
     {
         blaze::DynamicMatrix<double, blaze::rowMajor> Lambda {
@@ -37,7 +42,7 @@ namespace tmpc :: testing
 
         blaze::DynamicVector<double> l {4., 7.};
 
-        trsv(Lambda, l, 'L', 'N', 'N');
+        trsv(Lambda, l, 'L', 'T', 'N');
 
         blaze::DynamicVector<double> expected {4., 5.};
 
