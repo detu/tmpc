@@ -3,7 +3,7 @@
 #
 find_package(GTest REQUIRED)
 find_package(Threads REQUIRED)    # required for gtest
-find_package(PythonInterp REQUIRED)
+find_package(Python3 REQUIRED COMPONENTS Interpreter)
 
 # Generate and build models
 foreach (model pendulum)
@@ -13,7 +13,7 @@ foreach (model pendulum)
             ${generated_name}.h
             ${generated_name}.c
         COMMAND
-            ${PYTHON_EXECUTABLE}
+            ${Python3_EXECUTABLE}
         ARGS
             ${CMAKE_CURRENT_SOURCE_DIR}/model/${model}.py ${generated_name}.c
         DEPENDS
@@ -46,7 +46,7 @@ add_custom_command(
         pendulum_ode_generated.c
         ${TEST_DATA_PATH}/rk4/pendulum.txt
     COMMAND
-        ${PYTHON_EXECUTABLE}
+        ${Python3_EXECUTABLE}
     ARGS
         ${CMAKE_CURRENT_SOURCE_DIR}/rk4_test_generate_data.py ${TEST_DATA_PATH}
     #[COMMAND command2 [ARGS] [args2...] ...]

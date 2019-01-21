@@ -28,7 +28,7 @@ function(tmpc_generate_casadi_function SRCS HDRS PYTHON_FILES)
             "${_casadi_c_src}"
             "${_casadi_c_hdr}"
         COMMAND 
-            ${PYTHON_EXECUTABLE}
+            ${Python3_EXECUTABLE}
         ARGS
             ${TMPC_GENERATE_CASADI_FUNCTION_SCRIPT}
             ${ABS_FIL}
