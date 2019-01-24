@@ -20,6 +20,14 @@ namespace tmpc
 	{
 	public:
 		ExplicitRungeKutta4(size_t nx, size_t nu) 
+		:	A2_bar(nx, nx)
+		,	A3_bar(nx, nx)
+		,	A4_bar(nx, nx)
+		,	B2_bar(nx, nu)
+		,	B3_bar(nx, nu)
+		,	B4_bar(nx, nu)
+		,	I_(nx)
+		,	x_(nx)
 		{
 			for (size_t i = 0; i < N; ++i)
 			{
@@ -30,39 +38,41 @@ namespace tmpc
 		}
 
 
-		template <typename ODE, typename StateVector0, typename InputVector>
-		decltype(auto) operator()(ODE const& ode, Real t0, StateVector0 const& x0, InputVector const& u, Real h)
+		template <typename ODE, typename VT1, bool TF1, typename VT2, bool TF2>
+		decltype(auto) operator()(ODE const& ode, Real t0, blaze::Vector<VT1, TF1> const& x0, blaze::Vector<VT2, TF2> const& u, Real h)
 		{
 			// Calculating next state
-			k_[0] = ode(t0,          x0                , u);
-			k_[1] = ode(t0 + h / 2., x0 + k_[0] * (h / 2.), u);
-			k_[2] = ode(t0 + h / 2., x0 + k_[1] * (h / 2.), u);
-			k_[3] = ode(t0 + h,      x0 + k_[2] * h       , u);
+			k_[0] = ode(t0,          x_ = ~x0                , ~u);
+			k_[1] = ode(t0 + h / 2., x_ = ~x0 + k_[0] * (h / 2.), ~u);
+			k_[2] = ode(t0 + h / 2., x_ = ~x0 + k_[1] * (h / 2.), ~u);
+			k_[3] = ode(t0 + h,      x_ = ~x0 + k_[2] * h       , ~u);
 	
-			return x0 + (k_[0] + 2. * k_[1] + 2. * k_[2] + k_[3]) * (h / 6.);
+			return ~x0 + (k_[0] + 2. * k_[1] + 2. * k_[2] + k_[3]) * (h / 6.);
 		}
 
 		
-		// template <typename ODE, typename StateVector1_, typename AMatrix, typename BMatrix>
-		// void operator()(ODE const& ode, Real t0, OcpPoint<Kernel> const& p, Real h, StateVector1_& x_next, AMatrix& A, BMatrix& B)
-		// {
-		// 	// Calculating next state
-		// 	ode(t0,          x0                , u, k1, A1, B1);
-		// 	ode(t0 + h / 2., x0 + k1 * (h / 2.), u, k2, A2, B2);
-		// 	ode(t0 + h / 2., x0 + k2 * (h / 2.), u, k3, A3, B3);
-		// 	ode(t0 + h,      x0 + k3 * h       , u, k4, A4, B4);
+		template <typename ODE, typename VT1, bool TF1, typename VT2, bool TF2, 
+			typename VT3, bool TF3, typename MT1, bool SO1, typename MT2, bool SO2>
+		void operator()(ODE const& ode, Real t0, blaze::Vector<VT1, TF1> const& x0, blaze::Vector<VT2, TF2> const& u, Real h, 
+			blaze::Vector<VT3, TF3>& x_next, blaze::Matrix<MT1, SO1>& A, blaze::Matrix<MT2, SO2>& B)
+		{
+			// Calculating next state
+			ode(t0,          x_ = ~x0                , ~u, k_[0], A_[0], B_[0]);
+			ode(t0 + h / 2., x_ = ~x0 + k_[0] * (h / 2.), ~u, k_[1], A_[1], B_[1]);
+			ode(t0 + h / 2., x_ = ~x0 + k_[1] * (h / 2.), ~u, k_[2], A_[2], B_[2]);
+			ode(t0 + h,      x_ = ~x0 + k_[2] * h       , ~u, k_[3], A_[3], B_[3]);
 	
-		// 	x_next = x0 + (k1 + 2. * k2 + 2. * k3 + k4) * (h / 6.);
+			~x_next = ~x0 + (k_[0] + 2. * k_[1] + 2. * k_[2] + k_[3]) * (h / 6.);
 	
-		// 	// Calculating sensitivities
-		// 	auto const& A1_bar =      A1;							auto const& B1_bar =      B1;
-		// 	auto const  A2_bar = evaluate(A2 + (h / 2.) * A2 * A1_bar);	auto const  B2_bar = evaluate(B2 + (h / 2.) * A2 * B1_bar);
-		// 	auto const  A3_bar = evaluate(A3 + (h / 2.) * A3 * A2_bar);	auto const  B3_bar = evaluate(B3 + (h / 2.) * A3 * B2_bar);
-		// 	auto const  A4_bar =      A4 +  h       * A4 * A3_bar ;	auto const  B4_bar =      B4 +  h       * A4 * B3_bar ;
+			// Calculating sensitivities
+			auto const& A1_bar = A_[0];	auto const& B1_bar = B_[0];
+			auto const  A2_bar = evaluate(A_[1] + (h / 2.) * A_[1] * A1_bar);	auto const  B2_bar = evaluate(B_[1] + (h / 2.) * A_[1] * B1_bar);
+			auto const  A3_bar = evaluate(A_[2] + (h / 2.) * A_[2] * A2_bar);	auto const  B3_bar = evaluate(B_[2] + (h / 2.) * A_[2] * B2_bar);
+			auto const  A4_bar = A_[3] + h * A_[3] * A3_bar;	auto const B4_bar = B_[3] + h * A_[3] * B3_bar;
 	
-		// 	A = IdentityMatrix<Kernel>(NX) + (h / 6.) * (A1_bar + 2. * A2_bar + 2. * A3_bar + A4_bar);
-		// 	B = 					                 (h / 6.) * (B1_bar + 2. * B2_bar + 2. * B3_bar + B4_bar);
-		// }
+			~A = I_ + (h / 6.) * (A1_bar + 2. * A2_bar + 2. * A3_bar + A4_bar);
+			~B = (h / 6.) * (B1_bar + 2. * B2_bar + 2. * B3_bar + B4_bar);
+		}
 
 
 	private:
@@ -70,6 +80,14 @@ namespace tmpc
 		std::array<blaze::DynamicVector<Real>, N> k_;
 		std::array<blaze::DynamicMatrix<Real>, N> A_;
 		std::array<blaze::DynamicMatrix<Real>, N> B_;
+		blaze::DynamicMatrix<Real> A2_bar;
+		blaze::DynamicMatrix<Real> A3_bar;
+		blaze::DynamicMatrix<Real> A4_bar;
+		blaze::DynamicMatrix<Real> B2_bar;
+		blaze::DynamicMatrix<Real> B3_bar;
+		blaze::DynamicMatrix<Real> B4_bar;
+		blaze::IdentityMatrix<Real> I_;
+		blaze::DynamicVector<Real> x_;
 	};
 
 
