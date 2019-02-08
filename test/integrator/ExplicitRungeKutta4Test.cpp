@@ -68,10 +68,32 @@ namespace tmpc :: testing
 		/**
 		 * \brief Evaluates ODE.
 		 */
-		void operator()(double t, StateVector const& x0, InputVector const& u0,	StateVector& xdot, StateStateMatrix& A, StateInputMatrix& B) const
+		template <typename VT1, typename MT1, typename MT2>
+		void operator()(double t, StateVector const& x0, InputVector const& u0,	
+			blaze::DenseVector<VT1, blaze::columnVector>& xdot, 
+			blaze::DenseMatrix<MT1, blaze::columnMajor>& A, 
+			blaze::DenseMatrix<MT2, blaze::columnMajor>& B) const
 		{
-			_ode({&t, x0.data(), u0.data()}, {xdot.data(), A.data(), B.data(), nullptr, nullptr, nullptr, nullptr, nullptr, nullptr});
+			_ode({&t, x0.data(), u0.data()}, {data(xdot), data(A), data(B), nullptr, nullptr, nullptr, nullptr, nullptr, nullptr});
 		}
+
+
+		/**
+		 * \brief Evaluates ODE.
+		 */
+		template <typename VT1, bool TF1, typename MT1, bool SO1, typename MT2, bool SO2>
+		void operator()(double t, StateVector const& x0, InputVector const& u0,	
+			blaze::Vector<VT1, TF1>& xdot, 
+			blaze::Matrix<MT1, SO1>& A, 
+			blaze::Matrix<MT2, SO2>& B) const
+		{
+			_ode({&t, x0.data(), u0.data()}, {xdot_.data(), A_.data(), B_.data(), nullptr, nullptr, nullptr, nullptr, nullptr, nullptr});
+			
+			~xdot = xdot_;
+			~A = A_;
+			~B = B_;
+		}
+
 
 		/**
 		 * \brief Evaluates ODE and quadrature.
@@ -108,6 +130,12 @@ namespace tmpc :: testing
 
 			return xdot;
 		}
+
+
+	private:
+		mutable StateVector xdot_;
+		mutable StateStateMatrix A_;
+		mutable StateInputMatrix B_;
 	};
 
 
@@ -279,7 +307,7 @@ namespace tmpc :: testing
 	}
 
 
-	TEST_F(ExplicitRungeKutta4Test, testIntegrateCorrect)
+	TEST_F(ExplicitRungeKutta4Test, testIntegrate)
 	{
 		TestPoint p;
 
@@ -296,40 +324,38 @@ namespace tmpc :: testing
 
 		EXPECT_EQ(count, 600);
 	}
+
+
+	TEST_F(ExplicitRungeKutta4Test, testIntegrateWithSensitivities)
+	{
+		TestPoint p;
+
+		unsigned count = 0;
+		while (test_data_ >> p)
+		{
+			ODE::StateVector xplus;
+			ODE::StateStateMatrix A;
+			ODE::StateInputMatrix B;
+			integrator_(ode_, p.t, p.x0, p.u, timeStep_, xplus, A, B);
+
+			/*
+			EXPECT_EQ(forcePrint(xplus), forcePrint(p.xplus));
+			EXPECT_EQ(forcePrint(A), forcePrint(p.A));
+			EXPECT_EQ(forcePrint(B), forcePrint(p.B));
+			*/
+
+			MatrixApproxEquality const is_approx(1e-10);
+			EXPECT_PRED2(is_approx, xplus, p.xplus);
+			EXPECT_PRED2(is_approx, A, p.A);
+			EXPECT_PRED2(is_approx, B, p.B);
+
+			++count;
+		}
+
+		EXPECT_EQ(count, 600);
+	}
 }
 
-
-
-
-
-// TEST_F(ExplicitRungeKutta4Test, integrate_correct)
-// {
-// 	TestPoint p;
-
-// 	unsigned count = 0;
-// 	while (test_data_ >> p)
-// 	{
-// 		ODE::StateVector xplus;
-// 		ODE::StateStateMatrix A;
-// 		ODE::StateInputMatrix B;
-// 		integrate(integrator_, ode_, p.t, p.x0, p.u, xplus, A, B);
-
-// 		/*
-// 		EXPECT_EQ(forcePrint(xplus), forcePrint(p.xplus));
-// 		EXPECT_EQ(forcePrint(A), forcePrint(p.A));
-// 		EXPECT_EQ(forcePrint(B), forcePrint(p.B));
-// 		*/
-
-// 		MatrixApproxEquality const is_approx(1e-10);
-// 		EXPECT_PRED2(is_approx, xplus, p.xplus);
-// 		EXPECT_PRED2(is_approx, A, p.A);
-// 		EXPECT_PRED2(is_approx, B, p.B);
-
-// 		++count;
-// 	}
-
-// 	EXPECT_EQ(count, 600);
-// }
 
 // TEST_F(ExplicitRungeKutta4Test, integrate_q_correct)
 // {
