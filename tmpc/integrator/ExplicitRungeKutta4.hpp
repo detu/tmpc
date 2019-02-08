@@ -33,7 +33,7 @@ namespace tmpc
 
 
 		template <typename ODE, typename StateVector0, typename InputVector>
-		decltype(auto) operator()(ODE const& ode, Real t0, StateVector0 const& x0, InputVector const& u, Real h)
+		decltype(auto) operator()(ODE const& ode, Real t0, StateVector0 const& x0, InputVector const& u, Real h) const
 		{
 			// Calculating next state
 			k_[0] = ode(t0,          x0                , u);
@@ -69,9 +69,9 @@ namespace tmpc
 
 	private:
 		static size_t constexpr N = 4;
-		std::array<blaze::DynamicVector<Real>, N> k_;
-		std::array<blaze::DynamicMatrix<Real>, N> A_;
-		std::array<blaze::DynamicMatrix<Real>, N> B_;
+		mutable std::array<blaze::DynamicVector<Real>, N> k_;
+		mutable std::array<blaze::DynamicMatrix<Real>, N> A_;
+		mutable std::array<blaze::DynamicMatrix<Real>, N> B_;
 	};
 
 
