@@ -159,4 +159,19 @@ namespace tmpc
             }
         );
 	}
+
+
+    /// @brief Property map returning OCP size of nominal MHE graph nodes.
+	inline auto ocpSizeNominalMhe(size_t num_intervals, size_t nx, size_t nw, size_t nc = 0, size_t ns = 0)
+	{
+		return make_function_property_map<OcpVertexDescriptor>(
+            [num_intervals, nx, nw, nc, ns] (OcpVertexDescriptor v)
+            {
+                if (v > num_intervals)
+                    throw std::out_of_range("Vertex index out of range for nominal MHE! (ocpSizeNominalMhe())");
+
+                return OcpSize(nx, v == num_intervals ? 0 : nw, nc, ns);                
+            }
+        );
+	}
 }
