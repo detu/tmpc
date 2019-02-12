@@ -1,7 +1,6 @@
 #pragma once
 
-#include <blaze/Math.h>
-
+#include <tmpc/Math.hpp>
 #include <tmpc/SizeT.hpp>
 
 
@@ -22,7 +21,9 @@ namespace tmpc
 	{
 	public:
 		ExplicitRungeKutta4(size_t nx, size_t nu) 
-		:	A2_bar(nx, nx)
+		:	nx_(nx)
+		,	nu_(nu)
+		,	A2_bar(nx, nx)
 		,	A3_bar(nx, nx)
 		,	A4_bar(nx, nx)
 		,	B2_bar(nx, nu)
@@ -43,11 +44,17 @@ namespace tmpc
 		template <typename ODE, typename VT1, bool TF1, typename VT2, bool TF2>
 		decltype(auto) operator()(ODE const& ode, Real t0, blaze::Vector<VT1, TF1> const& x0, blaze::Vector<VT2, TF2> const& u, Real h) const
 		{
+			if (size(x0) != nx_)
+				throw std::invalid_argument("Invalid size of x0 in ExplicitRungeKutta4::operator()");
+
+			if (size(u) != nu_)
+				throw std::invalid_argument("Invalid size of u in ExplicitRungeKutta4::operator()");
+
 			// Calculating next state
-			k_[0] = ode(t0,          x_ = ~x0                , ~u);
-			k_[1] = ode(t0 + h / 2., x_ = ~x0 + k_[0] * (h / 2.), ~u);
-			k_[2] = ode(t0 + h / 2., x_ = ~x0 + k_[1] * (h / 2.), ~u);
-			k_[3] = ode(t0 + h,      x_ = ~x0 + k_[2] * h       , ~u);
+			noresize(k_[0]) = ode(t0,          x_ = ~x0                , ~u);
+			noresize(k_[1]) = ode(t0 + h / 2., x_ = ~x0 + k_[0] * (h / 2.), ~u);
+			noresize(k_[2]) = ode(t0 + h / 2., x_ = ~x0 + k_[1] * (h / 2.), ~u);
+			noresize(k_[3]) = ode(t0 + h,      x_ = ~x0 + k_[2] * h       , ~u);
 	
 			return ~x0 + (k_[0] + 2. * k_[1] + 2. * k_[2] + k_[3]) * (h / 6.);
 		}
@@ -58,6 +65,12 @@ namespace tmpc
 		void operator()(ODE const& ode, Real t0, blaze::Vector<VT1, TF1> const& x0, blaze::Vector<VT2, TF2> const& u, Real h, 
 			blaze::Vector<VT3, TF3>& x_next, blaze::Matrix<MT1, SO1>& A, blaze::Matrix<MT2, SO2>& B) const
 		{
+			if (size(x0) != nx_)
+				throw std::invalid_argument("Invalid size of x0 in ExplicitRungeKutta4::operator()");
+
+			if (size(u) != nu_)
+				throw std::invalid_argument("Invalid size of u in ExplicitRungeKutta4::operator()");
+				
 			// Calculating next state
 			ode(t0,          x_ = ~x0                , ~u, k_[0], A_[0], B_[0]);
 			ode(t0 + h / 2., x_ = ~x0 + k_[0] * (h / 2.), ~u, k_[1], A_[1], B_[1]);
@@ -79,6 +92,8 @@ namespace tmpc
 
 	private:
 		static size_t constexpr N = 4;
+		size_t const nx_;
+		size_t const nu_;
 		mutable std::array<blaze::DynamicVector<Real>, N> k_;
 		mutable std::array<blaze::DynamicMatrix<Real>, N> A_;
 		mutable std::array<blaze::DynamicMatrix<Real>, N> B_;
