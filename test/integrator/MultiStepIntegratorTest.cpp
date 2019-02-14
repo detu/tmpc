@@ -26,7 +26,7 @@ namespace tmpc :: testing
 		blaze::StaticVector<double, 1> const x1_true {exp(1.)};
 		blaze::StaticVector<double, 1> const x1_rk4 = rk4(&ode, 0., x0, u0, h);
 
-		MultiStepIntegrator<double> multistep(1);
+		MultiStepIntegrator<double> multistep(1, 0);
 		blaze::StaticVector<double, 1> const x1_multistep = multistep(rk4, &ode, 0., x0, u0, h, h_max);
 
 		double const err_rk4 = abs(x1_rk4[0] - x1_true[0]);

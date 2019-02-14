@@ -73,6 +73,8 @@ add_executable(test-tmpc
 
     integrator/ExplicitRungeKutta4Test.cpp
     integrator/MultiStepIntegratorTest.cpp
+    integrator/PendulumData.cpp
+    integrator/PendulumOdeTest.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/pendulum_ode_generated.h
     ${CMAKE_CURRENT_BINARY_DIR}/pendulum_ode_generated.c
 )
