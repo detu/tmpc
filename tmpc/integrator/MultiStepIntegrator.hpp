@@ -56,7 +56,11 @@ namespace tmpc
 
             x_ = x0;
             A_ = blaze::IdentityMatrix<Real>(nx_);
-            B_ = blaze::ZeroMatrix<Real>(nx_, nu_);
+
+            // Not using ZeroMatrix here because of this:
+            // https://bitbucket.org/blaze-lib/blaze/issues/230
+            // B_ = blaze::ZeroMatrix<Real>(nx_, nu_);
+            B_ = 0.;
 
             for (size_t i = 0; i < num_integrator_steps; ++i)
             {

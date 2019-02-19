@@ -22,7 +22,7 @@ namespace tmpc :: benchmark
         randomizeQp(ws);
 
         // Disable openblas multithreading
-        openblas_set_num_threads(1);
+        // openblas_set_num_threads(1);
 
         for (auto _ : state)
             riccati(ws, ws);
