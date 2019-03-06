@@ -3,10 +3,11 @@
 # The dynamic equations and parameters are taken from ACADO pendulum example:
 # https://github.com/acado/acado/blob/master/examples/integrator/pendulum.cpp 
 
-import casadi as cs
-import numpy as np
-import os
 import sys
+import os
+import numpy as np
+import casadi as cs
+
 
 def ensure_dir_exist(dirname):
     try:

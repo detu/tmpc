@@ -75,6 +75,9 @@ add_executable(test-tmpc
     integrator/MultiStepIntegratorTest.cpp
     integrator/PendulumData.cpp
     integrator/PendulumOdeTest.cpp
+    
+    numeric/CentralDifferenceDerivativeTest.cpp
+
     ${CMAKE_CURRENT_BINARY_DIR}/pendulum_ode_generated.h
     ${CMAKE_CURRENT_BINARY_DIR}/pendulum_ode_generated.c
 )
