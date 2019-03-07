@@ -74,6 +74,8 @@ add_executable(test-tmpc
 
     numeric/CentralDifferenceDerivativeTest.cpp
 
+    random/MultivariateNormalDistributionTest.cpp
+
     ${CMAKE_CURRENT_BINARY_DIR}/pendulum_ode_generated.h
     ${CMAKE_CURRENT_BINARY_DIR}/pendulum_ode_generated.c
 )
