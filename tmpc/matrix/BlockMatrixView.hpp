@@ -1,20 +1,20 @@
 #pragma once
 
+#include <tmpc/SizeT.hpp>
+
 #include <boost/range/iterator_range.hpp>
 
 #include <vector>
 #include <stdexcept>
+#include <initializer_list>
 
 
 namespace tmpc
 {
-    template <typename Kernel, typename MT>
+    template <typename MT>
     class BlockMatrixView
     {
     public:
-        using size_t = typename Kernel::size_t;
-
-
         BlockMatrixView(MT& m, std::initializer_list<size_t> size_m, std::initializer_list<size_t> size_n)
         :   BlockMatrixView(m, boost::make_iterator_range(size_m), boost::make_iterator_range(size_n))
         {            

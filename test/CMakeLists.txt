@@ -48,22 +48,21 @@ add_custom_command(
     COMMAND
         ${Python3_EXECUTABLE}
     ARGS
-        ${CMAKE_CURRENT_SOURCE_DIR}/rk4_test_generate_data.py ${TEST_DATA_PATH}
+        ${CMAKE_CURRENT_SOURCE_DIR}/integrator/rk4_test_generate_data.py ${TEST_DATA_PATH}
     #[COMMAND command2 [ARGS] [args2...] ...]
     #[MAIN_DEPENDENCY depend]
     DEPENDS
-        rk4_test_generate_data.py
+        integrator/rk4_test_generate_data.py
     #[IMPLICIT_DEPENDS <lang1> depend1
     #                 [<lang2> depend2] ...]
     WORKING_DIRECTORY
         ${CMAKE_CURRENT_BINARY_DIR}
     COMMENT
-        "Generating model code and test data for rk4..."
+        "Generating model code and test data for ExplicitRungeKutta4..."
 )
 
 # ~~~~~~~~~~ Our tests ~~~~~~~~~~~~~~
 add_executable(test-tmpc
-    #rk4_test.cpp
     #mhe_test.cpp
     ocp/SensitivityTupleTest.cpp
     ocp/CondensedOcpSizeTest.cpp
@@ -72,6 +71,11 @@ add_executable(test-tmpc
 
     matrix/MatrixTest.cpp
 
+    integrator/ExplicitRungeKutta4Test.cpp
+    integrator/MultiStepIntegratorTest.cpp
+    integrator/PendulumData.cpp
+    integrator/PendulumOdeTest.cpp
+    
     numeric/CentralDifferenceDerivativeTest.cpp
 
     random/MultivariateNormalDistributionTest.cpp
@@ -103,7 +107,7 @@ target_link_libraries(test-tmpc PRIVATE
 
 add_subdirectory(matrix)
 add_subdirectory(qp)
-add_subdirectory(integrator)
+
 
 if (TMPC_WITH_CASADI_INTERFACE)
     add_subdirectory(casadi_interface)

@@ -49,10 +49,10 @@ namespace tmpc :: testing
 		EXPECT_EQ(graph::adjacent_vertices(vertex(1, g), g)[0], 3);
 		EXPECT_EQ(graph::adjacent_vertices(vertex(2, g), g)[0], 4);
 
-		EXPECT_EQ(get(graph::edge_index, g, graph::out_edges(vertex(0, g), g)[0]), 0);
-		EXPECT_EQ(get(graph::edge_index, g, graph::out_edges(vertex(0, g), g)[1]), 1);
-		EXPECT_EQ(get(graph::edge_index, g, graph::out_edges(vertex(1, g), g)[0]), 2);
-		EXPECT_EQ(get(graph::edge_index, g, graph::out_edges(vertex(2, g), g)[0]), 3);
+		EXPECT_EQ(get(graph::edge_index, g, *next(graph::out_edges(vertex(0, g), g).begin(), 0)), 0);
+		EXPECT_EQ(get(graph::edge_index, g, *next(graph::out_edges(vertex(0, g), g).begin(), 1)), 1);
+		EXPECT_EQ(get(graph::edge_index, g, *next(graph::out_edges(vertex(1, g), g).begin(), 0)), 2);
+		EXPECT_EQ(get(graph::edge_index, g, *next(graph::out_edges(vertex(2, g), g).begin(), 0)), 3);
 	}
 
 

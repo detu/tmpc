@@ -111,18 +111,49 @@ namespace tmpc :: testing
 	class MatrixApproxEquality
 	{
 	public:
-		MatrixApproxEquality(double tolerance)
-		:	tolerance_(tolerance)
+		MatrixApproxEquality(double abs_tol, double rel_tol = 0.)
+		:	absTol_(abs_tol)
+		,	relTol_(rel_tol)
 		{
 		}
 
-		template <typename MatrixA, typename MatrixB>
-		bool operator()(MatrixA const& lhs, MatrixB const& rhs)
+
+		template <typename MT1, bool SO1, typename MT2, bool SO2>
+		bool operator()(blaze::Matrix<MT1, SO1> const& lhs, blaze::Matrix<MT2, SO2> const& rhs) const
 		{
-			return maxNorm(lhs - rhs) <= tolerance_;
+			size_t const M = rows(lhs);
+			size_t const N = columns(lhs);
+
+			if (rows(rhs) != M || columns(rhs) != N)
+				throw std::invalid_argument("Matrix size mismatch in MatrixApproxEquality");
+
+			for (size_t i = 0; i < M; ++i)
+				for (size_t j = 0; j < N; ++j)
+					if (abs((~lhs)(i, j) - (~rhs)(i, j)) > absTol_ + relTol_ * abs((~rhs)(i, j)))
+						return false;
+
+			return true;
 		}
+
+
+		template <typename VT1, typename VT2, bool TF>
+		bool operator()(blaze::Vector<VT1, TF> const& lhs, blaze::Vector<VT2, TF> const& rhs) const
+		{
+			size_t const N = size(lhs);
+
+			if (size(rhs) != N)
+				throw std::invalid_argument("Vector size mismatch in MatrixApproxEquality");
+
+			for (size_t j = 0; j < N; ++j)
+				if (abs((~lhs)[j] - (~rhs)[j]) > absTol_ + relTol_ * abs((~rhs)[j]))
+					return false;
+
+			return true;
+		}
+
 
 	private:
-		double tolerance_;
+		double const absTol_;
+		double const relTol_;
 	};
 }

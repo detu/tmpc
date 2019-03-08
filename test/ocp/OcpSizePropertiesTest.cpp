@@ -1,6 +1,7 @@
 #include <tmpc/ocp/OcpSizeProperties.hpp>
 #include <tmpc/core/Range.hpp>
 #include <tmpc/core/PropertyMap.hpp>
+#include <tmpc/print/ocp/OcpSize.hpp>
 
 #include <tmpc/test_tools.hpp>
 
@@ -186,5 +187,26 @@ namespace tmpc :: testing
 
 		for (size_t i = 7; i < 11; ++i)
 			EXPECT_EQ(get(size_map, vertex(i, g)), size_leaf) << i;
+	}
+
+
+	TEST(OcpSizeTest, test_ocpSizeNominalMhe)
+	{
+		OcpGraph const g = ocpGraphLinear(4);
+
+		size_t const nx = 5, nw = 4, nc = 3, ns = 2;
+		auto const size_map = ocpSizeNominalMhe(num_vertices(g) - 1, nx, nw, nc, ns);
+
+		OcpSize const size_root(nx, nw, nc, ns);
+		OcpSize const size_leaf(nx, 0, nc, ns);
+		OcpSize const size_other(nx, nw, nc, ns);
+
+		EXPECT_EQ(forcePrint(get(size_map, vertex(0, g))), forcePrint(size_root));
+
+		for (size_t i = 1; i < 3; ++i)
+			EXPECT_EQ(forcePrint(get(size_map, vertex(i, g))), forcePrint(size_other)) << i;
+
+		for (size_t i = 3; i < 4; ++i)
+			EXPECT_EQ(forcePrint(get(size_map, vertex(i, g))), forcePrint(size_leaf)) << i;
 	}
 }

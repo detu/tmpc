@@ -59,20 +59,6 @@ namespace tmpc
 namespace blaze
 {
     template <typename V, bool TF>
-    inline decltype(auto) noresize(Vector<V, TF>& v)
-    {
-        return subvector(v, 0, size(v));
-    }
-
-    
-    template <typename M, bool SO>
-    inline decltype(auto) noresize(Matrix<M, SO>& m)
-    {
-        return submatrix(m, 0, 0, rows(m), columns(m));
-    }
-
-
-    template <typename V, bool TF>
     inline auto dimensions(Vector<V, TF> const& v)
     {
         return size(v);
