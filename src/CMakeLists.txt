@@ -25,6 +25,7 @@ add_library(tmpc STATIC ${SRC})
 
 target_include_directories(tmpc
     PUBLIC ${PROJECT_INCLUDE_DIR}
+    PUBLIC ${EIGEN3_INCLUDE_DIR}
 )
 
 

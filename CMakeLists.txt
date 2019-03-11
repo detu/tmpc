@@ -36,16 +36,9 @@ foreach (lib ${extern_libs})
     message(STATUS "TMPC_WITH_${lib}=${TMPC_WITH_${lib}}")
 endforeach ()
 
-find_package(Eigen3 3.2.10)
-
-if (EIGEN3_FOUND)
-    message(STATUS "Eigen3 found in ${EIGEN3_INCLUDE_DIR}")
-    include_directories(${EIGEN3_INCLUDE_DIR})
-else()
-    message(STATUS "Eigen3 NOT FOUND")
-endif()
-
-
+# TODO: Eigen3 is required now, because some older tests depend on it.
+# This dependency must be removed in future.
+find_package(Eigen3 3.2.10 REQUIRED)
 find_package(blaze 3.5 REQUIRED)
 find_package(LAPACK REQUIRED)
 
