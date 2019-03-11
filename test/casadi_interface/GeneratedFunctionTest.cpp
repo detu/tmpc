@@ -1,10 +1,9 @@
 #include <tmpc/casadi_interface/GeneratedFunction.hpp>
-#include <tmpc/BlazeKernel.hpp>
-#include <tmpc/EigenKernel.hpp>
 #include <tmpc/Testing.hpp>
 
 #include <test_functions.h>
 
+#include <blaze/Math.h>
 
 #include <tuple>
 #include <stdexcept>
@@ -13,134 +12,13 @@
 
 namespace tmpc :: testing
 {
-	using Kernel = EigenKernel<double>;
-	using namespace casadi_interface;
-
-
-	TEST(CompressedColumnStorageToMatrixTest, testDense)
-	{
-		casadi_int const sparsity[11] = {3, 2, 0, 3, 6, 0, 1, 2, 0, 1, 2};
-		casadi_real const data[6] = {1.1, 2.1, 3.1, 1.2, 2.2, 3.2};
-
-		blaze::StaticMatrix<casadi_real, 3, 2> m;
-		compressedColumnStorageToMatrix(data, sparsity, m);
-
-		EXPECT_EQ(forcePrint(m), forcePrint(blaze::StaticMatrix<casadi_real, 3, 2> {
-			{1.1, 1.2},
-			{2.1, 2.2},
-			{3.1, 3.2}
-		}));
-	}
-
-
-	TEST(CompressedColumnStorageToMatrixTest, testSparse)
-	{
-		casadi_int const sparsity[11] = {3, 2, 0, 2, 3, 1, 2, 0};
-		casadi_real const data[3] = {1.1, 2.2, 3.3};
-
-		blaze::StaticMatrix<casadi_real, 3, 2> m;
-		compressedColumnStorageToMatrix(data, sparsity, m);
-
-		EXPECT_EQ(forcePrint(m), forcePrint(blaze::StaticMatrix<casadi_real, 3, 2> {
-			{0.0, 3.3},
-			{1.1, 0.0},
-			{2.2, 0.0}
-		}));
-	}
-
-
-	TEST(CompressedColumnStorageToMatrixTest, testInvalidNumRowsThrows)
-	{
-		casadi_int const sparsity[11] = {3, 2, 0, 3, 6, 0, 1, 2, 0, 1, 2};
-		casadi_real const data[6] = {1.1, 2.1, 3.1, 1.2, 2.2, 3.2};
-
-		blaze::StaticMatrix<casadi_real, 4, 2> m;
-		EXPECT_THROW(compressedColumnStorageToMatrix(data, sparsity, m), std::invalid_argument);
-	}
-
-
-	TEST(CompressedColumnStorageToMatrixTest, testInvalidNumColsThrows)
-	{
-		casadi_int const sparsity[11] = {3, 2, 0, 3, 6, 0, 1, 2, 0, 1, 2};
-		casadi_real const data[6] = {1.1, 2.1, 3.1, 1.2, 2.2, 3.2};
-
-		blaze::StaticMatrix<casadi_real, 3, 3> m;
-		EXPECT_THROW(compressedColumnStorageToMatrix(data, sparsity, m), std::invalid_argument);
-	}
-
-
-	TEST(CompressedColumnStorageToMatrixTest, testInvalidSparsityThrows)
-	{
-		casadi_int const sparsity[11] = {3, 2, 1, 3, 6, 0, 1, 2, 0, 1, 2};
-		casadi_real const data[6] = {1.1, 2.1, 3.1, 1.2, 2.2, 3.2};
-
-		blaze::StaticMatrix<casadi_real, 3, 2> m;
-		EXPECT_THROW(compressedColumnStorageToMatrix(data, sparsity, m), std::invalid_argument);
-	}
-
-
-	TEST(MatrixToCompressedColumnStorageTest, testDense)
-	{
-		casadi_int const sparsity[11] = {3, 2, 0, 3, 6, 0, 1, 2, 0, 1, 2};
-		casadi_real data[6] = {0., 0., 0., 0., 0., 0.};
-
-		blaze::StaticMatrix<casadi_real, 3, 2> const m {
-			{1.1, 1.2},
-			{2.1, 2.2},
-			{3.1, 3.2}
-		};
-
-		matrixToCompressedColumnStorage(m, data, sparsity);
-
-		EXPECT_THAT(data, ElementsAre(1.1, 2.1, 3.1, 1.2, 2.2, 3.2));
-	}
-
-
-	TEST(MatrixToCompressedColumnStorageTest, testSparse)
-	{
-		casadi_int const sparsity[11] = {3, 2, 0, 2, 3, 1, 2, 0};
-		casadi_real data[3] = {0., 0., 0.};
-
-		blaze::StaticMatrix<casadi_real, 3, 2> const m {
-			{0.0, 3.3},
-			{1.1, 0.0},
-			{2.2, 0.0}
-		};
-
-		matrixToCompressedColumnStorage(m, data, sparsity);
-
-		EXPECT_THAT(data, ElementsAre(1.1, 2.2, 3.3));
-	}
-
-
-	TEST(MatrixToCompressedColumnStorageTest, testInvalidNumRowsThrows)
-	{
-		casadi_int const sparsity[11] = {3, 2, 0, 3, 6, 0, 1, 2, 0, 1, 2};
-		casadi_real data[6] = {1.1, 2.1, 3.1, 1.2, 2.2, 3.2};
-
-		blaze::StaticMatrix<casadi_real, 4, 2> const m(0.);
-		EXPECT_THROW(matrixToCompressedColumnStorage(m, data, sparsity), std::invalid_argument);
-	}
-
-
-	TEST(MatrixToCompressedColumnStorageTest, testInvalidNumColsThrows)
-	{
-		casadi_int const sparsity[11] = {3, 2, 0, 3, 6, 0, 1, 2, 0, 1, 2};
-		casadi_real data[6] = {1.1, 2.1, 3.1, 1.2, 2.2, 3.2};
-
-		blaze::StaticMatrix<casadi_real, 3, 3> const m(0.);
-		EXPECT_THROW(matrixToCompressedColumnStorage(m, data, sparsity), std::invalid_argument);
-	}
-
-
-	TEST(MatrixToCompressedColumnStorageTest, testInvalidSparsityThrows)
-	{
-		casadi_int const sparsity[11] = {3, 2, 1, 3, 6, 0, 1, 2, 0, 1, 2};
-		casadi_real data[6] = {1.1, 2.1, 3.1, 1.2, 2.2, 3.2};
-
-		blaze::StaticMatrix<casadi_real, 3, 2> const m(0.);
-		EXPECT_THROW(matrixToCompressedColumnStorage(m, data, sparsity), std::invalid_argument);
-	}
+	using Real = double;
+	using blaze::StaticMatrix;
+	using blaze::StaticVector;
+	using blaze::columnMajor;
+	using blaze::rowVector;
+	using blaze::columnVector;
+	using namespace casadi_interface;	
 
 
 	class GeneratedFunctionTest 
@@ -148,24 +26,23 @@ namespace tmpc :: testing
 	{
 	protected:
 		casadi_interface::GeneratedFunction fun_ {f_functions()};
-		using MatrixA = StaticMatrix<Kernel, 3, 2, columnMajor>;
-		using MatrixB = StaticMatrix<Kernel, 2, 2, columnMajor>;
-		using MatrixX = StaticMatrix<Kernel, 3, 2>;
-		using VectorY = StaticVector<Kernel, 2, rowVector>;
-		using Real = Kernel::Real;
+		using MatrixA = StaticMatrix<Real, 3, 2, columnMajor>;
+		using MatrixB = StaticMatrix<Real, 2, 2, columnMajor>;
+		using MatrixX = StaticMatrix<Real, 3, 2>;
+		using VectorY = StaticVector<Real, 2, rowVector>;
 	};
 
 
 	TEST_F(GeneratedFunctionTest, incorrect_n_inputs_throws)
 	{
-		Kernel::Real x = 0.;
+		Real x = 0.;
 		ASSERT_THROW(fun_({&x, &x, &x, &x}, {&x, &x}), std::invalid_argument);
 	}
 
 
 	TEST_F(GeneratedFunctionTest, incorrect_n_outputs_throws)
 	{
-		Kernel::Real x = 0.;
+		Real x = 0.;
 		ASSERT_THROW(fun_({&x, &x, &x}, {&x, &x, &x}), std::invalid_argument);
 	}
 
@@ -214,59 +91,59 @@ namespace tmpc :: testing
 
 	TEST_F(GeneratedFunctionTest, testPointerArgumentCall)
 	{
-		StaticMatrix<Kernel, 3, 2, columnMajor> A {
-			{1., 2.},
-			{3., 4.},
-			{5., 6.}
+		Real const A[3 * 2] = {
+			1., 3., 5.,
+			2., 4., 6.
 		};
-		StaticMatrix<Kernel, 2, 2, columnMajor> B {
-			{7., 8.},
-			{9., 10.}
+		
+		Real const B[2 * 2] = {
+			7., 9.,
+			8., 10.
 		};
-		Kernel::Real x = 0.1;
 
-		//randomize(A);
-		//randomize(B);
-		//blaze::randomize(x);
+		Real x = 0.1;
 
-		StaticMatrix<Kernel, 3, 2> X;
-		StaticVector<Kernel, 2, rowVector> Y;
+		Real X[3 * 2];
+		Real Y[2];
 
-		fun_({A.data(), B.data(), &x}, {X.data(), Y.data()});
+		fun_({A, B, &x}, {X, Y});
 
-		EXPECT_PRED2(ApproxEqual(1e-12), X, (A * x) * B);
-		EXPECT_EQ(Y, (StaticVector<Kernel, 3, rowVector> {1., 1., 1.} * (A * B)));
+		EXPECT_THAT(X, ElementsAreArray({
+			DoubleEq(2.5), DoubleEq(5.7), DoubleEq(8.9),
+			DoubleEq(2.8), DoubleEq(6.4), DoubleEq(10.0)
+		}));
+		EXPECT_THAT(Y, ElementsAreArray({171., 192.}));
 	}
 
 
 	TEST_F(GeneratedFunctionTest, testCopyCtor)
 	{
-		StaticMatrix<Kernel, 3, 2, columnMajor> A {
+		StaticMatrix<Real, 3, 2, columnMajor> A {
 			{1., 2.},
 			{3., 4.},
 			{5., 6.}
 		};
-		StaticMatrix<Kernel, 2, 2, columnMajor> B {
+		StaticMatrix<Real, 2, 2, columnMajor> B {
 			{7., 8.},
 			{9., 10.}
 		};
-		Kernel::Real x = 0.1;
+		Real x = 0.1;
 
 		//randomize(A);
 		//randomize(B);
 		//blaze::randomize(x);
 
-		StaticMatrix<Kernel, 3, 2> X, X1;
-		StaticVector<Kernel, 2, rowVector> Y, Y1;
+		StaticMatrix<Real, 3, 2, columnMajor> X, X1;
+		StaticVector<Real, 2, rowVector> Y, Y1;
 
 		casadi_interface::GeneratedFunction const fun_copy = fun_;
-		fun_({A.data(), B.data(), &x}, {X.data(), Y.data()});
-		fun_copy({A.data(), B.data(), &x}, {X1.data(), Y1.data()});
+		fun_(std::tie(A, B, x), std::tie(X, Y));
+		fun_copy(std::tie(A, B, x), std::tie(X1, Y1));
 
-		EXPECT_PRED2(ApproxEqual(1e-12), X, (A * x) * B);
-		EXPECT_EQ(Y, (StaticVector<Kernel, 3, rowVector> {1., 1., 1.} * (A * B)));
-		EXPECT_PRED2(ApproxEqual(1e-12), X1, (A * x) * B);
-		EXPECT_EQ(Y1, (StaticVector<Kernel, 3, rowVector> {1., 1., 1.} * (A * B)));
+		TMPC_EXPECT_APPROX_EQ(X, (A * x) * B, 1e-12, 0.);
+		TMPC_EXPECT_EQ(Y, (StaticVector<Real, 3, rowVector> {1., 1., 1.} * (A * B)));
+		TMPC_EXPECT_APPROX_EQ(X1, (A * x) * B, 1e-12, 0.);
+		TMPC_EXPECT_EQ(Y1, (StaticVector<Real, 3, rowVector> {1., 1., 1.} * (A * B)));
 	}
 
 
@@ -284,8 +161,8 @@ namespace tmpc :: testing
 
 		for (size_t i = 0; i < N; ++i)
 		{
-			A[i] = MatrixA::Random();
-			B[i] = MatrixB::Random();
+			randomize(A[i]);
+			randomize(B[i]);
 			x[i] = dis(gen);
 		}
 
@@ -308,57 +185,36 @@ namespace tmpc :: testing
 		// Check if the results are the same.
 		for (size_t i = 0; i < N; ++i)
 		{
-			EXPECT_EQ(forcePrint(X[i]), forcePrint(X_ref[i])) << "at i=" << i;
-			EXPECT_EQ(forcePrint(Y[i]), forcePrint(Y_ref[i])) << "at i=" << i;
+			TMPC_EXPECT_EQ(X[i], X_ref[i]) << "at i=" << i;
+			TMPC_EXPECT_EQ(Y[i], Y_ref[i]) << "at i=" << i;
 		}
 	}
 
-	/*
+
 	TEST_F(GeneratedFunctionTest, testMatrixArgumentCall)
 	{
-		StaticMatrix<Kernel, 3, 2, columnMajor> A {
+		StaticMatrix<Real, 3, 2, columnMajor> A {
 			{1., 2.},
 			{3., 4.},
 			{5., 6.}
 		};
-		StaticMatrix<Kernel, 2, 2, columnMajor> B {
+		StaticMatrix<Real, 2, 2, columnMajor> B {
 			{7., 8.},
 			{9., 10.}
 		};
-		Kernel::Real x = 0.1;
+		Real x = 0.1;
 
 		//randomize(A);
 		//randomize(B);
 		//blaze::randomize(x);
 
-		StaticMatrix<Kernel, 3, 2> X;
-		StaticVector<Kernel, 2, rowVector> Y;
+		StaticMatrix<Real, 3, 2> X;
+		StaticVector<Real, 2, rowVector> Y;
 
-		fun_({A, B, x}, {X, Y});
+		// fun_(std::tie(A, B, x));
+		fun_(std::tie(A, B, x), std::tie(X, Y));
 
-		EXPECT_EQ(forcePrint(X), forcePrint((A * x) * B));
-		EXPECT_EQ(Y, (StaticVector<Kernel, 3, rowVector> {1., 1., 1.} * (A * B)));
+		TMPC_EXPECT_EQ(X, (A * x) * B);
+		TMPC_EXPECT_EQ(Y, (StaticVector<Real, 3, rowVector> {1., 1., 1.} * (A * B)));
 	}
-	*/
-
-	/*
-	// Some interesting ideas here: https://habrahabr.ru/post/228031/
-	template <typename Function, typename TupleIn, typename TupleOut>
-	void call(Function const& f, TupleIn&& in, TupleOut&& out)
-	{
-		throw std::logic_error("Not implemented");
-	}
-
-	TEST_F(GeneratedFunctionTest, DISABLED_matrix_argument_call_correct)
-	{
-		StaticMatrix<Kernel, 3, 2> const A {0.};
-		StaticMatrix<Kernel, 2, 2> const B {0.};
-		StaticMatrix<Kernel, 1, 1> const x {0.};
-
-		StaticMatrix<Kernel, 3, 2> X;
-		StaticMatrix<Kernel, 1, 2> Y;
-
-		call(fun_, std::forward_as_tuple(A, B, x), std::forward_as_tuple(X, Y));
-	}
-	*/
 }

@@ -8,6 +8,8 @@
 #pragma once
 
 #include <tmpc/SizeT.hpp>
+#include <tmpc/casadi_interface/Sparsity.hpp>
+#include <tmpc/casadi_interface/CompressedColumnStorage.hpp>
 
 #include <vector>
 #include <string>
@@ -15,6 +17,9 @@
 #include <initializer_list>
 #include <sstream>
 #include <stdexcept>
+#include <tuple>
+#include <utility>
+#include <memory>
 
 #include <casadi/mem.h>
 
@@ -23,64 +28,6 @@
 
 namespace casadi_interface
 {
-	/// @brief Copy data from a compressed column storage to a Blaze matrix.
-	///
-	/// When this issue https://bitbucket.org/blaze-lib/blaze/issues/190/custom-matrix-vector-equivalent-for-sparse
-	/// is resolved, we probably can use a wrapper for the compressed column storage (CCS) format
-	/// profided by Blaze. Before that, we use functions which copy data to and from CSS arrays.
-	template <typename MT, bool SO>
-	inline void compressedColumnStorageToMatrix(casadi_real const * data, casadi_int const * sparsity, blaze::Matrix<MT, SO>& m)
-	{
-		auto const& n_rows = sparsity[0];
-		auto const& n_cols = sparsity[1];
-		auto const * colind = sparsity + 2;
-		auto const * rowind = colind + n_cols + 1;
-
-		if (colind[0] != 0)
-			throw std::invalid_argument("Invalid sparsity pattern in compressedColumnStorageToMatrix()");
-
-		if (rows(m) != n_rows || columns(m) != n_cols)
-			throw std::invalid_argument("Matrix size does not match the sparsity pattern in compressedColumnStorageToMatrix()");
-
-		~m = 0.;
-		casadi_int ind = 0;
-		for (size_t j = 0; j < n_cols; ++j)
-		{
-			for (; ind < colind[j + 1]; ++ind)
-				(~m)(rowind[ind], j) = data[ind];
-		}
-	}
-
-
-	/// @brief Copy data from a Blaze matrix to a compressed column storage.
-	///
-	/// When this issue https://bitbucket.org/blaze-lib/blaze/issues/190/custom-matrix-vector-equivalent-for-sparse
-	/// is resolved, we probably can use a wrapper for the compressed column storage (CCS) format
-	/// profided by Blaze. Before that, we use functions which copy data to and from CSS arrays.
-	template <typename MT, bool SO>
-	inline void matrixToCompressedColumnStorage(blaze::Matrix<MT, SO> const& m, casadi_real * data, casadi_int const * sparsity)
-	{
-		auto const& n_rows = sparsity[0];
-		auto const& n_cols = sparsity[1];
-		auto const * colind = sparsity + 2;
-		auto const * rowind = colind + n_cols + 1;
-
-		if (colind[0] != 0)
-			throw std::invalid_argument("Invalid sparsity pattern in compressedColumnStorageToMatrix()");
-
-		if (rows(m) != n_rows || columns(m) != n_cols)
-			throw std::invalid_argument("Matrix size does not match the sparsity pattern in compressedColumnStorageToMatrix()");
-
-		casadi_int ind = 0;
-		for (size_t j = 0; j < n_cols; ++j)
-		{
-			for (; ind < colind[j + 1]; ++ind)
-				data[ind] = (~m)(rowind[ind], j);
-		}
-
-	}
-
-
 	/// TODO: implement move constructor.
 	class GeneratedFunction
 	{
@@ -141,6 +88,7 @@ namespace casadi_interface
 			return fun_.f_->sparsity_out(ind)[1];
 		}
 
+
 		void operator()(std::initializer_list<const casadi_real *> arg, std::initializer_list<casadi_real *> res) const
 		{
 			if (arg.size() != n_in())
@@ -154,6 +102,34 @@ namespace casadi_interface
 
 			fun_.f_->eval(arg_.data(), res_.data(), iw_.data(), w_.data(), 0);
 		}
+
+
+		template <typename... ArgsIn, typename... ArgsOut>
+		void operator()(std::tuple<ArgsIn&...> in, std::tuple<ArgsOut&...> out) const
+		{
+			// Check number of input arguments
+			if (sizeof...(ArgsIn) != n_in())
+				throw std::invalid_argument("Wrong number of input arguments passed to GeneratedFunction");
+
+			// Check number of output arguments
+			if (sizeof...(ArgsOut) != n_out())
+				throw std::invalid_argument("Wrong number of output arguments passed to GeneratedFunction");
+
+			// Copy data from input arguments to dataIn_ arrays 
+			// and/or set pointers, depending on the argument types.
+			copyIn(std::index_sequence_for<ArgsIn...>(), in);
+
+			// Set pointers to output arguments, depending on the argument types.
+			setOutPtr(std::index_sequence_for<ArgsOut...>(), out);
+
+			// Evaluate the function
+			fun_.f_->eval(arg_.data(), res_.data(), iw_.data(), w_.data(), 0);
+
+			// Copy data from dataOut_ arrays to output arguments if neccessary,
+			// depending on argument types.
+			copyOut(std::index_sequence_for<ArgsOut...>(), out);
+		}
+
 
 	private:
 		struct Functions
@@ -211,14 +187,124 @@ namespace casadi_interface
 		mutable std::vector<casadi_real *> res_;
 		mutable std::vector<casadi_int> iw_;
 		mutable std::vector<casadi_real> w_;
-	};
+		mutable std::vector<std::unique_ptr<casadi_real[]>> dataIn_;
+		mutable std::vector<std::unique_ptr<casadi_real[]>> dataOut_;
 
-	// Some interesting ideas here: https://habrahabr.ru/post/228031/
-	/*
-	template <typename... Args>
-	void call(GeneratedFunction const& f, Args&&... args)
-	{
-		std::tuple<Args...> args_ = std::make_tuple(std::forward<Args>(args)...);
-	}
-	*/
+
+		template <std::size_t... Is, typename... Args>
+		void copyIn(std::index_sequence<Is...>, std::tuple<Args&...> args) const
+		{
+			(copyIn(Is, std::get<Is>(args)), ...);
+		}
+
+
+		template <typename MT, bool SO>
+		void copyIn(size_t i, blaze::Matrix<MT, SO> const& arg) const
+		{
+			toCompressedColumnStorage(arg, dataIn_[i].get(), sparsity_in(i));
+			arg_[i] = dataIn_[i].get();
+		}
+
+
+		template <typename VT, bool TF>
+		void copyIn(size_t i, blaze::Vector<VT, TF> const& arg) const
+		{
+			toCompressedColumnStorage(arg, dataIn_[i].get(), sparsity_in(i));
+			arg_[i] = dataIn_[i].get();
+		}
+
+
+		void copyIn(size_t i, casadi_real const& arg) const
+		{
+			if (sparsity_in(i).nnz() != 1)
+				throw std::invalid_argument("Invalid size of input argument " + std::to_string(i) + " in CasADi function " + name());
+
+			arg_[i] = &arg;
+		}
+
+
+		void copyIn(size_t i, std::nullptr_t) const
+		{
+			arg_[i] = nullptr;
+		}
+
+
+		template <std::size_t... Is, typename... Args>
+		void setOutPtr(std::index_sequence<Is...>, std::tuple<Args&...> args) const
+		{
+			(setOutPtr(Is, std::get<Is>(args)), ...);
+		}
+
+
+		template <typename MT, bool SO>
+		void setOutPtr(size_t i, blaze::Matrix<MT, SO>& arg) const
+		{
+			res_[i] = dataOut_[i].get();
+		}
+
+
+		template <typename VT, bool TF>
+		void setOutPtr(size_t i, blaze::Vector<VT, TF>& arg) const
+		{
+			res_[i] = dataOut_[i].get();
+		}
+
+
+		void setOutPtr(size_t i, casadi_real& arg) const
+		{
+			res_[i] = &arg;
+		}
+
+
+		void setOutPtr(size_t i, std::nullptr_t) const
+		{
+			res_[i] = nullptr;
+		}
+
+
+		template <std::size_t... Is, typename... Args>
+		void copyOut(std::index_sequence<Is...>, std::tuple<Args&...> args) const
+		{
+			(copyOut(Is, std::get<Is>(args)), ...);
+		}
+
+
+		template <typename MT, bool SO>
+		void copyOut(size_t i, blaze::Matrix<MT, SO>& arg) const
+		{
+			fromCompressedColumnStorage(res_[i], sparsity_out(i), arg);
+		}
+
+
+		template <typename VT, bool TF>
+		void copyOut(size_t i, blaze::Vector<VT, TF>& arg) const
+		{
+			fromCompressedColumnStorage(res_[i], sparsity_out(i), arg);
+		}
+
+
+		void copyOut(size_t i, casadi_real& arg) const
+		{
+		}
+
+
+		void copyOut(size_t i, std::nullptr_t) const
+		{
+		}
+
+
+		Sparsity sparsity_in(int ind) const
+		{
+			return Sparsity(fun_.f_->sparsity_in(ind));
+		}
+
+
+		Sparsity sparsity_out(int ind) const
+		{
+			return Sparsity(fun_.f_->sparsity_out(ind));
+		}
+
+
+		void allocateDataInOut();
+	};
 }

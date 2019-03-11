@@ -181,5 +181,8 @@ namespace tmpc :: testing
 }
 
 
-#define TMPC_EXPECT_APPROX_EQUAL(val, expected, abs_tol, rel_tol) \
-	EXPECT_PRED2(::tmpc::ApproxEqual(abs_tol, rel_tol), ::tmpc::forcePrint(val), ::tmpc::forcePrint(expected))
+#define TMPC_EXPECT_APPROX_EQ(val, expected, abs_tol, rel_tol) \
+	EXPECT_PRED2(::tmpc::testing::ApproxEqual(abs_tol, rel_tol), ::tmpc::testing::forcePrint(val), ::tmpc::testing::forcePrint(expected))
+
+#define TMPC_EXPECT_EQ(val, expected) \
+	EXPECT_EQ(::tmpc::testing::forcePrint(val), ::tmpc::testing::forcePrint(expected))

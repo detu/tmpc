@@ -41,33 +41,14 @@ namespace tmpc :: testing
 		/**
 		 * \brief Evaluates ODE.
 		 */
-		template <typename VT1, typename MT1, typename MT2>
-		void operator()(double t, StateVector const& x0, InputVector const& u0,	
-			blaze::DenseVector<VT1, blaze::columnVector>& xdot, 
-			blaze::DenseMatrix<MT1, blaze::columnMajor>& A, 
-			blaze::DenseMatrix<MT2, blaze::columnMajor>& B) const
-		{
-			_ode({&t, x0.data(), u0.data()}, {data(xdot_), data(A_), data(B_), nullptr, nullptr, nullptr, nullptr, nullptr, nullptr});
-			~xdot = xdot_;
-			~A = A_;
-			~B = B_;
-		}
-
-
-		/**
-		 * \brief Evaluates ODE.
-		 */
 		template <typename VT1, bool TF1, typename MT1, bool SO1, typename MT2, bool SO2>
 		void operator()(double t, StateVector const& x0, InputVector const& u0,	
 			blaze::Vector<VT1, TF1>& xdot, 
 			blaze::Matrix<MT1, SO1>& A, 
 			blaze::Matrix<MT2, SO2>& B) const
 		{
-			_ode({&t, x0.data(), u0.data()}, {xdot_.data(), A_.data(), B_.data(), nullptr, nullptr, nullptr, nullptr, nullptr, nullptr});
-			
-			~xdot = xdot_;
-			~A = A_;
-			~B = B_;
+			nullptr_t null;
+			_ode(std::tie(t, x0, u0), std::tie(xdot, A, B, null, null, null, null, null, null));
 		}
 
 
@@ -77,8 +58,10 @@ namespace tmpc :: testing
 		void operator()(double t, StateVector const& x0, InputVector const& u0,	StateVector& xdot, StateStateMatrix& A, StateInputMatrix& B,
 			QuadVector& q, QuadStateMatrix& qA, QuadInputMatrix& qB) const
 		{
-			_ode({&t, x0.data(), u0.data()}, {xdot.data(), A.data(), B.data(), q.data(), qA.data(), qB.data(), nullptr, nullptr, nullptr});
+			nullptr_t null;
+			_ode(std::tie(t, x0, u0), std::tie(xdot, A, B, q, qA, qB, null, null, null));
 		}
+
 
 		/**
 		 * \brief Evaluates ODE, quadrature and residuals.
@@ -86,14 +69,17 @@ namespace tmpc :: testing
 		void operator()(double t, StateVector const& x0, InputVector const& u0,	StateVector& xdot, StateStateMatrix& A, StateInputMatrix& B,
 			QuadVector& q, QuadStateMatrix& qA, QuadInputMatrix& qB, ResVector& r, ResStateMatrix& rA, ResInputMatrix& rB) const
 		{
-			_ode({&t, x0.data(), u0.data()}, {xdot.data(), A.data(), B.data(), q.data(), qA.data(), qB.data(), r.data(), rA.data(), rB.data()});
+			nullptr_t null;
+			_ode(std::tie(t, x0, u0), std::tie(xdot, A, B, q, qA, qB, r, rA, rB));
 		}
+
 
 		void operator()(double t, StateVector const& x0, InputVector const& u0,
 				StateVector const& x0_seed, InputVector const& u_seed, StateVector& xdot, StateVector& xdot_sens) const
 		{
+			nullptr_t null;
 			static casadi_interface::GeneratedFunction const _ode(pendulum_ode_sens_functions());
-			_ode({&t, x0.data(), u0.data(), x0_seed.data(), u_seed.data()}, {xdot.data(), xdot_sens.data()});
+			_ode(std::tie(t, x0, u0, x0_seed, u_seed), std::tie(xdot, xdot_sens));
 		}
 
 		/**
@@ -101,17 +87,12 @@ namespace tmpc :: testing
 		 */
 		StateVector operator()(double t, StateVector const& x0, InputVector const& u0) const
 		{
+			nullptr_t null;
 			StateVector xdot;
-			_ode({&t, x0.data(), u0.data()}, {xdot.data(), nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr});
+			_ode(std::tie(t, x0, u0), std::tie(xdot, null, null, null, null, null, null, null, null));
 
 			return xdot;
 		}
-
-
-	private:
-		mutable StateVector xdot_;
-		mutable StateStateMatrix A_;
-		mutable StateInputMatrix B_;
 	};
 
 
@@ -125,7 +106,8 @@ namespace tmpc :: testing
 		void operator()(double t, StateVector const& x0, InputVector const& u0,	StateVector& xdot, StateStateMatrix& A, StateInputMatrix& B,
 			ResVector& r, ResStateMatrix& rA, ResInputMatrix& rB) const
 		{
-			_ode({&t, x0.data(), u0.data()}, {xdot.data(), A.data(), B.data(), nullptr, nullptr, nullptr, r.data(), rA.data(), rB.data()});
+			nullptr_t null;
+			_ode(std::tie(t, x0, u0), std::tie(xdot, A, B, null, null, null, r, rA, rB));
 		}
 	};
 }

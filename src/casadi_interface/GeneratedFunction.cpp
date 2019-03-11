@@ -16,6 +16,8 @@ namespace casadi_interface
         res_.resize(sz_res);
         iw_.resize(sz_iw);
         w_.resize(sz_w);
+
+        allocateDataInOut();
     }
 
 
@@ -27,10 +29,26 @@ namespace casadi_interface
     ,	iw_(rhs.iw_.size())
     ,	w_(rhs.w_.size())
     {
+        allocateDataInOut();
     }
 
 
     GeneratedFunction::~GeneratedFunction()
-    {        
+    {
+    }
+
+
+    void GeneratedFunction::allocateDataInOut()
+    {
+        auto const n_in = this->n_in();
+        auto const n_out = this->n_out();
+
+        dataIn_.reserve(n_in);
+        for (size_t i = 0; i < n_in; ++i)
+            dataIn_.emplace_back(new casadi_real[sparsity_in(i).nnz()]);
+
+        dataOut_.reserve(n_out);
+        for (size_t i = 0; i < n_out; ++i)
+            dataOut_.emplace_back(new casadi_real[sparsity_out(i).nnz()]);
     }
 }
