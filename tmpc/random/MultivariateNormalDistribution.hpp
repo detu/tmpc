@@ -1,6 +1,7 @@
 #pragma once
 
 #include <tmpc/SizeT.hpp>
+#include <tmpc/Math.hpp>
 
 #include <blaze/Math.h>
 
@@ -24,9 +25,10 @@ namespace tmpc
         /// @param n number of dimensions
         MultivariateNormalDistribution(size_t n)
         :   mean_(blaze::ZeroVector<Real>(n))
-        ,   covariance_(blaze::IdentityMatrix<Real>(n))
+        ,   covariance_(n)
         ,   sample_(n)
         {
+            covariance(blaze::IdentityMatrix<Real>(n));
         }
 
 
@@ -34,16 +36,17 @@ namespace tmpc
         ///
         /// @param n number of dimensions
         template <typename VT, typename MT, bool SO>
-        MultivariateNormalDistribution(blaze::Vector<VT, blaze::columnVector> const& mean, blaze::Matrix<MT, SO> const& covariance)
+        MultivariateNormalDistribution(blaze::Vector<VT, blaze::columnVector> const& mean, blaze::Matrix<MT, SO> const& cov)
         {
             auto const n = size(mean);
 
-            if (rows(covariance) != n || columns(covariance) != n)
+            if (rows(cov) != n || columns(cov) != n)
                 throw std::invalid_argument("Inconsistent dimensions of mean and covariance in MultivariateNormalDistribution ctor");
 
             mean_ = mean;
-            covariance_ = covariance;
             sample_.resize(n);
+            covariance_.resize(n);
+            covariance(cov);
         }
 
 
@@ -54,7 +57,12 @@ namespace tmpc
             for (auto& x : sample_)
                 x = uninormal_(g);
 
-            // ...
+            // Multiply by Cholesky factor of the covariance
+            sample_ = covarianceFactor_ * sample_;
+
+            // Add mean
+            sample_ += mean_;
+
             return sample_;
         }
 
@@ -66,9 +74,52 @@ namespace tmpc
         }
 
 
+        /// @brief Set covariance matrix
+        template <typename MT>
+        void covariance(blaze::SymmetricMatrix<MT> const& val)
+        {
+            noresize(covariance_) = val;
+            llh(covariance_, covarianceFactor_);
+        }
+
+
+        /// @brief Set covariance matrix
+        template <typename MT, bool SO>
+        void covariance(blaze::Matrix<MT, SO> const& val)
+        {
+            noresize(covariance_) = val;
+            llh(covariance_, covarianceFactor_);
+        }
+
+
+        /// @brief Get covariance matrix
+        auto const& covariance() const
+        {
+            return covariance_;
+        }
+
+
+        /// @brief Set mean
+        template <typename VT>
+        void mean(blaze::Vector<VT, blaze::columnVector> const& val)
+        {
+            noresize(mean_) = val;
+        }
+
+
+        /// @brief Get mean
+        auto const& mean() const
+        {
+            return mean_;
+        }
+
+
     private:
         blaze::DynamicVector<Real, blaze::columnVector> mean_;
-        blaze::DynamicMatrix<Real> covariance_;
+        blaze::SymmetricMatrix<blaze::DynamicMatrix<Real>> covariance_;
+
+        // Cholesky factor of the covariance matrix
+        blaze::LowerMatrix<blaze::DynamicMatrix<Real>> covarianceFactor_;
         blaze::DynamicVector<Real> sample_;
 
         std::normal_distribution<Real> uninormal_;
