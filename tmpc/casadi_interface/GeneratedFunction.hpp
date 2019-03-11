@@ -7,48 +7,91 @@
 
 #pragma once
 
+#include <tmpc/SizeT.hpp>
+
 #include <vector>
 #include <string>
 #include <array>
 #include <initializer_list>
 #include <sstream>
+#include <stdexcept>
 
 #include <casadi/mem.h>
+
+#include <blaze/Math.h>
 
 
 namespace casadi_interface
 {
+	/// @brief Copy data from a compressed column storage to a Blaze matrix.
+	///
+	/// When this issue https://bitbucket.org/blaze-lib/blaze/issues/190/custom-matrix-vector-equivalent-for-sparse
+	/// is resolved, we probably can use a wrapper for the compressed column storage (CCS) format
+	/// profided by Blaze. Before that, we use functions which copy data to and from CSS arrays.
+	template <typename MT, bool SO>
+	inline void compressedColumnStorageToMatrix(casadi_real const * data, casadi_int const * sparsity, blaze::Matrix<MT, SO>& m)
+	{
+		auto const& n_rows = sparsity[0];
+		auto const& n_cols = sparsity[1];
+		auto const * colind = sparsity + 2;
+		auto const * rowind = colind + n_cols + 1;
+
+		if (colind[0] != 0)
+			throw std::invalid_argument("Invalid sparsity pattern in compressedColumnStorageToMatrix()");
+
+		if (rows(m) != n_rows || columns(m) != n_cols)
+			throw std::invalid_argument("Matrix size does not match the sparsity pattern in compressedColumnStorageToMatrix()");
+
+		~m = 0.;
+		casadi_int ind = 0;
+		for (size_t j = 0; j < n_cols; ++j)
+		{
+			for (; ind < colind[j + 1]; ++ind)
+				(~m)(rowind[ind], j) = data[ind];
+		}
+	}
+
+
+	/// @brief Copy data from a Blaze matrix to a compressed column storage.
+	///
+	/// When this issue https://bitbucket.org/blaze-lib/blaze/issues/190/custom-matrix-vector-equivalent-for-sparse
+	/// is resolved, we probably can use a wrapper for the compressed column storage (CCS) format
+	/// profided by Blaze. Before that, we use functions which copy data to and from CSS arrays.
+	template <typename MT, bool SO>
+	inline void matrixToCompressedColumnStorage(blaze::Matrix<MT, SO> const& m, casadi_real * data, casadi_int const * sparsity)
+	{
+		auto const& n_rows = sparsity[0];
+		auto const& n_cols = sparsity[1];
+		auto const * colind = sparsity + 2;
+		auto const * rowind = colind + n_cols + 1;
+
+		if (colind[0] != 0)
+			throw std::invalid_argument("Invalid sparsity pattern in compressedColumnStorageToMatrix()");
+
+		if (rows(m) != n_rows || columns(m) != n_cols)
+			throw std::invalid_argument("Matrix size does not match the sparsity pattern in compressedColumnStorageToMatrix()");
+
+		casadi_int ind = 0;
+		for (size_t j = 0; j < n_cols; ++j)
+		{
+			for (; ind < colind[j + 1]; ++ind)
+				data[ind] = (~m)(rowind[ind], j);
+		}
+
+	}
+
+
 	/// TODO: implement move constructor.
 	class GeneratedFunction
 	{
 	public:
 		/// @brief Constructor.
-		GeneratedFunction(casadi_functions const * f, std::string const& n = "Unknown CasADi function")
-		:	fun_(f)
-		,	name_(n)
-		{
-			// Get work memory size.
-			casadi_int sz_arg, sz_res, sz_iw, sz_w;
-			if (int code = fun_.f_->work(&sz_arg, &sz_res, &sz_iw, &sz_w) != 0)
-				throw std::runtime_error(name() + "_fun_work() returned " + std::to_string(code));
-
-			arg_.resize(sz_arg);
-			res_.resize(sz_res);
-			iw_.resize(sz_iw);
-			w_.resize(sz_w);
-		}
-
+		GeneratedFunction(casadi_functions const * f, std::string const& n = "Unknown CasADi function");
 
 		/// @brief Copy constructor.
-		GeneratedFunction(GeneratedFunction const& rhs)
-		:	fun_{rhs.fun_}
-		,	name_{rhs.name_}
-		,	arg_(rhs.arg_.size())
-		,	res_(rhs.res_.size())
-		,	iw_(rhs.iw_.size())
-		,	w_(rhs.w_.size())
-		{
-		}
+		GeneratedFunction(GeneratedFunction const& rhs);
+
+		~GeneratedFunction();
 		
 
 		// MK: I am too lazy to implement the assignment operator at the moment, 
@@ -62,9 +105,10 @@ namespace casadi_interface
 			return name_;
 		}
 
-		std::size_t const n_in () const { return fun_.f_->n_in() ; }
-		std::size_t const n_out() const { return fun_.f_->n_out(); }
+		size_t const n_in () const { return fun_.f_->n_in() ; }
+		size_t const n_out() const { return fun_.f_->n_out(); }
 
+		
 		int n_row_in(int ind) const
 		{
 			if (ind < 0 || ind >= n_in())

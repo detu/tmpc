@@ -1,8 +1,7 @@
 #include <tmpc/ocp/OcpGraph.hpp>
 #include <tmpc/core/Range.hpp>
 #include <tmpc/core/PropertyMap.hpp>
-
-#include <tmpc/test_tools.hpp>
+#include <tmpc/Testing.hpp>
 
 #include <array>
 

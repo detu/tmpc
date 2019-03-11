@@ -1,15 +1,14 @@
 #include <tmpc/qp/OcpQp.hpp>
 #include <tmpc/mpc/MpcOcpSize.hpp>
-
 #include <test/Kernels.hpp>
-#include <tmpc/test_tools.hpp>
+#include <tmpc/Testing.hpp>
 
 
 namespace tmpc :: testing
 {
 	template <typename CA>
 	class CondensingTest 
-	: 	public ::testing::Test
+	: 	public Test
 	{
 	public:
 

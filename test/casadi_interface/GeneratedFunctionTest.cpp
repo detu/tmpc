@@ -1,12 +1,9 @@
 #include <tmpc/casadi_interface/GeneratedFunction.hpp>
 #include <tmpc/BlazeKernel.hpp>
 #include <tmpc/EigenKernel.hpp>
-#include <tmpc/test_tools.hpp>
+#include <tmpc/Testing.hpp>
 
 #include <test_functions.h>
-
-#include <gtest/gtest.h>
-#include <gmock/gmock.h>
 
 
 #include <tuple>
@@ -17,9 +14,137 @@
 namespace tmpc :: testing
 {
 	using Kernel = EigenKernel<double>;
+	using namespace casadi_interface;
+
+
+	TEST(CompressedColumnStorageToMatrixTest, testDense)
+	{
+		casadi_int const sparsity[11] = {3, 2, 0, 3, 6, 0, 1, 2, 0, 1, 2};
+		casadi_real const data[6] = {1.1, 2.1, 3.1, 1.2, 2.2, 3.2};
+
+		blaze::StaticMatrix<casadi_real, 3, 2> m;
+		compressedColumnStorageToMatrix(data, sparsity, m);
+
+		EXPECT_EQ(forcePrint(m), forcePrint(blaze::StaticMatrix<casadi_real, 3, 2> {
+			{1.1, 1.2},
+			{2.1, 2.2},
+			{3.1, 3.2}
+		}));
+	}
+
+
+	TEST(CompressedColumnStorageToMatrixTest, testSparse)
+	{
+		casadi_int const sparsity[11] = {3, 2, 0, 2, 3, 1, 2, 0};
+		casadi_real const data[3] = {1.1, 2.2, 3.3};
+
+		blaze::StaticMatrix<casadi_real, 3, 2> m;
+		compressedColumnStorageToMatrix(data, sparsity, m);
+
+		EXPECT_EQ(forcePrint(m), forcePrint(blaze::StaticMatrix<casadi_real, 3, 2> {
+			{0.0, 3.3},
+			{1.1, 0.0},
+			{2.2, 0.0}
+		}));
+	}
+
+
+	TEST(CompressedColumnStorageToMatrixTest, testInvalidNumRowsThrows)
+	{
+		casadi_int const sparsity[11] = {3, 2, 0, 3, 6, 0, 1, 2, 0, 1, 2};
+		casadi_real const data[6] = {1.1, 2.1, 3.1, 1.2, 2.2, 3.2};
+
+		blaze::StaticMatrix<casadi_real, 4, 2> m;
+		EXPECT_THROW(compressedColumnStorageToMatrix(data, sparsity, m), std::invalid_argument);
+	}
+
+
+	TEST(CompressedColumnStorageToMatrixTest, testInvalidNumColsThrows)
+	{
+		casadi_int const sparsity[11] = {3, 2, 0, 3, 6, 0, 1, 2, 0, 1, 2};
+		casadi_real const data[6] = {1.1, 2.1, 3.1, 1.2, 2.2, 3.2};
+
+		blaze::StaticMatrix<casadi_real, 3, 3> m;
+		EXPECT_THROW(compressedColumnStorageToMatrix(data, sparsity, m), std::invalid_argument);
+	}
+
+
+	TEST(CompressedColumnStorageToMatrixTest, testInvalidSparsityThrows)
+	{
+		casadi_int const sparsity[11] = {3, 2, 1, 3, 6, 0, 1, 2, 0, 1, 2};
+		casadi_real const data[6] = {1.1, 2.1, 3.1, 1.2, 2.2, 3.2};
+
+		blaze::StaticMatrix<casadi_real, 3, 2> m;
+		EXPECT_THROW(compressedColumnStorageToMatrix(data, sparsity, m), std::invalid_argument);
+	}
+
+
+	TEST(MatrixToCompressedColumnStorageTest, testDense)
+	{
+		casadi_int const sparsity[11] = {3, 2, 0, 3, 6, 0, 1, 2, 0, 1, 2};
+		casadi_real data[6] = {0., 0., 0., 0., 0., 0.};
+
+		blaze::StaticMatrix<casadi_real, 3, 2> const m {
+			{1.1, 1.2},
+			{2.1, 2.2},
+			{3.1, 3.2}
+		};
+
+		matrixToCompressedColumnStorage(m, data, sparsity);
+
+		EXPECT_THAT(data, ElementsAre(1.1, 2.1, 3.1, 1.2, 2.2, 3.2));
+	}
+
+
+	TEST(MatrixToCompressedColumnStorageTest, testSparse)
+	{
+		casadi_int const sparsity[11] = {3, 2, 0, 2, 3, 1, 2, 0};
+		casadi_real data[3] = {0., 0., 0.};
+
+		blaze::StaticMatrix<casadi_real, 3, 2> const m {
+			{0.0, 3.3},
+			{1.1, 0.0},
+			{2.2, 0.0}
+		};
+
+		matrixToCompressedColumnStorage(m, data, sparsity);
+
+		EXPECT_THAT(data, ElementsAre(1.1, 2.2, 3.3));
+	}
+
+
+	TEST(MatrixToCompressedColumnStorageTest, testInvalidNumRowsThrows)
+	{
+		casadi_int const sparsity[11] = {3, 2, 0, 3, 6, 0, 1, 2, 0, 1, 2};
+		casadi_real data[6] = {1.1, 2.1, 3.1, 1.2, 2.2, 3.2};
+
+		blaze::StaticMatrix<casadi_real, 4, 2> const m(0.);
+		EXPECT_THROW(matrixToCompressedColumnStorage(m, data, sparsity), std::invalid_argument);
+	}
+
+
+	TEST(MatrixToCompressedColumnStorageTest, testInvalidNumColsThrows)
+	{
+		casadi_int const sparsity[11] = {3, 2, 0, 3, 6, 0, 1, 2, 0, 1, 2};
+		casadi_real data[6] = {1.1, 2.1, 3.1, 1.2, 2.2, 3.2};
+
+		blaze::StaticMatrix<casadi_real, 3, 3> const m(0.);
+		EXPECT_THROW(matrixToCompressedColumnStorage(m, data, sparsity), std::invalid_argument);
+	}
+
+
+	TEST(MatrixToCompressedColumnStorageTest, testInvalidSparsityThrows)
+	{
+		casadi_int const sparsity[11] = {3, 2, 1, 3, 6, 0, 1, 2, 0, 1, 2};
+		casadi_real data[6] = {1.1, 2.1, 3.1, 1.2, 2.2, 3.2};
+
+		blaze::StaticMatrix<casadi_real, 3, 2> const m(0.);
+		EXPECT_THROW(matrixToCompressedColumnStorage(m, data, sparsity), std::invalid_argument);
+	}
+
 
 	class GeneratedFunctionTest 
-	: 	public ::testing::Test
+	: 	public Test
 	{
 	protected:
 		casadi_interface::GeneratedFunction fun_ {f_functions()};
@@ -86,6 +211,7 @@ namespace tmpc :: testing
 		EXPECT_EQ(fun_.n_col_out(1), 2);
 	}
 
+
 	TEST_F(GeneratedFunctionTest, testPointerArgumentCall)
 	{
 		StaticMatrix<Kernel, 3, 2, columnMajor> A {
@@ -108,7 +234,7 @@ namespace tmpc :: testing
 
 		fun_({A.data(), B.data(), &x}, {X.data(), Y.data()});
 
-		EXPECT_PRED2(MatrixApproxEquality(1e-12), X, (A * x) * B);
+		EXPECT_PRED2(ApproxEqual(1e-12), X, (A * x) * B);
 		EXPECT_EQ(Y, (StaticVector<Kernel, 3, rowVector> {1., 1., 1.} * (A * B)));
 	}
 
@@ -137,9 +263,9 @@ namespace tmpc :: testing
 		fun_({A.data(), B.data(), &x}, {X.data(), Y.data()});
 		fun_copy({A.data(), B.data(), &x}, {X1.data(), Y1.data()});
 
-		EXPECT_PRED2(MatrixApproxEquality(1e-12), X, (A * x) * B);
+		EXPECT_PRED2(ApproxEqual(1e-12), X, (A * x) * B);
 		EXPECT_EQ(Y, (StaticVector<Kernel, 3, rowVector> {1., 1., 1.} * (A * B)));
-		EXPECT_PRED2(MatrixApproxEquality(1e-12), X1, (A * x) * B);
+		EXPECT_PRED2(ApproxEqual(1e-12), X1, (A * x) * B);
 		EXPECT_EQ(Y1, (StaticVector<Kernel, 3, rowVector> {1., 1., 1.} * (A * B)));
 	}
 

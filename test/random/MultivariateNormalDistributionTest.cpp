@@ -1,6 +1,5 @@
 #include <tmpc/random/MultivariateNormalDistribution.hpp>
-
-#include <tmpc/test_tools.hpp>
+#include <tmpc/Testing.hpp>
 
 
 namespace tmpc :: testing

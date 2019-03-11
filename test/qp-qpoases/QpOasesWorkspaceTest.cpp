@@ -3,16 +3,16 @@
 
 #include <tmpc/qp/QpOasesWorkspace.hpp>
 #include <test/Kernels.hpp>
-
-#include <tmpc/test_tools.hpp>
+#include <tmpc/Testing.hpp>
 
 #include <array>
+
 
 namespace tmpc :: testing
 {
 	template <typename Kernel_>
 	class QpOasesWorkspaceTest
-	: 	public ::testing::Test
+	: 	public Test
 	{
 	protected:
 		using Kernel = Kernel_;

@@ -22,6 +22,10 @@ if (TMPC_WITH_CASADI_INTERFACE)
     target_include_directories(tmpc_bench
         PRIVATE ${CMAKE_CURRENT_BINARY_DIR}
     )
+
+    target_link_libraries(tmpc_bench
+        tmpc-casadi
+    )
 endif ()
 
 

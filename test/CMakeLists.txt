@@ -39,28 +39,6 @@ endforeach ()
 
 set(TEST_DATA_PATH ${CMAKE_CURRENT_BINARY_DIR}/data)
 
-# Generate code and test data for rk4 test
-add_custom_command(
-    OUTPUT
-        pendulum_ode_generated.h
-        pendulum_ode_generated.c
-        ${TEST_DATA_PATH}/rk4/pendulum.txt
-    COMMAND
-        ${Python3_EXECUTABLE}
-    ARGS
-        ${CMAKE_CURRENT_SOURCE_DIR}/integrator/rk4_test_generate_data.py ${TEST_DATA_PATH}
-    #[COMMAND command2 [ARGS] [args2...] ...]
-    #[MAIN_DEPENDENCY depend]
-    DEPENDS
-        integrator/rk4_test_generate_data.py
-    #[IMPLICIT_DEPENDS <lang1> depend1
-    #                 [<lang2> depend2] ...]
-    WORKING_DIRECTORY
-        ${CMAKE_CURRENT_BINARY_DIR}
-    COMMENT
-        "Generating model code and test data for ExplicitRungeKutta4..."
-)
-
 # ~~~~~~~~~~ Our tests ~~~~~~~~~~~~~~
 add_executable(test-tmpc
     #mhe_test.cpp
@@ -69,9 +47,18 @@ add_executable(test-tmpc
     ocp/OcpGraphTest.cpp
     ocp/OcpSizePropertiesTest.cpp
 
-    matrix/MatrixTest.cpp
+    qp/CondensingN3Test.cpp
+    qp/CondensingN2Test.cpp
+    qp/VectorPropertyMapTest.cpp
+    qp/MpipmWorkspaceTest.cpp
+    qp/RiccatiTest.cpp
 
-    integrator/ExplicitRungeKutta4Test.cpp
+    matrix/MatrixTest.cpp
+    matrix/DynamicSubmatrixTest.cpp
+    matrix/DynamicSubvectorTest.cpp
+    matrix/KernelTest.cpp
+    matrix/BlockMatrixViewTest.cpp
+
     integrator/MultiStepIntegratorTest.cpp
     integrator/PendulumData.cpp
     integrator/PendulumOdeTest.cpp
@@ -79,10 +66,44 @@ add_executable(test-tmpc
     numeric/CentralDifferenceDerivativeTest.cpp
 
     random/MultivariateNormalDistributionTest.cpp
-
-    ${CMAKE_CURRENT_BINARY_DIR}/pendulum_ode_generated.h
-    ${CMAKE_CURRENT_BINARY_DIR}/pendulum_ode_generated.c
 )
+
+if (TMPC_WITH_CASADI_INTERFACE)
+    # Generate code and test data for rk4 test
+    add_custom_command(
+        OUTPUT
+            pendulum_ode_generated.h
+            pendulum_ode_generated.c
+            ${TEST_DATA_PATH}/rk4/pendulum.txt
+        COMMAND
+            ${Python3_EXECUTABLE}
+        ARGS
+            ${CMAKE_CURRENT_SOURCE_DIR}/integrator/rk4_test_generate_data.py ${TEST_DATA_PATH}
+        #[COMMAND command2 [ARGS] [args2...] ...]
+        #[MAIN_DEPENDENCY depend]
+        DEPENDS
+            integrator/rk4_test_generate_data.py
+        #[IMPLICIT_DEPENDS <lang1> depend1
+        #                 [<lang2> depend2] ...]
+        WORKING_DIRECTORY
+            ${CMAKE_CURRENT_BINARY_DIR}
+        COMMENT
+            "Generating model code and test data for ExplicitRungeKutta4..."
+    )
+
+    target_sources(test-tmpc
+        PRIVATE
+        ${CMAKE_CURRENT_BINARY_DIR}/pendulum_ode_generated.h
+        ${CMAKE_CURRENT_BINARY_DIR}/pendulum_ode_generated.c
+        # TODO: ExplicitRungeKutta4 test depends on CasADi.
+        # Remove this dependency.
+        integrator/ExplicitRungeKutta4Test.cpp
+    )
+
+    target_link_libraries(test-tmpc
+        PUBLIC tmpc-casadi
+    )
+endif ()
 
 target_compile_definitions(test-tmpc
     PRIVATE TEST_DATA_PATH="${TEST_DATA_PATH}")
@@ -104,9 +125,6 @@ target_link_libraries(test-tmpc PRIVATE
     gmock
     ${CMAKE_THREAD_LIBS_INIT}    # Needed for gtest
 )
-
-add_subdirectory(matrix)
-add_subdirectory(qp)
 
 
 if (TMPC_WITH_CASADI_INTERFACE)

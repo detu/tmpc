@@ -5,16 +5,9 @@
 #include <tmpc/qp/DualNewtonTreeWorkspace.hpp>
 #include <tmpc/BlazeKernel.hpp>
 #include <tmpc/EigenKernel.hpp>
-
-/*
-* Unit tests for common functionality of QP workspaces.
-*/
-
 #include <tmpc/ocp/OcpGraph.hpp>
 #include <tmpc/Matrix.hpp>
-
-#include <tmpc/test_tools.hpp>
-#include <gtest/gtest.h>
+#include <tmpc/Testing.hpp>
 
 #include <iostream>
 #include <array>

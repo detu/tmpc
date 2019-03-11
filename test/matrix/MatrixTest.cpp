@@ -1,6 +1,6 @@
 #include <blaze/Math.h>
 
-#include <tmpc/test_tools.hpp>
+#include <tmpc/Testing.hpp>
 
 #include <limits>
 

@@ -2,8 +2,7 @@
 #include "TreeQpWorkspaceTest.hpp"
 
 #include <tmpc/qp/MpipmWorkspace.hpp>
-
-#include <tmpc/test_tools.hpp>
+#include <tmpc/Testing.hpp>
 
 
 namespace tmpc :: testing

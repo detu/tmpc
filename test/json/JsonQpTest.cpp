@@ -7,7 +7,7 @@
 #include <tmpc/BlazeKernel.hpp>
 #include <tmpc/core/Range.hpp>
 
-#include <gtest/gtest.h>
+#include <tmpc/Testing.hpp>
 
 
 namespace tmpc :: testing

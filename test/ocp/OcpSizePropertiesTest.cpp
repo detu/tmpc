@@ -2,8 +2,7 @@
 #include <tmpc/core/Range.hpp>
 #include <tmpc/core/PropertyMap.hpp>
 #include <tmpc/print/ocp/OcpSize.hpp>
-
-#include <tmpc/test_tools.hpp>
+#include <tmpc/Testing.hpp>
 
 #include <vector>
 
@@ -11,7 +10,7 @@
 namespace tmpc :: testing
 {
 	class OcpSizePropertiesTest
-	: 	public ::testing::Test
+	: 	public Test
 	{
 	public:
 		OcpSizePropertiesTest()

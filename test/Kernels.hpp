@@ -2,7 +2,8 @@
 #include <tmpc/EigenKernel.hpp>
 #include <tmpc/BlazeKernel.hpp>
 
-#include <gtest/gtest.h>
+#include <tmpc/Testing.hpp>
+
 
 namespace tmpc :: testing
 {

@@ -3,7 +3,7 @@
 #include "PendulumOde.hpp"
 #include "PendulumData.hpp"
 
-#include <tmpc/test_tools.hpp>
+#include <tmpc/Testing.hpp>
 
 #include <fstream>
 
@@ -11,7 +11,7 @@
 namespace tmpc :: testing
 {
 	class ExplicitRungeKutta4Test 
-	: 	public ::testing::Test
+	: 	public Test
 	{
 	protected:
 		using Real = double;
@@ -38,7 +38,7 @@ namespace tmpc :: testing
 		{
 			ODE::StateVector const xplus = integrator_(ode_, p.t, p.x0, p.u, p.timeStep);
 
-			MatrixApproxEquality const is_approx(1e-10);
+			ApproxEqual const is_approx(1e-10);
 			EXPECT_PRED2(is_approx, xplus, p.xplus);
 		}
 	}
@@ -59,7 +59,7 @@ namespace tmpc :: testing
 			EXPECT_EQ(forcePrint(B), forcePrint(p.B));
 			*/
 
-			MatrixApproxEquality const is_approx(1e-10);
+			ApproxEqual const is_approx(1e-10);
 			EXPECT_PRED2(is_approx, xplus, p.xplus);
 			EXPECT_PRED2(is_approx, A, p.A);
 			EXPECT_PRED2(is_approx, B, p.B);
@@ -176,7 +176,7 @@ namespace tmpc :: testing
 // 	while (test_data_ >> p)
 // 	{
 // 		auto const xplus = integrate(integrator_, ode_, p.t, p.x0, p.u);
-// 		EXPECT_PRED2(MatrixApproxEquality(1e-5), xplus, p.xplus);
+// 		EXPECT_PRED2(ApproxEqual(1e-5), xplus, p.xplus);
 
 // 		++count;
 // 	}

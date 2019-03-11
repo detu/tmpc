@@ -13,7 +13,7 @@ target_include_directories(test-tmpc-casadi
 )
 
 target_link_libraries(test-tmpc-casadi
-    tmpc
+    tmpc-casadi
     GTest::GTest
     GTest::Main
     OpenMP::OpenMP_CXX

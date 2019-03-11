@@ -9,17 +9,21 @@
 #include <tmpc/Matrix.hpp>
 
 #include <blaze/Math.h>
+#include <Eigen/Dense>
 
 
 namespace tmpc :: testing
 {
+	using namespace ::testing;
+	
+
 	namespace detail
 	{
 		template <typename T>
-		class ForcePrint 
+		class ForcePrintImpl
 		: 	public T 
 		{
-			friend void PrintTo(const ForcePrint &m, ::std::ostream *o) 
+			friend void PrintTo(const ForcePrintImpl &m, ::std::ostream *o) 
 			{
 				*o << "\n" << m;
 			}
@@ -33,9 +37,9 @@ namespace tmpc :: testing
 	* Taken from this post: http://stackoverflow.com/questions/25146997/teach-google-test-how-to-print-eigen-matrix
 	*/
 	template <typename T>
-	decltype(auto) forcePrint(T const &base) 
+	decltype(auto) forcePrint(T const& val) 
 	{
-		return static_cast<detail::ForcePrint<T> const&>(base);
+		return static_cast<detail::ForcePrintImpl<T> const&>(val);
 	}
 
 
@@ -108,10 +112,10 @@ namespace tmpc :: testing
 	}
 
 
-	class MatrixApproxEquality
+	class ApproxEqual
 	{
 	public:
-		MatrixApproxEquality(double abs_tol, double rel_tol = 0.)
+		ApproxEqual(double abs_tol, double rel_tol = 0.)
 		:	absTol_(abs_tol)
 		,	relTol_(rel_tol)
 		{
@@ -125,7 +129,7 @@ namespace tmpc :: testing
 			size_t const N = columns(lhs);
 
 			if (rows(rhs) != M || columns(rhs) != N)
-				throw std::invalid_argument("Matrix size mismatch in MatrixApproxEquality");
+				throw std::invalid_argument("Matrix size mismatch in ApproxEqual");
 
 			for (size_t i = 0; i < M; ++i)
 				for (size_t j = 0; j < N; ++j)
@@ -142,11 +146,29 @@ namespace tmpc :: testing
 			size_t const N = size(lhs);
 
 			if (size(rhs) != N)
-				throw std::invalid_argument("Vector size mismatch in MatrixApproxEquality");
+				throw std::invalid_argument("Vector size mismatch in ApproxEqual");
 
 			for (size_t j = 0; j < N; ++j)
 				if (abs((~lhs)[j] - (~rhs)[j]) > absTol_ + relTol_ * abs((~rhs)[j]))
 					return false;
+
+			return true;
+		}
+
+
+		template <typename MT1, typename MT2>
+		bool operator()(Eigen::MatrixBase<MT1> const& lhs, Eigen::MatrixBase<MT2> const& rhs) const
+		{
+			size_t const M = lhs.rows();
+			size_t const N = lhs.cols();
+
+			if (rhs.rows() != M || rhs.cols() != N)
+				throw std::invalid_argument("Matrix size mismatch in ApproxEqual");
+
+			for (size_t i = 0; i < M; ++i)
+				for (size_t j = 0; j < N; ++j)
+					if (abs(lhs(i, j) - rhs(i, j)) > absTol_ + relTol_ * abs(rhs(i, j)))
+						return false;
 
 			return true;
 		}
@@ -157,3 +179,7 @@ namespace tmpc :: testing
 		double const relTol_;
 	};
 }
+
+
+#define TMPC_EXPECT_APPROX_EQUAL(val, expected, abs_tol, rel_tol) \
+	EXPECT_PRED2(::tmpc::ApproxEqual(abs_tol, rel_tol), ::tmpc::forcePrint(val), ::tmpc::forcePrint(expected))

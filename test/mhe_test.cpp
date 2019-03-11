@@ -5,7 +5,7 @@
 
 #include <Eigen/Dense>
 
-#include <gtest/gtest.h>
+#include <tmpc/Testing.hpp>
 
 #include <type_traits>
 
@@ -172,7 +172,7 @@ void integrate(DiscreteTimeModel const& integrator, ODE const& model, double t0,
 }
 
 template <typename RealtimeIteration>
-class RealtimeIterationTest : public ::testing::Test
+class RealtimeIterationTest : public Test
 {
 public:
 	RealtimeIterationTest(unsigned Nt = 2)

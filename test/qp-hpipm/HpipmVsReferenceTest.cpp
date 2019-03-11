@@ -3,10 +3,8 @@
 #include <tmpc/ocp/OcpSizeProperties.hpp>
 #include <tmpc/qp/ClassicalRiccati.hpp>
 #include <tmpc/qp/OcpQp.hpp>
-
 #include <tmpc/BlazeKernel.hpp>
-
-#include <tmpc/test_tools.hpp>
+#include <tmpc/Testing.hpp>
 
 
 namespace tmpc :: testing

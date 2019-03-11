@@ -4,7 +4,7 @@ namespace tmpc :: testing
 {
     template <typename Kernel_>
     class KernelTest 
-    :   public ::testing::Test
+    :   public Test
     {
     protected:
         using Kernel = Kernel_;

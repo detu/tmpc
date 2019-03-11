@@ -47,7 +47,10 @@ namespace tmpc :: testing
 			blaze::DenseMatrix<MT1, blaze::columnMajor>& A, 
 			blaze::DenseMatrix<MT2, blaze::columnMajor>& B) const
 		{
-			_ode({&t, x0.data(), u0.data()}, {data(xdot), data(A), data(B), nullptr, nullptr, nullptr, nullptr, nullptr, nullptr});
+			_ode({&t, x0.data(), u0.data()}, {data(xdot_), data(A_), data(B_), nullptr, nullptr, nullptr, nullptr, nullptr, nullptr});
+			~xdot = xdot_;
+			~A = A_;
+			~B = B_;
 		}
 
 

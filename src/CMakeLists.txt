@@ -7,8 +7,7 @@ set(TMPC_INCLUDE_DIR ${PROJECT_INCLUDE_DIR}/tmpc)
 
 set (SRC
     ${TMPC_INCLUDE_DIR}/Matrix.hpp
-    ${TMPC_INCLUDE_DIR}/casadi_interface/GeneratedFunction.hpp
-
+    
 	${TMPC_INCLUDE_DIR}/qp/CondensingN3.hpp
 	${TMPC_INCLUDE_DIR}/qp/OcpQp.hpp
 
@@ -40,8 +39,16 @@ target_link_libraries(tmpc
 # Add CasADi interface
 #
 if (TMPC_WITH_CASADI_INTERFACE)
-    target_include_directories(tmpc
+    add_library(tmpc-casadi STATIC 
+        casadi_interface/GeneratedFunction.cpp
+    )
+
+    target_include_directories(tmpc-casadi
         PUBLIC ${CASADI_INCLUDE_DIRS}
+    )
+
+    target_link_libraries(tmpc-casadi 
+        PUBLIC tmpc
     )
 endif ()
 

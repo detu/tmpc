@@ -1,13 +1,13 @@
 #include "PendulumOde.hpp"
 #include "PendulumData.hpp"
 
-#include <tmpc/test_tools.hpp>
+#include <tmpc/Testing.hpp>
 
 
 namespace tmpc :: testing
 {
 	class PendulumOdeTest 
-	: 	public ::testing::Test
+	: 	public Test
 	{
 	protected:
 		using Real = double;
@@ -34,7 +34,7 @@ namespace tmpc :: testing
 			ODE::StateInputMatrix B;
 			ode_(p.t, p.x0, p.u, xdot, A, B);
 
-			MatrixApproxEquality const is_approx(1e-6);
+			ApproxEqual const is_approx(1e-6);
 			EXPECT_PRED2(is_approx, xdot, p.xdot);
 			EXPECT_PRED2(is_approx, A, p.Aode);
 			EXPECT_PRED2(is_approx, B, p.Bode);
@@ -54,7 +54,7 @@ namespace tmpc :: testing
 			ODE::QuadInputMatrix qB;
 			ode_(p.t, p.x0, p.u, xdot, A, B, q, qA, qB);
 
-			MatrixApproxEquality const is_approx(1e-6);
+			ApproxEqual const is_approx(1e-6);
 			EXPECT_PRED2(is_approx, xdot, p.xdot);
 			EXPECT_PRED2(is_approx, A, p.Aode);
 			EXPECT_PRED2(is_approx, B, p.Bode);
@@ -80,7 +80,7 @@ namespace tmpc :: testing
 			ODE::ResInputMatrix rB;
 			ode_(p.t, p.x0, p.u, xdot, A, B, q, qA, qB, r, rA, rB);
 
-			MatrixApproxEquality const is_approx(1e-6);
+			ApproxEqual const is_approx(1e-6);
 			EXPECT_PRED2(is_approx, xdot, p.xdot);
 			EXPECT_PRED2(is_approx, A, p.Aode);
 			EXPECT_PRED2(is_approx, B, p.Bode);

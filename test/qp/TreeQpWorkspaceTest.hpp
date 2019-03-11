@@ -9,18 +9,17 @@
 #include <tmpc/Matrix.hpp>
 #include <tmpc/core/PropertyMap.hpp>
 #include <tmpc/Traits.hpp>
-#include <tmpc/test_tools.hpp>
-
-#include <gtest/gtest.h>
+#include <tmpc/Testing.hpp>
 
 #include <iostream>
 #include <array>
+
 
 namespace tmpc :: testing
 {
     template <typename WS>
     class TreeQpWorkspaceTest 
-    :   public ::testing::Test
+    :   public Test
     {
     public:
         using Workspace = WS;

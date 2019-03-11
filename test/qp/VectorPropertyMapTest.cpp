@@ -1,11 +1,9 @@
 #include <tmpc/qp/detail/VectorPropertyMap.hpp>
 #include <tmpc/ocp/OcpSizeProperties.hpp>
 #include <tmpc/core/PropertyMap.hpp>
+#include <tmpc/Testing.hpp>
 
 #include <blaze/Blaze.h>
-
-#include <tmpc/test_tools.hpp>
-#include <gtest/gtest.h>
 
 #include <vector>
 
@@ -13,7 +11,7 @@
 namespace tmpc :: testing
 {
     class VectorPropertyMapTest 
-    :   public ::testing::Test
+    :   public Test
     {
     protected:
         VectorPropertyMapTest()

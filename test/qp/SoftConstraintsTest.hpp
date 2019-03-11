@@ -1,22 +1,19 @@
 #pragma once
 
 #include <tmpc/mpc/MpcOcpSize.hpp>	// for mpcOcpSize()
-
 #include <tmpc/Matrix.hpp>
 #include <tmpc/Math.hpp>
-
-#include <tmpc/test_tools.hpp>
-
-#include <gtest/gtest.h>
+#include <tmpc/Testing.hpp>
 
 #include <iostream>
 #include <fstream>
+
 
 namespace tmpc :: testing
 {
 	template <typename WS>
 	class SoftConstraintsTest 
-	: 	public ::testing::Test
+	: 	public Test
 	{
 	protected:
 		using Workspace = WS;
@@ -45,7 +42,7 @@ namespace tmpc :: testing
 
 		using Vector = DynamicVector<typename TestFixture::Kernel>;
 
-		EXPECT_PRED2(MatrixApproxEquality(1e-5), solution[0].x(), (Vector {1.81818}));
+		EXPECT_PRED2(ApproxEqual(1e-5), solution[0].x(), (Vector {1.81818}));
 	}
 
 
@@ -64,7 +61,7 @@ namespace tmpc :: testing
 
 		using Vector = DynamicVector<typename TestFixture::Kernel>;
 
-		EXPECT_PRED2(MatrixApproxEquality(1e-5), solution[0].x(), (Vector {1.}));
+		EXPECT_PRED2(ApproxEqual(1e-5), solution[0].x(), (Vector {1.}));
 	}
 
 
@@ -91,8 +88,8 @@ namespace tmpc :: testing
 
 		using Vector = DynamicVector<typename TestFixture::Kernel>;
 
-		EXPECT_PRED2(MatrixApproxEquality(1e-5), solution[0].x(), (Vector {1.}));
-		EXPECT_PRED2(MatrixApproxEquality(1e-5), solution[1].x(), (Vector {1.}));
+		EXPECT_PRED2(ApproxEqual(1e-5), solution[0].x(), (Vector {1.}));
+		EXPECT_PRED2(ApproxEqual(1e-5), solution[1].x(), (Vector {1.}));
 	}
 
 

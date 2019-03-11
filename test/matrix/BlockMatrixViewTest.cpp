@@ -1,14 +1,12 @@
 #include <tmpc/matrix/BlockMatrixView.hpp>
-
-#include <tmpc/test_tools.hpp>
-
+#include <tmpc/Testing.hpp>
 #include <tmpc/Math.hpp>
 
 
 namespace tmpc :: testing
 {
     class BlockMatrixViewTest 
-    :   public ::testing::Test 
+    :   public Test 
     {
     protected:
         using Matrix = blaze::DynamicMatrix<double>;
