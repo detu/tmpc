@@ -59,10 +59,6 @@ add_executable(test-tmpc
     matrix/KernelTest.cpp
     matrix/BlockMatrixViewTest.cpp
 
-    integrator/MultiStepIntegratorTest.cpp
-    integrator/PendulumData.cpp
-    integrator/PendulumOdeTest.cpp
-    
     numeric/CentralDifferenceDerivativeTest.cpp
 
     random/MultivariateNormalDistributionTest.cpp
@@ -95,9 +91,13 @@ if (TMPC_WITH_CASADI_INTERFACE)
         PRIVATE
         ${CMAKE_CURRENT_BINARY_DIR}/pendulum_ode_generated.h
         ${CMAKE_CURRENT_BINARY_DIR}/pendulum_ode_generated.c
-        # TODO: ExplicitRungeKutta4 test depends on CasADi.
+        
+        # TODO: Integrator tests depend on CasADi.
         # Remove this dependency.
+        integrator/PendulumData.cpp
+        integrator/PendulumOdeTest.cpp
         integrator/ExplicitRungeKutta4Test.cpp
+        integrator/MultiStepIntegratorTest.cpp
     )
 
     target_link_libraries(test-tmpc
