@@ -62,6 +62,8 @@ add_executable(test-tmpc
     numeric/CentralDifferenceDerivativeTest.cpp
 
     random/MultivariateNormalDistributionTest.cpp
+
+    estimation/KalmanFilterTest.cpp
 )
 
 if (TMPC_WITH_CASADI_INTERFACE)
