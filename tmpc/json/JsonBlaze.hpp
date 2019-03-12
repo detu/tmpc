@@ -8,7 +8,7 @@
 namespace blaze
 {
     template <typename MT, bool SO>
-    void to_json(tmpc::json& jsn, Matrix<MT, SO> const& m) 
+    inline void to_json(tmpc::json& jsn, Matrix<MT, SO> const& m) 
     {
         jsn = tmpc::json::array();
 
@@ -31,15 +31,17 @@ namespace blaze
 
 
     template <typename VT, bool SO>
-    void to_json(tmpc::json& jsn, Vector<VT, SO> const& v) 
+    inline void to_json(tmpc::json& jsn, Vector<VT, SO> const& v) 
     {
         jsn = tmpc::json::array();
-        std::copy((~v).begin(), (~v).end(), std::back_inserter(jsn));
+
+        for (size_t i = 0; i < size(v); ++i)
+            jsn[i] = (~v)[i];
     }
 
 
     template <typename MT, bool SO>
-    void from_json(tmpc::json const& j, Matrix<MT, SO>& m)
+    inline void from_json(tmpc::json const& j, Matrix<MT, SO>& m)
     {
         using Scalar = typename MT::ElementType;
 
@@ -93,7 +95,7 @@ namespace blaze
     
 
     template <typename VT, bool SO>
-    void from_json(tmpc::json const& j, Vector<VT, SO>& v) 
+    inline void from_json(tmpc::json const& j, Vector<VT, SO>& v) 
     {
         using Scalar = typename VT::ElementType;
 
