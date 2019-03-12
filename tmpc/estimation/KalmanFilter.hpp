@@ -1,8 +1,7 @@
 #pragma once
 
 #include <tmpc/SizeT.hpp>
-
-#include <blaze/Math.h>
+#include <tmpc/Math.hpp>
 
 
 namespace tmpc
@@ -139,7 +138,7 @@ namespace tmpc
         template <typename VT>
         void predict(blaze::Vector<VT, blaze::columnVector> const& u)
         {
-            stateEstimate_ = A_ * stateEstimate_ + B_ * u;
+            stateEstimate_ = A_ * stateEstimate_ + B_ * ~u;
             stateCovariance_ = A_ * stateCovariance_ * trans(A_) + processNoiseCovariance_;
         }
 
@@ -147,7 +146,7 @@ namespace tmpc
         template <typename VT>
         void update(blaze::Vector<VT, blaze::columnVector> const& z)
         {
-            y_ = z - C_ * stateEstimate_;
+            y_ = ~z - C_ * stateEstimate_;
             S_ = measurementNoiseCovariance_ + C_ * stateCovariance_ * trans(C_);
             K_ = stateCovariance_ * trans(C_) * inv(S_);
             stateEstimate_ += K_ * y_;
