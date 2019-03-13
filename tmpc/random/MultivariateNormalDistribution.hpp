@@ -32,6 +32,24 @@ namespace tmpc
         }
 
 
+        /// @brief Creates a multinormal distribution with given covariance and zero mean.
+        ///
+        /// @param n number of dimensions
+        template <typename MT, bool SO>
+        MultivariateNormalDistribution(blaze::Matrix<MT, SO> const& cov)
+        {
+            auto const n = rows(cov);
+
+            if (columns(cov) != n)
+                throw std::invalid_argument("Inconsistent dimensions of covariance in MultivariateNormalDistribution ctor");
+
+            mean_ = blaze::ZeroVector<Real>(n);
+            sample_.resize(n);
+            covariance_.resize(n);
+            covariance(cov);
+        }
+
+
         /// @brief Creates a multinormal distribution with given mean and covariance.
         ///
         /// @param n number of dimensions

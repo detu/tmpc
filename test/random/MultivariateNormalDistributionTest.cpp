@@ -36,6 +36,26 @@ namespace tmpc :: testing
     }
 
 
+    TEST(MultivariateNormalDistributionTest, testConstructFromCovariance)
+    {
+        size_t constexpr N = 2;
+        using Vec = blaze::StaticVector<double, N, blaze::columnVector>;
+        using Mat = blaze::SymmetricMatrix<blaze::StaticMatrix<double, N, N>>;
+
+        Vec const mu {0., 0.};
+        Mat const sigma {
+            {1., 0.5},
+            {0.5, 2.}
+        };
+        
+        MultivariateNormalDistribution<double> dist(sigma);
+        
+        EXPECT_EQ(dist.dimension(), N);
+        TMPC_EXPECT_EQ(dist.covariance(), sigma);
+        TMPC_EXPECT_EQ(dist.mean(), mu);
+    }
+
+
     TEST(MultivariateNormalDistributionTest, testGenerate)
     {
         size_t constexpr N = 2;
