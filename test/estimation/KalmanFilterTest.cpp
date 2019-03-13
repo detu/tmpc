@@ -65,9 +65,6 @@ namespace tmpc :: testing
                 {0.5482,    0.4314,    0.6500,    0.4815}
             }
         {
-            kalman_.A(A_);
-            kalman_.B(B_);
-            kalman_.C(C_);
             kalman_.processNoiseCovariance(Q_);
             kalman_.measurementNoiseCovariance(R_);
             kalman_.stateEstimate(xHat0_);
@@ -122,24 +119,6 @@ namespace tmpc :: testing
     }
 
 
-    TEST_F(KalmanFilterInitTest, testA)
-    {
-        EXPECT_EQ(kalman_.A(), (blaze::IdentityMatrix<Real>(NX)));
-    }
-
-
-    TEST_F(KalmanFilterInitTest, testB)
-    {
-        EXPECT_EQ(kalman_.B(), (blaze::ZeroMatrix<Real>(NX, NU)));
-    }
-
-
-    TEST_F(KalmanFilterInitTest, testC)
-    {
-        TMPC_EXPECT_EQ(kalman_.C(), (blaze::ZeroMatrix<Real>(NY, NX)));
-    }
-
-
     TEST_F(KalmanFilterInitTest, testProcessNoiseCovariance)
     {
         EXPECT_EQ(kalman_.processNoiseCovariance(), (blaze::ZeroMatrix<Real>(NX, NX)));
@@ -154,8 +133,8 @@ namespace tmpc :: testing
     
     TEST_F(KalmanFilterTest, testUpdate)
     {
-        Vec const z0 = C_ * x0_ + Vec {-0.2979, -0.1403};
-        kalman_.update(z0);
+        Vec const y0 = C_ * x0_ + Vec {-0.2979, -0.1403} - C_ * kalman_.stateEstimate();
+        kalman_.update(y0, C_);
 
         TMPC_EXPECT_APPROX_EQ(kalman_.stateEstimate(), (Vec {1.0672, 0.7747, 0.7956, 0.0509}), 1e-4, 0.);
         TMPC_EXPECT_APPROX_EQ(kalman_.stateCovariance(), (Mat {
@@ -167,9 +146,23 @@ namespace tmpc :: testing
     }
 
 
-    TEST_F(KalmanFilterTest, testPredict)
+    TEST_F(KalmanFilterTest, testPredict1)
     {
-        kalman_.predict(u0_);
+        kalman_.predict(A_ * kalman_.stateEstimate() + B_ * u0_, A_);
+
+        TMPC_EXPECT_APPROX_EQ(kalman_.stateEstimate(), (Vec {1.3990, 2.0599, 2.2287, 2.5951}), 1e-4, 0.);
+        TMPC_EXPECT_APPROX_EQ(kalman_.stateCovariance(), (Mat {
+            {1.3584,    2.3924,    2.2925,    2.3721},
+            {2.3924,    5.4282,    4.8832,    4.6771},
+            {2.2925,    4.8832,    4.8142,    4.6958},
+            {2.3721,    4.6771,    4.6958,    5.0963}
+        }), 1e-4, 0.);
+    }
+
+
+    TEST_F(KalmanFilterTest, testPredict2)
+    {
+        kalman_.predict(A_, B_, u0_);
 
         TMPC_EXPECT_APPROX_EQ(kalman_.stateEstimate(), (Vec {1.3990, 2.0599, 2.2287, 2.5951}), 1e-4, 0.);
         TMPC_EXPECT_APPROX_EQ(kalman_.stateCovariance(), (Mat {

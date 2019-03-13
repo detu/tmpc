@@ -18,12 +18,8 @@ namespace tmpc
         ,   ny_(ny)
         ,   stateEstimate_(nx, Real {})
         ,   stateCovariance_(nx)
-        ,   A_(blaze::IdentityMatrix<Real>(nx))
-        ,   B_(nx, nu)
-        ,   C_(ny, nx, Real {})
         ,   processNoiseCovariance_(nx)
         ,   measurementNoiseCovariance_(ny)
-        ,   y_(ny)
         ,   S_(ny)
         ,   K_(nx, ny)
         {
@@ -90,67 +86,42 @@ namespace tmpc
         }
 
 
-        /// @brief Get A matrix
-        auto const& A() const
+        /// @brief Update state estimate based on next state value and sensitivities.
+        ///
+        /// @param x_next next state value
+        /// @param A sensitivity matrix, A = d(x_next)/dx
+        template <typename VT, typename MT, bool SO>
+        void predict(blaze::Vector<VT, blaze::columnVector> const& x_next, blaze::Matrix<MT, SO> const& A)
         {
-            return A_;
+            stateEstimate_ = x_next;
+            stateCovariance_ = ~A * stateCovariance_ * trans(~A) + processNoiseCovariance_;
         }
 
 
-        /// @brief Set A matrix
-        template <typename MT, bool SO>
-        void A(blaze::Matrix<MT, SO> const& val)
+        /// @brief Update state estimate based on a linear model and control input.
+        ///
+        /// @param A linear model matrix A
+        /// @param B linear model matrix B
+        /// @param u control input
+        template <typename MT1, bool SO1, typename MT2, bool SO2, typename VT>
+        void predict(blaze::Matrix<MT1, SO1> const& A, blaze::Matrix<MT2, SO2> const& B, blaze::Vector<VT, blaze::columnVector> const& u)
         {
-            noresize(A_) = val;
+            stateEstimate_ = ~A * stateEstimate_ + ~B * ~u;
+            stateCovariance_ = ~A * stateCovariance_ * trans(~A) + processNoiseCovariance_;
         }
 
 
-        /// @brief Get B matrix
-        auto const& B() const
+        /// @brief Update state estimate based on measurement residual and sensitivities.
+        ///
+        /// @param y measurement residual, the difference between measured and predicted system output.
+        /// @param C output sensitivity matrix, C = d(y_pred)/dx, where y_pred is the predicted system output for state x.
+        template <typename VT, typename MT, bool SO>
+        void update(blaze::Vector<VT, blaze::columnVector> const& y, blaze::Matrix<MT, SO> const& C)
         {
-            return B_;
-        }
-
-
-        /// @brief Set B matrix
-        template <typename MT, bool SO>
-        void B(blaze::Matrix<MT, SO> const& val)
-        {
-            noresize(B_) = val;
-        }
-
-
-        /// @brief Get C matrix
-        auto const& C() const
-        {
-            return C_;
-        }
-
-
-        /// @brief Set C matrix
-        template <typename MT, bool SO>
-        void C(blaze::Matrix<MT, SO> const& val)
-        {
-            noresize(C_) = val;
-        }
-
-
-        template <typename VT>
-        void predict(blaze::Vector<VT, blaze::columnVector> const& u)
-        {
-            stateEstimate_ = A_ * stateEstimate_ + B_ * ~u;
-            stateCovariance_ = A_ * stateCovariance_ * trans(A_) + processNoiseCovariance_;
-        }
-
-
-        template <typename VT>
-        void update(blaze::Vector<VT, blaze::columnVector> const& z)
-        {
-            y_ = ~z - C_ * stateEstimate_;
-            S_ = measurementNoiseCovariance_ + C_ * stateCovariance_ * trans(C_);
-            K_ = stateCovariance_ * trans(C_) * inv(S_);
-            stateEstimate_ += K_ * y_;
-            stateCovariance_ = (blaze::IdentityMatrix<Real>(nx_) - K_ * C_) * stateCovariance_;
+            S_ = measurementNoiseCovariance_ + ~C * stateCovariance_ * trans(~C);
+            K_ = stateCovariance_ * trans(~C) * inv(S_);
+            stateEstimate_ += K_ * ~y;
+            stateCovariance_ = (blaze::IdentityMatrix<Real>(nx_) - K_ * ~C) * stateCovariance_;
         }
 
 
@@ -183,14 +154,9 @@ namespace tmpc
         blaze::DynamicVector<Real, blaze::columnVector> stateEstimate_;
         blaze::SymmetricMatrix<blaze::DynamicMatrix<Real>> stateCovariance_;
 
-        blaze::DynamicMatrix<Real> A_;
-        blaze::DynamicMatrix<Real> B_;
-        blaze::DynamicMatrix<Real> C_;
-
         blaze::SymmetricMatrix<blaze::DynamicMatrix<Real>> processNoiseCovariance_;
         blaze::SymmetricMatrix<blaze::DynamicMatrix<Real>> measurementNoiseCovariance_;
 
-        blaze::DynamicVector<Real, blaze::columnVector> y_;
         blaze::SymmetricMatrix<blaze::DynamicMatrix<Real>> S_;
         blaze::DynamicMatrix<Real> K_;
     };
