@@ -14,10 +14,9 @@ namespace tmpc :: testing
     {
     protected:
         static size_t constexpr NX = 4;
-        static size_t constexpr NU = 3;
         static size_t constexpr NY = 2;
 
-        KalmanFilter<Real> kalman_ {NX, NU, NY};
+        KalmanFilter<Real> kalman_ {NX, NY};
     };
 
 
@@ -26,7 +25,7 @@ namespace tmpc :: testing
     {
     protected:
         KalmanFilterTest()
-        :   kalman_ {NX, NU, NY}
+        :   kalman_ {NX, NY}
         ,   x0_ {0.8244,    0.9827,    0.7302,    0.3439}
         ,   u0_ {0.5841,    0.1078,    0.9063}
         ,   A_ {
@@ -92,12 +91,6 @@ namespace tmpc :: testing
 	TEST_F(KalmanFilterInitTest, testNx)
     {
         EXPECT_EQ(kalman_.nx(), NX);
-    }
-
-
-    TEST_F(KalmanFilterInitTest, testNu)
-    {
-        EXPECT_EQ(kalman_.nu(), NU);
     }
 
 

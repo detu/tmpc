@@ -12,9 +12,8 @@ namespace tmpc
     class KalmanFilter
     {
     public:
-        KalmanFilter(size_t nx, size_t nu, size_t ny)
+        KalmanFilter(size_t nx, size_t ny)
         :   nx_(nx)
-        ,   nu_(nu)
         ,   ny_(ny)
         ,   stateEstimate_(nx, Real {})
         ,   stateCovariance_(nx)
@@ -132,13 +131,6 @@ namespace tmpc
         }
 
 
-        /// @brief Number of inputs
-        auto const nu() const
-        {
-            return nu_;
-        }
-
-
         /// @brief Number of outputs
         auto const ny() const
         {
@@ -148,7 +140,6 @@ namespace tmpc
         
     private:
         size_t const nx_;
-        size_t const nu_;
         size_t const ny_;
 
         blaze::DynamicVector<Real, blaze::columnVector> stateEstimate_;
