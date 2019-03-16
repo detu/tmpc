@@ -7,6 +7,14 @@ namespace tmpc :: testing
     using Real = double;
     using Mat = blaze::DynamicMatrix<Real>;
     using Vec = blaze::DynamicVector<Real, blaze::columnVector>;
+    
+    using blaze::columnVector;
+                
+    template <size_t N, bool TF = columnVector>
+    using StaticVector = blaze::StaticVector<Real, N, TF>;
+
+    template <size_t M, size_t N, bool SO = columnMajor>
+    using StaticMatrix = blaze::StaticMatrix<Real, M, N, SO>;
 
 
     class KalmanFilterInitTest
@@ -164,5 +172,101 @@ namespace tmpc :: testing
             {2.2925,    4.8832,    4.8142,    4.6958},
             {2.3721,    4.6771,    4.6958,    5.0963}
         }), 1e-4, 0.);
+    }
+
+
+    TEST(KalmanFilterDifficultTest, testUpdate)
+    {
+        static size_t constexpr NX = 4;
+        static size_t constexpr NW = 1;
+        static size_t constexpr NH = 2;
+
+                
+        std::vector<StaticVector<NH>> const y_rec {
+            StaticVector<NH> {-1.7889e-05, -1.30424e-05},
+            StaticVector<NH> {-0.00022692, -0.000167837},
+            StaticVector<NH> {-0.00316451, 0.000157017},
+            StaticVector<NH> {-7.03035e-05, -1.82798e-05}
+        };
+
+        std::vector<StaticVector<NX + NW>> const x_rec {
+            StaticVector<NX + NW> {0., 0., 0., 0.},
+            StaticVector<NX + NW> {-1.29957e-05, 5.32864e-05, 1.24782e-05, -0.000849879, -5.21874e-10},
+            StaticVector<NX + NW> {-0.000152557, -0.040238, 0.0001302, 0.00746183, -0.0063417},
+            StaticVector<NX + NW> {0.000104791, 0.05479, -2.98354e-05, -0.00719635, 0.0179322}
+        };
+
+        std::vector<StaticMatrix<NX + NW, NX + NW>> const A_rec {
+            StaticMatrix<NX + NW, NX + NW> {
+                {   0.999998,  0.000997127,   0.00157084,  1.91313e-05,  3.98934e-07},
+                {-0.00317067,     0.994295,      2.75675,    0.0342017,  0.000792177},
+                {1.28311e-06,  2.30861e-06,     0.975111,  0.000696879, -3.20579e-07},
+                {  0.0022518,   0.00405201,     -43.7332,     0.457453, -0.000562602},
+                {          0,            0,            0,            0,            1},
+            },
+            StaticMatrix<NX + NW, NX + NW> {
+                {   0.999998,  0.000997127,   0.00157084,  1.91313e-05,  3.98934e-07},
+                {-0.00317067,     0.994295,      2.75675,    0.0342017,  0.000792177},
+                {1.28311e-06,  2.30861e-06,     0.975111,  0.000696879, -3.20579e-07},
+                {  0.0022518,   0.00405201,     -43.7332,     0.457453, -0.000562602},
+                {          0,            0,            0,            0,            1},
+            },
+            StaticMatrix<NX + NW, NX + NW> {
+                {   0.999998,  0.000997127,   0.00157084,  1.91313e-05,  3.98934e-07},
+                {-0.00317067,     0.994295,      2.75675,    0.0342017,  0.000792177},
+                {1.28311e-06,  2.30861e-06,     0.975111,  0.000696879, -3.20579e-07},
+                {  0.0022518,   0.00405201,     -43.7332,     0.457453, -0.000562602},
+                {          0,            0,            0,            0,            1},
+            },
+            StaticMatrix<NX + NW, NX + NW> {
+                {   0.999998,  0.000997127,   0.00157084,  1.91313e-05,  3.98934e-07},
+                {-0.00317067,     0.994295,      2.75675,    0.0342017,  0.000792177},
+                {1.28311e-06,  2.30861e-06,     0.975111,  0.000696879, -3.20579e-07},
+                {  0.0022518,   0.00405201,     -43.7332,     0.457453, -0.000562602},
+                {          0,            0,            0,            0,            1},
+            },
+        };
+
+        StaticMatrix<NH, NX + NW> C {
+            {-100,            0,         -100,            0,            0},
+            {   1,            0,            0,            0,            0}
+        };
+        
+        // Create and prepare estimator.
+        // EkfEstimator estimator(timeStepInSeconds);
+        tmpc::KalmanFilter<Real> kalman(NX + NW, NH);
+        kalman.stateEstimate(StaticVector<NX + NW> {0., 0., 0., 0., 0.});
+        kalman.stateCovariance(StaticMatrix<NX + NW, NX + NW> {
+            {1,            0,            0,            0,            0},
+            {0,            1,            0,            0,            0},
+            {0,            0,        10000,            0,            0},
+            {0,            0,            0,        10000,            0},
+            {0,            0,            0,            0,          100},
+        });
+        kalman.processNoiseCovariance(StaticMatrix<NX + NW, NX + NW> {
+            {0,            0,            0,            0,            0},
+            {0,            0,            0,            0,            0},
+            {0,            0,            0,            0,            0},
+            {0,            0,            0,            0,            0},
+            {0,            0,            0,            0,         0.01},
+        });
+        kalman.measurementNoiseCovariance(StaticMatrix<NH, NH> {
+            {1e-06,            0},
+            {    0,        1e-06},
+        });
+
+        for (size_t i = 0; i < size(y_rec); ++i)
+        {
+            // x = integrator.integrate(model, x, u, w, timeStepInSeconds);
+            StaticVector<NH> const y = y_rec[i];
+
+            // Feed current control input to the estimator
+            // DEBUG_predict(kalman, x_rec[i], A_rec[i]);
+            kalman.predict(x_rec[i], A_rec[i]);
+
+            // Update the estimate given the measurement
+            // DEBUG_update(kalman, y_rec[i], C);
+            kalman.update(y_rec[i], C);
+        }
     }
 }

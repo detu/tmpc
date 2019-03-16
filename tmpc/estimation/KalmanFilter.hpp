@@ -12,6 +12,10 @@ namespace tmpc
     class KalmanFilter
     {
     public:
+        using Matrix = blaze::DynamicMatrix<Real>;
+        using SymmetricMatrix = blaze::SymmetricMatrix<Matrix>;
+
+
         KalmanFilter(size_t nx, size_t ny)
         :   nx_(nx)
         ,   ny_(ny)
@@ -41,7 +45,7 @@ namespace tmpc
 
 
         /// @brief Get state covariance
-        auto const& stateCovariance() const
+        SymmetricMatrix const& stateCovariance() const
         {
             return stateCovariance_;
         }
@@ -56,7 +60,7 @@ namespace tmpc
 
 
         /// @brief Get process noise covariance
-        auto const& processNoiseCovariance() const
+        SymmetricMatrix const& processNoiseCovariance() const
         {
             return processNoiseCovariance_;
         }
@@ -71,7 +75,7 @@ namespace tmpc
 
 
         /// @brief Get measurement noise covariance
-        auto const& measurementNoiseCovariance() const
+        SymmetricMatrix const& measurementNoiseCovariance() const
         {
             return measurementNoiseCovariance_;
         }
@@ -120,7 +124,7 @@ namespace tmpc
             S_ = measurementNoiseCovariance_ + ~C * stateCovariance_ * trans(~C);
             K_ = stateCovariance_ * trans(~C) * inv(S_);
             stateEstimate_ += K_ * ~y;
-            stateCovariance_ = (blaze::IdentityMatrix<Real>(nx_) - K_ * ~C) * stateCovariance_;
+            stateCovariance_ -= K_ * S_ * trans(K_);
         }
 
 
@@ -137,18 +141,32 @@ namespace tmpc
             return ny_;
         }
 
+
+        /// @brief Kalman gain on the last update step
+        Matrix const& gain() const
+        {
+            return K_;
+        }
+
+
+        /// @brief Measurement prediction covariance on the last update step
+        SymmetricMatrix const& measurementPredictionCovariance() const
+        {
+            return S_;
+        }
+
         
     private:
         size_t const nx_;
         size_t const ny_;
 
         blaze::DynamicVector<Real, blaze::columnVector> stateEstimate_;
-        blaze::SymmetricMatrix<blaze::DynamicMatrix<Real>> stateCovariance_;
+        SymmetricMatrix stateCovariance_;
 
-        blaze::SymmetricMatrix<blaze::DynamicMatrix<Real>> processNoiseCovariance_;
-        blaze::SymmetricMatrix<blaze::DynamicMatrix<Real>> measurementNoiseCovariance_;
+        SymmetricMatrix processNoiseCovariance_;
+        SymmetricMatrix measurementNoiseCovariance_;
 
-        blaze::SymmetricMatrix<blaze::DynamicMatrix<Real>> S_;
-        blaze::DynamicMatrix<Real> K_;
+        SymmetricMatrix S_;
+        Matrix K_;
     };
 }
