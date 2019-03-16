@@ -48,7 +48,7 @@ namespace blaze
         if (j.is_number())
         {
             // Interpret number as a 1x1 matrix
-            (~m).resize(1, 1);
+            resize(m, 1, 1);
             (~m)(0, 0) = j;
         }
         else
@@ -56,7 +56,7 @@ namespace blaze
             size_t const M = j.size();
             size_t const N = M > 0 ? j[0].size() : 0;
 
-            (~m).resize(M, N);
+            resize(m, M, N);
             
             for (size_t ii = 0; ii < M; ++ii)
             {
