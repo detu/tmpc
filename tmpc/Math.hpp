@@ -21,6 +21,166 @@ namespace tmpc
     {
         return std::numeric_limits<T>::signaling_NaN();
     }
+
+
+    namespace detail
+    {
+        template <typename T>
+        inline size_t maxRowLength(std::initializer_list<std::initializer_list<T>> const& l)
+        {
+            size_t m = 0;
+
+            for (auto const& row : l)
+                m = std::max(m, size(row));
+
+            return m;
+        }
+
+
+        template <typename T>
+        class NoResize;
+
+
+        template <typename ET, bool SO>
+        class NoResize<blaze::DynamicMatrix<ET, SO>>
+        {
+        public:
+            using MatrixType = blaze::DynamicMatrix<ET, SO>;
+
+
+            explicit NoResize(MatrixType& m)
+            :   m_(m)
+            {
+            }
+
+
+            template <typename MT1, bool SO1>
+            MatrixType& operator=(blaze::Matrix<MT1, SO1> const& rhs)
+            {
+                if (rows(rhs) != rows(m_) || columns(rhs) != columns(m_))
+                    throw std::invalid_argument("Right-hind side of a matrix assignment has different size, "
+                        "but resizing of the left-hand size is not allowed");
+
+                return m_ = rhs;
+            }
+
+
+            template <typename T>
+		    MatrixType& operator=(std::initializer_list<std::initializer_list<T>> rhs)
+            {
+                if (!(size(rhs) == rows(m_) && (size(rhs) == 0 || maxRowLength(rhs) == columns(m_))))
+                    throw std::invalid_argument("Right-hind side of a matrix assignment has different size, "
+                        "but resizing of the left-hand size is not allowed");
+
+                return m_ = rhs;
+            }
+
+
+            template <typename T>
+            MatrixType& operator=(T const& rhs)
+            {
+                return m_ = rhs;
+            }
+
+
+        private:
+            MatrixType& m_;
+        };
+
+
+        template <typename ET, bool SO>
+        class NoResize<blaze::SymmetricMatrix<blaze::DynamicMatrix<ET, SO>>>
+        {
+        public:
+            using MatrixType = blaze::SymmetricMatrix<blaze::DynamicMatrix<ET, SO>>;
+
+
+            explicit NoResize(MatrixType& m)
+            :   m_(m)
+            {
+            }
+
+
+            template <typename MT1, bool SO1>
+            MatrixType& operator=(blaze::Matrix<MT1, SO1> const& rhs)
+            {
+                if (rows(rhs) != rows(m_) || columns(rhs) != columns(m_))
+                    throw std::invalid_argument("Right-hind side of a matrix assignment has different size, "
+                        "but resizing of the left-hand size is not allowed");
+
+                return m_ = rhs;
+            }
+
+
+            template <typename T>
+		    MatrixType& operator=(std::initializer_list<std::initializer_list<T>> rhs)
+            {
+                if (!(size(rhs) == rows(m_) && (size(rhs) == 0 || maxRowLength(rhs) == columns(m_))))
+                    throw std::invalid_argument("Right-hind side of a matrix assignment has different size, "
+                        "but resizing of the left-hand size is not allowed");
+
+                return m_ = rhs;
+            }
+
+
+            template <typename T>
+            MatrixType& operator=(T const& rhs)
+            {
+                return m_ = rhs;
+            }
+
+
+        private:
+            MatrixType& m_;
+        };
+
+
+        template <typename ET, bool TF>
+        class NoResize<blaze::DynamicVector<ET, TF>>
+        {
+        public:
+            using VectorType = blaze::DynamicVector<ET, TF>;
+
+
+            explicit NoResize(VectorType& v)
+            :   v_(v)
+            {
+            }
+
+
+            template <typename VT1, bool TF1>
+            VectorType& operator=(blaze::Vector<VT1, TF1> const& rhs)
+            {
+                if (size(rhs) != size(v_))
+                    throw std::invalid_argument("Right-hind side of a vector assignment has different size, "
+                        "but resizing of the left-hand size is not allowed");
+
+                return v_ = rhs;
+            }
+
+
+            template <typename T>
+		    VectorType& operator=(std::initializer_list<T> rhs)
+            {
+                if (size(rhs) != size(v_))
+                    throw std::invalid_argument("Right-hind side of a vector assignment has different size, "
+                        "but resizing of the left-hand size is not allowed");
+
+                return v_ = rhs;
+            }
+
+
+            template <typename T>
+            VectorType& operator=(T const& rhs)
+            {
+                return v_ = rhs;
+            }
+
+
+        private:
+            VectorType& v_;
+        };
+    }
 }
 
 
@@ -29,19 +189,29 @@ namespace blaze
     /// @brief No-resize adaptor for vector assignment
     ///
     /// See https://bitbucket.org/blaze-lib/blaze/issues/93/matrix-vector-assignment-without-resizing
-    template <typename VT, bool TF>
-    inline auto noresize(Vector<VT, TF>& v)
+    template <typename ET, bool TF>
+    inline auto noresize(DynamicVector<ET, TF>& v)
     {
-        return subvector(v, 0, size(v));
+        return tmpc::detail::NoResize<DynamicVector<ET, TF>>(v);
     }
 
 
     /// @brief No-resize adaptor for matrix assignment
     ///
     /// See https://bitbucket.org/blaze-lib/blaze/issues/93/matrix-vector-assignment-without-resizing
-    template <typename MT, bool SO>
-    inline auto noresize(Matrix<MT, SO>& m)
+    template <typename ET, bool SO>
+    inline auto noresize(DynamicMatrix<ET, SO>& m)
     {
-        return submatrix(m, 0, 0, rows(m), columns(m));
+        return tmpc::detail::NoResize<DynamicMatrix<ET, SO>>(m);
+    }
+
+
+    /// @brief No-resize adaptor for symmetric matrix assignment
+    ///
+    /// See https://bitbucket.org/blaze-lib/blaze/issues/93/matrix-vector-assignment-without-resizing
+    template <typename ET, bool SO>
+    inline auto noresize(SymmetricMatrix<DynamicMatrix<ET, SO>>& m)
+    {
+        return tmpc::detail::NoResize<SymmetricMatrix<DynamicMatrix<ET, SO>>>(m);
     }
 }
