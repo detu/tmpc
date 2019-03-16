@@ -48,4 +48,41 @@ namespace tmpc :: testing
 
         EXPECT_EQ(forcePrint(l), forcePrint(expected));
     }
+
+
+    // Test assignment behavior of symmetric matrices which are not exactly symmetric.
+    TEST(SymmetricMatrixTest, testNotExactlySymmetricAssign)
+    {
+        blaze::SymmetricMatrix<blaze::DynamicMatrix<double>> const A {
+            {1., 1e-9},
+            {1e-10, 2.}
+        };
+
+        blaze::StaticMatrix<double, 2, 2, blaze::columnMajor> const B = A;
+        // blaze::SymmetricMatrix<blaze::DynamicMatrix<double>> const B = A;
+        TMPC_EXPECT_EQ(B, A);
+
+        blaze::SymmetricMatrix<blaze::DynamicMatrix<double>> C {2ul};
+        submatrix(C, 0, 0, 2, 2) = B;
+
+        TMPC_EXPECT_EQ(C, B);
+        TMPC_EXPECT_EQ(C, A);
+
+        // std::clog << "A = \n" << A;
+        // std::clog << "B = \n" << B;
+        // std::clog << "C = \n" << C;
+    }
+
+
+    // Test init behavior of symmetric matrices which are not exactly symmetric.
+    TEST(SymmetricMatrixTest, testNotExactlySymmetricInit)
+    {
+        blaze::SymmetricMatrix<blaze::DynamicMatrix<double>> const A {
+            {1., 1e-9},
+            {1e-10, 1.}
+        };
+
+        ASSERT_EQ(A(0, 1), 1e-9);
+        ASSERT_EQ(A(1, 0), 1e-10);
+    }
 }

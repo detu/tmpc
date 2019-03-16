@@ -24,6 +24,7 @@ namespace tmpc
         ,   processNoiseCovariance_(nx)
         ,   measurementNoiseCovariance_(ny)
         ,   S_(ny)
+        ,   S_chol_(ny)
         ,   K_(nx, ny)
         {
         }
@@ -121,10 +122,26 @@ namespace tmpc
         template <typename VT, typename MT, bool SO>
         void update(blaze::Vector<VT, blaze::columnVector> const& y, blaze::Matrix<MT, SO> const& C)
         {
+            // TODO: performance of this code can definitely be improved by avoiding temporary subexpressions
+            // and using proper LAPACK routines.
             S_ = measurementNoiseCovariance_ + ~C * stateCovariance_ * trans(~C);
-            K_ = stateCovariance_ * trans(~C) * inv(S_);
+            llh(S_, S_chol_);
+
+            // Use the Cholesky decomposition of S to multiply with inv(S).
+            // K_ = stateCovariance_ * trans(~C) * inv(S_);
+            K_ = stateCovariance_ * trans(~C);
+            K_ *= inv(trans(S_chol_));
+            K_ *= inv(S_chol_);
+
+            // This results in the following message:
+            //  ** On entry to DTRSM parameter number  9 had an illegal value
+            // trsm(S_chol_, K_, CblasLeft, CblasLower, Real {1.});
+            // trsm(S_chol_, K_, CblasRight, CblasLower, Real {1.});
+
             stateEstimate_ += K_ * ~y;
-            stateCovariance_ -= K_ * S_ * trans(K_);
+
+            // Use the Cholesky decomposition of S to enforce symmetry by putting the expression in the form A*A^T.
+            stateCovariance_ -= K_ * S_chol_ * trans(K_ * S_chol_);
         }
 
 
@@ -167,6 +184,11 @@ namespace tmpc
         SymmetricMatrix measurementNoiseCovariance_;
 
         SymmetricMatrix S_;
+
+        // Cholesky decomposition of S_;
+        blaze::LowerMatrix<Matrix> S_chol_;
+
+        // Kalman gain
         Matrix K_;
     };
 }
