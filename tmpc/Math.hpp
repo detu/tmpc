@@ -214,4 +214,24 @@ namespace blaze
     {
         return tmpc::detail::NoResize<SymmetricMatrix<DynamicMatrix<ET, SO>>>(m);
     }
+
+
+    template <typename VT, bool TF>
+    inline decltype(auto) scalar(Vector<VT, TF> const& v)
+    {
+        if (size(v) != 1)
+            throw std::invalid_argument("Invalid size of the scalar() argument: a vector of size 1 expected");
+
+        return (~v)[0];
+    }
+
+
+    template <typename MT, bool SO>
+    inline decltype(auto) scalar(Matrix<MT, SO> const& m)
+    {
+        if (rows(m) != 1 || columns(m) != 1)
+            throw std::invalid_argument("Invalid size of the scalar() argument: a 1x1 matrix expected");
+
+        return (~m)(0, 0);
+    }
 }
