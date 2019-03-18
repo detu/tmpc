@@ -178,6 +178,38 @@ namespace tmpc :: testing
 		double const absTol_;
 		double const relTol_;
 	};
+
+
+	class VectorApproxEqual
+	{
+	public:
+		VectorApproxEqual(std::initializer_list<double> abs_tol)
+		:	absTol_(abs_tol)
+		,	relTol_(size(abs_tol), 0.)
+		{
+		}
+
+
+		template <typename VT1, typename VT2, bool TF>
+		bool operator()(blaze::Vector<VT1, TF> const& lhs, blaze::Vector<VT2, TF> const& rhs) const
+		{
+			size_t const N = size(absTol_);
+
+			if (size(lhs) != N || size(rhs) != N)
+				throw std::invalid_argument("Vector size mismatch in VectorApproxEqual");
+
+			for (size_t j = 0; j < N; ++j)
+				if (abs((~lhs)[j] - (~rhs)[j]) > absTol_[j] + relTol_[j] * abs((~rhs)[j]))
+					return false;
+
+			return true;
+		}
+
+
+	private:
+		blaze::DynamicVector<double> absTol_;
+		blaze::DynamicVector<double> relTol_;
+	};
 }
 
 
