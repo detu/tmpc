@@ -12,7 +12,7 @@ namespace tmpc
     class Unwrap
     {
     public:
-        Unwrap(Real period = Real {M_2_PI})
+        Unwrap(Real period = Real {2. * M_PI})
         :   period_(period)
         ,   halfPeriod_(period / 2.)
         {

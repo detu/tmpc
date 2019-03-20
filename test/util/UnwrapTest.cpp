@@ -145,4 +145,16 @@ namespace tmpc :: testing
         unwrap_(v0);
         EXPECT_NEAR(unwrap_(v1), v0 + 0.99 * unwrap_.halfPeriod(), 1e-10);
     }
+
+
+    TEST(Unwrap2PiTest, test1)
+    {
+        Unwrap<double> unwrap(2. * M_PI);
+
+        double v0 = 6.262908936000000;
+        double v1 = 0.006951916032000;
+
+        unwrap(v0);
+        EXPECT_NEAR(unwrap(v1), 6.290137223211587, 1e-10);
+    }
 }
