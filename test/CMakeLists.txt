@@ -64,6 +64,8 @@ add_executable(test-tmpc
     random/MultivariateNormalDistributionTest.cpp
 
     estimation/KalmanFilterTest.cpp
+
+    util/UnwrapTest.cpp
 )
 
 if (TMPC_WITH_CASADI_INTERFACE)
