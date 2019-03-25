@@ -6,6 +6,12 @@
 
 namespace tmpc :: testing
 {
+    using std::cos;
+    using std::sin;
+    using std::pow;
+    using std::exp;
+
+
     TEST(CentralDifferenceDerivativeTest, testDiff)
     {
         size_t constexpr NX = 2;
