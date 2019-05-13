@@ -181,6 +181,19 @@ namespace tmpc
             VectorType& v_;
         };
     }
+
+
+    // TODO: uncomment the following lines when 
+    // we finally get rid of Eigen wrappers with the same names.
+    //
+    // using blaze::StaticMatrix;
+    // using blaze::StaticVector;
+    // using blaze::DynamicMatrix;
+    // using blaze::DynamicVector;
+    // using blaze::columnMajor;
+    // using blaze::rowMajor;
+    // using blaze::columnVector;
+    // using blaze::rowVector;
 }
 
 

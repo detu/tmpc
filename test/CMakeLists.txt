@@ -60,6 +60,7 @@ add_executable(test-tmpc
     matrix/BlockMatrixViewTest.cpp
 
     numeric/CentralDifferenceDerivativeTest.cpp
+    numeric/NewtonSolverTest.cpp
 
     random/MultivariateNormalDistributionTest.cpp
 
