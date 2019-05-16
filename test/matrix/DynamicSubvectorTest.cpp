@@ -38,7 +38,7 @@ namespace tmpc :: testing
     {
         Vector const v(20);
         Subvector<Kernel, Vector const> sv(subvector(v, 2, 4));
-        EXPECT_EQ(sv, v.segment(2, 4));
+        TMPC_EXPECT_EQ(sv, v.segment(2, 4));
     }
 
     
@@ -46,21 +46,21 @@ namespace tmpc :: testing
     {
         Vector v(20);
         Subvector<Kernel, Vector> sv(subvector(v, 2, 4));
-        EXPECT_EQ(sv, v.segment(2, 4));
+        TMPC_EXPECT_EQ(sv, v.segment(2, 4));
     }
 
     
     TEST_F(DynamicSubvectorTest, testGet)
     {
         Vector v(20);
-        EXPECT_EQ(subvector(v, 2, 4), v.segment(2, 4));
+        TMPC_EXPECT_EQ(subvector(v, 2, 4), v.segment(2, 4));
     }
 
     
     TEST_F(DynamicSubvectorTest, testGetConst)
     {
         Vector const v(20);
-        EXPECT_EQ(subvector(v, 2, 4), v.segment(2, 4));
+        TMPC_EXPECT_EQ(subvector(v, 2, 4), v.segment(2, 4));
     }
 
     
