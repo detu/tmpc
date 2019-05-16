@@ -23,7 +23,7 @@ namespace tmpc
 	class ImplicitRungeKutta
 	{
 	public:
-		ImplicitRungeKutta(size_t nx, size_t nu, ButcherTableau<Real>&& butcher) 
+		ImplicitRungeKutta(size_t nx, size_t nu, ButcherTableau<Real> butcher) 
 		:	nx_(nx)
 		,	nu_(nu)
 		,	butcher_(std::move(butcher))

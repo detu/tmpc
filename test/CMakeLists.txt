@@ -1,7 +1,7 @@
 #
 # test
 #
-find_package(GTest REQUIRED)
+find_package(GTest 1.9.0 REQUIRED)
 find_package(Threads REQUIRED)    # required for gtest
 find_package(Python3 REQUIRED COMPONENTS Interpreter)
 
@@ -53,7 +53,7 @@ add_executable(test-tmpc
     qp/MpipmWorkspaceTest.cpp
     qp/RiccatiTest.cpp
 
-    integrator/BackwardEulerTest.cpp
+    integrator/ImplicitRungeKuttaTest.cpp
 
     matrix/MatrixTest.cpp
     matrix/DynamicSubmatrixTest.cpp
