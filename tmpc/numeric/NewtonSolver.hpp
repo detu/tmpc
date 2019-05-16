@@ -26,7 +26,7 @@ namespace tmpc
         template <typename F, typename VT>
         auto const& solve(F const& fun, blaze::Vector<VT, blaze::columnVector> const& x0)
         {
-            return solve(fun, x0, EmptyMonitor());
+            return solve(fun, x0, [] (size_t, auto const&, auto const&, auto const&) {});
         }
 
 
@@ -41,7 +41,7 @@ namespace tmpc
                 fun(x_, r_, J_);
                 residualMaxNorm_ = maxNorm(r_);
 
-                monitor(iterations_, x_, r_, J_);
+                monitor(iterations_, std::as_const(x_), std::as_const(r_), std::as_const(J_));
 
                 // Residual within tolerance; exit the loop.
 				if (residualMaxNorm_ < residualTolerance_)
@@ -112,18 +112,5 @@ namespace tmpc
         Real residualTolerance_ = 1e-10;
 
         std::unique_ptr<int[]> ipiv_;
-
-
-        struct EmptyMonitor
-        {
-            template <typename VT1, typename VT2, typename MT, bool SO>
-            void operator()(size_t iter, 
-                blaze::Vector<VT1, blaze::columnVector> const& x,
-                blaze::Vector<VT2, blaze::columnVector> const& r,
-                blaze::Matrix<MT, SO> const& J) const
-            {
-                // Do nothing                
-            }
-        };
     };
 }

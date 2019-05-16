@@ -53,6 +53,8 @@ add_executable(test-tmpc
     qp/MpipmWorkspaceTest.cpp
     qp/RiccatiTest.cpp
 
+    integrator/BackwardEulerTest.cpp
+
     matrix/MatrixTest.cpp
     matrix/DynamicSubmatrixTest.cpp
     matrix/DynamicSubvectorTest.cpp

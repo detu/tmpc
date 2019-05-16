@@ -3,6 +3,8 @@
 #include <tmpc/Math.hpp>
 #include <tmpc/SizeT.hpp>
 
+#include <stdexcept>
+
 
 namespace tmpc
 {
@@ -25,7 +27,7 @@ namespace tmpc
         ,   c_ {std::move(c)}
         {
             if (!(rows(A_) == columns(A_) && rows(A_) == size(c_) && columns(A_) == size(b_)))
-                throw std::invalid_argument(__FUNCTION__ ": inconsistent argumnent sizes");
+                throw std::invalid_argument(std::string(__func__) + ": inconsistent argumnent sizes");
         }
 
 
@@ -51,7 +53,7 @@ namespace tmpc
         A_type A_;
         b_type b_;
         c_type c_;
-    }
+    };
 
 
     /// @brief Size of a Butcher tableau.
