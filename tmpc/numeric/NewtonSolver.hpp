@@ -26,13 +26,22 @@ namespace tmpc
         template <typename F, typename VT>
         auto const& solve(F const& fun, blaze::Vector<VT, blaze::columnVector> const& x0)
         {
+            return solve(fun, x0, EmptyMonitor());
+        }
+
+
+        template <typename F, typename VT, typename Monitor>
+        auto const& solve(F const& fun, blaze::Vector<VT, blaze::columnVector> const& x0, Monitor monitor)
+        {
             x_ = x0;
             residualMaxNorm_ = inf<Real>();
 
-			for (iterations_ = 0; iterations_ < maxIterations_; ++iterations_)
+			for (iterations_ = 0; iterations_ <= maxIterations_; ++iterations_)
 			{
                 fun(x_, r_, J_);
                 residualMaxNorm_ = maxNorm(r_);
+
+                monitor(iterations_, x_, r_, J_);
 
                 // Residual within tolerance; exit the loop.
 				if (residualMaxNorm_ < residualTolerance_)
@@ -43,7 +52,7 @@ namespace tmpc
                 x_ -= r_;
             }
 
-            if (!(iterations_ < maxIterations_))
+            if (!(residualMaxNorm_ < residualTolerance_))
                 throw std::runtime_error("tmpc::NewtonSolver::solve(): max number of iteration reached but solution not found");
 
             return x_;
@@ -62,6 +71,33 @@ namespace tmpc
         }
 
 
+        Real residualTolerance() const
+        {
+            return residualTolerance_;
+        }
+
+
+        void residualTolerance(Real val)
+        {
+            if (val < 0)
+                throw std::invalid_argument(std::string(__PRETTY_FUNCTION__) + ": residual tolerance must be non-negative");
+
+            residualTolerance_ = val;
+        }
+
+
+        Real residualMaxNorm() const
+        {
+            return residualMaxNorm_;
+        }
+
+
+        size_t iterations() const
+        {
+            return iterations_;
+        }
+
+
     private:
         size_t nx_;
         blaze::DynamicVector<Real, blaze::columnVector> x_;
@@ -76,5 +112,18 @@ namespace tmpc
         Real residualTolerance_ = 1e-10;
 
         std::unique_ptr<int[]> ipiv_;
+
+
+        struct EmptyMonitor
+        {
+            template <typename VT1, typename VT2, typename MT, bool SO>
+            void operator()(size_t iter, 
+                blaze::Vector<VT1, blaze::columnVector> const& x,
+                blaze::Vector<VT2, blaze::columnVector> const& r,
+                blaze::Matrix<MT, SO> const& J) const
+            {
+                // Do nothing                
+            }
+        };
     };
 }

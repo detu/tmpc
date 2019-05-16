@@ -6,12 +6,6 @@
 
 namespace tmpc :: testing
 {
-    using std::cos;
-    using std::sin;
-    using std::pow;
-    using std::exp;
-
-
     class NewtonSolverTest
     :   public Test
     {
@@ -29,7 +23,7 @@ namespace tmpc :: testing
                 };
 
                 ~J = {
-                    {2. * (~x)[0], 3. * (~x)[1]},
+                    {2. * (~x)[0], 3. * pow((~x)[1], 2)},
                     {2., 6. * (~x)[1]}
                 };
             };
@@ -41,8 +35,6 @@ namespace tmpc :: testing
 
 
     /// @brief Check that the Newton method finds the correct solution of a system of 2 equations.
-    /// 
-    /// The example is taken from here: https://www.mathworks.com/help/optim/ug/fsolve.html
     TEST_F(NewtonSolverTest, testSolve)
     {
         size_t constexpr NX = 2;
@@ -56,9 +48,22 @@ namespace tmpc :: testing
         solver.maxIterations(20);
 
         // Initial guess
-        Vec const x0 {-2.48345, -1.72886}; //{-2., -1.};
+        Vec const x0 {-2., -1.};
+
+        // Find the solution
+        Vec const x_star = solver.solve(fun_, x0);
         
-        // You will be surprised, by they are really equal within machine precision.
-        TMPC_EXPECT_APPROX_EQ(solver.solve(fun_, x0), (Vec {-2.48345, -1.72886}), 1.e-5, 0.);
+        // Check the solution
+        TMPC_EXPECT_APPROX_EQ(x_star, (Vec {-2.48345, -1.72886}), 1.e-5, 0.);
+
+        // Check residual at the solution
+        Vec r;
+        Mat J;
+        fun_(x_star, r, J);
+        EXPECT_LT(maxNorm(r), solver.residualTolerance());
+        EXPECT_EQ(solver.residualMaxNorm(), maxNorm(r));
+
+        // Check number of iterations
+        EXPECT_LE(solver.iterations(), solver.maxIterations());
     }
 }

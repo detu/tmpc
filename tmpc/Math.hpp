@@ -5,10 +5,17 @@
 #include <blaze/Math.h>
 
 #include <limits>
+#include <cmath>
 
 
 namespace tmpc
 {
+    using std::cos;
+    using std::sin;
+    using std::pow;
+    using std::exp;
+
+
     template <typename T>
     inline T constexpr inf()
     {
