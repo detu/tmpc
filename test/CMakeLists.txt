@@ -133,6 +133,14 @@ target_link_libraries(test-tmpc PRIVATE
     ${CMAKE_THREAD_LIBS_INIT}    # Needed for gtest
 )
 
+if (TARGET casadi)
+    target_sources(test-tmpc PRIVATE
+        integrator/PendulumTest.cpp
+    )
+
+    target_link_libraries(test-tmpc PRIVATE casadi)
+endif ()
+
 
 if (TMPC_WITH_CASADI_INTERFACE)
     add_subdirectory(casadi_interface)

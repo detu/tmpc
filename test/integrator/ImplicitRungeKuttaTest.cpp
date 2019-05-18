@@ -1,9 +1,9 @@
+#include "IrkTestParam.hpp"
+
 #include <tmpc/integrator/ImplicitRungeKutta.hpp>
 #include <tmpc/integrator/BackwardEuler.hpp>
 #include <tmpc/integrator/GaussLegendre.hpp>
 #include <tmpc/Testing.hpp>
-
-#include <tuple>
 
 
 namespace tmpc :: testing
@@ -11,35 +11,16 @@ namespace tmpc :: testing
 	using Real = double;
 
 
-	struct TestParam
-	{
-		ButcherTableau<Real> tableau;
-		Real relTol;
-		std::string methodName;
-	};
-
-
-	std::ostream& operator<<(std::ostream& os, TestParam const& p)
-	{
-		return os << p.methodName;
-	}
-
-
 	/// @brief Test integration of a simple linear ODE.
-	///
-	/// The first test param is the Butcher tableau, 
-	/// the second is the relative tolerance for checking the integrator output.
 	class IRK_SimpleLinearOdeTest
-	:	public ::testing::TestWithParam<TestParam>
+	:	public TestWithParam<IrkTestParam<Real>>
 	{
 	};
 
 
-	/// @brief Test integration of a simple time-dependent ODE
-	/// The first test param is the Butcher tableau, 
-	/// the second is the relative tolerance for checking the integrator output.
+	/// @brief Test integration of a simple time-dependent ODE.
 	class IRK_SimpleTimeDependentOdeTest
-	:	public ::testing::TestWithParam<TestParam>
+	:	public TestWithParam<IrkTestParam<Real>>
 	{
 	};
 
@@ -65,13 +46,12 @@ namespace tmpc :: testing
 		Real const h = 0.025;
 		VecX const x1 = irk(ode, t0, x0, u, h);
 
-		TMPC_EXPECT_APPROX_EQ(x1, x0 * exp(u * h), 0., GetParam().relTol);
+		TMPC_EXPECT_APPROX_EQ(x1, x0 * exp(u * h), GetParam().absTol, GetParam().relTol);
 	}
 
 	
 	TEST_P(IRK_SimpleTimeDependentOdeTest, testIntegrate)
 	{
-		using Real = double;
 		size_t const NX = 1, NU = 1;
 		using VecX = blaze::StaticVector<Real, NX, blaze::columnVector>;
 		using VecU = blaze::StaticVector<Real, NU, blaze::columnVector>;
@@ -90,22 +70,22 @@ namespace tmpc :: testing
 		Real const h = 0.05;
 		VecX const x1 = irk(ode, t0, x0, u, h);
 
-		TMPC_EXPECT_APPROX_EQ(x1, x0 + u * (pow(t0 + h, 2) - pow(t0, 2)) / 2., 0., GetParam().relTol);
+		TMPC_EXPECT_APPROX_EQ(x1, x0 + u * (pow(t0 + h, 2) - pow(t0, 2)) / 2., GetParam().absTol, GetParam().relTol);
 	}
 
 
 	INSTANTIATE_TEST_SUITE_P(ImplicitRungeKuttaTest, IRK_SimpleLinearOdeTest,
 		Values(
-			TestParam {backwardEuler<Real>(), 0.002, "Backward Euler"},
-			TestParam {gaussLegendre<Real>(2), 1e-7, "Gauss-Legendre"}
+			IrkTestParam {"Backward Euler", backwardEuler<Real>(), 0., 0.002},
+			IrkTestParam {"Gauss-Legendre", gaussLegendre<Real>(2), 0., 1e-7}
 		)
 	);
 
 
 	INSTANTIATE_TEST_SUITE_P(ImplicitRungeKuttaTest, IRK_SimpleTimeDependentOdeTest,
 		Values(
-			TestParam {backwardEuler<Real>(), 0.001, "Backward Euler"},
-			TestParam {gaussLegendre<Real>(2), 1e-7, "Gauss-Legendre"}
+			IrkTestParam {"Backward Euler", backwardEuler<Real>(), 0., 0.001},
+			IrkTestParam {"Gauss-Legendre", gaussLegendre<Real>(2), 0., 1e-7}
 		)
 	);
 }
