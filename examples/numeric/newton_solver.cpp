@@ -17,17 +17,21 @@ int main(int, char **)
     tmpc::NewtonSolver<Real> solver(NX);
     solver.maxIterations(10);
 
-    // Define the equation and its jacobian
-    auto fun = [] (auto const& x, auto& f, auto& J)        
+    // Define the equation and its Jacobian.
+    // This is the Rosenbrock problem.
+    auto rosenbrock = [] (auto const& x, auto& f, auto& J)
     {
-        ~f = {
-            std::pow(x[0], 2) + std::pow(x[1], 3) - 1.,
-            2. * x[0] + 3. * std::pow(x[1], 2) - 4.
+        Real a = 1.;
+        Real b = 100.;
+
+        f = {
+            -a + x[0] + 2. * b * pow(x[0], 3) - 2. * b * x[0] * x[1],
+            b * (-pow(x[0], 2) + x[1])
         };
 
-        ~J = {
-            {2. * x[0], 3. * std::pow(x[1], 2)},
-            {2., 6. * x[1]}
+        J = {
+            {1. + 6. * b * pow(x[0], 2) - 2. * b * x[1], -2. * b * x[0]},
+            {-2. * b * x[0], b}
         };
     };
 
@@ -38,15 +42,15 @@ int main(int, char **)
     auto monitor = [] (size_t iter, auto const& x, auto const& r, auto const& J)
     {
         std::cout << "iteration " << iter << std::endl;
-        std::cout << "x = " << trans(~x);
-        std::cout << "r = " << trans(~r);
+        std::cout << "x = " << trans(x);
+        std::cout << "r = " << trans(r);
         std::cout << "J = " << std::endl << J;
         std::cout << "----------------------------" << std::endl;
     };
 
     // Find the solution
-    Vec const x_star = solver.solve(fun, x0, monitor);
-    std::cout << "Solution found at " << trans(x_star);
+    Vec const x_star = solver.solve(rosenbrock, x0, monitor);
+    std::cout << "Rosenbrock problem solution: " << trans(x_star);
 
     return 0;
 }
