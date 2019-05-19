@@ -3,6 +3,8 @@
 #include <tmpc/Math.hpp>
 #include <tmpc/SizeT.hpp>
 
+#include <boost/throw_exception.hpp>
+
 #include <stdexcept>
 
 
@@ -27,7 +29,7 @@ namespace tmpc
         ,   c_ {std::move(c)}
         {
             if (!(rows(A_) == columns(A_) && rows(A_) == size(c_) && columns(A_) == size(b_)))
-                throw std::invalid_argument(std::string(__func__) + ": inconsistent argumnent sizes");
+                BOOST_THROW_EXCEPTION(std::invalid_argument("Inconsistent argumnent sizes"));
         }
 
 

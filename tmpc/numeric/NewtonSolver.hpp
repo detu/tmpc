@@ -2,6 +2,8 @@
 
 #include <tmpc/Math.hpp>
 
+#include <boost/throw_exception.hpp>
+
 #include <memory>
 #include <stdexcept>
 
@@ -53,7 +55,7 @@ namespace tmpc
             }
 
             if (!(residualMaxNorm_ < residualTolerance_))
-                throw std::runtime_error("tmpc::NewtonSolver::solve(): max number of iteration reached but solution not found");
+                BOOST_THROW_EXCEPTION(std::runtime_error("Max number of iteration reached but solution not found"));
 
             return x_;
         }
@@ -80,7 +82,7 @@ namespace tmpc
         void residualTolerance(Real val)
         {
             if (val < 0)
-                throw std::invalid_argument(std::string(__PRETTY_FUNCTION__) + ": residual tolerance must be non-negative");
+                BOOST_THROW_EXCEPTION(std::invalid_argument("Residual tolerance must be non-negative"));
 
             residualTolerance_ = val;
         }
