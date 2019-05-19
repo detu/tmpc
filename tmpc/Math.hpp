@@ -14,6 +14,7 @@ namespace tmpc
     using std::sin;
     using std::pow;
     using std::exp;
+    using std::abs;
 
 
     template <typename T>
