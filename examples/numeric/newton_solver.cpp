@@ -15,14 +15,15 @@ int main(int, char **)
 
     // Newton solver
     tmpc::NewtonSolver<Real> solver(NX);
-    solver.maxIterations(10);
+    solver.maxIterations(1000);
+    solver.backTrackingAlpha(0.7);
 
     // Define the equation and its Jacobian.
     // This is the Rosenbrock problem.
     auto rosenbrock = [] (auto const& x, auto& f, auto& J)
     {
         Real a = 1.;
-        Real b = 100.;
+        Real b = 10.;
 
         f = {
             -a + x[0] + 2. * b * pow(x[0], 3) - 2. * b * x[0] * x[1],
