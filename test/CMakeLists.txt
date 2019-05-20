@@ -1,7 +1,7 @@
 #
 # test
 #
-find_package(GTest REQUIRED)
+find_package(GTest 1.9.0 REQUIRED)
 find_package(Threads REQUIRED)    # required for gtest
 find_package(Python3 REQUIRED COMPONENTS Interpreter)
 
@@ -53,6 +53,8 @@ add_executable(test-tmpc
     qp/MpipmWorkspaceTest.cpp
     qp/RiccatiTest.cpp
 
+    integrator/ImplicitRungeKuttaTest.cpp
+
     matrix/MatrixTest.cpp
     matrix/DynamicSubmatrixTest.cpp
     matrix/DynamicSubvectorTest.cpp
@@ -60,6 +62,7 @@ add_executable(test-tmpc
     matrix/BlockMatrixViewTest.cpp
 
     numeric/CentralDifferenceDerivativeTest.cpp
+    numeric/NewtonSolverTest.cpp
 
     random/MultivariateNormalDistributionTest.cpp
 
@@ -129,6 +132,14 @@ target_link_libraries(test-tmpc PRIVATE
     gmock
     ${CMAKE_THREAD_LIBS_INIT}    # Needed for gtest
 )
+
+if (TARGET casadi)
+    target_sources(test-tmpc PRIVATE
+        integrator/PendulumTest.cpp
+    )
+
+    target_link_libraries(test-tmpc PRIVATE casadi)
+endif ()
 
 
 if (TMPC_WITH_CASADI_INTERFACE)

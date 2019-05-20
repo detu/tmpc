@@ -13,7 +13,6 @@ namespace tmpc
 	/**
 	 * \brief Explicit Runge-Kutta 4 integrator.
 	 * \ingroup integrators
-	 *
 	 * 
 	 */
 	template <typename Real>

@@ -43,17 +43,27 @@ find_package(blaze 3.5 REQUIRED)
 find_package(LAPACK REQUIRED)
 
 # Find boost.
-find_package(Boost REQUIRED COMPONENTS graph)
+find_package(Boost REQUIRED COMPONENTS graph exception)
+
+# Find CasADi. Besides Used in some tests
+find_package(CasADi 3.2.0)
+
+if (TARGET casadi)
+    message(STATUS "CASADI_INCLUDE_DIRS=${CASADI_INCLUDE_DIRS}")
+else ()
+    message(STATUS "CasADi not found; the tests depending on CasADi will not be built")
+endif ()
 
 
 # TMPC_WITH_CASADI_INTERFACE
 set(TMPC_WITH_CASADI_INTERFACE ON CACHE BOOL "Build tmpc with CasADi generated function support classes")
 
 if (TMPC_WITH_CASADI_INTERFACE)
-    find_package(CasADi 3.2.0 REQUIRED)
-    message(STATUS "CASADI_INCLUDE_DIRS=${CASADI_INCLUDE_DIRS}")
-
-    include ("CMakeModules/GenerateCasadiFunction.cmake")
+    if (TARGET casadi)
+        include("CMakeModules/GenerateCasadiFunction.cmake")
+    else ()
+        message(SEND_ERROR, "You have selected TMPC_WITH_CASADI_INTERFACE, but CasADi was not found")
+    endif ()
 endif ()
 
 
