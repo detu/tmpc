@@ -1,0 +1,115 @@
+#include <tmpc/numeric/NewtonSolver.hpp>
+#include <tmpc/Testing.hpp>
+
+
+namespace tmpc :: testing
+{
+    /// @brief Check that the Newton method finds the correct solution of a system of 2 equations.
+    TEST(NewtonSolverTest, testSolve)
+    {
+        size_t constexpr NX = 2;
+        
+        using Real = double;
+        using Vec = blaze::StaticVector<Real, NX, blaze::columnVector>;
+        using Mat = blaze::StaticMatrix<Real, NX, NX>;
+
+        // Newton solver
+        NewtonSolver<Real> solver(NX);
+
+        // Define the equation and its Jacobian
+        auto fun = [] (auto const& x, auto& f, auto& J)
+        {
+            ~f = {
+                pow(x[0], 2) + pow(x[1], 3) - 1.,
+                2. * x[0] + 3. * pow(x[1], 2) - 4.
+            };
+
+            ~J = {
+                {2. * x[0], 3. * pow(x[1], 2)},
+                {2., 6. * x[1]}
+            };
+        };
+
+        // Initial guess
+        Vec const x0 {-2., -1.};
+
+        // Find the solution
+        Vec const x_star = solver.solve(fun, x0);
+        
+        // Check the solution
+        TMPC_EXPECT_APPROX_EQ(x_star, (Vec {-2.48345, -1.72886}), 1.e-5, 0.);
+
+        // Check residual at the solution
+        Vec r;
+        Mat J;
+        fun(x_star, r, J);
+        EXPECT_LT(maxNorm(r), solver.residualTolerance());
+        EXPECT_EQ(solver.residualMaxNorm(), maxNorm(r));
+
+        // Check number of iterations
+        EXPECT_LE(solver.iterations(), solver.maxIterations());
+    }
+
+
+    /// @brief Solve the Rosenbrock problem https://en.wikipedia.org/wiki/Rosenbrock_function
+    /// for multiple random initial points.
+    ///
+    /// The corresponding system of equalities is
+    /// 0 = -a + x + 2 b x^3 - 2 b x y
+    /// 0 = b (-x^2 + y)
+    ///
+    /// The Jacobian of the system is
+    /// 1 + 6 b x^2 - 2 b y, -2 b x
+    /// -2 b x             , b
+    TEST(NewtonSolverTest, testRosenbrock)
+    {
+        size_t constexpr NX = 2;
+        
+        using Real = double;
+        using Vec = blaze::StaticVector<Real, NX, blaze::columnVector>;
+        using Mat = blaze::StaticMatrix<Real, NX, NX>;
+
+        // Newton solver
+        NewtonSolver<Real> solver(NX);
+        solver.residualTolerance(1e-10);
+        solver.maxIterations(20);
+
+        // Define the equation and its Jacobian
+        auto fun = [] (auto const& x, auto& f, auto& J)
+        {
+            Real a = 1.;
+            Real b = 100.;
+
+            f = {
+                -a + x[0] + 2. * b * pow(x[0], 3) - 2. * b * x[0] * x[1],
+                b * (-pow(x[0], 2) + x[1])
+            };
+
+            J = {
+                {1. + 6. * b * pow(x[0], 2) - 2. * b * x[1], -2. * b * x[0]},
+                {-2. * b * x[0], b}
+            };
+        };
+
+        // True solution
+        Vec const x_true {1., 1.};
+
+        // Try different initial points
+        size_t const num_points = 10000;
+        for (size_t count = 0; count < num_points; ++count)
+        {
+            // Initial guess
+            Vec x0;
+            randomize(x0, -20., 20.);
+
+            // Find the solution
+            Vec x_star;
+            ASSERT_NO_THROW(x_star = solver.solve(fun, x0))
+                << " at starting point " << trans(x0);
+            
+            // Check the solution
+            TMPC_EXPECT_APPROX_EQ(x_star, x_true, 1e-9, 0.)
+                << " the difference is " << trans(x_star - x_true);
+        }
+    }
+}

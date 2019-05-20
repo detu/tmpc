@@ -26,7 +26,16 @@ namespace tmpc
 
 
         template <typename Integrator, typename ODE, typename StateVector0, typename InputVector>
-		auto const& operator()(Integrator const& integrator, ODE const& ode, Real t0, StateVector0 const& x0, InputVector const& u, Real h, Real h_max) const
+		auto const& operator()(Integrator const& integrator, ODE const& ode, Real t0, StateVector0 const& x0, 
+            InputVector const& u, Real h, Real h_max) const
+		{
+            return (*this)(integrator, ode, t0, x0, u, h, h_max, [] (Real, auto const&) {});
+        }
+
+
+        template <typename Integrator, typename ODE, typename StateVector0, typename InputVector, typename Monitor>
+		auto const& operator()(Integrator const& integrator, ODE const& ode, Real t0, 
+            StateVector0 const& x0, InputVector const& u, Real h, Real h_max, Monitor monitor) const
 		{
 			// Number of integrator steps per simulation step.
             size_t const num_integrator_steps = ceil(h / h_max);
@@ -36,7 +45,10 @@ namespace tmpc
 
             x_ = x0;
             for (size_t i = 0; i < num_integrator_steps; ++i)
+            {
                 x_ = integrator(ode, t0 + integrator_step * i, x_, u, integrator_step);
+                monitor(integrator_step * (i + 1), x_);
+            }
 	
 			return x_;
 		}

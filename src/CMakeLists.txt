@@ -34,6 +34,8 @@ target_link_libraries(tmpc
     # target_link_libraries(blaze INTERFACE $<BUILD_INTERFACE:${LAPACK_LIBRARIES}>)
     # But for some reason it does not work.
     PUBLIC ${LAPACK_LIBRARIES}
+    PUBLIC Boost::graph
+    PUBLIC Boost::exception
 )
 
 #
