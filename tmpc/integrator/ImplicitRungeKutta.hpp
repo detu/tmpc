@@ -110,6 +110,27 @@ namespace tmpc
 		}
 
 
+		/// @brief Get max number of Newton iterations
+		size_t newtonMaxIterations() const
+		{
+			return newtonSolver_.maxIterations();
+		}
+
+
+		/// @brief Set max number of Newton iterations
+		void newtonMaxIterations(size_t val)
+		{
+			newtonSolver_.maxIterations(val);
+		}
+
+
+		/// @brief Get number of Newton iterations made on the last operator() call.
+		size_t newtonIterations() const
+		{
+			return newtonSolver_.iterations();
+		}
+
+
 	private:
 		size_t const nx_;
 		size_t const nu_;
