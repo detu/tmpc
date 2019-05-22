@@ -74,6 +74,8 @@ namespace tmpc :: testing
 
         // Newton solver
         NewtonSolver<Real> solver(NX);
+        solver.maxIterations(20000);
+        solver.backTrackingAlpha(0.5);
 
         // Define the equation and its Jacobian
         auto fun = [] (auto const& x, auto& f, auto& J)

@@ -38,8 +38,11 @@ namespace tmpc
         template <typename F, typename VT, typename Monitor>
         auto const& solve(F const& fun, blaze::Vector<VT, blaze::columnVector> const& x0, Monitor monitor)
         {
+            functionEvaluations_ = 0;
+
             x_ = x0;
             fun(x_, r_, J_);
+            ++functionEvaluations_;
 
 			for (iterations_ = 0; iterations_ <= maxIterations_; ++iterations_)
 			{
@@ -58,8 +61,9 @@ namespace tmpc
                 // Step size
                 Real t = 1.;
 
-                // Do backtracking search
-                while (fun(x1_ = x_ + t * d_, r1_, J_), !allAbsLessThan(r1_, r_) /*maxNorm(r1_) >= residualMaxNorm_*/)
+                // Do backtracking search.
+                // alpha == 1. disables backtracking.
+                while (fun(x1_ = x_ + t * d_, r1_, J_), ++functionEvaluations_, alpha_ < 1. && !allAbsLessThan(r1_, r_))
                     t *= alpha_;
 
                 // Netwon method update: x(n+1) = x(n) + t*d
@@ -107,9 +111,17 @@ namespace tmpc
         }
 
 
+        /// @brief Total number of Newton iterations during last solve.
         size_t iterations() const
         {
             return iterations_;
+        }
+
+
+        /// @brief Total number of function evaluations during last solve.
+        size_t functionEvaluations() const
+        {
+            return functionEvaluations_;
         }
 
 
@@ -119,10 +131,14 @@ namespace tmpc
         }
 
 
+        /// @brief Set backtracking alpha parameter value.
+        ///
+        /// alpha must be withing the range (0., 1.].
+        /// Setting alpha = 1. disables backtracking.
         void backTrackingAlpha(Real val)
         {
             if (!(0. < val && val < 1.))
-                throw std::invalid_argument(std::string(__PRETTY_FUNCTION__) + ": backtracking alpha must be within (0, 1)");
+                BOOST_THROW_EXCEPTION(std::invalid_argument("Backtracking alpha must be within the (0, 1] range"));
 
             alpha_ = val;
         }
@@ -141,11 +157,12 @@ namespace tmpc
 
         size_t iterations_ = 0;
 		size_t maxIterations_ = 10;
+        size_t functionEvaluations_ = 0;
 		Real residualMaxNorm_ = inf<Real>();
         Real residualTolerance_ = 1e-10;
 
         // Backtracking alpha
-        Real alpha_ = 0.5;
+        Real alpha_ = 1.;
 
         std::unique_ptr<int[]> ipiv_;
 
