@@ -290,7 +290,7 @@ namespace tmpc :: testing
         riccati(ws_mpipm, ws_mpipm);
 
         auto const v = vertex(0, g);
-		EXPECT_PRED2(ApproxEqual(1e-4), forcePrint(get(ws_mpipm.u(), v)), forcePrint(blaze::DynamicVector {1.4785, -1.3196}));
+		EXPECT_PRED2(ApproxEqual(1e-4), forcePrint(get(ws_mpipm.u(), v)), forcePrint(blaze::DynamicVector<double> {1.4785, -1.3196}));
 	}
 
 

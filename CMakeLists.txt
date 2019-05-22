@@ -43,7 +43,7 @@ find_package(blaze 3.5 REQUIRED)
 find_package(LAPACK REQUIRED)
 
 # Find boost.
-find_package(Boost REQUIRED COMPONENTS graph)
+find_package(Boost REQUIRED COMPONENTS graph exception)
 
 # Find CasADi. Besides Used in some tests
 find_package(CasADi 3.2.0)

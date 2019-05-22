@@ -5,6 +5,8 @@
 #include <tmpc/integrator/ButcherTableau.hpp>
 #include <tmpc/numeric/NewtonSolver.hpp>
 
+#include <boost/throw_exception.hpp>
+
 #include <stdexcept>
 
 
@@ -51,10 +53,10 @@ namespace tmpc
 			blaze::Vector<VT2, blaze::columnVector> const& u, Real h, Monitor monitor) const
 		{
 			if (size(x0) != nx_)
-				throw std::invalid_argument(std::string(__func__) + ": Invalid size of x0");
+				BOOST_THROW_EXCEPTION(std::invalid_argument("Invalid size of x0"));
 
 			if (size(u) != nu_)
-				throw std::invalid_argument(std::string(__func__) + ": Invalid size of u");
+				BOOST_THROW_EXCEPTION(std::invalid_argument("Invalid size of u"));
 
 			// Finding the root of the following equation using Newton method:
 			// 0 = f(t_0 + c_i h, x_0 + \sum_{j=1}^s a_{i,j} k_j) - k_i
@@ -99,12 +101,33 @@ namespace tmpc
 			blaze::Vector<VT3, TF3>& x_next, blaze::Matrix<MT1, SO1>& A, blaze::Matrix<MT2, SO2>& B) const
 		{
 			if (size(x0) != nx_)
-				throw std::invalid_argument(std::string(__func__) + ": Invalid size of x0");
+				BOOST_THROW_EXCEPTION(std::invalid_argument("Invalid size of x0"));
 
 			if (size(u) != nu_)
-				throw std::invalid_argument(std::string(__func__) + "Invalid size of u");
+				BOOST_THROW_EXCEPTION(std::invalid_argument("Invalid size of u"));
 				
-			throw std::logic_error(std::string(__func__) + " is not implemented");
+			throw BOOST_THROW_EXCEPTION(std::logic_error("Function is not implemented"));
+		}
+
+
+		/// @brief Get max number of Newton iterations
+		size_t newtonMaxIterations() const
+		{
+			return newtonSolver_.maxIterations();
+		}
+
+
+		/// @brief Set max number of Newton iterations
+		void newtonMaxIterations(size_t val)
+		{
+			newtonSolver_.maxIterations(val);
+		}
+
+
+		/// @brief Get number of Newton iterations made on the last operator() call.
+		size_t newtonIterations() const
+		{
+			return newtonSolver_.iterations();
 		}
 
 

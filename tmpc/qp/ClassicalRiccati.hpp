@@ -90,12 +90,12 @@ namespace tmpc
             std::vector<boost::default_color_type> color(num_vertices(graph_));
 
             depth_first_search(graph_,
-                RiccatiBackwardVisitor(*this, qp, sol), 
+                RiccatiBackwardVisitor<Qp, QpSol>(*this, qp, sol), 
                 make_iterator_property_map(color.begin(), get(graph::vertex_index, graph_)), 
                 vertex(0, graph_));
 
             depth_first_search(graph_,
-                RiccatiForwardVisitor(*this, qp, sol), 
+                RiccatiForwardVisitor<Qp, QpSol>(*this, qp, sol), 
                 make_iterator_property_map(color.begin(), get(graph::vertex_index, graph_)), 
                 vertex(0, graph_));
         }

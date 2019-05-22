@@ -6,6 +6,8 @@
 
 #include <blaze/Math.h>
 
+#include <cstddef>
+
 
 namespace tmpc :: testing
 {
@@ -47,7 +49,7 @@ namespace tmpc :: testing
 			blaze::Matrix<MT1, SO1>& A, 
 			blaze::Matrix<MT2, SO2>& B) const
 		{
-			nullptr_t null;
+			std::nullptr_t null;
 			_ode(std::tie(t, x0, u0), std::tie(xdot, A, B, null, null, null, null, null, null));
 		}
 
@@ -58,7 +60,7 @@ namespace tmpc :: testing
 		void operator()(double t, StateVector const& x0, InputVector const& u0,	StateVector& xdot, StateStateMatrix& A, StateInputMatrix& B,
 			QuadVector& q, QuadStateMatrix& qA, QuadInputMatrix& qB) const
 		{
-			nullptr_t null;
+			std::nullptr_t null;
 			_ode(std::tie(t, x0, u0), std::tie(xdot, A, B, q, qA, qB, null, null, null));
 		}
 
@@ -69,7 +71,7 @@ namespace tmpc :: testing
 		void operator()(double t, StateVector const& x0, InputVector const& u0,	StateVector& xdot, StateStateMatrix& A, StateInputMatrix& B,
 			QuadVector& q, QuadStateMatrix& qA, QuadInputMatrix& qB, ResVector& r, ResStateMatrix& rA, ResInputMatrix& rB) const
 		{
-			nullptr_t null;
+			std::nullptr_t null;
 			_ode(std::tie(t, x0, u0), std::tie(xdot, A, B, q, qA, qB, r, rA, rB));
 		}
 
@@ -77,7 +79,7 @@ namespace tmpc :: testing
 		void operator()(double t, StateVector const& x0, InputVector const& u0,
 				StateVector const& x0_seed, InputVector const& u_seed, StateVector& xdot, StateVector& xdot_sens) const
 		{
-			nullptr_t null;
+			std::nullptr_t null;
 			static casadi_interface::GeneratedFunction const _ode(pendulum_ode_sens_functions());
 			_ode(std::tie(t, x0, u0, x0_seed, u_seed), std::tie(xdot, xdot_sens));
 		}
@@ -87,7 +89,7 @@ namespace tmpc :: testing
 		 */
 		StateVector operator()(double t, StateVector const& x0, InputVector const& u0) const
 		{
-			nullptr_t null;
+			std::nullptr_t null;
 			StateVector xdot;
 			_ode(std::tie(t, x0, u0), std::tie(xdot, null, null, null, null, null, null, null, null));
 
@@ -106,7 +108,7 @@ namespace tmpc :: testing
 		void operator()(double t, StateVector const& x0, InputVector const& u0,	StateVector& xdot, StateStateMatrix& A, StateInputMatrix& B,
 			ResVector& r, ResStateMatrix& rA, ResInputMatrix& rB) const
 		{
-			nullptr_t null;
+			std::nullptr_t null;
 			_ode(std::tie(t, x0, u0), std::tie(xdot, A, B, null, null, null, r, rA, rB));
 		}
 	};

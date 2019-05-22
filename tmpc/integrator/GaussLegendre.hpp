@@ -2,6 +2,8 @@
 
 #include <tmpc/integrator/ButcherTableau.hpp>
 
+#include <boost/throw_exception.hpp>
+
 #include <stdexcept>
 
 
@@ -14,7 +16,7 @@ namespace tmpc
         using Tableau = ButcherTableau<Real>;
 
         if (n_steps != 2)
-            throw std::invalid_argument(std::string(__func__) + ": only 2-point Gauss-Lenendre quadrature is currently supported");
+            BOOST_THROW_EXCEPTION(std::invalid_argument("Only 2-point Gauss-Lenendre quadrature is currently supported"));
 
         // The table for 2-point method is taken from 
         // https://en.wikipedia.org/wiki/List_of_Runge%E2%80%93Kutta_methods#Gauss%E2%80%93Legendre_methods

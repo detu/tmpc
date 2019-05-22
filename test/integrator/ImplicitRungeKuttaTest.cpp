@@ -24,7 +24,6 @@ namespace tmpc :: testing
 	{
 	};
 
-
 	TEST_P(IRK_SimpleLinearOdeTest, testIntegrate)
 	{
 		using Real = double;
@@ -88,4 +87,40 @@ namespace tmpc :: testing
 			IrkTestParam {"Gauss-Legendre", gaussLegendre<Real>(2), 0., 1e-7}
 		)
 	);
+
+
+	TEST(ImplicitRungeKuttaTest, testInvalidDimensionX)
+	{
+		size_t const NX = 1, NU = 1;
+		ImplicitRungeKutta<Real> irk(NX, NU, backwardEuler<Real>());
+
+		auto foo_ode = [] (Real t, auto const& x, auto const& u, auto& f, auto& df_dx)
+		{
+			f = 0.;
+			df_dx = {{0.}};
+		};
+
+		blaze::StaticVector<Real, NX + 1, blaze::columnVector> const x0(0.);
+		blaze::StaticVector<Real, NU, blaze::columnVector> const u(0.);
+
+		EXPECT_THROW(irk(foo_ode, 0., x0, u, 1.), std::invalid_argument);
+	}
+
+
+	TEST(ImplicitRungeKuttaTest, testInvalidDimensionU)
+	{
+		size_t const NX = 1, NU = 1;
+		ImplicitRungeKutta<Real> irk(NX, NU, backwardEuler<Real>());
+
+		auto foo_ode = [] (Real t, auto const& x, auto const& u, auto& f, auto& df_dx)
+		{
+			f = 0.;
+			df_dx = {{0.}};
+		};
+
+		blaze::StaticVector<Real, NX, blaze::columnVector> const x0(0.);
+		blaze::StaticVector<Real, NU + 1, blaze::columnVector> const u(0.);
+
+		EXPECT_THROW(irk(foo_ode, 0., x0, u, 1.), std::invalid_argument);
+	}
 }
