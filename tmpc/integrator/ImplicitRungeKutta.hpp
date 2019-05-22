@@ -124,6 +124,13 @@ namespace tmpc
 		}
 
 
+		/// @brief Set Newton method backtracking parameter
+		void newtonBacktrackingAlpha(Real val)
+		{
+			newtonSolver_.backtrackingAlpha(val);
+		}
+
+
 		/// @brief Get number of Newton iterations made on the last operator() call.
 		size_t newtonIterations() const
 		{

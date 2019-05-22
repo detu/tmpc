@@ -125,7 +125,7 @@ namespace tmpc
         }
 
 
-        Real backTrackingAlpha() const
+        Real backtrackingAlpha() const
         {
             return alpha_;
         }
@@ -135,7 +135,7 @@ namespace tmpc
         ///
         /// alpha must be withing the range (0., 1.].
         /// Setting alpha = 1. disables backtracking.
-        void backTrackingAlpha(Real val)
+        void backtrackingAlpha(Real val)
         {
             if (!(0. < val && val < 1.))
                 BOOST_THROW_EXCEPTION(std::invalid_argument("Backtracking alpha must be within the (0, 1] range"));
