@@ -137,7 +137,7 @@ namespace tmpc
         /// Setting alpha = 1. disables backtracking.
         void backtrackingAlpha(Real val)
         {
-            if (!(0. < val && val < 1.))
+            if (!(0. < val && val <= 1.))
                 BOOST_THROW_EXCEPTION(std::invalid_argument("Backtracking alpha must be within the (0, 1] range"));
 
             alpha_ = val;
