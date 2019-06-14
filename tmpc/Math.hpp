@@ -2,6 +2,8 @@
 
 #pragma once
 
+#include "math/Expm.hpp"
+
 #include <blaze/Math.h>
 
 #include <limits>
