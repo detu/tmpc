@@ -18,7 +18,10 @@ namespace tmpc
         NewtonSolver(size_t nx)
         :   nx_(nx)
         ,   x_(nx)
+        ,   x1_(nx)
         ,   r_(nx)
+        ,   r1_(nx)
+        ,   d_(nx)
         ,   J_(nx, nx, Real {})
         ,   ipiv_(new int[nx])
         {
@@ -35,12 +38,14 @@ namespace tmpc
         template <typename F, typename VT, typename Monitor>
         auto const& solve(F const& fun, blaze::Vector<VT, blaze::columnVector> const& x0, Monitor monitor)
         {
+            functionEvaluations_ = 0;
+
             x_ = x0;
-            residualMaxNorm_ = inf<Real>();
+            fun(x_, r_, J_);
+            ++functionEvaluations_;
 
 			for (iterations_ = 0; iterations_ <= maxIterations_; ++iterations_)
 			{
-                fun(x_, r_, J_);
                 residualMaxNorm_ = maxNorm(r_);
 
                 monitor(iterations_, std::as_const(x_), std::as_const(r_), std::as_const(J_));
@@ -49,9 +54,21 @@ namespace tmpc
 				if (residualMaxNorm_ < residualTolerance_)
 					break;
 
-                // Netwon method update: x(n+1) = x(n) - inv(J(n))*r(n)
-                gesv(J_, r_, ipiv_.get());
-                x_ -= r_;
+                // Calculate search direction d(n)=-inv(J(n))*r(n)
+                d_ = -r_;
+                gesv(J_, d_, ipiv_.get());
+
+                // Step size
+                Real t = 1.;
+
+                // Do backtracking search.
+                // alpha == 1. disables backtracking.
+                while (fun(x1_ = x_ + t * d_, r1_, J_), ++functionEvaluations_, alpha_ < 1. && !allAbsLessThan(r1_, r_))
+                    t *= alpha_;
+
+                // Netwon method update: x(n+1) = x(n) + t*d
+                x_ = x1_;
+                r_ = r1_;
             }
 
             if (!(residualMaxNorm_ < residualTolerance_))
@@ -94,25 +111,75 @@ namespace tmpc
         }
 
 
+        /// @brief Total number of Newton iterations during last solve.
         size_t iterations() const
         {
             return iterations_;
         }
 
 
+        /// @brief Total number of function evaluations during last solve.
+        size_t functionEvaluations() const
+        {
+            return functionEvaluations_;
+        }
+
+
+        Real backtrackingAlpha() const
+        {
+            return alpha_;
+        }
+
+
+        /// @brief Set backtracking alpha parameter value.
+        ///
+        /// alpha must be withing the range (0., 1.].
+        /// Setting alpha = 1. disables backtracking.
+        void backtrackingAlpha(Real val)
+        {
+            if (!(0. < val && val <= 1.))
+                BOOST_THROW_EXCEPTION(std::invalid_argument("Backtracking alpha must be within the (0, 1] range"));
+
+            alpha_ = val;
+        }
+
+
     private:
         size_t nx_;
         blaze::DynamicVector<Real, blaze::columnVector> x_;
+        blaze::DynamicVector<Real, blaze::columnVector> x1_;
         blaze::DynamicVector<Real, blaze::columnVector> r_;
+        blaze::DynamicVector<Real, blaze::columnVector> r1_;
+        blaze::DynamicVector<Real, blaze::columnVector> d_;
 
         // The J matrix must be column-major in order blaze::gesv() to work.
         blaze::DynamicMatrix<Real, blaze::columnMajor> J_;
 
         size_t iterations_ = 0;
 		size_t maxIterations_ = 10;
+        size_t functionEvaluations_ = 0;
 		Real residualMaxNorm_ = inf<Real>();
         Real residualTolerance_ = 1e-10;
 
+        // Backtracking alpha
+        Real alpha_ = 1.;
+
         std::unique_ptr<int[]> ipiv_;
+
+
+        template <typename VT1, typename VT2, bool TF>
+        static bool allAbsLessThan(blaze::Vector<VT1, TF> const& a, blaze::Vector<VT2, TF> const& b)
+        {
+            size_t const n = size(a);
+
+            if (n != size(b))
+                throw std::invalid_argument(std::string(__func__) + ": vector sizes don't match");
+
+            size_t i = 0; 
+            while (i < n && abs((~a)[i]) < abs((~b)[i]))
+                ++i;
+                
+            return i >= n;
+        }
     };
 }

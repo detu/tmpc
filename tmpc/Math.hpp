@@ -6,8 +6,11 @@
 
 #include <blaze/Math.h>
 
+#include <boost/throw_exception.hpp>
+
 #include <limits>
 #include <cmath>
+#include <stdexcept>
 
 
 namespace tmpc
@@ -68,8 +71,8 @@ namespace tmpc
             MatrixType& operator=(blaze::Matrix<MT1, SO1> const& rhs)
             {
                 if (rows(rhs) != rows(m_) || columns(rhs) != columns(m_))
-                    throw std::invalid_argument("Right-hind side of a matrix assignment has different size, "
-                        "but resizing of the left-hand size is not allowed");
+                    BOOST_THROW_EXCEPTION(std::invalid_argument("Right-hind side of a matrix assignment has different size, "
+                        "but resizing of the left-hand size is not allowed"));
 
                 return m_ = rhs;
             }
@@ -79,8 +82,8 @@ namespace tmpc
 		    MatrixType& operator=(std::initializer_list<std::initializer_list<T>> rhs)
             {
                 if (!(size(rhs) == rows(m_) && (size(rhs) == 0 || maxRowLength(rhs) == columns(m_))))
-                    throw std::invalid_argument("Right-hind side of a matrix assignment has different size, "
-                        "but resizing of the left-hand size is not allowed");
+                    BOOST_THROW_EXCEPTION(std::invalid_argument("Right-hind side of a matrix assignment has different size, "
+                        "but resizing of the left-hand size is not allowed"));
 
                 return m_ = rhs;
             }
@@ -115,8 +118,8 @@ namespace tmpc
             MatrixType& operator=(blaze::Matrix<MT1, SO1> const& rhs)
             {
                 if (rows(rhs) != rows(m_) || columns(rhs) != columns(m_))
-                    throw std::invalid_argument("Right-hind side of a matrix assignment has different size, "
-                        "but resizing of the left-hand size is not allowed");
+                    BOOST_THROW_EXCEPTION(std::invalid_argument("Right-hind side of a matrix assignment has different size, "
+                        "but resizing of the left-hand size is not allowed"));
 
                 return m_ = rhs;
             }
@@ -126,8 +129,8 @@ namespace tmpc
 		    MatrixType& operator=(std::initializer_list<std::initializer_list<T>> rhs)
             {
                 if (!(size(rhs) == rows(m_) && (size(rhs) == 0 || maxRowLength(rhs) == columns(m_))))
-                    throw std::invalid_argument("Right-hind side of a matrix assignment has different size, "
-                        "but resizing of the left-hand size is not allowed");
+                    BOOST_THROW_EXCEPTION(std::invalid_argument("Right-hind side of a matrix assignment has different size, "
+                        "but resizing of the left-hand size is not allowed"));
 
                 return m_ = rhs;
             }
@@ -162,8 +165,8 @@ namespace tmpc
             VectorType& operator=(blaze::Vector<VT1, TF1> const& rhs)
             {
                 if (size(rhs) != size(v_))
-                    throw std::invalid_argument("Right-hind side of a vector assignment has different size, "
-                        "but resizing of the left-hand size is not allowed");
+                    BOOST_THROW_EXCEPTION(std::invalid_argument("Right-hind side of a vector assignment has different size, "
+                        "but resizing of the left-hand size is not allowed"));
 
                 return v_ = rhs;
             }
@@ -173,8 +176,8 @@ namespace tmpc
 		    VectorType& operator=(std::initializer_list<T> rhs)
             {
                 if (size(rhs) != size(v_))
-                    throw std::invalid_argument("Right-hind side of a vector assignment has different size, "
-                        "but resizing of the left-hand size is not allowed");
+                    BOOST_THROW_EXCEPTION(std::invalid_argument("Right-hind side of a vector assignment has different size, "
+                        "but resizing of the left-hand size is not allowed"));
 
                 return v_ = rhs;
             }
@@ -243,7 +246,7 @@ namespace blaze
     inline decltype(auto) scalar(Vector<VT, TF> const& v)
     {
         if (size(v) != 1)
-            throw std::invalid_argument("Invalid size of the scalar() argument: a vector of size 1 expected");
+            BOOST_THROW_EXCEPTION(std::invalid_argument("Invalid size of the scalar() argument: a vector of size 1 expected"));
 
         return (~v)[0];
     }
@@ -253,7 +256,7 @@ namespace blaze
     inline decltype(auto) scalar(Vector<VT, TF>& v)
     {
         if (size(v) != 1)
-            throw std::invalid_argument("Invalid size of the scalar() argument: a vector of size 1 expected");
+            BOOST_THROW_EXCEPTION(std::invalid_argument("Invalid size of the scalar() argument: a vector of size 1 expected"));
 
         return (~v)[0];
     }
@@ -263,7 +266,7 @@ namespace blaze
     inline decltype(auto) scalar(Vector<VT, TF>&& v)
     {
         if (size(v) != 1)
-            throw std::invalid_argument("Invalid size of the scalar() argument: a vector of size 1 expected");
+            BOOST_THROW_EXCEPTION(std::invalid_argument("Invalid size of the scalar() argument: a vector of size 1 expected"));
 
         return (~v)[0];
     }
@@ -273,7 +276,7 @@ namespace blaze
     inline decltype(auto) scalar(Matrix<MT, SO> const& m)
     {
         if (rows(m) != 1 || columns(m) != 1)
-            throw std::invalid_argument("Invalid size of the scalar() argument: a 1x1 matrix expected");
+            BOOST_THROW_EXCEPTION(std::invalid_argument("Invalid size of the scalar() argument: a 1x1 matrix expected"));
 
         return (~m)(0, 0);
     }
@@ -283,7 +286,7 @@ namespace blaze
     inline decltype(auto) scalar(Matrix<MT, SO>& m)
     {
         if (rows(m) != 1 || columns(m) != 1)
-            throw std::invalid_argument("Invalid size of the scalar() argument: a 1x1 matrix expected");
+            BOOST_THROW_EXCEPTION(std::invalid_argument("Invalid size of the scalar() argument: a 1x1 matrix expected"));
 
         return (~m)(0, 0);
     }
@@ -293,7 +296,7 @@ namespace blaze
     inline decltype(auto) scalar(Matrix<MT, SO>&& m)
     {
         if (rows(m) != 1 || columns(m) != 1)
-            throw std::invalid_argument("Invalid size of the scalar() argument: a 1x1 matrix expected");
+            BOOST_THROW_EXCEPTION(std::invalid_argument("Invalid size of the scalar() argument: a 1x1 matrix expected"));
 
         return (~m)(0, 0);
     }

@@ -185,7 +185,8 @@ namespace tmpc :: testing
 	INSTANTIATE_TEST_SUITE_P(ImplicitRungeKuttaTest, PendulumTest,
 		Values(
 			IrkTestParam {"Backward Euler", backwardEuler<Real>(), 1e-3, 2e-3},
-			IrkTestParam {"Gauss-Legendre", gaussLegendre<Real>(2), 1e-6, 1e-4}
+			IrkTestParam {"Gauss-Legendre", gaussLegendre<Real>(2), 1e-6, 1e-4},
+			IrkTestParam {"Gauss-Legendre", gaussLegendre<Real>(3), 1e-6, 1e-5}
 		)
 	);
 }

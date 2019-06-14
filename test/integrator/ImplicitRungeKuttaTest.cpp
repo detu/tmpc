@@ -76,7 +76,8 @@ namespace tmpc :: testing
 	INSTANTIATE_TEST_SUITE_P(ImplicitRungeKuttaTest, IRK_SimpleLinearOdeTest,
 		Values(
 			IrkTestParam {"Backward Euler", backwardEuler<Real>(), 0., 0.002},
-			IrkTestParam {"Gauss-Legendre", gaussLegendre<Real>(2), 0., 1e-7}
+			IrkTestParam {"Gauss-Legendre", gaussLegendre<Real>(2), 0., 1e-7},
+			IrkTestParam {"Gauss-Legendre", gaussLegendre<Real>(3), 0., 1e-14}
 		)
 	);
 
@@ -84,7 +85,8 @@ namespace tmpc :: testing
 	INSTANTIATE_TEST_SUITE_P(ImplicitRungeKuttaTest, IRK_SimpleTimeDependentOdeTest,
 		Values(
 			IrkTestParam {"Backward Euler", backwardEuler<Real>(), 0., 0.001},
-			IrkTestParam {"Gauss-Legendre", gaussLegendre<Real>(2), 0., 1e-7}
+			IrkTestParam {"Gauss-Legendre", gaussLegendre<Real>(2), 0., 1e-14},
+			IrkTestParam {"Gauss-Legendre", gaussLegendre<Real>(3), 0., 1e-17}
 		)
 	);
 

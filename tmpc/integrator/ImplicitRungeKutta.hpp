@@ -34,7 +34,7 @@ namespace tmpc
 		,	x_(nx)
 		,	f_(nx)
 		,	df_dx_(nx, nx)
-		,	k_(ns_ * nx_)
+		,	k_(ns_ * nx_, Real {})
 		,	newtonSolver_(ns_ * nx)
 		{
 		}
@@ -60,6 +60,12 @@ namespace tmpc
 
 			// Finding the root of the following equation using Newton method:
 			// 0 = f(t_0 + c_i h, x_0 + \sum_{j=1}^s a_{i,j} k_j) - k_i
+
+			// If warm-starting, reuse the previous value of k as the starting point,
+			// otherwise reset it to 0.
+			if (!warmStart_)
+				k_ = Real {};
+
 			k_ = newtonSolver_.solve(
 				[&] (auto const& k, auto& r, auto& J)
 				{
@@ -79,7 +85,7 @@ namespace tmpc
 
 					J -= blaze::IdentityMatrix<Real>(ns_ * nx_);
 				}, 
-				blaze::ZeroVector<Real>(ns_ * nx_),
+				k_,
 				monitor
 			);
 
@@ -124,10 +130,31 @@ namespace tmpc
 		}
 
 
+		/// @brief Set Newton method backtracking parameter
+		void newtonBacktrackingAlpha(Real val)
+		{
+			newtonSolver_.backtrackingAlpha(val);
+		}
+
+
 		/// @brief Get number of Newton iterations made on the last operator() call.
 		size_t newtonIterations() const
 		{
 			return newtonSolver_.iterations();
+		}
+
+
+		/// @brief Get warm start value.
+		bool warmStart() const
+		{
+			return warmStart_;
+		}
+
+
+		/// @brief Switch warm start on and off.
+		void warmStart(bool val)
+		{
+			warmStart_ = val;
 		}
 
 
@@ -146,6 +173,9 @@ namespace tmpc
 		mutable blaze::DynamicVector<Real, blaze::columnVector> k_;
 
 		mutable NewtonSolver<Real> newtonSolver_;
+
+		// Use previous solution as the initial point in the Newton method
+		bool warmStart_ = false;
 
 
 		Real a(size_t i, size_t j) const
