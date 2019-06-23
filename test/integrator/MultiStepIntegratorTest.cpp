@@ -68,8 +68,7 @@ namespace tmpc :: testing
 			ODE::StateVector const xplus = integrator_(rk4_, ode_, p.t, p.x0, p.u, p.timeStep, p.timeStep * 0.1);
 
 			// Tolerance increased by the factor of 1e+2, because the test data are obtained using 1-step RK4.
-			ApproxEqual const is_approx(1e-8);
-			EXPECT_PRED2(is_approx, forcePrint(xplus), forcePrint(p.xplus));
+			EXPECT_TRUE(approxEqual(xplus, p.xplus, 1e-8));
 		}
 	}
 
@@ -84,9 +83,9 @@ namespace tmpc :: testing
 			integrator_(rk4_, ode_, p.t, p.x0, p.u, p.timeStep, p.timeStep * 0.1, xplus, A, B);
 
 			// Tolerance increased by the factor of 1e+2, because the test data are obtained using 1-step RK4.
-			EXPECT_PRED2(ApproxEqual(1e-8), forcePrint(xplus), forcePrint(p.xplus));
-			EXPECT_PRED2(ApproxEqual(1e-8), forcePrint(A), forcePrint(p.A));
-			EXPECT_PRED2(ApproxEqual(1e-8), forcePrint(B), forcePrint(p.B));
+			EXPECT_TRUE(approxEqual(xplus, p.xplus, 1e-8));
+			EXPECT_TRUE(approxEqual(A, p.A, 1e-8));
+			EXPECT_TRUE(approxEqual(B, p.B, 1e-8));
 		}
 	}
 }

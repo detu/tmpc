@@ -112,112 +112,105 @@ namespace tmpc :: testing
 	}
 
 
-	class ApproxEqual
+	/// @brief Blaze matrix approx equality predicate
+	template <typename MT1, bool SO1, typename MT2, bool SO2, typename Real>
+	inline AssertionResult approxEqual(blaze::Matrix<MT1, SO1> const& lhs, blaze::Matrix<MT2, SO2> const& rhs, Real abs_tol, Real rel_tol = 0)
 	{
-	public:
-		ApproxEqual(double abs_tol, double rel_tol = 0.)
-		:	absTol_(abs_tol)
-		,	relTol_(rel_tol)
-		{
-		}
+		size_t const M = rows(lhs);
+		size_t const N = columns(lhs);
 
+		if (rows(rhs) != M || columns(rhs) != N)
+			return AssertionFailure() << "Matrix size mismatch";
 
-		template <typename MT1, bool SO1, typename MT2, bool SO2>
-		bool operator()(blaze::Matrix<MT1, SO1> const& lhs, blaze::Matrix<MT2, SO2> const& rhs) const
-		{
-			size_t const M = rows(lhs);
-			size_t const N = columns(lhs);
-
-			if (rows(rhs) != M || columns(rhs) != N)
-				throw std::invalid_argument("Matrix size mismatch in ApproxEqual");
-
-			for (size_t i = 0; i < M; ++i)
-				for (size_t j = 0; j < N; ++j)
-					if (abs((~lhs)(i, j) - (~rhs)(i, j)) > absTol_ + relTol_ * abs((~rhs)(i, j)))
-						return false;
-
-			return true;
-		}
-
-
-		template <typename VT1, typename VT2, bool TF>
-		bool operator()(blaze::Vector<VT1, TF> const& lhs, blaze::Vector<VT2, TF> const& rhs) const
-		{
-			size_t const N = size(lhs);
-
-			if (size(rhs) != N)
-				throw std::invalid_argument("Vector size mismatch in ApproxEqual");
-
+		for (size_t i = 0; i < M; ++i)
 			for (size_t j = 0; j < N; ++j)
-				if (abs((~lhs)[j] - (~rhs)[j]) > absTol_ + relTol_ * abs((~rhs)[j]))
-					return false;
+				if (abs((~lhs)(i, j) - (~rhs)(i, j)) > abs_tol + rel_tol * abs((~rhs)(i, j)))
+					return AssertionFailure();
 
-			return true;
-		}
-
-
-		template <typename MT1, typename MT2>
-		bool operator()(Eigen::MatrixBase<MT1> const& lhs, Eigen::MatrixBase<MT2> const& rhs) const
-		{
-			size_t const M = lhs.rows();
-			size_t const N = lhs.cols();
-
-			if (rhs.rows() != M || rhs.cols() != N)
-				throw std::invalid_argument("Matrix size mismatch in ApproxEqual");
-
-			for (size_t i = 0; i < M; ++i)
-				for (size_t j = 0; j < N; ++j)
-					if (abs(lhs(i, j) - rhs(i, j)) > absTol_ + relTol_ * abs(rhs(i, j)))
-						return false;
-
-			return true;
-		}
+		return AssertionSuccess();
+	}
 
 
-	private:
-		double const absTol_;
-		double const relTol_;
-	};
-
-
-	class VectorApproxEqual
+	/// @brief Blaze vector approx equality predicate
+	template <typename VT1, typename VT2, bool TF, typename Real>
+	inline AssertionResult approxEqual(blaze::Vector<VT1, TF> const& lhs, blaze::Vector<VT2, TF> const& rhs, Real abs_tol, Real rel_tol = 0)
 	{
-	public:
-		VectorApproxEqual(std::initializer_list<double> abs_tol)
-		:	absTol_(abs_tol)
-		,	relTol_(size(abs_tol), 0.)
-		{
-		}
+		size_t const N = size(lhs);
+
+		if (size(rhs) != N)
+			return AssertionFailure() << "Vector size mismatch";
+
+		for (size_t j = 0; j < N; ++j)
+			if (abs((~lhs)[j] - (~rhs)[j]) > abs_tol + rel_tol * abs((~rhs)[j]))
+				return AssertionFailure();
+
+		return AssertionSuccess();
+	}
 
 
-		template <typename VT1, typename VT2, bool TF>
-		bool operator()(blaze::Vector<VT1, TF> const& lhs, blaze::Vector<VT2, TF> const& rhs) const
-		{
-			size_t const N = size(absTol_);
+	/// @brief Eigen matrix approx equality predicate
+	template <typename MT1, typename MT2, typename Real>
+	inline AssertionResult approxEqual(Eigen::MatrixBase<MT1> const& lhs, Eigen::MatrixBase<MT2> const& rhs, Real abs_tol, Real rel_tol = 0)
+	{
+		size_t const M = lhs.rows();
+		size_t const N = lhs.cols();
 
-			if (size(lhs) != N || size(rhs) != N)
-				throw std::invalid_argument("Vector size mismatch in VectorApproxEqual");
+		if (rhs.rows() != M || rhs.cols() != N)
+			return AssertionFailure() << "Matrix size mismatch";
 
+		for (size_t i = 0; i < M; ++i)
 			for (size_t j = 0; j < N; ++j)
-				if (abs((~lhs)[j] - (~rhs)[j]) > absTol_[j] + relTol_[j] * abs((~rhs)[j]))
-					return false;
+				if (abs(lhs(i, j) - rhs(i, j)) > abs_tol + rel_tol * abs(rhs(i, j)))
+					return AssertionFailure();
 
-			return true;
-		}
+		return AssertionSuccess();
+	}
 
 
-	private:
-		blaze::DynamicVector<double> absTol_;
-		blaze::DynamicVector<double> relTol_;
-	};
+	/// @brief Exact equality comparison for matrices
+	template <typename MT1, bool SO1, typename MT2, bool SO2>
+	inline AssertionResult exactEqual(blaze::Matrix<MT1, SO1> const& lhs, blaze::Matrix<MT2, SO2> const& rhs)
+	{
+		size_t const M = rows(lhs);
+		size_t const N = columns(lhs);
+
+		if (rows(rhs) != M || columns(rhs) != N)
+			return AssertionFailure() << "Matrix size mismatch";
+
+		for (size_t i = 0; i < M; ++i)
+			for (size_t j = 0; j < N; ++j)
+				if (!((~lhs)(i, j) == (~rhs)(i, j)))
+					return AssertionFailure() << "First element mismatch at index (" 
+						<< i << "," << j << "), lhs=" << (~lhs)(i, j) << ", rhs=" << (~rhs)(i, j);
+
+		return AssertionSuccess();
+	}
+
+
+	/// @brief Exact equality comparison for vectors
+	template <typename VT1, typename VT2, bool TF>
+	inline AssertionResult exactEqual(blaze::Vector<VT1, TF> const& lhs, blaze::Vector<VT2, TF> const& rhs)
+	{
+		size_t const N = size(lhs);
+
+		if (size(rhs) != N)
+			return AssertionFailure() << "Vector size mismatch";
+
+		for (size_t j = 0; j < N; ++j)
+			if (!((~lhs)[j] == (~rhs)[j]))
+				return AssertionFailure() << "First element mismatch at index " 
+					<< j << ", lhs=" << (~lhs)[j] << ", rhs=" << (~rhs)[j];
+
+		return AssertionSuccess();
+	}
 }
 
 
 #define TMPC_EXPECT_APPROX_EQ(val, expected, abs_tol, rel_tol) \
-	EXPECT_PRED2(::tmpc::testing::ApproxEqual(abs_tol, rel_tol), ::tmpc::testing::forcePrint(val), ::tmpc::testing::forcePrint(expected))
+	EXPECT_TRUE(::tmpc::testing::approxEqual(val, expected, abs_tol, rel_tol))
 
 #define TMPC_ASSERT_APPROX_EQ(val, expected, abs_tol, rel_tol) \
-	ASSERT_PRED2(::tmpc::testing::ApproxEqual(abs_tol, rel_tol), ::tmpc::testing::forcePrint(val), ::tmpc::testing::forcePrint(expected))
+	ASSERT_TRUE(::tmpc::testing::approxEqual(val, expected, abs_tol, rel_tol))
 
 #define TMPC_EXPECT_EQ(val, expected) \
 	EXPECT_EQ(::tmpc::testing::forcePrint(val), ::tmpc::testing::forcePrint(expected))

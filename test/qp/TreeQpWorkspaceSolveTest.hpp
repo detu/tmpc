@@ -317,13 +317,13 @@ namespace tmpc :: testing
 		auto ws = TestFixture::problem_0();
 		ws.solve();
 
-		EXPECT_PRED2(ApproxEqual(1e-6), get(ws.x(), 0), (DynamicVector<typename TestFixture::Kernel> {1., -1.}));
-		EXPECT_PRED2(ApproxEqual(1e-6), get(ws.u(), 0), (DynamicVector<typename TestFixture::Kernel> {-1.}));
+		EXPECT_TRUE(approxEqual(get(ws.x(), 0), (DynamicVector<typename TestFixture::Kernel> {1., -1.}), 1e-6));
+		EXPECT_TRUE(approxEqual(get(ws.u(), 0), (DynamicVector<typename TestFixture::Kernel> {-1.}), 1e-6));
 
-		EXPECT_PRED2(ApproxEqual(1e-6), get(ws.x(), 1), (DynamicVector<typename TestFixture::Kernel> {0.5, 0.}));
-		EXPECT_PRED2(ApproxEqual(1e-6), get(ws.u(), 1), (DynamicVector<typename TestFixture::Kernel> {-1.}));
+		EXPECT_TRUE(approxEqual(get(ws.x(), 1), (DynamicVector<typename TestFixture::Kernel> {0.5, 0.}), 1e-6));
+		EXPECT_TRUE(approxEqual(get(ws.u(), 1), (DynamicVector<typename TestFixture::Kernel> {-1.}), 1e-6));
 
-		EXPECT_PRED2(ApproxEqual(1e-6), get(ws.x(), 2), (DynamicVector<typename TestFixture::Kernel> {1., 1.}));
+		EXPECT_TRUE(approxEqual(get(ws.x(), 2), (DynamicVector<typename TestFixture::Kernel> {1., 1.}), 1e-6));
 	}
 
 
@@ -332,13 +332,13 @@ namespace tmpc :: testing
 		auto ws = TestFixture::problem_0_unconstrained();
 		ws.solve();
 
-		EXPECT_PRED2(ApproxEqual(1e-6), get(ws.x(), 0), (DynamicVector<typename TestFixture::Kernel> {4.2376727217537882, -3.2166970575479454}));
-		EXPECT_PRED2(ApproxEqual(1e-6), get(ws.u(), 0), (DynamicVector<typename TestFixture::Kernel> {-0.34889319983994238}));
+		EXPECT_TRUE(approxEqual(get(ws.x(), 0), (DynamicVector<typename TestFixture::Kernel> {4.2376727217537882, -3.2166970575479454}), 1e-6));
+		EXPECT_TRUE(approxEqual(get(ws.u(), 0), (DynamicVector<typename TestFixture::Kernel> {-0.34889319983994238}), 1e-6));
 
-		EXPECT_PRED2(ApproxEqual(1e-6), get(ws.x(), 1), (DynamicVector<typename TestFixture::Kernel> {1.8465290642858716, -1.5655902573878877}));
-		EXPECT_PRED2(ApproxEqual(1e-6), get(ws.u(), 1), (DynamicVector<typename TestFixture::Kernel> {-0.20287931724419153}));
+		EXPECT_TRUE(approxEqual(get(ws.x(), 1), (DynamicVector<typename TestFixture::Kernel> {1.8465290642858716, -1.5655902573878877}), 1e-6));
+		EXPECT_TRUE(approxEqual(get(ws.u(), 1), (DynamicVector<typename TestFixture::Kernel> {-0.20287931724419153}), 1e-6));
 
-		EXPECT_PRED2(ApproxEqual(1e-6), get(ws.x(), 2), (DynamicVector<typename TestFixture::Kernel> {1.1794991482758881, 0.23153042536792068}));
+		EXPECT_TRUE(approxEqual(get(ws.x(), 2), (DynamicVector<typename TestFixture::Kernel> {1.1794991482758881, 0.23153042536792068}), 1e-6));
 	}
 
 
@@ -522,15 +522,14 @@ namespace tmpc :: testing
 
 		ws.solve();
 
-		EXPECT_PRED2(ApproxEqual(1e-6), get(ws.x(), 0), (Vec {6.592835368068550e-02, -4.063901103087715e-01}));
-		EXPECT_PRED2(ApproxEqual(1e-6), get(ws.x(), 1), (Vec {2.342956460060519e-01, 3.561800465271370e-01}));
-		EXPECT_PRED2(ApproxEqual(1e-6), get(ws.x(), 2), (Vec {-4.093033514742150e-02, -3.552137307936658e-01}));
-		EXPECT_PRED2(ApproxEqual(1e-6), get(ws.x(), 3), (Vec {-2.087478975092527e-01}));
-		EXPECT_PRED2(ApproxEqual(1e-6), get(ws.x(), 4), (Vec {2.939583174994020e-02, 1.623760005176457e-01, -3.367157300712413e-01, 1.756957363329313e-01}));
-
-		EXPECT_PRED2(ApproxEqual(1e-6), get(ws.u(), 0), (Vec {-4.301938159361802e-01, -2.070756990391132e-01}));
-		EXPECT_PRED2(ApproxEqual(1e-6), get(ws.u(), 1), (Vec {-1.394097954236166e-01, -1.088549940479685e+00}));
-		EXPECT_PRED2(ApproxEqual(1e-6), get(ws.u(), 2), (Vec {-1.291731382101928e-01, -7.037998096601095e-01}));
+		EXPECT_TRUE(approxEqual(get(ws.x(), 0), {6.592835368068550e-02, -4.063901103087715e-01}, 1e-6));
+		EXPECT_TRUE(approxEqual(get(ws.x(), 1), Vec {2.342956460060519e-01, 3.561800465271370e-01}, 1e-6));
+		EXPECT_TRUE(approxEqual(get(ws.x(), 2), Vec {-4.093033514742150e-02, -3.552137307936658e-01}, 1e-6));
+		EXPECT_TRUE(approxEqual(get(ws.x(), 3), Vec {-2.087478975092527e-01}, 1e-6));
+		EXPECT_TRUE(approxEqual(get(ws.x(), 4), Vec {2.939583174994020e-02, 1.623760005176457e-01, -3.367157300712413e-01, 1.756957363329313e-01}, 1e-6));
+		EXPECT_TRUE(approxEqual(get(ws.u(), 0), Vec {-4.301938159361802e-01, -2.070756990391132e-01}, 1e-6));
+		EXPECT_TRUE(approxEqual(get(ws.u(), 1), Vec {-1.394097954236166e-01, -1.088549940479685e+00}, 1e-6));
+		EXPECT_TRUE(approxEqual(get(ws.u(), 2), Vec {-1.291731382101928e-01, -7.037998096601095e-01}, 1e-6));
 	}
 
 #if 0

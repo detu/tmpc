@@ -42,7 +42,7 @@ namespace tmpc :: testing
 
 		using Vector = DynamicVector<typename TestFixture::Kernel>;
 
-		EXPECT_PRED2(ApproxEqual(1e-5), solution[0].x(), (Vector {1.81818}));
+		EXPECT_TRUE(approxEqual(solution[0].x(), (Vector {1.81818}), 1e-5));
 	}
 
 
@@ -61,7 +61,7 @@ namespace tmpc :: testing
 
 		using Vector = DynamicVector<typename TestFixture::Kernel>;
 
-		EXPECT_PRED2(ApproxEqual(1e-5), solution[0].x(), (Vector {1.}));
+		EXPECT_TRUE(approxEqual(solution[0].x(), (Vector {1.}), 1e-5));
 	}
 
 
@@ -88,8 +88,8 @@ namespace tmpc :: testing
 
 		using Vector = DynamicVector<typename TestFixture::Kernel>;
 
-		EXPECT_PRED2(ApproxEqual(1e-5), solution[0].x(), (Vector {1.}));
-		EXPECT_PRED2(ApproxEqual(1e-5), solution[1].x(), (Vector {1.}));
+		EXPECT_TRUE(approxEqual(solution[0].x(), (Vector {1.}), 1e-5));
+		EXPECT_TRUE(approxEqual(solution[1].x(), (Vector {1.}), 1e-5));
 	}
 
 

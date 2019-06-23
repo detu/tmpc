@@ -34,10 +34,10 @@ namespace tmpc :: testing
 			ODE::StateInputMatrix B;
 			ode_(p.t, p.x0, p.u, xdot, A, B);
 
-			ApproxEqual const is_approx(1e-6);
-			EXPECT_PRED2(is_approx, xdot, p.xdot);
-			EXPECT_PRED2(is_approx, A, p.Aode);
-			EXPECT_PRED2(is_approx, B, p.Bode);
+			double const tol = 1e-6;
+			EXPECT_TRUE(approxEqual(xdot, p.xdot, tol));
+			EXPECT_TRUE(approxEqual(A, p.Aode, tol));
+			EXPECT_TRUE(approxEqual(B, p.Bode, tol));
 		}
 	}
 	
@@ -54,13 +54,13 @@ namespace tmpc :: testing
 			ODE::QuadInputMatrix qB;
 			ode_(p.t, p.x0, p.u, xdot, A, B, q, qA, qB);
 
-			ApproxEqual const is_approx(1e-6);
-			EXPECT_PRED2(is_approx, xdot, p.xdot);
-			EXPECT_PRED2(is_approx, A, p.Aode);
-			EXPECT_PRED2(is_approx, B, p.Bode);
-			EXPECT_PRED2(is_approx, q, p.q);
-			EXPECT_PRED2(is_approx, qA, p.qA_ode);
-			EXPECT_PRED2(is_approx, qB, p.qB_ode);
+			double const tol = 1e-6;
+			EXPECT_TRUE(approxEqual(xdot, p.xdot, tol));
+			EXPECT_TRUE(approxEqual(A, p.Aode, tol));
+			EXPECT_TRUE(approxEqual(B, p.Bode, tol));
+			EXPECT_TRUE(approxEqual(q, p.q, tol));
+			EXPECT_TRUE(approxEqual(qA, p.qA_ode, tol));
+			EXPECT_TRUE(approxEqual(qB, p.qB_ode, tol));
 		}
 	}
 
@@ -80,16 +80,16 @@ namespace tmpc :: testing
 			ODE::ResInputMatrix rB;
 			ode_(p.t, p.x0, p.u, xdot, A, B, q, qA, qB, r, rA, rB);
 
-			ApproxEqual const is_approx(1e-6);
-			EXPECT_PRED2(is_approx, xdot, p.xdot);
-			EXPECT_PRED2(is_approx, A, p.Aode);
-			EXPECT_PRED2(is_approx, B, p.Bode);
-			EXPECT_PRED2(is_approx, q, p.q);
-			EXPECT_PRED2(is_approx, qA, p.qA_ode);
-			EXPECT_PRED2(is_approx, qB, p.qB_ode);
-			EXPECT_PRED2(is_approx, r, p.r);
-			EXPECT_PRED2(is_approx, rA, p.rA_ode);
-			EXPECT_PRED2(is_approx, rB, p.rB_ode);
+			double const tol = 1e-6;
+			EXPECT_TRUE(approxEqual(xdot, p.xdot, tol));
+			EXPECT_TRUE(approxEqual(A, p.Aode, tol));
+			EXPECT_TRUE(approxEqual(B, p.Bode, tol));
+			EXPECT_TRUE(approxEqual(q, p.q, tol));
+			EXPECT_TRUE(approxEqual(qA, p.qA_ode, tol));
+			EXPECT_TRUE(approxEqual(qB, p.qB_ode, tol));
+			EXPECT_TRUE(approxEqual(r, p.r, tol));
+			EXPECT_TRUE(approxEqual(rA, p.rA_ode, tol));
+			EXPECT_TRUE(approxEqual(rB, p.rB_ode, tol));
 		}
 	}
 }

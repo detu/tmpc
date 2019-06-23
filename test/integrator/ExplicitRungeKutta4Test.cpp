@@ -37,9 +37,7 @@ namespace tmpc :: testing
 		for (auto p : test_data_)
 		{
 			ODE::StateVector const xplus = integrator_(ode_, p.t, p.x0, p.u, p.timeStep);
-
-			ApproxEqual const is_approx(1e-10);
-			EXPECT_PRED2(is_approx, xplus, p.xplus);
+			EXPECT_TRUE(approxEqual(xplus, p.xplus, 1e-10));
 		}
 	}
 
@@ -59,10 +57,10 @@ namespace tmpc :: testing
 			EXPECT_EQ(forcePrint(B), forcePrint(p.B));
 			*/
 
-			ApproxEqual const is_approx(1e-10);
-			EXPECT_PRED2(is_approx, xplus, p.xplus);
-			EXPECT_PRED2(is_approx, A, p.A);
-			EXPECT_PRED2(is_approx, B, p.B);
+			double const tol = 1e-10;
+			EXPECT_TRUE(approxEqual(xplus, p.xplus, tol));
+			EXPECT_TRUE(approxEqual(A, p.A, tol));
+			EXPECT_TRUE(approxEqual(B, p.B, tol));
 		}
 	}
 }

@@ -57,7 +57,6 @@ add_executable(test-tmpc
 
     matrix/MatrixTest.cpp
     matrix/DynamicSubmatrixTest.cpp
-    matrix/DynamicSubvectorTest.cpp
     matrix/KernelTest.cpp
     matrix/BlockMatrixViewTest.cpp
 

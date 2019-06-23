@@ -217,8 +217,7 @@ namespace tmpc :: testing
 			u = this->Feedback(x);
 
 			PS::InputVector u_expected {-0.690877362606266};
-
-			EXPECT_PRED2(ApproxEqual(1e-6), u, u_expected);
+			EXPECT_TRUE(approxEqual(u, u_expected, 1e-6));
 		}
 
 		// Step 1
@@ -228,7 +227,7 @@ namespace tmpc :: testing
 			{
 				PS::StateVector x;
 				PS::InputVector u;
-				ApproxEqual is_approx(1e-6);
+				double const tol = 1e-6;
 
 				x = {0.654561318696867,	 -0.690877362606266};	u = {0.215679569867116};
 				//EXPECT_PRED2(is_approx, this->_rti.workingPoint()[0].x(), x);
@@ -236,10 +235,10 @@ namespace tmpc :: testing
 
 				x = {0.0715237410241597, -0.475197792739149};	u = {0.215679569867116};
 				//EXPECT_PRED2(is_approx, this->_rti.workingPoint()[1].x(), x);
-				EXPECT_PRED2(is_approx, this->_rti.workingPoint()[1].u(), u);
+				EXPECT_TRUE(approxEqual(this->_rti.workingPoint()[1].u(), u, tol));
 
 				x = {0.0715237410241597, -0.475197792739149};
-				EXPECT_PRED2(is_approx, this->_rti.workingPoint()[2].x(), x);
+				EXPECT_TRUE(approxEqual(this->_rti.workingPoint()[2].x(), x, tol));
 			}
 
 			x = {0.654561318696867,	-0.690877362606266};
