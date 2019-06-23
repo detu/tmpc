@@ -167,6 +167,26 @@ namespace tmpc :: testing
 	}
 
 
+	/// @brief Vector approx equality predicate with absolute tolerances specified for each element.
+	template <typename VT1, typename VT2, bool TF, typename Real>
+	inline AssertionResult approxEqual(blaze::Vector<VT1, TF> const& lhs, blaze::Vector<VT2, TF> const& rhs, std::initializer_list<Real> abs_tol)
+	{
+		size_t const N = size(abs_tol);
+
+		if (size(lhs) != N || size(rhs) != N)
+			return AssertionFailure() << "Vector size mismatch";
+
+		auto atol = begin(abs_tol);
+
+		for (size_t j = 0; j < N; ++j, ++atol)
+			if (abs((~lhs)[j] - (~rhs)[j]) > *atol)
+				return AssertionFailure() << "First element mismatch at index " 
+					<< j << ", lhs=" << (~lhs)[j] << ", rhs=" << (~rhs)[j] << ", abs_tol=" << *atol;
+
+		return AssertionSuccess();
+	}
+
+
 	/// @brief Exact equality comparison for matrices
 	template <typename MT1, bool SO1, typename MT2, bool SO2>
 	inline AssertionResult exactEqual(blaze::Matrix<MT1, SO1> const& lhs, blaze::Matrix<MT2, SO2> const& rhs)
