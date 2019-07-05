@@ -66,6 +66,7 @@ add_executable(test-tmpc
     numeric/NewtonSolverTest.cpp
 
     system/LtiContinuousToDiscreteTest.cpp
+    system/DareTest.cpp
 
     random/MultivariateNormalDistributionTest.cpp
 

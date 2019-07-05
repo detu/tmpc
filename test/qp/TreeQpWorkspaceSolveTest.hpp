@@ -522,7 +522,7 @@ namespace tmpc :: testing
 
 		ws.solve();
 
-		EXPECT_TRUE(approxEqual(get(ws.x(), 0), {6.592835368068550e-02, -4.063901103087715e-01}, 1e-6));
+		EXPECT_TRUE(approxEqual(get(ws.x(), 0), Vec {6.592835368068550e-02, -4.063901103087715e-01}, 1e-6));
 		EXPECT_TRUE(approxEqual(get(ws.x(), 1), Vec {2.342956460060519e-01, 3.561800465271370e-01}, 1e-6));
 		EXPECT_TRUE(approxEqual(get(ws.x(), 2), Vec {-4.093033514742150e-02, -3.552137307936658e-01}, 1e-6));
 		EXPECT_TRUE(approxEqual(get(ws.x(), 3), Vec {-2.087478975092527e-01}, 1e-6));
