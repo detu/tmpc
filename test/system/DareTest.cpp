@@ -1,8 +1,6 @@
 #include <tmpc/system/Dare.hpp>
 #include <tmpc/Testing.hpp>
 
-#include <iostream>
-
 
 namespace tmpc :: testing
 {
@@ -43,6 +41,7 @@ namespace tmpc :: testing
         dare(A, B, Q, R, X);
         // dare.dump(std::cout);
         
+        // Check against the solution obtained with MATLAB's dare() function.
         EXPECT_TRUE(approxEqual(X, blaze::DynamicMatrix<double> {
             {4.124901922184289e+00,     2.857241032445132e+00,     3.106840810022587e+00,     2.997920104991082e+00,     3.182746822491208e+00},
             {2.857241032445132e+00,     3.379818664590152e+00,     3.121182757683871e+00,     3.567849739551920e+00,     3.332728231860177e+00},
@@ -50,5 +49,9 @@ namespace tmpc :: testing
             {2.997920104991082e+00,     3.567849739551920e+00,     3.695004404308833e+00,     4.001529346265117e+00,     3.733495112144165e+00},
             {3.182746822491208e+00,     3.332728231860177e+00,     3.261068589993055e+00,     3.733495112144165e+00,     4.103198554604887e+00},
         }, 0., 1e-14));
+
+        // Substitute the solution into the Riccati equation and check the residual.
+        EXPECT_TRUE(approxEqual(evaluate(trans(A) * X * A - X - trans(A) * X * B * inv(trans(B) * X * B + R) * trans(B) * X * A + Q),
+            blaze::ZeroMatrix<double>(5, 5), 1e-13));
     }
 }
