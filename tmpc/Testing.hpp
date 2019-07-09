@@ -125,7 +125,10 @@ namespace tmpc :: testing
 		for (size_t i = 0; i < M; ++i)
 			for (size_t j = 0; j < N; ++j)
 				if (abs((~lhs)(i, j) - (~rhs)(i, j)) > abs_tol + rel_tol * abs((~rhs)(i, j)))
-					return AssertionFailure();
+					return AssertionFailure() 
+						<< "Actual value:\n" << lhs 
+						<< "Expected value:\n" << rhs
+						<< "First mismatch at index (" << i << ", " << j << ")";
 
 		return AssertionSuccess();
 	}
@@ -142,7 +145,10 @@ namespace tmpc :: testing
 
 		for (size_t j = 0; j < N; ++j)
 			if (abs((~lhs)[j] - (~rhs)[j]) > abs_tol + rel_tol * abs((~rhs)[j]))
-				return AssertionFailure();
+				return AssertionFailure()
+					<< "Actual value:\n" << lhs 
+					<< "Expected value:\n" << rhs
+					<< "First mismatch at index (" << j << ")";
 
 		return AssertionSuccess();
 	}
