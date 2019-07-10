@@ -61,6 +61,7 @@ add_executable(test-tmpc
     matrix/BlockMatrixViewTest.cpp
 
     math/ExpmTest.cpp
+    math/RankTest.cpp
 
     numeric/CentralDifferenceDerivativeTest.cpp
     numeric/NewtonSolverTest.cpp

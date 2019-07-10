@@ -1,8 +1,6 @@
 #include <tmpc/math/Expm.hpp>
 #include <tmpc/Testing.hpp>
 
-#include <iostream>
-
 
 namespace tmpc :: testing
 {
