@@ -1,4 +1,4 @@
-#include <tmpc/system/LtiContinuousToDiscrete.hpp>
+#include <tmpc/lti/LtiContinuousToDiscrete.hpp>
 #include <tmpc/Testing.hpp>
 
 #include <unsupported/Eigen/MatrixFunctions>

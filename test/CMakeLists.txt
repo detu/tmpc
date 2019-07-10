@@ -66,8 +66,8 @@ add_executable(test-tmpc
     numeric/CentralDifferenceDerivativeTest.cpp
     numeric/NewtonSolverTest.cpp
 
-    system/LtiContinuousToDiscreteTest.cpp
-    system/DareTest.cpp
+    lti/LtiContinuousToDiscreteTest.cpp
+    lti/DareTest.cpp
 
     random/MultivariateNormalDistributionTest.cpp
 
