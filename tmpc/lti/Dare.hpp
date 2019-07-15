@@ -38,6 +38,8 @@ namespace tmpc
 
 
         /// @brief Solves DARE of the form A^T*X*A−X−A^T*X*B*(B^T*X*B+R)^{−1}B^T*X*A+Q=0
+        ///
+        /// TODO: should Q, R, X be declared as a SymmetricMatrix<> ?
         template <typename MT1, bool SO1, typename MT2, bool SO2, typename MT3, bool SO3, typename MT4, bool SO4,
             typename MT5, bool SO5>
         void operator()(blaze::Matrix<MT1, SO1> const& A, blaze::Matrix<MT2, SO2> const& B,
