@@ -3,13 +3,14 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-#include <iostream>
-#include <cmath>
-
 #include <tmpc/Matrix.hpp>
 
 #include <blaze/Math.h>
+#include <blaze/util/typetraits/IsArithmetic.h>
 #include <Eigen/Dense>
+
+#include <iostream>
+#include <cmath>
 
 
 namespace tmpc :: testing
@@ -136,7 +137,8 @@ namespace tmpc :: testing
 
 	/// @brief Blaze vector approx equality predicate
 	template <typename VT1, typename VT2, bool TF, typename Real>
-	inline AssertionResult approxEqual(blaze::Vector<VT1, TF> const& lhs, blaze::Vector<VT2, TF> const& rhs, Real abs_tol, Real rel_tol = 0)
+	inline std::enable_if_t<blaze::IsArithmetic_v<Real>, AssertionResult> 
+		approxEqual(blaze::Vector<VT1, TF> const& lhs, blaze::Vector<VT2, TF> const& rhs, Real abs_tol, Real rel_tol = 0)
 	{
 		size_t const N = size(lhs);
 
@@ -188,6 +190,24 @@ namespace tmpc :: testing
 			if (abs((~lhs)[j] - (~rhs)[j]) > *atol)
 				return AssertionFailure() << "First element mismatch at index " 
 					<< j << ", lhs=" << (~lhs)[j] << ", rhs=" << (~rhs)[j] << ", abs_tol=" << *atol;
+
+		return AssertionSuccess();
+	}
+
+
+	/// @brief Vector approx equality predicate with absolute tolerances specified for each element.
+	template <typename VT1, typename VT2, typename VT3, bool TF>
+	inline AssertionResult approxEqual(blaze::Vector<VT1, TF> const& lhs, blaze::Vector<VT2, TF> const& rhs, blaze::Vector<VT3, TF> const& abs_tol)
+	{
+		size_t const N = size(abs_tol);
+
+		if (size(lhs) != N || size(rhs) != N)
+			return AssertionFailure() << "Vector size mismatch";
+
+		for (size_t j = 0; j < N; ++j)
+			if (abs((~lhs)[j] - (~rhs)[j]) > (~abs_tol)[j])
+				return AssertionFailure() << "First element mismatch at index " 
+					<< j << ", lhs=" << (~lhs)[j] << ", rhs=" << (~rhs)[j] << ", abs_tol=" << (~abs_tol)[j];
 
 		return AssertionSuccess();
 	}
