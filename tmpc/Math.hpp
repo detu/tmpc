@@ -196,6 +196,24 @@ namespace tmpc
     }
 
 
+    /// @brief Create a diagonal matrix with given diagonal elements
+    ///
+    /// Useful until https://bitbucket.org/blaze-lib/blaze/issues/203 is resolved.
+    ///
+    /// @param d vector of diagonal elements
+    template <typename MT, typename VT, bool TF>
+    inline blaze::DiagonalMatrix<MT> diagonalMatrix(blaze::Vector<VT, TF> const& d)
+    {
+        auto const n = size(d);
+        blaze::DiagonalMatrix<MT> result(n);
+
+        for (size_t i = 0; i < n; ++i)
+            result(i, i) = (~d)[i];
+
+        return result;
+    }
+
+
     // TODO: uncomment the following lines when 
     // we finally get rid of Eigen wrappers with the same names.
     //
