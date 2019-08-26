@@ -172,7 +172,8 @@ namespace tmpc
                             trsm(Lambda, L, CblasLeft, CblasLower, 1.);
                         
                         // Alg 1 line 8
-                        P = get(qp_.Q(), u) + APA - trans(L) * L;
+                        blaze::DynamicMatrix<Real> const tmp = get(qp_.Q(), u) + APA - trans(L) * L;
+                        P = 0.5 * (tmp + trans(tmp));
 
                         // Alg 1 line 9
                         //put(ws_.P(), u, 0.5 * (get(ws_.P(), u) + trans(get(ws_.P(), u))));
@@ -342,9 +343,9 @@ namespace tmpc
         OcpGraph graph_;
         std::vector<OcpSize> size_;
 
-        // Forcing all matrices to be column major, because of this bug:
+        // Forcing all matrices to be column major, because of this issue:
         // https://bitbucket.org/blaze-lib/blaze/issues/216
-        std::vector<blaze::DynamicMatrix<Real, blaze::columnMajor>> P_;
+        std::vector<blaze::SymmetricMatrix<blaze::DynamicMatrix<Real, blaze::columnMajor>>> P_;
         std::vector<blaze::DynamicVector<Real>> p_;
         std::vector<blaze::DynamicMatrix<Real, blaze::columnMajor>> Lambda_;
         std::vector<blaze::DynamicMatrix<Real, blaze::columnMajor>> L_;
@@ -353,8 +354,8 @@ namespace tmpc
         std::vector<blaze::DynamicMatrix<Real, blaze::columnMajor>> PA_;
         std::vector<blaze::DynamicMatrix<Real, blaze::columnMajor>> PB_;
         std::vector<blaze::DynamicMatrix<Real, blaze::columnMajor>> BPA_;
-        std::vector<blaze::DynamicMatrix<Real, blaze::columnMajor>> BPB_;
-        std::vector<blaze::DynamicMatrix<Real, blaze::columnMajor>> APA_;
+        std::vector<blaze::SymmetricMatrix<blaze::DynamicMatrix<Real, blaze::columnMajor>>> BPB_;
+        std::vector<blaze::SymmetricMatrix<blaze::DynamicMatrix<Real, blaze::columnMajor>>> APA_;
         std::vector<blaze::DynamicVector<Real>> Pb_p_;
     };
 
