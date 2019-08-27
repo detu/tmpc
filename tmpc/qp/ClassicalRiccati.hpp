@@ -153,16 +153,19 @@ namespace tmpc
                         // Alg 1 line 4
                         BPA = trans(get(qp_.B(), e)) * PA;
                         BPB = trans(get(qp_.B(), e)) * PB;
+                        assert(isSymmetric(BPB));
 
                         // Alg 1 line 5
                         APA = trans(get(qp_.A(), e)) * PA;
+                        APA = 0.5 * (APA + trans(APA));
+                        assert(isSymmetric(APA));
                         
                         // Alg 1 line 6
                         // llh() or potrf()?
                         // TODO: llh() can be used with adaptors. See if using blaze::SymmetricMatrix improves the performance.
                         // https://bitbucket.org/blaze-lib/blaze/wiki/Matrix%20Operations#!cholesky-decomposition
                         //llh(get(ws_.Lambda(), u), get(ws_.Lambda(), u));
-                        Lambda = get(qp_.R(), u) + BPB;
+                        Lambda = declsym(get(qp_.R(), u)) + declsym(BPB);
                         potrf(Lambda, 'L');
 
                         // Alg 1 line 7
@@ -172,8 +175,7 @@ namespace tmpc
                             trsm(Lambda, L, CblasLeft, CblasLower, 1.);
                         
                         // Alg 1 line 8
-                        blaze::DynamicMatrix<Real> const tmp = get(qp_.Q(), u) + APA - trans(L) * L;
-                        P = 0.5 * (tmp + trans(tmp));
+                        P = declsym(get(qp_.Q(), u)) + declsym(APA) - declsym(trans(L) * L);
 
                         // Alg 1 line 9
                         //put(ws_.P(), u, 0.5 * (get(ws_.P(), u) + trans(get(ws_.P(), u))));
@@ -354,8 +356,8 @@ namespace tmpc
         std::vector<blaze::DynamicMatrix<Real, blaze::columnMajor>> PA_;
         std::vector<blaze::DynamicMatrix<Real, blaze::columnMajor>> PB_;
         std::vector<blaze::DynamicMatrix<Real, blaze::columnMajor>> BPA_;
-        std::vector<blaze::SymmetricMatrix<blaze::DynamicMatrix<Real, blaze::columnMajor>>> BPB_;
-        std::vector<blaze::SymmetricMatrix<blaze::DynamicMatrix<Real, blaze::columnMajor>>> APA_;
+        std::vector<blaze::DynamicMatrix<Real, blaze::columnMajor>> BPB_;
+        std::vector<blaze::DynamicMatrix<Real, blaze::columnMajor>> APA_;
         std::vector<blaze::DynamicVector<Real>> Pb_p_;
     };
 
