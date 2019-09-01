@@ -17,26 +17,20 @@
 
 namespace tmpc
 {
-    /// @brief Implements classical Riccati algorithm from [Frison2013]
+    /// @brief Implements factorized Riccati algorithm from [Frison2013]
     ///
     template <typename Real>
-    class ClassicalRiccati
+    class FactorizedRiccati
     {
     public:
         template <typename SizeMap>
-        ClassicalRiccati(OcpGraph const& g, SizeMap size_map)
+        FactorizedRiccati(OcpGraph const& g, SizeMap size_map)
         :   graph_(g)
         ,   size_(num_vertices(g))
-        ,   P_(num_vertices(g))
-        ,   Lambda_(num_vertices(g))
-        ,   L_(num_vertices(g))
+        ,   LL_(num_vertices(g))
         ,   p_(num_vertices(g))
         ,   l_(num_vertices(g))
-        ,   PA_(num_edges(g))
-        ,   PB_(num_edges(g))
-        ,   BPA_(num_edges(g))
-        ,   BPB_(num_edges(g))
-        ,   APA_(num_edges(g))
+        ,   LBLA_(num_edges(g))
         ,   Pb_p_(num_edges(g))
         {
             copyProperty(size_map, make_iterator_property_map(size_.begin(), vertexIndex(graph_)), graph::vertices(graph_));
@@ -50,9 +44,7 @@ namespace tmpc
                 auto const& sz = get(size(), v);
                 auto v_id = get(graph::vertex_index, graph_, v);
 
-                P_[v_id].resize(sz.nx(), sz.nx());
-                Lambda_[v_id].resize(sz.nu(), sz.nu());
-                L_[v_id].resize(sz.nu(), sz.nx());
+                LL_[v_id].resize(sz.nx() + sz.nu(), sz.nx() + sz.nu());
                 p_[v_id].resize(sz.nx());
                 l_[v_id].resize(sz.nu());
             }
@@ -64,11 +56,7 @@ namespace tmpc
                 auto const sz_v = get(size_map, target(e, g));
                 auto edge_id = get(graph::edge_index, graph_, e);
                 
-                PA_[edge_id].resize(sz_v.nx(), sz_u.nx());
-                PB_[edge_id].resize(sz_v.nx(), sz_u.nu());
-                BPA_[edge_id].resize(sz_u.nu(), sz_u.nx());
-                BPB_[edge_id].resize(sz_u.nu(), sz_u.nu());
-                APA_[edge_id].resize(sz_u.nx(), sz_u.nx());
+                LBLA_[edge_id].resize(sz_v.nx(), sz_u.nu() + sz_u.nx());
                 Pb_p_[edge_id].resize(sz_v.nx());
             }
         }
@@ -109,7 +97,7 @@ namespace tmpc
         :   public graph::default_dfs_visitor 
         {
         public:
-            RiccatiBackwardVisitor(ClassicalRiccati& ws, Qp const& qp, QpSol& sol)
+            RiccatiBackwardVisitor(FactorizedRiccati& ws, Qp const& qp, QpSol& sol)
             :   ws_(ws)
             ,   qp_(qp)
             ,   sol_(sol)
@@ -119,10 +107,17 @@ namespace tmpc
             
             void finish_vertex(OcpVertexDescriptor u, OcpGraph const& g) const
             {
+                auto const& sz_u = get(ws_.size(), u);
+                auto& LL = get(ws_.LL(), u);
+                auto Lambda = submatrix(LL, 0, 0, sz_u.nu(), sz_u.nu());
+                auto L_trans = submatrix(LL, sz_u.nu(), 0, sz_u.nx(), sz_u.nu());   
+                auto Lcal = submatrix(LL, sz_u.nu(), sz_u.nu(), sz_u.nx(), sz_u.nx());
+
                 if (out_degree(u, g) == 0)
                 {
-                    // Alg 1 line 1
-                    put(ws_.P(), u, get(qp_.Q(), u));
+                    // Alg 3 line 1
+                    Lcal = get(qp_.Q(), u);
+                    potrf(Lcal, 'L');
 
                     // Alg 2 line 1
                     put(ws_.p(), u, get(qp_.q(), u));
@@ -135,64 +130,55 @@ namespace tmpc
                     {
                         auto const e = out_e.front();
                         auto const v = target(e, g);
+                        auto const& sz_v = get(ws_.size(), v);
 
-                        auto& PA = get(ws_.PA(), e);
-                        auto& PB = get(ws_.PB(), e);
-                        auto& BPA = get(ws_.BPA(), e);
-                        auto& BPB = get(ws_.BPB(), e);
-                        auto& APA = get(ws_.APA(), e);
-                        auto& Lambda = get(ws_.Lambda(), u);
-                        auto& L = get(ws_.L(), u);
-                        auto& P = get(ws_.P(), u);
+                        auto& LBLA = get(ws_.LBLA(), e);
                         auto& Pb_p = get(ws_.Pb_p(), e);
                         auto& l = get(ws_.l(), u);
                         auto& p = get(ws_.p(), u);
 
-                        // Alg 1 line 3
-                        PA = trans(get(ws_.P(), v)) * get(qp_.A(), e);
-                        PB = trans(get(ws_.P(), v)) * get(qp_.B(), e);
+                        // Alg 3 line 3
+                        // TODO: dtrmm
+                        auto const Lcal_next = submatrix(get(ws_.LL(), v), sz_v.nu(), sz_v.nu(), sz_v.nx(), sz_v.nx());
+                        // submatrix(LBLA, 0, 0, sz_v.nx(), sz_u.nu()) = trans(L_next) * get(qp_.B(), e);
+                        // submatrix(LBLA, 0, sz_u.nu(), sz_v.nx(), sz_u.nx()) = trans(L_next) * get(qp_.A(), e);
+                        submatrix(LBLA, 0, 0, sz_v.nx(), sz_u.nu()) = get(qp_.B(), e);
+                        submatrix(LBLA, 0, sz_u.nu(), sz_v.nx(), sz_u.nx()) = get(qp_.A(), e);
+                        trmm(LBLA, trans(Lcal_next), CblasLeft, CblasUpper, 1.);
 
-                        // Alg 1 line 4
-                        BPA = trans(get(qp_.B(), e)) * PA;
-                        BPB = trans(get(qp_.B(), e)) * PB;
-                        assert(isSymmetric(BPB));
+                        // Alg 3 line 4
+                        // LL = [B'*P*B, B'*P*A; 
+                        //       A'*P*B, A'*P*A]
+                        // TODO: dsyrk
+                        LL = trans(LBLA) * LBLA;
+                        assert(isSymmetric(LL));
 
-                        // Alg 1 line 5
-                        APA = trans(get(qp_.A(), e)) * PA;
-                        APA = 0.5 * (APA + trans(APA));
-                        assert(isSymmetric(APA));
+                        // Alg 3 line 5
+                        Lambda += get(qp_.R(), u);
+                        L_trans += trans(get(qp_.S(), u));
+                        Lcal += get(qp_.Q(), u);
                         
-                        // Alg 1 line 6
                         // llh() or potrf()?
                         // TODO: llh() can be used with adaptors. See if using blaze::SymmetricMatrix improves the performance.
                         // https://bitbucket.org/blaze-lib/blaze/wiki/Matrix%20Operations#!cholesky-decomposition
                         //llh(get(ws_.Lambda(), u), get(ws_.Lambda(), u));
-                        Lambda = declsym(get(qp_.R(), u)) + declsym(BPB);
-                        potrf(Lambda, 'L');
+                        potrf(LL, 'L');
 
-                        // Alg 1 line 7
-                        L = get(qp_.S(), u) + BPA;
-
-                        if (!isEmpty(get(qp_.S(), u)))  // prevent trsm() from complaining about lda=0
-                            trsm(Lambda, L, CblasLeft, CblasLower, 1.);
-                        
-                        // Alg 1 line 8
-                        P = declsym(get(qp_.Q(), u)) + declsym(APA) - declsym(trans(L) * L);
-
-                        // Alg 1 line 9
-                        //put(ws_.P(), u, 0.5 * (get(ws_.P(), u) + trans(get(ws_.P(), u))));
-
-                        // Alg 2 line 3
-                        Pb_p = trans(get(ws_.P(), v)) * get(qp_.b(), e) + get(ws_.p(), v);
+                        // Alg 2 line 3.
+                        // Pb_p = P_{n+1}^T * b_n + p_{n+1} = \mathcal{L}_{n+1} * \mathcal{L}_{n+1}^T * b_n + p_{n+1}
+                        Pb_p = get(qp_.b(), e);
+                        trmv(Pb_p, trans(Lcal_next), CblasUpper);
+                        trmv(Pb_p, Lcal_next, CblasLower);
+                        Pb_p += get(ws_.p(), v);
                         l = get(qp_.r(), u) + trans(get(qp_.B(), e)) * Pb_p;
                         trsv(Lambda, l, 'L', 'N', 'N');
                         
                         // Alg 2 line 4
-                        p = get(qp_.q(), u) + trans(get(qp_.A(), e)) * Pb_p - trans(L) * l;
+                        p = get(qp_.q(), u) + trans(get(qp_.A(), e)) * Pb_p - L_trans * l;
                     }
                     else
                     {
-                        throw std::invalid_argument("ClassicalRiccati solver is not implemented on tree QPs yet");
+                        throw std::invalid_argument("FactorizedRiccati solver is not implemented on tree QPs yet");
                     }
                 }
 
@@ -205,7 +191,7 @@ namespace tmpc
 
 
         private:
-            ClassicalRiccati& ws_;
+            FactorizedRiccati& ws_;
             Qp const& qp_;
             QpSol& sol_;
         };
@@ -216,7 +202,7 @@ namespace tmpc
         :   public graph::default_dfs_visitor 
         {
         public:
-            RiccatiForwardVisitor(ClassicalRiccati& ws, Qp const& qp, QpSol& sol)
+            RiccatiForwardVisitor(FactorizedRiccati& ws, Qp const& qp, QpSol& sol)
             :   ws_(ws)
             ,   qp_(qp)
             ,   sol_(sol)
@@ -226,25 +212,36 @@ namespace tmpc
             
             void discover_vertex(OcpVertexDescriptor u, OcpGraph const& g) const
             {
+                auto const& sz_u = get(ws_.size(), u);
+                auto const& LL = get(ws_.LL(), u);
+                auto const Lambda = submatrix(LL, 0, 0, sz_u.nu(), sz_u.nu());
+                auto const L_trans = submatrix(LL, sz_u.nu(), 0, sz_u.nx(), sz_u.nu());
+                auto const Lcal = submatrix(LL, sz_u.nu(), sz_u.nu(), sz_u.nx(), sz_u.nx());
+
                 if (in_degree(u, g) == 0)
                 {
-                    // Root vertex
-                    put(sol_.x(), u, -inv(get(ws_.P(), u)) * get(ws_.p(), u));
-
-                    /*
-                    potrf(get(ws_.P(), u), 'L');
+                    // Root vertex.
+                    
+                    // Solve P*x+p=0 by using Cholesky factor of P:
+                    // \mathcal{L}*(\mathcal{L}^T*x)=-p
                     put(sol_.x(), u, -get(ws_.p(), u));
-                    trsv(get(ws_.P(), u), get(sol_.x(), u), 'L', 'N', 'N');
-                    */
+
+                    // Solve \mathcal{L}*z=-p
+                    trsv(Lcal, get(sol_.x(), u), 'L', 'T', 'N');
+
+                    // Solve \mathcal{L}^T*x=z
+                    trsv(Lcal, get(sol_.x(), u), 'L', 'N', 'N');
                 }
 
                 // Alg 2 line 8
                 // put(sol_.u(), u, -get(ws_.L(), u) * get(sol_.x(), u));
                 // get(sol_.u(), u) -= get(ws_.l(), u);
                 // trsv(get(ws_.Lambda(), u), get(sol_.u(), u), 'L', 'T', 'N');
+                //
+                // TODO: avoid using the temporary variable
 
-                blaze::DynamicVector<Real> u_tmp = get(ws_.L(), u) * get(sol_.x(), u) + get(ws_.l(), u);
-                trsv(get(ws_.Lambda(), u), u_tmp, 'L', 'T', 'N');
+                blaze::DynamicVector<Real> u_tmp = trans(L_trans) * get(sol_.x(), u) + get(ws_.l(), u);
+                trsv(Lambda, u_tmp, 'L', 'T', 'N');
                 put(sol_.u(), u, -u_tmp);
 
                 /*
@@ -258,41 +255,38 @@ namespace tmpc
             {
                 auto const u = source(e, g);
                 auto const v = target(e, g);
+                auto const& sz_v = get(ws_.size(), v);
+                auto const& LL_next = get(ws_.LL(), v);
+                auto const& Lcal_next = submatrix(LL_next, sz_v.nu(), sz_v.nu(), sz_v.nx(), sz_v.nx());
 
                 // Alg 2 line 9
+                // TODO: write in 1 line, should not degrade the performance.
                 put(sol_.x(), v, get(qp_.A(), e) * get(sol_.x(), u));
                 get(sol_.x(), v) += get(qp_.B(), e) * get(sol_.u(), u);
                 get(sol_.x(), v) += get(qp_.b(), e);
 
                 // Alg 2 line 10
-                put(sol_.pi(), e, trans(get(ws_.P(), v)) * get(sol_.x(), v) + get(ws_.p(), v));
+                // TODO: avoid using temporary pi
+                blaze::DynamicVector<Real> pi = get(sol_.x(), v);
+                trmv(pi, trans(Lcal_next), CblasUpper);
+                trmv(pi, Lcal_next, CblasLower);
+                pi += get(ws_.p(), v);
+                put(sol_.pi(), e, pi);
 
                 // std::clog << "pi = " << std::endl << get(sol_.pi(), e) << std::endl;
             }
 
 
         private:
-            ClassicalRiccati& ws_;
+            FactorizedRiccati& ws_;
             Qp const& qp_;
             QpSol& sol_;
         };
 
 
-        auto P()
+        auto LL()
         {
-            return make_iterator_property_map(P_.begin(), vertexIndex(graph_));
-        }
-
-
-        auto Lambda()
-        {
-            return make_iterator_property_map(Lambda_.begin(), vertexIndex(graph_));
-        }
-
-
-        auto L()
-        {
-            return make_iterator_property_map(L_.begin(), vertexIndex(graph_));
+            return make_iterator_property_map(LL_.begin(), vertexIndex(graph_));
         }
 
 
@@ -308,33 +302,9 @@ namespace tmpc
         }
 
 
-        auto PA()
+        auto LBLA()
         {
-            return make_iterator_property_map(PA_.begin(), get(graph::edge_index, graph_));
-        }
-
-
-        auto PB()
-        {
-            return make_iterator_property_map(PB_.begin(), get(graph::edge_index, graph_));
-        }
-
-
-        auto BPA()
-        {
-            return make_iterator_property_map(BPA_.begin(), get(graph::edge_index, graph_));
-        }
-
-
-        auto BPB()
-        {
-            return make_iterator_property_map(BPB_.begin(), get(graph::edge_index, graph_));
-        }
-
-
-        auto APA()
-        {
-            return make_iterator_property_map(APA_.begin(), get(graph::edge_index, graph_));
+            return make_iterator_property_map(LBLA_.begin(), get(graph::edge_index, graph_));
         }
 
 
@@ -356,30 +326,29 @@ namespace tmpc
         // Fortran-like) order, the better performance in matrix-matrix
         // multiplications is obtained when the left matrix is transposed
         // and the right one is not."
-        std::vector<blaze::SymmetricMatrix<blaze::DynamicMatrix<Real, blaze::columnMajor>>> P_;
         std::vector<blaze::DynamicVector<Real>> p_;
-        std::vector<blaze::DynamicMatrix<Real, blaze::columnMajor>> Lambda_;
-        std::vector<blaze::DynamicMatrix<Real, blaze::columnMajor>> L_;
+
+        // LL = [\Lambda, L;
+        //       L', \mathcal{L}]
+        std::vector<blaze::DynamicMatrix<Real, blaze::columnMajor>> LL_;
         std::vector<blaze::DynamicVector<Real>> l_;
 
-        std::vector<blaze::DynamicMatrix<Real, blaze::columnMajor>> PA_;
-        std::vector<blaze::DynamicMatrix<Real, blaze::columnMajor>> PB_;
-        std::vector<blaze::DynamicMatrix<Real, blaze::columnMajor>> BPA_;
-        std::vector<blaze::DynamicMatrix<Real, blaze::columnMajor>> BPB_;
-        std::vector<blaze::DynamicMatrix<Real, blaze::columnMajor>> APA_;
+        // LBLA = [L'*B, L'*A]
+        std::vector<blaze::DynamicMatrix<Real, blaze::columnMajor>> LBLA_;
+
         std::vector<blaze::DynamicVector<Real>> Pb_p_;
     };
 
 
     template <typename Real>
-    struct KernelOf<ClassicalRiccati<Real>>
+    struct KernelOf<FactorizedRiccati<Real>>
     {
         using type = BlazeKernel<Real>;
     };
 
 
     template <typename Real>
-    struct RealOf<ClassicalRiccati<Real>>
+    struct RealOf<FactorizedRiccati<Real>>
     {
         using type = Real;
     };
