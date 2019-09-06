@@ -90,8 +90,7 @@ namespace tmpc
                 if (out_degree(u, g) == 0)
                 {
                     // Alg 3 line 1
-                    Lcal = get(qp_.Q(), u);
-                    potrf(Lcal, 'L');
+                    llh(get(qp_.Q(), u), Lcal);
 
                     // Alg 2 line 1
                     put(ws_.p(), u, get(qp_.q(), u));
@@ -123,27 +122,27 @@ namespace tmpc
 
                         // Alg 3 line 4
                         ABPBA = declsym(trans(LBLA) * LBLA);
-                        LL = ABPBA;
 
                         // Alg 3 line 5
-                        Lambda += get(qp_.R(), u);
-                        L_trans += trans(get(qp_.S(), u));
-                        Lcal += get(qp_.Q(), u);
+                        blaze::submatrix<0, 0, NU, NU>(ABPBA) += declsym(get(qp_.R(), u));
+                        blaze::submatrix<NU, 0, NX, NU>(ABPBA) += trans(get(qp_.S(), u));   
+                        blaze::submatrix<NU, NU, NX, NX>(ABPBA) += declsym(get(qp_.Q(), u));
                         
                         // llh() or potrf()?
                         // TODO: llh() can be used with adaptors. See if using blaze::SymmetricMatrix improves the performance.
                         // https://bitbucket.org/blaze-lib/blaze/wiki/Matrix%20Operations#!cholesky-decomposition
-                        //llh(get(ws_.Lambda(), u), get(ws_.Lambda(), u));
-                        potrf(LL, 'L');
+                        llh(ABPBA, LL);
+                        // potrf(LL, 'L');
 
                         // Alg 2 line 3.
                         // Pb_p = P_{n+1}^T * b_n + p_{n+1} = \mathcal{L}_{n+1} * \mathcal{L}_{n+1}^T * b_n + p_{n+1}
                         Pb_p = get(qp_.b(), e);
-                        trmv(Pb_p, trans(Lcal_next), CblasUpper);
-                        trmv(Pb_p, Lcal_next, CblasLower);
+                        Pb_p = trans(Lcal_next) * Pb_p;
+                        Pb_p = Lcal_next * Pb_p;
+                        // trmv(Pb_p, trans(Lcal_next), CblasUpper);
+                        // trmv(Pb_p, Lcal_next, CblasLower);
                         Pb_p += get(ws_.p(), v);
-                        l = get(qp_.r(), u) + trans(get(qp_.B(), e)) * Pb_p;
-                        trsv(Lambda, l, 'L', 'N', 'N');
+                        l = inv(Lambda) * (get(qp_.r(), u) + trans(get(qp_.B(), e)) * Pb_p);
                         
                         // Alg 2 line 4
                         p = get(qp_.q(), u) + trans(get(qp_.A(), e)) * Pb_p - L_trans * l;
@@ -198,10 +197,10 @@ namespace tmpc
                     put(sol_.x(), u, -get(ws_.p(), u));
 
                     // Solve \mathcal{L}*z=-p
-                    trsv(Lcal, get(sol_.x(), u), 'L', 'N', 'N');
+                    put(sol_.x(), u, inv(Lcal) * get(sol_.x(), u));
 
                     // Solve \mathcal{L}^T*x=z
-                    trsv(Lcal, get(sol_.x(), u), 'L', 'T', 'N');
+                    put(sol_.x(), u, inv(trans(Lcal)) * get(sol_.x(), u));
                 }
 
                 // Alg 2 line 8
@@ -215,8 +214,7 @@ namespace tmpc
                 {
                     // Only non-leaf edges have u.
                     blaze::DynamicVector<Real> u_tmp = trans(L_trans) * get(sol_.x(), u) + get(ws_.l(), u);
-                    trsv(Lambda, u_tmp, 'L', 'T', 'N');
-                    put(sol_.u(), u, -u_tmp);
+                    put(sol_.u(), u, -inv(trans(Lambda)) * u_tmp);
                 }
 
                 /*
@@ -242,8 +240,10 @@ namespace tmpc
                 // Alg 2 line 10
                 // TODO: avoid using temporary pi
                 blaze::DynamicVector<Real> pi = get(sol_.x(), v);
-                trmv(pi, trans(Lcal_next), CblasUpper);
-                trmv(pi, Lcal_next, CblasLower);
+                pi = trans(Lcal_next) * pi;
+                pi = Lcal_next * pi;
+                // trmv(pi, trans(Lcal_next), CblasUpper);
+                // trmv(pi, Lcal_next, CblasLower);
                 pi += get(ws_.p(), v);
                 put(sol_.pi(), e, pi);
 
@@ -314,7 +314,7 @@ namespace tmpc
 
         // LL = [\Lambda, L;
         //       L', \mathcal{L}]
-        std::vector<blaze::StaticMatrix<Real, NX + NU, NX + NU, blaze::columnMajor>> LL_;
+        std::vector<blaze::LowerMatrix<blaze::StaticMatrix<Real, NX + NU, NX + NU, blaze::columnMajor>>> LL_;
         std::vector<blaze::StaticVector<Real, NU>> l_;
 
         // LBLA = [L'*B, L'*A]
