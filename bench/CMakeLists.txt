@@ -5,9 +5,16 @@ find_package(Threads REQUIRED)
 #~~~~~~~~~~~~~~~~
 add_executable(tmpc_bench
     CondensingBench.cpp
-    MathBench.cpp
+    math/MathBench.cpp
+    math/Cholesky.cpp
+    math/Syrk.cpp
+    math/Trmm.cpp
+    math/Trmv.cpp
+    math/Trsv.cpp
     RiccatiBench.cpp
     ClassicalRiccatiBench.cpp
+    FactorizedRiccatiBench.cpp
+    FactorizedRiccatiStaticBench.cpp
     OcpGraphBench.cpp
 )
 

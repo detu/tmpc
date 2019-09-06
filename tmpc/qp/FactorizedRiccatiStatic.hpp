@@ -18,15 +18,14 @@
 namespace tmpc
 {
     /// @brief Implements factorized Riccati algorithm from [Frison2013]
+    /// for static matrix sizes.
     ///
-    template <typename Real>
-    class FactorizedRiccati
+    template <typename Real, size_t NX, size_t NU>
+    class FactorizedRiccatiStatic
     {
     public:
-        template <typename SizeMap>
-        FactorizedRiccati(OcpGraph const& g, SizeMap size_map)
+        FactorizedRiccatiStatic(OcpGraph const& g)
         :   graph_(g)
-        ,   size_(num_vertices(g))
         ,   ABPBA_(num_edges(g))
         ,   LL_(num_vertices(g))
         ,   p_(num_vertices(g))
@@ -34,33 +33,6 @@ namespace tmpc
         ,   LBLA_(num_edges(g))
         ,   Pb_p_(num_edges(g))
         {
-            copyProperty(size_map, make_iterator_property_map(size_.begin(), vertexIndex(graph_)), graph::vertices(graph_));
-            
-            // vertexProperties_.reserve(num_vertices(graph_));
-            // for (auto const& sz : size_)
-            //     vertexProperties_.emplace_back(sz);
-
-            for (auto v : graph::vertices(graph_))
-            {
-                auto const& sz = get(size(), v);
-                auto v_id = get(graph::vertex_index, graph_, v);
-
-                LL_[v_id].resize(sz.nx() + sz.nu(), sz.nx() + sz.nu());
-                p_[v_id].resize(sz.nx());
-                l_[v_id].resize(sz.nu());
-            }
-
-            
-            for (auto e : graph::edges(graph_))
-            {
-                auto const sz_u = get(size_map, source(e, g));
-                auto const sz_v = get(size_map, target(e, g));
-                auto edge_id = get(graph::edge_index, graph_, e);
-                
-                LBLA_[edge_id].resize(sz_v.nx(), sz_u.nu() + sz_u.nx());
-                ABPBA_[edge_id].resize(sz_u.nu() + sz_u.nx());
-                Pb_p_[edge_id].resize(sz_v.nx());
-            }
         }
 
 
@@ -99,7 +71,7 @@ namespace tmpc
         :   public graph::default_dfs_visitor 
         {
         public:
-            RiccatiBackwardVisitor(FactorizedRiccati& ws, Qp const& qp, QpSol& sol)
+            RiccatiBackwardVisitor(FactorizedRiccatiStatic& ws, Qp const& qp, QpSol& sol)
             :   ws_(ws)
             ,   qp_(qp)
             ,   sol_(sol)
@@ -111,9 +83,9 @@ namespace tmpc
             {
                 auto const& sz_u = get(ws_.size(), u);
                 auto& LL = get(ws_.LL(), u);
-                auto Lambda = submatrix(LL, 0, 0, sz_u.nu(), sz_u.nu());
-                auto L_trans = submatrix(LL, sz_u.nu(), 0, sz_u.nx(), sz_u.nu());   
-                auto Lcal = submatrix(LL, sz_u.nu(), sz_u.nu(), sz_u.nx(), sz_u.nx());
+                auto Lambda = blaze::submatrix<0, 0, NU, NU>(LL);
+                auto L_trans = blaze::submatrix<NU, 0, NX, NU>(LL);   
+                auto Lcal = blaze::submatrix<NU, NU, NX, NX>(LL);
 
                 if (out_degree(u, g) == 0)
                 {
@@ -142,11 +114,11 @@ namespace tmpc
 
                         // Alg 3 line 3
                         // TODO: dtrmm
-                        auto const Lcal_next = submatrix(get(ws_.LL(), v), sz_v.nu(), sz_v.nu(), sz_v.nx(), sz_v.nx());
-                        // submatrix(LBLA, 0, 0, sz_v.nx(), sz_u.nu()) = trans(L_next) * get(qp_.B(), e);
-                        // submatrix(LBLA, 0, sz_u.nu(), sz_v.nx(), sz_u.nx()) = trans(L_next) * get(qp_.A(), e);
-                        submatrix(LBLA, 0, 0, sz_v.nx(), sz_u.nu()) = get(qp_.B(), e);
-                        submatrix(LBLA, 0, sz_u.nu(), sz_v.nx(), sz_u.nx()) = get(qp_.A(), e);
+                        auto const Lcal_next = blaze::submatrix<NU, NU, NX, NX>(get(ws_.LL(), v));
+                        // blaze::submatrix(LBLA, 0, 0, sz_v.nx(), NU) = trans(L_next) * get(qp_.B(), e);
+                        // blaze::submatrix(LBLA, 0, NU, sz_v.nx(), NX) = trans(L_next) * get(qp_.A(), e);
+                        blaze::submatrix<0, 0, NX, NU>(LBLA) = get(qp_.B(), e);
+                        blaze::submatrix<0, NU, NX, NX>(LBLA) = get(qp_.A(), e);
                         trmm(LBLA, trans(Lcal_next), CblasLeft, CblasUpper, 1.);
 
                         // Alg 3 line 4
@@ -178,7 +150,7 @@ namespace tmpc
                     }
                     else
                     {
-                        throw std::invalid_argument("FactorizedRiccati solver is not implemented on tree QPs yet");
+                        throw std::invalid_argument("FactorizedRiccatiStatic solver is not implemented on tree QPs yet");
                     }
                 }
 
@@ -191,7 +163,7 @@ namespace tmpc
 
 
         private:
-            FactorizedRiccati& ws_;
+            FactorizedRiccatiStatic& ws_;
             Qp const& qp_;
             QpSol& sol_;
         };
@@ -202,7 +174,7 @@ namespace tmpc
         :   public graph::default_dfs_visitor 
         {
         public:
-            RiccatiForwardVisitor(FactorizedRiccati& ws, Qp const& qp, QpSol& sol)
+            RiccatiForwardVisitor(FactorizedRiccatiStatic& ws, Qp const& qp, QpSol& sol)
             :   ws_(ws)
             ,   qp_(qp)
             ,   sol_(sol)
@@ -212,11 +184,10 @@ namespace tmpc
             
             void discover_vertex(OcpVertexDescriptor u, OcpGraph const& g) const
             {
-                auto const& sz_u = get(ws_.size(), u);
                 auto const& LL = get(ws_.LL(), u);
-                auto const Lambda = submatrix(LL, 0, 0, sz_u.nu(), sz_u.nu());
-                auto const L_trans = submatrix(LL, sz_u.nu(), 0, sz_u.nx(), sz_u.nu());
-                auto const Lcal = submatrix(LL, sz_u.nu(), sz_u.nu(), sz_u.nx(), sz_u.nx());
+                auto const Lambda = blaze::submatrix<0, 0, NU, NU>(LL);
+                auto const L_trans = blaze::submatrix<NU, 0, NX, NU>(LL);
+                auto const Lcal = blaze::submatrix<NU, NU, NX, NX>(LL);
 
                 if (in_degree(u, g) == 0)
                 {
@@ -240,9 +211,13 @@ namespace tmpc
                 //
                 // TODO: avoid using the temporary variable
 
-                blaze::DynamicVector<Real> u_tmp = trans(L_trans) * get(sol_.x(), u) + get(ws_.l(), u);
-                trsv(Lambda, u_tmp, 'L', 'T', 'N');
-                put(sol_.u(), u, -u_tmp);
+                if (out_degree(u, g) > 0)
+                {
+                    // Only non-leaf edges have u.
+                    blaze::DynamicVector<Real> u_tmp = trans(L_trans) * get(sol_.x(), u) + get(ws_.l(), u);
+                    trsv(Lambda, u_tmp, 'L', 'T', 'N');
+                    put(sol_.u(), u, -u_tmp);
+                }
 
                 /*
                 std::clog << "u = " << std::endl << get(sol_.u(), u) << std::endl;
@@ -255,9 +230,8 @@ namespace tmpc
             {
                 auto const u = source(e, g);
                 auto const v = target(e, g);
-                auto const& sz_v = get(ws_.size(), v);
                 auto const& LL_next = get(ws_.LL(), v);
-                auto const& Lcal_next = submatrix(LL_next, sz_v.nu(), sz_v.nu(), sz_v.nx(), sz_v.nx());
+                auto const& Lcal_next = blaze::submatrix<NU, NU, NX, NX>(LL_next);
 
                 // Alg 2 line 9
                 // TODO: write in 1 line, should not degrade the performance.
@@ -278,7 +252,7 @@ namespace tmpc
 
 
         private:
-            FactorizedRiccati& ws_;
+            FactorizedRiccatiStatic& ws_;
             Qp const& qp_;
             QpSol& sol_;
         };
@@ -332,33 +306,26 @@ namespace tmpc
         // Fortran-like) order, the better performance in matrix-matrix
         // multiplications is obtained when the left matrix is transposed
         // and the right one is not."
-        std::vector<blaze::DynamicVector<Real>> p_;
+        std::vector<blaze::StaticVector<Real, NX>> p_;
 
         // ABPBA = [B'*P*B, B'*P*A; 
         //        A'*P*B, A'*P*A]
-        std::vector<blaze::SymmetricMatrix<blaze::DynamicMatrix<Real, blaze::columnMajor>>> ABPBA_;
+        std::vector<blaze::SymmetricMatrix<blaze::StaticMatrix<Real, NX + NU, NX + NU, blaze::columnMajor>>> ABPBA_;
 
         // LL = [\Lambda, L;
         //       L', \mathcal{L}]
-        std::vector<blaze::DynamicMatrix<Real, blaze::columnMajor>> LL_;
-        std::vector<blaze::DynamicVector<Real>> l_;
+        std::vector<blaze::StaticMatrix<Real, NX + NU, NX + NU, blaze::columnMajor>> LL_;
+        std::vector<blaze::StaticVector<Real, NU>> l_;
 
         // LBLA = [L'*B, L'*A]
-        std::vector<blaze::DynamicMatrix<Real, blaze::columnMajor>> LBLA_;
+        std::vector<blaze::StaticMatrix<Real, NX, NU + NX, blaze::columnMajor>> LBLA_;
 
-        std::vector<blaze::DynamicVector<Real>> Pb_p_;
+        std::vector<blaze::StaticVector<Real, NX>> Pb_p_;
     };
 
 
-    template <typename Real>
-    struct KernelOf<FactorizedRiccati<Real>>
-    {
-        using type = BlazeKernel<Real>;
-    };
-
-
-    template <typename Real>
-    struct RealOf<FactorizedRiccati<Real>>
+    template <typename Real, size_t NX, size_t NU>
+    struct RealOf<FactorizedRiccatiStatic<Real, NX, NU>>
     {
         using type = Real;
     };

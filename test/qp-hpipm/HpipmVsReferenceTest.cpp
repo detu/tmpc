@@ -3,6 +3,7 @@
 #include <tmpc/ocp/OcpSizeProperties.hpp>
 #include <tmpc/qp/ClassicalRiccati.hpp>
 #include <tmpc/qp/FactorizedRiccati.hpp>
+#include <tmpc/qp/FactorizedRiccatiStatic.hpp>
 #include <tmpc/qp/OcpQp.hpp>
 #include <tmpc/BlazeKernel.hpp>
 #include <tmpc/Testing.hpp>
@@ -21,7 +22,7 @@ namespace tmpc :: testing
 		size_t const N = 5, nx = 3, nu = 2;
 
         OcpGraph const g = ocpGraphLinear(N + 1);
-        auto const sz = ocpSizeNominalMpc(N, nx, nu, 0, 0, 0, true);
+        auto const sz = ocpSizeNominalMpc(N, nx, nu, 0, 0, 0, false);
         
         HpipmWorkspace<BlazeKernel<double>> ws_hpipm(g, sz);
         MpipmWorkspace<double> ws_mpipm(g, sz);
@@ -46,11 +47,61 @@ namespace tmpc :: testing
 		size_t const N = 5, nx = 3, nu = 2;
 
         OcpGraph const g = ocpGraphLinear(N + 1);
-        auto const sz = ocpSizeNominalMpc(N, nx, nu, 0, 0, 0, true);
+        auto const sz = ocpSizeNominalMpc(N, nx, nu, 0, 0, 0, false);
         
         HpipmWorkspace<BlazeKernel<double>> ws_hpipm(g, sz);
         MpipmWorkspace<double> ws_mpipm(g, sz);
         FactorizedRiccati<double> riccati(g, sz);
+
+        randomizeQp(ws_mpipm);        
+        copyQpProperties(ws_mpipm, ws_hpipm);
+
+        ws_hpipm.solveUnconstrained();
+        riccati(ws_mpipm, ws_mpipm);
+
+        for (auto v : graph::vertices(g))
+        {
+            EXPECT_EQ(forcePrint(get(ws_mpipm.x(), v)), forcePrint(get(ws_hpipm.x(), v))) << " at node " << get(graph::vertex_index, g, v);
+            EXPECT_EQ(forcePrint(get(ws_mpipm.u(), v)), forcePrint(get(ws_hpipm.u(), v))) << " at node " << get(graph::vertex_index, g, v);
+        }
+	}
+
+
+    TEST(HpipmVsReferenceTest, testFactorizedRiccatiStatic)
+	{
+		size_t constexpr N = 5, NX = 3, NU = 2;
+
+        OcpGraph const g = ocpGraphLinear(N + 1);
+        auto const sz = ocpSizeNominalMpc(N, NX, NU, 0, 0, 0, false);
+        
+        HpipmWorkspace<BlazeKernel<double>> ws_hpipm(g, sz);
+        MpipmWorkspace<double> ws_mpipm(g, sz);
+        FactorizedRiccatiStatic<double, NX, NU> riccati(g);
+
+        randomizeQp(ws_mpipm);        
+        copyQpProperties(ws_mpipm, ws_hpipm);
+
+        ws_hpipm.solveUnconstrained();
+        riccati(ws_mpipm, ws_mpipm);
+
+        for (auto v : graph::vertices(g))
+        {
+            EXPECT_EQ(forcePrint(get(ws_mpipm.x(), v)), forcePrint(get(ws_hpipm.x(), v))) << " at node " << get(graph::vertex_index, g, v);
+            EXPECT_EQ(forcePrint(get(ws_mpipm.u(), v)), forcePrint(get(ws_hpipm.u(), v))) << " at node " << get(graph::vertex_index, g, v);
+        }
+	}
+
+
+    TEST(HpipmVsReferenceTest, DISABLED_testFactorizedRiccatiStatic1)
+	{
+		size_t constexpr N = 100, NX = 2, NU = 1;
+
+        OcpGraph const g = ocpGraphLinear(N + 1);
+        auto const sz = ocpSizeNominalMpc(N, NX, NU, 0, 0, 0, false);
+        
+        HpipmWorkspace<BlazeKernel<double>> ws_hpipm(g, sz);
+        MpipmWorkspace<double> ws_mpipm(g, sz);
+        FactorizedRiccatiStatic<double, NX, NU> riccati(g);
 
         randomizeQp(ws_mpipm);        
         copyQpProperties(ws_mpipm, ws_hpipm);

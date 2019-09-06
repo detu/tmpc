@@ -381,9 +381,9 @@ namespace tmpc
             }
 
 
-            blaze::DynamicMatrix<Real> Q_;
-            blaze::DynamicMatrix<Real> R_;
-            blaze::DynamicMatrix<Real> S_;
+            blaze::DynamicMatrix<Real, blaze::columnMajor> Q_;
+            blaze::DynamicMatrix<Real, blaze::columnMajor> R_;
+            blaze::DynamicMatrix<Real, blaze::columnMajor> S_;
             blaze::DynamicVector<Real> q_;
             blaze::DynamicVector<Real> r_;
 
@@ -392,8 +392,8 @@ namespace tmpc
             blaze::DynamicVector<Real> lu_;
             blaze::DynamicVector<Real> uu_;
 
-            blaze::DynamicMatrix<Real> C_;
-            blaze::DynamicMatrix<Real> D_;
+            blaze::DynamicMatrix<Real, blaze::columnMajor> C_;
+            blaze::DynamicMatrix<Real, blaze::columnMajor> D_;
             blaze::DynamicVector<Real> ld_;
             blaze::DynamicVector<Real> ud_;
 
@@ -419,8 +419,8 @@ namespace tmpc
             }
 
 
-            blaze::DynamicMatrix<Real> A_;
-            blaze::DynamicMatrix<Real> B_;
+            blaze::DynamicMatrix<Real, blaze::columnMajor> A_;
+            blaze::DynamicMatrix<Real, blaze::columnMajor> B_;
             blaze::DynamicVector<Real> b_;
             blaze::DynamicVector<Real> pi_;
         };
