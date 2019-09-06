@@ -59,11 +59,21 @@ namespace tmpc
 
             l(k, k) = x = sqrt(x);
 
-            if (k > 0 && rs > 0) 
-                A21 -= A20 * ctrans(A10);
+            if (k > 0)
+            {
+                // Not using matrix-vector multiplication here to prevent Blaze
+                // from creating a temporary due to possible aliasing.
+                // See this for more details:
+                // https://bitbucket.org/blaze-lib/blaze/issues/287/is-there-a-way-to-specify-that-the
+                //
+                // A21 -= A20 * ctrans(A10);
+                // A21 -= trans(A10 * ctrans(A20));
 
-            if (rs > 0) 
-                A21 /= x;
+                for (size_t i = 0; i < rs; ++i)
+                    A21(i, 0) -= row(A20, i) * ctrans(row(A10, 0));
+            }
+
+            A21 /= x;
         }
     }
 }

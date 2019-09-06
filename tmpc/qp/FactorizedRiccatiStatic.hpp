@@ -9,6 +9,7 @@
 #include <tmpc/core/Range.hpp>
 #include <tmpc/Traits.hpp>
 #include <tmpc/Math.hpp>
+#include <tmpc/math/Llh.hpp>
 
 #include <blaze/Math.h>
 
@@ -90,7 +91,7 @@ namespace tmpc
                 if (out_degree(u, g) == 0)
                 {
                     // Alg 3 line 1
-                    llh(get(qp_.Q(), u), Lcal);
+                    tmpc::llh(get(qp_.Q(), u), Lcal);
 
                     // Alg 2 line 1
                     put(ws_.p(), u, get(qp_.q(), u));
@@ -126,8 +127,7 @@ namespace tmpc
                         // llh() or potrf()?
                         // TODO: llh() can be used with adaptors. See if using blaze::SymmetricMatrix improves the performance.
                         // https://bitbucket.org/blaze-lib/blaze/wiki/Matrix%20Operations#!cholesky-decomposition
-                        llh(ABPBA, LL);
-                        // potrf(LL, 'L');
+                        tmpc::llh(ABPBA, LL);
 
                         // Alg 2 line 3.
                         // Pb_p = P_{n+1}^T * b_n + p_{n+1} = \mathcal{L}_{n+1} * \mathcal{L}_{n+1}^T * b_n + p_{n+1}

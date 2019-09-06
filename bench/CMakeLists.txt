@@ -11,6 +11,7 @@ add_executable(tmpc_bench
     math/Trmm.cpp
     math/Trmv.cpp
     math/Trsv.cpp
+    math/SqrNorm.cpp
     RiccatiBench.cpp
     ClassicalRiccatiBench.cpp
     FactorizedRiccatiBench.cpp

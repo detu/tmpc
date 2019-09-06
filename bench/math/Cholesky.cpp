@@ -1,3 +1,5 @@
+#include <tmpc/math/Llh.hpp>
+
 #include <blaze/Math.h>
 #include <Eigen/Dense>
 
@@ -31,7 +33,7 @@ namespace tmpc :: benchmark
 
         blaze::DynamicMatrix<Real, blaze::columnMajor> B(N, N);        
         for (auto _ : state)
-            llh(A, B);
+            blaze::llh(A, B);
     }
 
 
@@ -44,7 +46,7 @@ namespace tmpc :: benchmark
 
         blaze::DynamicMatrix<Real, blaze::columnMajor> B(N, N);        
         for (auto _ : state)
-            llh(A, B);
+            blaze::llh(A, B);
     }
 
 
@@ -57,7 +59,7 @@ namespace tmpc :: benchmark
 
         blaze::LowerMatrix<blaze::DynamicMatrix<Real, blaze::columnMajor>> B(N);        
         for (auto _ : state)
-            llh(A, B);
+            blaze::llh(A, B);
     }
 
 
@@ -70,7 +72,7 @@ namespace tmpc :: benchmark
 
         blaze::DynamicMatrix<Real, blaze::columnMajor> B(N, N);        
         for (auto _ : state)
-            llh(declsym(A), B);
+            blaze::llh(declsym(A), B);
     }
 
 
@@ -121,9 +123,23 @@ namespace tmpc :: benchmark
     }
 
 
+    template <typename Real, int N>
+    static void BM_Cholesky_tmpc_llh_Static(::benchmark::State& state)
+    {
+        // Make a positive definite matrix A
+        blaze::SymmetricMatrix<blaze::StaticMatrix<Real, N, N, blaze::columnMajor>> A;
+        makePositiveDefinite(A);
+
+        blaze::LowerMatrix<blaze::StaticMatrix<Real, N, N, blaze::rowMajor>> L;
+
+        for (auto _ : state)
+            tmpc::llh(A, L);
+    }
+
+
     static void choleskyBenchArguments(::benchmark::internal::Benchmark* b) 
     {
-        b->Arg(1)->Arg(2)->Arg(10)->Arg(35);
+        b->Arg(1)->Arg(2)->Arg(5)->Arg(10)->Arg(35);
     }
 
     
@@ -136,6 +152,12 @@ namespace tmpc :: benchmark
     BENCHMARK_TEMPLATE(BM_Cholesky_Eigen_LLT_SelfadjointDynamic, double)->Apply(choleskyBenchArguments);
     BENCHMARK_TEMPLATE(BM_Cholesky_Eigen_LLT_Static, double, 1);
     BENCHMARK_TEMPLATE(BM_Cholesky_Eigen_LLT_Static, double, 2);
+    BENCHMARK_TEMPLATE(BM_Cholesky_Eigen_LLT_Static, double, 5);
     BENCHMARK_TEMPLATE(BM_Cholesky_Eigen_LLT_Static, double, 10);
     BENCHMARK_TEMPLATE(BM_Cholesky_Eigen_LLT_Static, double, 35);
+    BENCHMARK_TEMPLATE(BM_Cholesky_tmpc_llh_Static, double, 1);
+    BENCHMARK_TEMPLATE(BM_Cholesky_tmpc_llh_Static, double, 2);
+    BENCHMARK_TEMPLATE(BM_Cholesky_tmpc_llh_Static, double, 5);
+    BENCHMARK_TEMPLATE(BM_Cholesky_tmpc_llh_Static, double, 10);
+    BENCHMARK_TEMPLATE(BM_Cholesky_tmpc_llh_Static, double, 35);
 }
