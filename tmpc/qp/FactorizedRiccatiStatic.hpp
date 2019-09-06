@@ -103,7 +103,6 @@ namespace tmpc
                     {
                         auto const e = out_e.front();
                         auto const v = target(e, g);
-                        auto const& sz_v = get(ws_.size(), v);
 
                         auto& LBLA = get(ws_.LBLA(), e);
                         auto& ABPBA = get(ws_.ABPBA(), e);
@@ -112,13 +111,9 @@ namespace tmpc
                         auto& p = get(ws_.p(), u);
 
                         // Alg 3 line 3
-                        // TODO: dtrmm
                         auto const Lcal_next = blaze::submatrix<NU, NU, NX, NX>(get(ws_.LL(), v));
-                        // blaze::submatrix(LBLA, 0, 0, sz_v.nx(), NU) = trans(L_next) * get(qp_.B(), e);
-                        // blaze::submatrix(LBLA, 0, NU, sz_v.nx(), NX) = trans(L_next) * get(qp_.A(), e);
-                        blaze::submatrix<0, 0, NX, NU>(LBLA) = get(qp_.B(), e);
-                        blaze::submatrix<0, NU, NX, NX>(LBLA) = get(qp_.A(), e);
-                        trmm(LBLA, trans(Lcal_next), CblasLeft, CblasUpper, 1.);
+                        blaze::submatrix<0, 0, NX, NU>(LBLA) = trans(Lcal_next) * get(qp_.B(), e);
+                        blaze::submatrix<0, NU, NX, NX>(LBLA) = trans(Lcal_next) * get(qp_.A(), e);
 
                         // Alg 3 line 4
                         ABPBA = declsym(trans(LBLA) * LBLA);
@@ -136,13 +131,9 @@ namespace tmpc
 
                         // Alg 2 line 3.
                         // Pb_p = P_{n+1}^T * b_n + p_{n+1} = \mathcal{L}_{n+1} * \mathcal{L}_{n+1}^T * b_n + p_{n+1}
-                        Pb_p = get(qp_.b(), e);
-                        Pb_p = trans(Lcal_next) * Pb_p;
-                        Pb_p = Lcal_next * Pb_p;
-                        // trmv(Pb_p, trans(Lcal_next), CblasUpper);
-                        // trmv(Pb_p, Lcal_next, CblasLower);
-                        Pb_p += get(ws_.p(), v);
-                        l = inv(Lambda) * (get(qp_.r(), u) + trans(get(qp_.B(), e)) * Pb_p);
+                        Pb_p = get(ws_.p(), v) + Lcal_next * (trans(Lcal_next) * get(qp_.b(), e));
+                        l = get(qp_.r(), u) + trans(get(qp_.B(), e)) * Pb_p;
+                        l = inv(Lambda) * l;
                         
                         // Alg 2 line 4
                         p = get(qp_.q(), u) + trans(get(qp_.A(), e)) * Pb_p - L_trans * l;
@@ -194,27 +185,16 @@ namespace tmpc
                     
                     // Solve P*x+p=0 by using Cholesky factor of P:
                     // \mathcal{L}*(\mathcal{L}^T*x)=-p
-                    put(sol_.x(), u, -get(ws_.p(), u));
-
-                    // Solve \mathcal{L}*z=-p
-                    put(sol_.x(), u, inv(Lcal) * get(sol_.x(), u));
-
-                    // Solve \mathcal{L}^T*x=z
-                    put(sol_.x(), u, inv(trans(Lcal)) * get(sol_.x(), u));
+                    // TODO: this should become faster when the following feature is implemented:
+                    // https://bitbucket.org/blaze-lib/blaze/issues/284/solving-a-linear-system-with-triangular
+                    put(sol_.x(), u, inv(trans(Lcal)) * (inv(Lcal) * (-get(ws_.p(), u))));
                 }
 
                 // Alg 2 line 8
-                // put(sol_.u(), u, -get(ws_.L(), u) * get(sol_.x(), u));
-                // get(sol_.u(), u) -= get(ws_.l(), u);
-                // trsv(get(ws_.Lambda(), u), get(sol_.u(), u), 'L', 'T', 'N');
-                //
-                // TODO: avoid using the temporary variable
-
                 if (out_degree(u, g) > 0)
                 {
                     // Only non-leaf edges have u.
-                    blaze::DynamicVector<Real> u_tmp = trans(L_trans) * get(sol_.x(), u) + get(ws_.l(), u);
-                    put(sol_.u(), u, -inv(trans(Lambda)) * u_tmp);
+                    put(sol_.u(), u, -inv(trans(Lambda)) * (get(ws_.l(), u) + trans(L_trans) * get(sol_.x(), u)));
                 }
 
                 /*
@@ -232,20 +212,10 @@ namespace tmpc
                 auto const& Lcal_next = blaze::submatrix<NU, NU, NX, NX>(LL_next);
 
                 // Alg 2 line 9
-                // TODO: write in 1 line, should not degrade the performance.
-                put(sol_.x(), v, get(qp_.A(), e) * get(sol_.x(), u));
-                get(sol_.x(), v) += get(qp_.B(), e) * get(sol_.u(), u);
-                get(sol_.x(), v) += get(qp_.b(), e);
+                put(sol_.x(), v, get(qp_.b(), e) + get(qp_.A(), e) * get(sol_.x(), u) + get(qp_.B(), e) * get(sol_.u(), u));
 
                 // Alg 2 line 10
-                // TODO: avoid using temporary pi
-                blaze::DynamicVector<Real> pi = get(sol_.x(), v);
-                pi = trans(Lcal_next) * pi;
-                pi = Lcal_next * pi;
-                // trmv(pi, trans(Lcal_next), CblasUpper);
-                // trmv(pi, Lcal_next, CblasLower);
-                pi += get(ws_.p(), v);
-                put(sol_.pi(), e, pi);
+                put(sol_.pi(), e, get(ws_.p(), v) + Lcal_next * (trans(Lcal_next) * get(sol_.x(), v)));
 
                 // std::clog << "pi = " << std::endl << get(sol_.pi(), e) << std::endl;
             }
