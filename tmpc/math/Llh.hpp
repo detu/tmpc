@@ -59,21 +59,23 @@ namespace tmpc
 
             l(k, k) = x = sqrt(x);
 
-            if (k > 0)
+            // NOTE:
+            // Not using matrix-vector multiplication here to prevent Blaze
+            // from creating a temporary due to possible aliasing.
+            // See this for more details:
+            // https://bitbucket.org/blaze-lib/blaze/issues/287/is-there-a-way-to-specify-that-the
+            //
+            // A21 -= A20 * ctrans(A10);
+            // A21 -= trans(A10 * ctrans(A20));
+            // 
+            for (size_t i = 0; i < rs; ++i)
             {
-                // Not using matrix-vector multiplication here to prevent Blaze
-                // from creating a temporary due to possible aliasing.
-                // See this for more details:
-                // https://bitbucket.org/blaze-lib/blaze/issues/287/is-there-a-way-to-specify-that-the
-                //
-                // A21 -= A20 * ctrans(A10);
-                // A21 -= trans(A10 * ctrans(A20));
+                A21(i, 0) -= row(A20, i) * ctrans(row(A10, 0));
 
-                for (size_t i = 0; i < rs; ++i)
-                    A21(i, 0) -= row(A20, i) * ctrans(row(A10, 0));
+                // NOTE: using scalar/scalar division instead of matrix/scalar division (or multiplication) here
+                // because of this issue: https://bitbucket.org/blaze-lib/blaze/issues/288/performance-issue-dmatscalarmultexpr-ctor
+                A21(i, 0) /= x;
             }
-
-            A21 /= x;
         }
     }
 }
