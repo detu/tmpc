@@ -29,9 +29,7 @@ namespace tmpc
     public:
         FactorizedRiccatiStatic(OcpGraph const& g)
         :   graph_(g)
-        ,   LL_(num_vertices(g))
-        ,   p_(num_vertices(g))
-        ,   l_(num_vertices(g))
+        ,   vertexData_(num_vertices(g))
         {
         }
 
@@ -70,18 +68,16 @@ namespace tmpc
         template <typename Qp>
         void backwardPassVertex(OcpVertexDescriptor u, Qp const& qp)
         {
-            auto& LL = LL_[u];
-            auto Lambda = blaze::submatrix<0, 0, NU, NU>(LL);
-            auto L_trans = blaze::submatrix<NU, 0, NX, NU>(LL);   
-            auto Lcal = blaze::submatrix<NU, NU, NX, NX>(LL);
+            auto& vd_u = vertexData_[u];
 
             if (out_degree(u, graph_) == 0)
             {
                 // Alg 3 line 1
+                auto Lcal = vd_u.Lcal();
                 tmpc::llh(get(qp.Q(), u), Lcal);
 
                 // Alg 2 line 1
-                p_[u] = get(qp.q(), u);
+                vd_u.p_ = get(qp.q(), u);
             }
             else
             {
@@ -90,21 +86,18 @@ namespace tmpc
                 if (out_e.size() == 1)
                 {
                     auto const e = out_e.front();
-                    auto const e_index = get(graph::edge_index, graph_, e);
                     auto const v = target(e, graph_);
-
-                    auto& l = l_[u];
-                    auto& p = p_[u];
+                    auto const& vd_v = vertexData_[v];
 
                     // Alg 3 line 3
-                    auto const Lcal_next = blaze::submatrix<NU, NU, NX, NX>(LL_[v]);
+                    auto const Lcal_next = vd_v.Lcal();
                     // LBLA_ = trans(Lcal_next) * get(qp.BA(), e);
                     blaze::submatrix<0, 0, NX, NU>(LBLA_) = trans(Lcal_next) * get(qp.B(), e);
                     blaze::submatrix<0, NU, NX, NX>(LBLA_) = trans(Lcal_next) * get(qp.A(), e);
 
                     // Alg 3 line 4, 5
                     {
-                        decltype(auto) ABPBA = derestrict(LL);
+                        decltype(auto) ABPBA = derestrict(vd_u.LL_);
                         ABPBA = declsym(get(qp.H(), u)) + declsym(trans(LBLA_) * LBLA_);
                         tmpc::llh(ABPBA);
                     }
@@ -112,13 +105,15 @@ namespace tmpc
                     // Alg 2 line 3.
                     // Pb_p = P_{n+1}^T * b_n + p_{n+1} = \mathcal{L}_{n+1} * \mathcal{L}_{n+1}^T * b_n + p_{n+1}
                     blaze::StaticVector<Real, NX> const tmp1 = trans(Lcal_next) * get(qp.b(), e);
-                    blaze::StaticVector<Real, NX> const Pb_p = p_[v] + Lcal_next * tmp1;
+                    blaze::StaticVector<Real, NX> const Pb_p = vd_v.p_ + Lcal_next * tmp1;
                         
+                    auto& l = vd_u.l_;
                     blaze::StaticVector<Real, NU> const tmp2 = get(qp.r(), u) + trans(get(qp.B(), e)) * Pb_p;
-                    l = inv(Lambda) * tmp2;
+                    l = inv(vd_u.Lambda()) * tmp2;
                     
                     // Alg 2 line 4
-                    p = get(qp.q(), u) + trans(get(qp.A(), e)) * Pb_p - L_trans * l;
+                    auto& p = vd_u.p_;
+                    p = get(qp.q(), u) + trans(get(qp.A(), e)) * Pb_p - vd_u.L_trans() * l;
                 }
                 else
                 {
@@ -132,10 +127,7 @@ namespace tmpc
         template <typename QpSol>
         void forwardPassVertex(OcpVertexDescriptor u, QpSol& sol) const
         {
-            auto const& LL = LL_[u];
-            auto const Lambda = blaze::submatrix<0, 0, NU, NU>(LL);
-            auto const L_trans = blaze::submatrix<NU, 0, NX, NU>(LL);
-            auto const Lcal = blaze::submatrix<NU, NU, NX, NX>(LL);
+            auto const& vd_u = vertexData_[u];
 
             if (in_degree(u, graph_) == 0)
             {
@@ -145,8 +137,8 @@ namespace tmpc
                 // \mathcal{L}*(\mathcal{L}^T*x)=-p
                 // TODO: this should become faster when the following feature is implemented:
                 // https://bitbucket.org/blaze-lib/blaze/issues/284/solving-a-linear-system-with-triangular
-                blaze::StaticVector<Real, NX> const tmp1 = inv(Lcal) * p_[u];
-                blaze::StaticVector<Real, NX> const tmp2 = inv(trans(Lcal)) * tmp1;
+                blaze::StaticVector<Real, NX> const tmp1 = inv(vd_u.Lcal()) * vd_u.p_;
+                blaze::StaticVector<Real, NX> const tmp2 = inv(trans(vd_u.Lcal())) * tmp1;
                 put(sol.x(), u, -tmp2);
             }
 
@@ -160,8 +152,8 @@ namespace tmpc
                 // vmovapd 0x8(%rdx),%ymm7
                 // 
                 // Possibly a compiler bug.
-                blaze::StaticVector<Real, NU> const tmp1 = l_[u] + trans(L_trans) * get(sol.x(), u);
-                blaze::StaticVector<Real, NU> const tmp2 = inv(trans(Lambda)) * tmp1;
+                blaze::StaticVector<Real, NU> const tmp1 = vd_u.l_ + trans(vd_u.L_trans()) * get(sol.x(), u);
+                blaze::StaticVector<Real, NU> const tmp2 = inv(trans(vd_u.Lambda())) * tmp1;
                 put(sol.u(), u, -tmp2);
             }
 
@@ -177,15 +169,14 @@ namespace tmpc
         {
             auto const u = source(e, graph_);
             auto const v = target(e, graph_);
-            auto const& LL_next = LL_[v];
-            auto const& Lcal_next = blaze::submatrix<NU, NU, NX, NX>(LL_next);
+            auto const& vd_v = vertexData_[v];
 
             // Alg 2 line 9
             put(sol.x(), v, get(qp.b(), e) + get(qp.A(), e) * get(sol.x(), u) + get(qp.B(), e) * get(sol.u(), u));
 
             // Alg 2 line 10
-            blaze::StaticVector<Real, NX> const tmp = trans(Lcal_next) * get(sol.x(), v);
-            put(sol.pi(), e, p_[v] + Lcal_next * tmp);
+            blaze::StaticVector<Real, NX> const tmp = trans(vd_v.Lcal()) * get(sol.x(), v);
+            put(sol.pi(), e, vd_v.p_ + vd_v.Lcal() * tmp);
 
             // std::clog << "pi = " << std::endl << get(sol.pi(), e) << std::endl;
         }
@@ -194,21 +185,62 @@ namespace tmpc
         OcpGraph graph_;
         std::vector<OcpSize> size_;
 
-        // Forcing all matrices to be column major, because of this issue:
-        // https://bitbucket.org/blaze-lib/blaze/issues/216
-        //
-        // Also from [Frison2013]:
-        // "Particular attention is given in accessing contiguous data
-        // in memory: since all matrices are stored in column-major (or
-        // Fortran-like) order, the better performance in matrix-matrix
-        // multiplications is obtained when the left matrix is transposed
-        // and the right one is not."
-        std::vector<blaze::StaticVector<Real, NX>> p_;
+        struct VertexData
+        {
+            // Forcing all matrices to be column major, because of this issue:
+            // https://bitbucket.org/blaze-lib/blaze/issues/216
+            //
+            // Also from [Frison2013]:
+            // "Particular attention is given in accessing contiguous data
+            // in memory: since all matrices are stored in column-major (or
+            // Fortran-like) order, the better performance in matrix-matrix
+            // multiplications is obtained when the left matrix is transposed
+            // and the right one is not."
+            
+            // LL = [\Lambda, L;
+            //       L', \mathcal{L}]
+            blaze::LowerMatrix<blaze::StaticMatrix<Real, NX + NU, NX + NU, blaze::columnMajor>> LL_;
+            blaze::StaticVector<Real, NU> l_;
+            blaze::StaticVector<Real, NX> p_;
 
-        // LL = [\Lambda, L;
-        //       L', \mathcal{L}]
-        std::vector<blaze::LowerMatrix<blaze::StaticMatrix<Real, NX + NU, NX + NU, blaze::columnMajor>>> LL_;
-        std::vector<blaze::StaticVector<Real, NU>> l_;
+            auto Lambda()
+            {
+                return blaze::submatrix<0, 0, NU, NU>(LL_);
+            }
+
+
+            auto Lambda() const
+            {
+                return blaze::submatrix<0, 0, NU, NU>(LL_);
+            }
+
+
+            auto L_trans()
+            {
+                return blaze::submatrix<NU, 0, NX, NU>(LL_);
+            }
+
+
+            auto L_trans() const
+            {
+                return blaze::submatrix<NU, 0, NX, NU>(LL_);
+            }
+
+
+            auto Lcal()
+            {
+                return blaze::submatrix<NU, NU, NX, NX>(LL_);
+            }
+
+
+            auto Lcal() const
+            {
+                return blaze::submatrix<NU, NU, NX, NX>(LL_);
+            }
+        };
+
+        // Temporary variables for each vertex used by the algorithm
+        std::vector<VertexData> vertexData_;
 
         // LBLA = [L'*B, L'*A]
         blaze::StaticMatrix<Real, NX, NU + NX, blaze::columnMajor> LBLA_;
