@@ -13,6 +13,8 @@
 
 #include <blaze/Math.h>
 
+#include <boost/throw_exception.hpp>
+
 #include <vector>
 
 
@@ -39,6 +41,8 @@ namespace tmpc
 
         auto size() const
         {
+            BOOST_THROW_EXCEPTION(std::logic_error("Function not implemented"));
+
             return make_iterator_property_map(size_.begin(), vertexIndex(graph_));
         }
 
@@ -100,20 +104,12 @@ namespace tmpc
 
                     // Alg 3 line 3
                     auto const Lcal_next = blaze::submatrix<NU, NU, NX, NX>(LL_[v]);
+                    // LBLA = trans(Lcal_next) * get(qp.BA(), e);
                     blaze::submatrix<0, 0, NX, NU>(LBLA) = trans(Lcal_next) * get(qp.B(), e);
                     blaze::submatrix<0, NU, NX, NX>(LBLA) = trans(Lcal_next) * get(qp.A(), e);
 
-                    // Alg 3 line 4
-                    ABPBA = declsym(trans(LBLA) * LBLA);
-
-                    // Alg 3 line 5
-                    blaze::submatrix<0, 0, NU, NU>(ABPBA) += declsym(get(qp.R(), u));
-                    blaze::submatrix<NU, 0, NX, NU>(ABPBA) += trans(get(qp.S(), u));   
-                    blaze::submatrix<NU, NU, NX, NX>(ABPBA) += declsym(get(qp.Q(), u));
-                    
-                    // llh() or potrf()?
-                    // TODO: llh() can be used with adaptors. See if using blaze::SymmetricMatrix improves the performance.
-                    // https://bitbucket.org/blaze-lib/blaze/wiki/Matrix%20Operations#!cholesky-decomposition
+                    // Alg 3 line 4, 5
+                    ABPBA = declsym(get(qp.H(), u)) + declsym(trans(LBLA) * LBLA);
                     tmpc::llh(ABPBA, LL);
 
                     // Alg 2 line 3.
@@ -207,8 +203,16 @@ namespace tmpc
         std::vector<blaze::StaticVector<Real, NX>> p_;
 
         // ABPBA = [B'*P*B, B'*P*A; 
-        //        A'*P*B, A'*P*A]
+        //          A'*P*B, A'*P*A]
         std::vector<blaze::SymmetricMatrix<blaze::StaticMatrix<Real, NX + NU, NX + NU, blaze::columnMajor>>> ABPBA_;
+
+        // ABPBA = [B'*P*B, B'*P*A; 
+        //          A'*P*B, A'*P*A]
+        //
+        // NOTE:
+        // Not using blaze::SymmetricMatrix because of this issue:
+        // https://bitbucket.org/blaze-lib/blaze/issues/289/assigning-a-symmetricmatrix-to-a-symmetric
+        // std::vector<blaze::StaticMatrix<Real, NX + NU, NX + NU, blaze::columnMajor>> ABPBA_;
 
         // LL = [\Lambda, L;
         //       L', \mathcal{L}]

@@ -52,6 +52,18 @@ namespace tmpc
         }
 
 
+        auto H()
+        {
+            return detail::BundlePropertyMap(&VertexPropertyBundle::H_, vertexProperties());
+        }
+
+
+        auto H() const
+        {
+            return detail::BundlePropertyMap(&VertexPropertyBundle::H_, vertexProperties());
+        }
+
+
         auto Q()
         {
             return detail::BundlePropertyMap(&VertexPropertyBundle::Q_, vertexProperties());
@@ -208,6 +220,21 @@ namespace tmpc
         }
 
 
+
+		/*
+        auto BA()
+        {
+            return detail::BundlePropertyMap(&EdgePropertyBundle::BA_, edgeProperties());
+        }
+
+
+        auto BA() const
+        {
+            return detail::BundlePropertyMap(&EdgePropertyBundle::BA_, edgeProperties());
+        }
+		*/
+
+
         auto A()
         {
             return detail::BundlePropertyMap(&EdgePropertyBundle::A_, edgeProperties());
@@ -356,9 +383,10 @@ namespace tmpc
         struct VertexPropertyBundle
         {
             VertexPropertyBundle(OcpSize const& sz)
-            :   Q_(sz.nx(), sz.nx())
-            ,   R_(sz.nu(), sz.nu())
-            ,   S_(sz.nu(), sz.nx())
+            :   H_(sz.nu() + sz.nx())
+            ,   Q_(submatrix(H_, sz.nu(), sz.nu(), sz.nx(), sz.nx()))
+            ,   R_(submatrix(H_, 0, 0, sz.nu(), sz.nu()))
+            ,   S_(submatrix(H_, 0, sz.nu(), sz.nu(), sz.nx()))
             ,   q_(sz.nx())
             ,   r_(sz.nu())
             ,   lx_(sz.nx())
@@ -380,10 +408,15 @@ namespace tmpc
             {
             }
 
+            // H = [ R,   S
+            //       S^T, Q]
+            blaze::SymmetricMatrix<blaze::DynamicMatrix<Real, blaze::columnMajor>> H_;
 
-            blaze::DynamicMatrix<Real, blaze::columnMajor> Q_;
-            blaze::DynamicMatrix<Real, blaze::columnMajor> R_;
-            blaze::DynamicMatrix<Real, blaze::columnMajor> S_;
+            using Submatrix = decltype(blaze::submatrix(H_, 0, 0, 1, 1));
+
+            Submatrix Q_;
+            Submatrix R_;
+            Submatrix S_;
             blaze::DynamicVector<Real> q_;
             blaze::DynamicVector<Real> r_;
 
@@ -413,6 +446,11 @@ namespace tmpc
             EdgePropertyBundle(OcpSize const& size_src, OcpSize const& size_dst)
             :   A_(size_dst.nx(), size_src.nx())
             ,   B_(size_dst.nx(), size_src.nu())
+			/*
+            :   BA_(size_dst.nx(), size_src.nu() + size_src.nx())
+            ,   A_(submatrix(BA_, 0, size_src.nu(), size_dst.nx(), size_src.nx()))
+            ,   B_(submatrix(BA_, 0, 0, size_dst.nx(), size_src.nu()))
+			*/
             ,   b_(size_dst.nx())
             ,   pi_(size_dst.nx())
             {
@@ -421,6 +459,16 @@ namespace tmpc
 
             blaze::DynamicMatrix<Real, blaze::columnMajor> A_;
             blaze::DynamicMatrix<Real, blaze::columnMajor> B_;
+			
+			/*
+            blaze::DynamicMatrix<Real, blaze::columnMajor> BA_;
+
+            using Submatrix = decltype(blaze::submatrix(BA_, 0, 0, 1, 1));
+
+            Submatrix A_;
+            Submatrix B_;
+			*/
+			
             blaze::DynamicVector<Real> b_;
             blaze::DynamicVector<Real> pi_;
         };

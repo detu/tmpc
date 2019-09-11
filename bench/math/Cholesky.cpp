@@ -127,6 +127,20 @@ namespace tmpc :: benchmark
     static void BM_Cholesky_tmpc_llh_Static(::benchmark::State& state)
     {
         // Make a positive definite matrix A
+        blaze::StaticMatrix<Real, N, N, SO1> A;
+        makePositiveDefinite(A);
+
+        blaze::LowerMatrix<blaze::StaticMatrix<Real, N, N, SO2>> L;
+
+        for (auto _ : state)
+            tmpc::llh(A, L);
+    }
+
+
+    template <typename Real, int N, bool SO1, bool SO2>
+    static void BM_Cholesky_tmpc_llh_Static_Symmetric(::benchmark::State& state)
+    {
+        // Make a positive definite matrix A
         blaze::SymmetricMatrix<blaze::StaticMatrix<Real, N, N, SO1>> A;
         makePositiveDefinite(A);
 
@@ -171,5 +185,21 @@ namespace tmpc :: benchmark
     BENCHMARK_TEMPLATE(BM_Cholesky_tmpc_llh_Static, double, 5, blaze::rowMajor, blaze::rowMajor);
     BENCHMARK_TEMPLATE(BM_Cholesky_tmpc_llh_Static, double, 10, blaze::rowMajor, blaze::rowMajor);
     BENCHMARK_TEMPLATE(BM_Cholesky_tmpc_llh_Static, double, 35, blaze::rowMajor, blaze::rowMajor);
+
+    BENCHMARK_TEMPLATE(BM_Cholesky_tmpc_llh_Static_Symmetric, double, 1, blaze::columnMajor, blaze::columnMajor);
+    BENCHMARK_TEMPLATE(BM_Cholesky_tmpc_llh_Static_Symmetric, double, 2, blaze::columnMajor, blaze::columnMajor);
+    BENCHMARK_TEMPLATE(BM_Cholesky_tmpc_llh_Static_Symmetric, double, 5, blaze::columnMajor, blaze::columnMajor);
+    BENCHMARK_TEMPLATE(BM_Cholesky_tmpc_llh_Static_Symmetric, double, 10, blaze::columnMajor, blaze::columnMajor);
+    BENCHMARK_TEMPLATE(BM_Cholesky_tmpc_llh_Static_Symmetric, double, 35, blaze::columnMajor, blaze::columnMajor);
+    BENCHMARK_TEMPLATE(BM_Cholesky_tmpc_llh_Static_Symmetric, double, 1, blaze::columnMajor, blaze::rowMajor);
+    BENCHMARK_TEMPLATE(BM_Cholesky_tmpc_llh_Static_Symmetric, double, 2, blaze::columnMajor, blaze::rowMajor);
+    BENCHMARK_TEMPLATE(BM_Cholesky_tmpc_llh_Static_Symmetric, double, 5, blaze::columnMajor, blaze::rowMajor);
+    BENCHMARK_TEMPLATE(BM_Cholesky_tmpc_llh_Static_Symmetric, double, 10, blaze::columnMajor, blaze::rowMajor);
+    BENCHMARK_TEMPLATE(BM_Cholesky_tmpc_llh_Static_Symmetric, double, 35, blaze::columnMajor, blaze::rowMajor);
+    BENCHMARK_TEMPLATE(BM_Cholesky_tmpc_llh_Static_Symmetric, double, 1, blaze::rowMajor, blaze::rowMajor);
+    BENCHMARK_TEMPLATE(BM_Cholesky_tmpc_llh_Static_Symmetric, double, 2, blaze::rowMajor, blaze::rowMajor);
+    BENCHMARK_TEMPLATE(BM_Cholesky_tmpc_llh_Static_Symmetric, double, 5, blaze::rowMajor, blaze::rowMajor);
+    BENCHMARK_TEMPLATE(BM_Cholesky_tmpc_llh_Static_Symmetric, double, 10, blaze::rowMajor, blaze::rowMajor);
+    BENCHMARK_TEMPLATE(BM_Cholesky_tmpc_llh_Static_Symmetric, double, 35, blaze::rowMajor, blaze::rowMajor);
     
 }
