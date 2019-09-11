@@ -51,6 +51,7 @@ add_executable(test-tmpc
     qp/CondensingN2Test.cpp
     qp/VectorPropertyMapTest.cpp
     qp/MpipmWorkspaceTest.cpp
+    qp/StaticOcpQpTest.cpp
     qp/RiccatiTest.cpp
 
     integrator/ImplicitRungeKuttaTest.cpp

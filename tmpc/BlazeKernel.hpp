@@ -55,33 +55,3 @@ namespace tmpc
         using Rand = blaze::Rand<T>;
     };
 }
-
-namespace blaze
-{
-    template <typename V, bool TF>
-    inline auto dimensions(Vector<V, TF> const& v)
-    {
-        return size(v);
-    }
-
-
-    template <typename M, bool SO>
-    inline auto dimensions(Matrix<M, SO> const& m)
-    {
-        return std::pair(rows(m), columns(m));
-    }
-
-
-    template <typename V, bool TF>
-    inline auto shape(Vector<V, TF> const& v)
-    {
-        return std::pair<size_t, bool>(size(v), TF);
-    }
-
-
-    template <typename M, bool SO>
-    inline auto shape(Matrix<M, SO> const& m)
-    {
-        return std::pair<size_t, size_t>(rows(m), columns(m));
-    }
-}

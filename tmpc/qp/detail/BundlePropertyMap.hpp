@@ -2,6 +2,8 @@
 
 #include <tmpc/core/PropertyMap.hpp>
 
+#include <boost/throw_exception.hpp>
+
 
 namespace tmpc :: detail
 {
@@ -31,8 +33,10 @@ namespace tmpc :: detail
         {
             Value& ref = pm.bundleMap_[k].*pm.field_;
             
+            // TODO: get rid of this check for static vectors/matrices
+            // and/or use noresize().
             if (shape(val) != shape(ref))
-                throw std::invalid_argument("Invalid size of a vector or a matrix");
+                BOOST_THROW_EXCEPTION(std::invalid_argument("Invalid size of a vector or a matrix"));
 
             ref = val;
         }

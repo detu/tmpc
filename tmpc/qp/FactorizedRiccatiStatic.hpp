@@ -1,7 +1,5 @@
 #pragma once
 
-#include "detail/BundlePropertyMap.hpp"
-
 #include <tmpc/ocp/OcpGraph.hpp>
 #include <tmpc/ocp/OcpSize.hpp>
 #include <tmpc/core/PropertyMap.hpp>
@@ -10,8 +8,6 @@
 #include <tmpc/Traits.hpp>
 #include <tmpc/Math.hpp>
 #include <tmpc/math/Llh.hpp>
-
-#include <blaze/Math.h>
 
 #include <boost/throw_exception.hpp>
 

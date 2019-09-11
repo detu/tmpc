@@ -318,4 +318,32 @@ namespace blaze
 
         return (~m)(0, 0);
     }
+
+
+    template <typename V, bool TF>
+    inline auto dimensions(blaze::Vector<V, TF> const& v)
+    {
+        return size(v);
+    }
+
+
+    template <typename M, bool SO>
+    inline auto dimensions(blaze::Matrix<M, SO> const& m)
+    {
+        return std::pair(rows(m), columns(m));
+    }
+
+
+    template <typename V, bool TF>
+    inline auto shape(blaze::Vector<V, TF> const& v)
+    {
+        return std::pair<size_t, bool>(size(v), TF);
+    }
+
+
+    template <typename M, bool SO>
+    inline auto shape(blaze::Matrix<M, SO> const& m)
+    {
+        return std::pair<size_t, size_t>(rows(m), columns(m));
+    }
 }
