@@ -190,7 +190,8 @@ namespace tmpc
             put(sol.x(), v, get(qp.b(), e) + get(qp.A(), e) * get(sol.x(), u) + get(qp.B(), e) * get(sol.u(), u));
 
             // Alg 2 line 10
-            put(sol.pi(), e, p_[v] + Lcal_next * (trans(Lcal_next) * get(sol.x(), v)));
+            blaze::StaticVector<Real, NX> const tmp = trans(Lcal_next) * get(sol.x(), v);
+            put(sol.pi(), e, p_[v] + Lcal_next * tmp);
 
             // std::clog << "pi = " << std::endl << get(sol.pi(), e) << std::endl;
         }
