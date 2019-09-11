@@ -52,215 +52,143 @@ namespace tmpc
         template <typename Qp, typename QpSol>
         void operator()(Qp const& qp, QpSol& sol)
         {
-            std::vector<boost::default_color_type> color(num_vertices(graph_));
+            for (OcpVertexDescriptor v = num_vertices(graph_); v-- > 0; )
+                backwardPassVertex(v, qp);
 
-            depth_first_search(graph_,
-                RiccatiBackwardVisitor<Qp, QpSol>(*this, qp, sol), 
-                make_iterator_property_map(color.begin(), get(graph::vertex_index, graph_)), 
-                vertex(0, graph_));
+            for (OcpVertexDescriptor v = 0; v < num_vertices(graph_); ++v)
+            {
+                if (auto const parent_edge = graph_.parentEdge(v))
+                    forwardPassEdge(*parent_edge, qp, sol);
 
-            depth_first_search(graph_,
-                RiccatiForwardVisitor<Qp, QpSol>(*this, qp, sol), 
-                make_iterator_property_map(color.begin(), get(graph::vertex_index, graph_)), 
-                vertex(0, graph_));
+                forwardPassVertex(v, sol);
+            }
         }
 
 
     private:
-        template <typename Qp, typename QpSol>
-        class RiccatiBackwardVisitor
-        :   public graph::default_dfs_visitor 
+        template <typename Qp>
+        void backwardPassVertex(OcpVertexDescriptor u, Qp const& qp)
         {
-        public:
-            RiccatiBackwardVisitor(FactorizedRiccatiStatic& ws, Qp const& qp, QpSol& sol)
-            :   ws_(ws)
-            ,   qp_(qp)
-            ,   sol_(sol)
+            auto& LL = LL_[u];
+            auto Lambda = blaze::submatrix<0, 0, NU, NU>(LL);
+            auto L_trans = blaze::submatrix<NU, 0, NX, NU>(LL);   
+            auto Lcal = blaze::submatrix<NU, NU, NX, NX>(LL);
+
+            if (out_degree(u, graph_) == 0)
             {
+                // Alg 3 line 1
+                tmpc::llh(get(qp.Q(), u), Lcal);
+
+                // Alg 2 line 1
+                p_[u] = get(qp.q(), u);
             }
-        
-            
-            void finish_vertex(OcpVertexDescriptor u, OcpGraph const& g) const
+            else
             {
-                auto const& sz_u = get(ws_.size(), u);
-                auto& LL = get(ws_.LL(), u);
-                auto Lambda = blaze::submatrix<0, 0, NU, NU>(LL);
-                auto L_trans = blaze::submatrix<NU, 0, NX, NU>(LL);   
-                auto Lcal = blaze::submatrix<NU, NU, NX, NX>(LL);
+                auto const out_e = graph::out_edges(u, graph_);
 
-                if (out_degree(u, g) == 0)
+                if (out_e.size() == 1)
                 {
-                    // Alg 3 line 1
-                    tmpc::llh(get(qp_.Q(), u), Lcal);
+                    auto const e = out_e.front();
+                    auto const e_index = get(graph::edge_index, graph_, e);
+                    auto const v = target(e, graph_);
 
-                    // Alg 2 line 1
-                    put(ws_.p(), u, get(qp_.q(), u));
+                    auto& LBLA = LBLA_[e_index];
+                    auto& ABPBA = ABPBA_[e_index];
+                    auto& Pb_p = Pb_p_[e_index];
+                    auto& l = l_[u];
+                    auto& p = p_[u];
+
+                    // Alg 3 line 3
+                    auto const Lcal_next = blaze::submatrix<NU, NU, NX, NX>(LL_[v]);
+                    blaze::submatrix<0, 0, NX, NU>(LBLA) = trans(Lcal_next) * get(qp.B(), e);
+                    blaze::submatrix<0, NU, NX, NX>(LBLA) = trans(Lcal_next) * get(qp.A(), e);
+
+                    // Alg 3 line 4
+                    ABPBA = declsym(trans(LBLA) * LBLA);
+
+                    // Alg 3 line 5
+                    blaze::submatrix<0, 0, NU, NU>(ABPBA) += declsym(get(qp.R(), u));
+                    blaze::submatrix<NU, 0, NX, NU>(ABPBA) += trans(get(qp.S(), u));   
+                    blaze::submatrix<NU, NU, NX, NX>(ABPBA) += declsym(get(qp.Q(), u));
+                    
+                    // llh() or potrf()?
+                    // TODO: llh() can be used with adaptors. See if using blaze::SymmetricMatrix improves the performance.
+                    // https://bitbucket.org/blaze-lib/blaze/wiki/Matrix%20Operations#!cholesky-decomposition
+                    tmpc::llh(ABPBA, LL);
+
+                    // Alg 2 line 3.
+                    // Pb_p = P_{n+1}^T * b_n + p_{n+1} = \mathcal{L}_{n+1} * \mathcal{L}_{n+1}^T * b_n + p_{n+1}
+                    Pb_p = p_[v] + Lcal_next * (trans(Lcal_next) * get(qp.b(), e));
+                    l = get(qp.r(), u) + trans(get(qp.B(), e)) * Pb_p;
+                    l = inv(Lambda) * l;
+                    
+                    // Alg 2 line 4
+                    p = get(qp.q(), u) + trans(get(qp.A(), e)) * Pb_p - L_trans * l;
                 }
                 else
                 {
-                    auto const out_e = graph::out_edges(u, g);
-
-                    if (out_e.size() == 1)
-                    {
-                        auto const e = out_e.front();
-                        auto const v = target(e, g);
-
-                        auto& LBLA = get(ws_.LBLA(), e);
-                        auto& ABPBA = get(ws_.ABPBA(), e);
-                        auto& Pb_p = get(ws_.Pb_p(), e);
-                        auto& l = get(ws_.l(), u);
-                        auto& p = get(ws_.p(), u);
-
-                        // Alg 3 line 3
-                        auto const Lcal_next = blaze::submatrix<NU, NU, NX, NX>(get(ws_.LL(), v));
-                        blaze::submatrix<0, 0, NX, NU>(LBLA) = trans(Lcal_next) * get(qp_.B(), e);
-                        blaze::submatrix<0, NU, NX, NX>(LBLA) = trans(Lcal_next) * get(qp_.A(), e);
-
-                        // Alg 3 line 4
-                        ABPBA = declsym(trans(LBLA) * LBLA);
-
-                        // Alg 3 line 5
-                        blaze::submatrix<0, 0, NU, NU>(ABPBA) += declsym(get(qp_.R(), u));
-                        blaze::submatrix<NU, 0, NX, NU>(ABPBA) += trans(get(qp_.S(), u));   
-                        blaze::submatrix<NU, NU, NX, NX>(ABPBA) += declsym(get(qp_.Q(), u));
-                        
-                        // llh() or potrf()?
-                        // TODO: llh() can be used with adaptors. See if using blaze::SymmetricMatrix improves the performance.
-                        // https://bitbucket.org/blaze-lib/blaze/wiki/Matrix%20Operations#!cholesky-decomposition
-                        tmpc::llh(ABPBA, LL);
-
-                        // Alg 2 line 3.
-                        // Pb_p = P_{n+1}^T * b_n + p_{n+1} = \mathcal{L}_{n+1} * \mathcal{L}_{n+1}^T * b_n + p_{n+1}
-                        Pb_p = get(ws_.p(), v) + Lcal_next * (trans(Lcal_next) * get(qp_.b(), e));
-                        l = get(qp_.r(), u) + trans(get(qp_.B(), e)) * Pb_p;
-                        l = inv(Lambda) * l;
-                        
-                        // Alg 2 line 4
-                        p = get(qp_.q(), u) + trans(get(qp_.A(), e)) * Pb_p - L_trans * l;
-                    }
-                    else
-                    {
-                        throw std::invalid_argument("FactorizedRiccatiStatic solver is not implemented on tree QPs yet");
-                    }
+                    throw std::invalid_argument("FactorizedRiccatiStatic solver is not implemented on tree QPs yet");
                 }
+            }
+        }
 
-                // std::clog << "Lambda = " << std::endl << get(ws_.Lambda(), u) << std::endl;
-                // std::clog << "L = " << std::endl << get(ws_.L(), u) << std::endl;
-                // std::clog << "l = " << std::endl << get(ws_.l(), u) << std::endl;
-                // std::clog << "P = " << std::endl << get(ws_.P(), u) << std::endl;
-                // std::clog << "p = " << std::endl << get(ws_.p(), u) << std::endl;
+
+        
+        template <typename QpSol>
+        void forwardPassVertex(OcpVertexDescriptor u, QpSol& sol) const
+        {
+            auto const& LL = LL_[u];
+            auto const Lambda = blaze::submatrix<0, 0, NU, NU>(LL);
+            auto const L_trans = blaze::submatrix<NU, 0, NX, NU>(LL);
+            auto const Lcal = blaze::submatrix<NU, NU, NX, NX>(LL);
+
+            if (in_degree(u, graph_) == 0)
+            {
+                // Root vertex.
+                
+                // Solve P*x+p=0 by using Cholesky factor of P:
+                // \mathcal{L}*(\mathcal{L}^T*x)=-p
+                // TODO: this should become faster when the following feature is implemented:
+                // https://bitbucket.org/blaze-lib/blaze/issues/284/solving-a-linear-system-with-triangular
+                put(sol.x(), u, inv(trans(Lcal)) * (inv(Lcal) * (-p_[u])));
             }
 
+            // Alg 2 line 8
+            if (out_degree(u, graph_) > 0)
+            {
+                // Only non-leaf edges have u.
+                //
+                // NOTE: need a temporary StaticVector here, otherwise with -O3 we get a SEGFAULT
+                // because of improperly aligned vmovapd: 
+                // vmovapd 0x8(%rdx),%ymm7
+                // 
+                // Possibly a compiler bug.
+                blaze::StaticVector<Real, NU> const tmp = trans(L_trans) * get(sol.x(), u);
+                put(sol.u(), u, -inv(trans(Lambda)) * (l_[u] + tmp));
+            }
 
-        private:
-            FactorizedRiccatiStatic& ws_;
-            Qp const& qp_;
-            QpSol& sol_;
-        };
+            /*
+            std::clog << "u = " << std::endl << get(sol.u(), u) << std::endl;
+            std::clog << "x = " << std::endl << get(sol.x(), u) << std::endl;
+            */
+        }
 
 
         template <typename Qp, typename QpSol>
-        class RiccatiForwardVisitor
-        :   public graph::default_dfs_visitor 
+        void forwardPassEdge(OcpEdgeDescriptor e, Qp const& qp, QpSol& sol) const
         {
-        public:
-            RiccatiForwardVisitor(FactorizedRiccatiStatic& ws, Qp const& qp, QpSol& sol)
-            :   ws_(ws)
-            ,   qp_(qp)
-            ,   sol_(sol)
-            {
-            }
-        
-            
-            void discover_vertex(OcpVertexDescriptor u, OcpGraph const& g) const
-            {
-                auto const& LL = get(ws_.LL(), u);
-                auto const Lambda = blaze::submatrix<0, 0, NU, NU>(LL);
-                auto const L_trans = blaze::submatrix<NU, 0, NX, NU>(LL);
-                auto const Lcal = blaze::submatrix<NU, NU, NX, NX>(LL);
+            auto const u = source(e, graph_);
+            auto const v = target(e, graph_);
+            auto const& LL_next = LL_[v];
+            auto const& Lcal_next = blaze::submatrix<NU, NU, NX, NX>(LL_next);
 
-                if (in_degree(u, g) == 0)
-                {
-                    // Root vertex.
-                    
-                    // Solve P*x+p=0 by using Cholesky factor of P:
-                    // \mathcal{L}*(\mathcal{L}^T*x)=-p
-                    // TODO: this should become faster when the following feature is implemented:
-                    // https://bitbucket.org/blaze-lib/blaze/issues/284/solving-a-linear-system-with-triangular
-                    put(sol_.x(), u, inv(trans(Lcal)) * (inv(Lcal) * (-get(ws_.p(), u))));
-                }
+            // Alg 2 line 9
+            put(sol.x(), v, get(qp.b(), e) + get(qp.A(), e) * get(sol.x(), u) + get(qp.B(), e) * get(sol.u(), u));
 
-                // Alg 2 line 8
-                if (out_degree(u, g) > 0)
-                {
-                    // Only non-leaf edges have u.
-                    put(sol_.u(), u, -inv(trans(Lambda)) * (get(ws_.l(), u) + trans(L_trans) * get(sol_.x(), u)));
-                }
+            // Alg 2 line 10
+            put(sol.pi(), e, p_[v] + Lcal_next * (trans(Lcal_next) * get(sol.x(), v)));
 
-                /*
-                std::clog << "u = " << std::endl << get(sol_.u(), u) << std::endl;
-                std::clog << "x = " << std::endl << get(sol_.x(), u) << std::endl;
-                */
-            }
-
-
-            void tree_edge(OcpEdgeDescriptor e, OcpGraph const& g) const
-            {
-                auto const u = source(e, g);
-                auto const v = target(e, g);
-                auto const& LL_next = get(ws_.LL(), v);
-                auto const& Lcal_next = blaze::submatrix<NU, NU, NX, NX>(LL_next);
-
-                // Alg 2 line 9
-                put(sol_.x(), v, get(qp_.b(), e) + get(qp_.A(), e) * get(sol_.x(), u) + get(qp_.B(), e) * get(sol_.u(), u));
-
-                // Alg 2 line 10
-                put(sol_.pi(), e, get(ws_.p(), v) + Lcal_next * (trans(Lcal_next) * get(sol_.x(), v)));
-
-                // std::clog << "pi = " << std::endl << get(sol_.pi(), e) << std::endl;
-            }
-
-
-        private:
-            FactorizedRiccatiStatic& ws_;
-            Qp const& qp_;
-            QpSol& sol_;
-        };
-
-
-        auto ABPBA()
-        {
-            return make_iterator_property_map(ABPBA_.begin(), get(graph::edge_index, graph_));
-        }
-
-
-        auto LL()
-        {
-            return make_iterator_property_map(LL_.begin(), vertexIndex(graph_));
-        }
-
-
-        auto p()
-        {
-            return make_iterator_property_map(p_.begin(), vertexIndex(graph_));
-        }
-
-
-        auto l()
-        {
-            return make_iterator_property_map(l_.begin(), vertexIndex(graph_));
-        }
-
-
-        auto LBLA()
-        {
-            return make_iterator_property_map(LBLA_.begin(), get(graph::edge_index, graph_));
-        }
-
-
-        auto Pb_p()
-        {
-            return make_iterator_property_map(Pb_p_.begin(), get(graph::edge_index, graph_));
+            // std::clog << "pi = " << std::endl << get(sol.pi(), e) << std::endl;
         }
 
 
