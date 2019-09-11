@@ -32,8 +32,6 @@ namespace tmpc
         ,   LL_(num_vertices(g))
         ,   p_(num_vertices(g))
         ,   l_(num_vertices(g))
-        ,   LBLA_(num_edges(g))
-        ,   Pb_p_(num_edges(g))
         {
         }
 
@@ -95,33 +93,29 @@ namespace tmpc
                     auto const e_index = get(graph::edge_index, graph_, e);
                     auto const v = target(e, graph_);
 
-                    auto& LBLA = LBLA_[e_index];
-                    auto& Pb_p = Pb_p_[e_index];
                     auto& l = l_[u];
                     auto& p = p_[u];
 
                     // Alg 3 line 3
                     auto const Lcal_next = blaze::submatrix<NU, NU, NX, NX>(LL_[v]);
-                    // LBLA = trans(Lcal_next) * get(qp.BA(), e);
-                    blaze::submatrix<0, 0, NX, NU>(LBLA) = trans(Lcal_next) * get(qp.B(), e);
-                    blaze::submatrix<0, NU, NX, NX>(LBLA) = trans(Lcal_next) * get(qp.A(), e);
+                    // LBLA_ = trans(Lcal_next) * get(qp.BA(), e);
+                    blaze::submatrix<0, 0, NX, NU>(LBLA_) = trans(Lcal_next) * get(qp.B(), e);
+                    blaze::submatrix<0, NU, NX, NX>(LBLA_) = trans(Lcal_next) * get(qp.A(), e);
 
                     // Alg 3 line 4, 5
                     {
                         decltype(auto) ABPBA = derestrict(LL);
-                        ABPBA = declsym(get(qp.H(), u)) + declsym(trans(LBLA) * LBLA);
+                        ABPBA = declsym(get(qp.H(), u)) + declsym(trans(LBLA_) * LBLA_);
                         tmpc::llh(ABPBA);
                     }
 
                     // Alg 2 line 3.
                     // Pb_p = P_{n+1}^T * b_n + p_{n+1} = \mathcal{L}_{n+1} * \mathcal{L}_{n+1}^T * b_n + p_{n+1}
-                    {
-                        blaze::StaticVector<Real, NX> tmp1 = trans(Lcal_next) * get(qp.b(), e);
-                        Pb_p = p_[v] + Lcal_next * tmp1;
+                    blaze::StaticVector<Real, NX> const tmp1 = trans(Lcal_next) * get(qp.b(), e);
+                    blaze::StaticVector<Real, NX> const Pb_p = p_[v] + Lcal_next * tmp1;
                         
-                        blaze::StaticVector<Real, NU> tmp2 = get(qp.r(), u) + trans(get(qp.B(), e)) * Pb_p;
-                        l = inv(Lambda) * tmp2;
-                    }
+                    blaze::StaticVector<Real, NU> const tmp2 = get(qp.r(), u) + trans(get(qp.B(), e)) * Pb_p;
+                    l = inv(Lambda) * tmp2;
                     
                     // Alg 2 line 4
                     p = get(qp.q(), u) + trans(get(qp.A(), e)) * Pb_p - L_trans * l;
@@ -217,9 +211,7 @@ namespace tmpc
         std::vector<blaze::StaticVector<Real, NU>> l_;
 
         // LBLA = [L'*B, L'*A]
-        std::vector<blaze::StaticMatrix<Real, NX, NU + NX, blaze::columnMajor>> LBLA_;
-
-        std::vector<blaze::StaticVector<Real, NX>> Pb_p_;
+        blaze::StaticMatrix<Real, NX, NU + NX, blaze::columnMajor> LBLA_;
     };
 
 
