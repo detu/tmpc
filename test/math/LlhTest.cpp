@@ -18,6 +18,20 @@ namespace tmpc :: testing
     }
 
 
+    template <typename MatrixTypeA>
+    static void llhInplaceStaticTestImpl()
+    {
+        MatrixTypeA A;
+        blaze::LowerMatrix<MatrixTypeA> L_ref;
+        makePositiveDefinite(A);
+
+        blaze::llh(A, L_ref);
+        tmpc::llh(A);
+
+        TMPC_EXPECT_APPROX_EQ(A, L_ref, 1e-10, 0.);
+    }
+
+
     TEST(MathTest, test_Llh_double_1_1_StaticMatrix_rowMajor_StaticMatrix_rowMajor)
     {
         llhStaticTestImpl<blaze::StaticMatrix<double, 1, 1, blaze::rowMajor>, blaze::StaticMatrix<double, 1, 1, blaze::rowMajor>>();
@@ -60,6 +74,48 @@ namespace tmpc :: testing
             blaze::SymmetricMatrix<blaze::StaticMatrix<double, 10, 10, blaze::columnMajor>>, 
             blaze::LowerMatrix<blaze::StaticMatrix<double, 10, 10, blaze::columnMajor>>
             >();
+    }
+
+
+    // ---------------------------------------------------------
+    //
+    // In-place LLH tests
+    //
+    // ---------------------------------------------------------
+
+    TEST(MathTest, test_LlhInplace_double_1_1_StaticMatrix_rowMajor)
+    {
+        llhInplaceStaticTestImpl<blaze::StaticMatrix<double, 1, 1, blaze::rowMajor>>();
+    }
+
+
+    TEST(MathTest, test_LlhInplace_double_1_1_StaticMatrix_columnMajor)
+    {
+        llhInplaceStaticTestImpl<blaze::StaticMatrix<double, 1, 1, blaze::columnMajor>>();
+    }
+
+
+    TEST(MathTest, test_LlhInplace_double_2_2_StaticMatrix_rowMajor)
+    {
+        llhInplaceStaticTestImpl<blaze::StaticMatrix<double, 2, 2, blaze::rowMajor>>();
+    }
+
+
+    TEST(MathTest, test_LlhInplace_double_2_2_StaticMatrix_columnMajor)
+    {
+        llhInplaceStaticTestImpl<blaze::StaticMatrix<double, 2, 2, blaze::columnMajor>>();
+    }
+
+
+    TEST(MathTest, test_LlhInplace_double_10_10_StaticMatrix_rowMajor)
+    {
+        llhInplaceStaticTestImpl<blaze::StaticMatrix<double, 10, 10, blaze::rowMajor>>();
+    }
+
+
+    TEST(MathTest, test_LlhInplace_double_10_10_StaticMatrix_columnMajor)
+    {
+        llhInplaceStaticTestImpl<blaze::StaticMatrix<double, 10, 10, blaze::columnMajor>>();
     }
 
 

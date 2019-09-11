@@ -29,7 +29,6 @@ namespace tmpc
     public:
         FactorizedRiccatiStatic(OcpGraph const& g)
         :   graph_(g)
-        ,   ABPBA_(num_edges(g))
         ,   LL_(num_vertices(g))
         ,   p_(num_vertices(g))
         ,   l_(num_vertices(g))
@@ -97,7 +96,6 @@ namespace tmpc
                     auto const v = target(e, graph_);
 
                     auto& LBLA = LBLA_[e_index];
-                    auto& ABPBA = ABPBA_[e_index];
                     auto& Pb_p = Pb_p_[e_index];
                     auto& l = l_[u];
                     auto& p = p_[u];
@@ -109,8 +107,11 @@ namespace tmpc
                     blaze::submatrix<0, NU, NX, NX>(LBLA) = trans(Lcal_next) * get(qp.A(), e);
 
                     // Alg 3 line 4, 5
-                    ABPBA = declsym(get(qp.H(), u)) + declsym(trans(LBLA) * LBLA);
-                    tmpc::llh(ABPBA, LL);
+                    {
+                        decltype(auto) ABPBA = derestrict(LL);
+                        ABPBA = declsym(get(qp.H(), u)) + declsym(trans(LBLA) * LBLA);
+                        tmpc::llh(ABPBA);
+                    }
 
                     // Alg 2 line 3.
                     // Pb_p = P_{n+1}^T * b_n + p_{n+1} = \mathcal{L}_{n+1} * \mathcal{L}_{n+1}^T * b_n + p_{n+1}
@@ -201,18 +202,6 @@ namespace tmpc
         // multiplications is obtained when the left matrix is transposed
         // and the right one is not."
         std::vector<blaze::StaticVector<Real, NX>> p_;
-
-        // ABPBA = [B'*P*B, B'*P*A; 
-        //          A'*P*B, A'*P*A]
-        std::vector<blaze::SymmetricMatrix<blaze::StaticMatrix<Real, NX + NU, NX + NU, blaze::columnMajor>>> ABPBA_;
-
-        // ABPBA = [B'*P*B, B'*P*A; 
-        //          A'*P*B, A'*P*A]
-        //
-        // NOTE:
-        // Not using blaze::SymmetricMatrix because of this issue:
-        // https://bitbucket.org/blaze-lib/blaze/issues/289/assigning-a-symmetricmatrix-to-a-symmetric
-        // std::vector<blaze::StaticMatrix<Real, NX + NU, NX + NU, blaze::columnMajor>> ABPBA_;
 
         // LL = [\Lambda, L;
         //       L', \mathcal{L}]

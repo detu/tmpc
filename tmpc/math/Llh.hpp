@@ -9,6 +9,12 @@
 
 namespace tmpc
 {
+    /// @brief In-place Cholesky decomposition algorithm.
+    ///
+    template <typename MT, bool SO>
+    void llh(blaze::DenseMatrix<MT, SO>& A);
+
+
     /// @brief Cholesky decomposition algorithm.
     ///
     template <typename MT1, bool SO1, typename MT2, bool SO2>
@@ -38,6 +44,32 @@ namespace tmpc
         // Copy A to L
         decltype(auto) l( derestrict( ~L ) );
         l = ~A;
+
+        // Solve in-place
+        llh(l);
+    }
+
+
+    template <typename MT, bool SO>
+    inline void llh(blaze::DenseMatrix<MT, SO>& A)
+    {
+        BLAZE_CONSTRAINT_MUST_NOT_BE_SYMMETRIC_MATRIX_TYPE( MT );
+        BLAZE_CONSTRAINT_MUST_NOT_BE_HERMITIAN_MATRIX_TYPE( MT );
+        BLAZE_CONSTRAINT_MUST_NOT_BE_UNITRIANGULAR_MATRIX_TYPE( MT );
+        BLAZE_CONSTRAINT_MUST_NOT_BE_UPPER_MATRIX_TYPE( MT );
+        BLAZE_CONSTRAINT_MUST_NOT_BE_LOWER_MATRIX_TYPE( MT );
+        BLAZE_CONSTRAINT_MUST_BE_BLAS_COMPATIBLE_TYPE( blaze::ElementType_t<MT> );
+
+        if( !isSquare( ~A ) ) {
+            BLAZE_THROW_INVALID_ARGUMENT( "Invalid non-square matrix provided" );
+        }
+
+        const size_t n( (~A).rows() );
+
+        using Scalar = blaze::ElementType_t<MT>;
+
+        // Copy A to L
+        decltype(auto) l( derestrict( ~A ) );
 
         for (size_t k = 0; k < n; ++k)
         {
