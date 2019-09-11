@@ -115,9 +115,13 @@ namespace tmpc
 
                     // Alg 2 line 3.
                     // Pb_p = P_{n+1}^T * b_n + p_{n+1} = \mathcal{L}_{n+1} * \mathcal{L}_{n+1}^T * b_n + p_{n+1}
-                    Pb_p = p_[v] + Lcal_next * (trans(Lcal_next) * get(qp.b(), e));
-                    l = get(qp.r(), u) + trans(get(qp.B(), e)) * Pb_p;
-                    l = inv(Lambda) * l;
+                    {
+                        blaze::StaticVector<Real, NX> tmp1 = trans(Lcal_next) * get(qp.b(), e);
+                        Pb_p = p_[v] + Lcal_next * tmp1;
+                        
+                        blaze::StaticVector<Real, NU> tmp2 = get(qp.r(), u) + trans(get(qp.B(), e)) * Pb_p;
+                        l = inv(Lambda) * tmp2;
+                    }
                     
                     // Alg 2 line 4
                     p = get(qp.q(), u) + trans(get(qp.A(), e)) * Pb_p - L_trans * l;
