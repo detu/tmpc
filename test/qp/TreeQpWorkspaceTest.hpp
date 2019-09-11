@@ -78,8 +78,14 @@ namespace tmpc :: testing
         {
             auto const& sz = get(this->ws_.size(), v);
 
-            put(this->ws_.Q(), v, Q[v] = rand_matrix.generate(sz.nx(), sz.nx()));
-            put(this->ws_.R(), v, R[v] = rand_matrix.generate(sz.nu(), sz.nu()));
+            Q[v].resize(sz.nx(), sz.nx());
+            makePositiveDefinite(Q[v]);
+
+            R[v].resize(sz.nu(), sz.nu());
+            makePositiveDefinite(R[v]);
+
+            put(this->ws_.Q(), v, Q[v]);
+            put(this->ws_.R(), v, R[v]);
             put(this->ws_.S(), v, S[v] = rand_matrix.generate(sz.nu(), sz.nx()));
             put(this->ws_.q(), v, q[v] = rand_vector.generate(sz.nx()));
             put(this->ws_.r(), v, r[v] = rand_vector.generate(sz.nu()));

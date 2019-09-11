@@ -75,6 +75,32 @@ namespace tmpc :: benchmark
     }
 
 
+    template <typename Real, size_t M, size_t N, bool SO1, bool SO2>
+    void syrkStaticLoop(blaze::StaticMatrix<Real, M, N, SO1> const& A, blaze::StaticMatrix<Real, N, N, SO2>& B)
+    {
+        for (size_t j = 0; j < N; ++j)
+        {
+            for (size_t i = j; i < N; ++i)
+                B(i, j) = dot(column(A, i), column(A, j));
+        }
+    }
+
+
+    template <typename Real, size_t M, size_t N>
+    static void BM_syrk_Blaze_Static_Loop(::benchmark::State& state)
+    {
+        blaze::StaticMatrix<Real, M, N, blaze::columnMajor> A;        
+        blaze::StaticMatrix<Real, N, N, blaze::columnMajor> B;
+
+        randomize(A);
+        
+        for (auto _ : state)
+        {
+            syrkStaticLoop(A, B);
+        }
+    }
+
+
     template <typename Real>
     static void BM_syrk_Eigen_Dynamic(::benchmark::State& state)
     {
@@ -183,27 +209,30 @@ namespace tmpc :: benchmark
 
     static void syrkBenchArguments(::benchmark::internal::Benchmark* b) 
     {
-        b->Args({1, 2})->Args({30, 35});
+        b->Args({4, 5})->Args({30, 35});
     }
 
 
     BENCHMARK_TEMPLATE(BM_syrk_Blaze_Dynamic, double)->Apply(syrkBenchArguments);
     BENCHMARK_TEMPLATE(BM_syrk_Blaze_SymmetricDynamic, double)->Apply(syrkBenchArguments);
-    BENCHMARK_TEMPLATE(BM_syrk_Blaze_Static, double, 1, 2);
+    BENCHMARK_TEMPLATE(BM_syrk_Blaze_Static, double, 4, 5);
     BENCHMARK_TEMPLATE(BM_syrk_Blaze_Static, double, 30, 35);
-    BENCHMARK_TEMPLATE(BM_syrk_Blaze_Static_Declsym, double, 1, 2);
+    BENCHMARK_TEMPLATE(BM_syrk_Blaze_Static_Declsym, double, 4, 5);
     BENCHMARK_TEMPLATE(BM_syrk_Blaze_Static_Declsym, double, 30, 35);
-    BENCHMARK_TEMPLATE(BM_syrk_Blaze_Static_Symmetric_Declsym, double, 1, 2);
+    BENCHMARK_TEMPLATE(BM_syrk_Blaze_Static_Symmetric_Declsym, double, 4, 5);
     BENCHMARK_TEMPLATE(BM_syrk_Blaze_Static_Symmetric_Declsym, double, 30, 35);
+
+    BENCHMARK_TEMPLATE(BM_syrk_Blaze_Static_Loop, double, 4, 5);
+    BENCHMARK_TEMPLATE(BM_syrk_Blaze_Static_Loop, double, 30, 35);
 
     BENCHMARK_TEMPLATE(BM_syrk_Eigen_Dynamic, double)->Apply(syrkBenchArguments);
     BENCHMARK_TEMPLATE(BM_syrk_Eigen_RankUpdateDynamic, double)->Apply(syrkBenchArguments);
-    BENCHMARK_TEMPLATE(BM_syrk_Eigen_Static, double, 1, 2);
+    BENCHMARK_TEMPLATE(BM_syrk_Eigen_Static, double, 4, 5);
     BENCHMARK_TEMPLATE(BM_syrk_Eigen_Static, double, 30, 35);
-    BENCHMARK_TEMPLATE(BM_syrk_Eigen_RankUpdateStatic, double, 1, 2);
+    BENCHMARK_TEMPLATE(BM_syrk_Eigen_RankUpdateStatic, double, 4, 5);
     BENCHMARK_TEMPLATE(BM_syrk_Eigen_RankUpdateStatic, double, 30, 35);
     BENCHMARK_TEMPLATE(BM_syrk_Eigen_TriangularDynamic, double)->Apply(syrkBenchArguments);
-    BENCHMARK_TEMPLATE(BM_syrk_Eigen_TriangularStatic, double, 1, 2);
+    BENCHMARK_TEMPLATE(BM_syrk_Eigen_TriangularStatic, double, 4, 5);
     BENCHMARK_TEMPLATE(BM_syrk_Eigen_TriangularStatic, double, 30, 35);
 
 #if BLAZE_BLAS_MODE
