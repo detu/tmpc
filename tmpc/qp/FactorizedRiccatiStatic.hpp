@@ -151,7 +151,9 @@ namespace tmpc
                 // \mathcal{L}*(\mathcal{L}^T*x)=-p
                 // TODO: this should become faster when the following feature is implemented:
                 // https://bitbucket.org/blaze-lib/blaze/issues/284/solving-a-linear-system-with-triangular
-                put(sol.x(), u, inv(trans(Lcal)) * (inv(Lcal) * (-p_[u])));
+                blaze::StaticVector<Real, NX> const tmp1 = inv(Lcal) * p_[u];
+                blaze::StaticVector<Real, NX> const tmp2 = inv(trans(Lcal)) * tmp1;
+                put(sol.x(), u, -tmp2);
             }
 
             // Alg 2 line 8
@@ -164,8 +166,9 @@ namespace tmpc
                 // vmovapd 0x8(%rdx),%ymm7
                 // 
                 // Possibly a compiler bug.
-                blaze::StaticVector<Real, NU> const tmp = trans(L_trans) * get(sol.x(), u);
-                put(sol.u(), u, -inv(trans(Lambda)) * (l_[u] + tmp));
+                blaze::StaticVector<Real, NU> const tmp1 = l_[u] + trans(L_trans) * get(sol.x(), u);
+                blaze::StaticVector<Real, NU> const tmp2 = inv(trans(Lambda)) * tmp1;
+                put(sol.u(), u, -tmp2);
             }
 
             /*
