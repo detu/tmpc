@@ -24,15 +24,19 @@ namespace tmpc :: benchmark
 
         randomizeQp(qp);
 
-        // Disable openblas multithreading
-        // openblas_set_num_threads(1);
-
         for (auto _ : state)
             riccati(qp, sol);
     }
 
-
+    BENCHMARK_TEMPLATE(BM_StaticFactorizedRiccati, 2, 1)->Arg(100);
+    BENCHMARK_TEMPLATE(BM_StaticFactorizedRiccati, 3, 1)->Arg(100);
     BENCHMARK_TEMPLATE(BM_StaticFactorizedRiccati, 4, 1)->Arg(100);
+    BENCHMARK_TEMPLATE(BM_StaticFactorizedRiccati, 5, 1)->Arg(100);
+    BENCHMARK_TEMPLATE(BM_StaticFactorizedRiccati, 6, 1)->Arg(100);
+    BENCHMARK_TEMPLATE(BM_StaticFactorizedRiccati, 7, 1)->Arg(100);
+    BENCHMARK_TEMPLATE(BM_StaticFactorizedRiccati, 8, 1)->Arg(100);
+    BENCHMARK_TEMPLATE(BM_StaticFactorizedRiccati, 9, 1)->Arg(100);
+    BENCHMARK_TEMPLATE(BM_StaticFactorizedRiccati, 10, 1)->Arg(100);
     BENCHMARK_TEMPLATE(BM_StaticFactorizedRiccati, 30, 5)->Arg(100);
 
     //BENCHMARK(BM_FactorizedRiccati)->Args({1, 2, 1});
