@@ -1,4 +1,5 @@
-#include <tmpc/qp/MpipmWorkspace.hpp>
+#include <tmpc/qp/StaticOcpQp.hpp>
+#include <tmpc/ocp/StaticOcpSolution.hpp>
 #include <tmpc/qp/StaticFactorizedRiccati.hpp>
 #include <tmpc/qp/OcpQp.hpp>
 #include <tmpc/ocp/OcpSizeProperties.hpp>
@@ -17,16 +18,17 @@ namespace tmpc :: benchmark
 
         OcpGraph const g = ocpGraphLinear(N + 1);
         auto const sz = ocpSizeNominalMpc(N, NX, NU, 0, 0, 0, false);
-        MpipmWorkspace<double> ws(g, sz);
+        StaticOcpQp<double, NX, NU> qp(g);
+        StaticOcpSolution<double, NX, NU> sol(g);
         StaticFactorizedRiccati<double, NX, NU> riccati(g);
 
-        randomizeQp(ws);
+        randomizeQp(qp);
 
         // Disable openblas multithreading
         // openblas_set_num_threads(1);
 
         for (auto _ : state)
-            riccati(ws, ws);
+            riccati(qp, sol);
     }
 
 
