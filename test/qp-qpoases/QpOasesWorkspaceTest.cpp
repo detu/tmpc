@@ -18,7 +18,7 @@ namespace tmpc :: testing
 		using Kernel = Kernel_;
 	};
 
-	TYPED_TEST_CASE(QpOasesWorkspaceTest, Kernels);
+	TYPED_TEST_SUITE(QpOasesWorkspaceTest, Kernels);
 
 	TYPED_TEST(QpOasesWorkspaceTest, testMatricesCorrect)
 	{
@@ -155,8 +155,8 @@ namespace tmpc :: testing
 		EXPECT_EQ(forcePrint(ws.ubA()), forcePrint(ubA_expected));
 	}
 
-	INSTANTIATE_TYPED_TEST_CASE_P(QpOases_Eigen_double, QpWorkspaceTest, QpOasesWorkspace<EigenKernel<double>>);
-	INSTANTIATE_TYPED_TEST_CASE_P(QpOases_Blaze_double, QpWorkspaceTest, QpOasesWorkspace<BlazeKernel<double>>);
-	INSTANTIATE_TYPED_TEST_CASE_P(QpOases_Eigen_double, QpWorkspaceSolveTest, QpOasesWorkspace<EigenKernel<double>>);
-	INSTANTIATE_TYPED_TEST_CASE_P(QpOases_Blaze_double, QpWorkspaceSolveTest, QpOasesWorkspace<BlazeKernel<double>>);
+	INSTANTIATE_TYPED_TEST_SUITE_P(QpOases_Eigen_double, QpWorkspaceTest, QpOasesWorkspace<EigenKernel<double>>);
+	INSTANTIATE_TYPED_TEST_SUITE_P(QpOases_Blaze_double, QpWorkspaceTest, QpOasesWorkspace<BlazeKernel<double>>);
+	INSTANTIATE_TYPED_TEST_SUITE_P(QpOases_Eigen_double, QpWorkspaceSolveTest, QpOasesWorkspace<EigenKernel<double>>);
+	INSTANTIATE_TYPED_TEST_SUITE_P(QpOases_Blaze_double, QpWorkspaceSolveTest, QpOasesWorkspace<BlazeKernel<double>>);
 }

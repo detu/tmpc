@@ -24,7 +24,7 @@ namespace tmpc :: testing
 	};
 
 
-	TYPED_TEST_CASE_P(SoftConstraintsTest);
+	TYPED_TEST_SUITE_P(SoftConstraintsTest);
 
 
 	TYPED_TEST_P(SoftConstraintsTest, test1dSmallPenalty)
@@ -93,7 +93,7 @@ namespace tmpc :: testing
 	}
 
 
-	REGISTER_TYPED_TEST_CASE_P(SoftConstraintsTest,
+	REGISTER_TYPED_TEST_SUITE_P(SoftConstraintsTest,
 		test1dSmallPenalty,
 		test1dBigPenalty,
 		test2stage1dInfeasible

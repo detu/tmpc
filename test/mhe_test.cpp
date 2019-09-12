@@ -209,7 +209,7 @@ typedef ::testing::Types<
 ,		tmpc::RealtimeIteration<OCP, DiscreteTimeModel, tmpc::HPMPCSolver     >
 	> RTITypes;
 
-TYPED_TEST_CASE(RealtimeIterationTest, RTITypes);
+TYPED_TEST_SUITE(RealtimeIterationTest, RTITypes);
 
 TYPED_TEST(RealtimeIterationTest, GivesCorrectU0)
 {

@@ -48,7 +48,7 @@ namespace tmpc :: testing
     };
 
 
-    TYPED_TEST_CASE_P(TreeQpWorkspaceTest);
+    TYPED_TEST_SUITE_P(TreeQpWorkspaceTest);
 
 
     TYPED_TEST_P(TreeQpWorkspaceTest, testQpInterface)
@@ -184,6 +184,6 @@ namespace tmpc :: testing
         }
     }
 
-    REGISTER_TYPED_TEST_CASE_P(TreeQpWorkspaceTest,
+    REGISTER_TYPED_TEST_SUITE_P(TreeQpWorkspaceTest,
         testQpInterface, testMatrixSizesCorrect);
 }

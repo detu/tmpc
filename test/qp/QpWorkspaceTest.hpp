@@ -41,7 +41,7 @@ namespace tmpc :: testing
         Workspace ws_;
     };
 
-    TYPED_TEST_CASE_P(QpWorkspaceTest);
+    TYPED_TEST_SUITE_P(QpWorkspaceTest);
 
     TYPED_TEST_P(QpWorkspaceTest, testQpInterface)
     {
@@ -169,6 +169,6 @@ namespace tmpc :: testing
         }
     }
 
-    REGISTER_TYPED_TEST_CASE_P(QpWorkspaceTest,
+    REGISTER_TYPED_TEST_SUITE_P(QpWorkspaceTest,
         testQpInterface, testMatrixSizesCorrect);
 }

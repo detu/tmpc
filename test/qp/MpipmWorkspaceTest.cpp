@@ -7,6 +7,6 @@
 
 namespace tmpc :: testing
 {
-	INSTANTIATE_TYPED_TEST_CASE_P(Mpipm_double, TreeQpWorkspaceTest, MpipmWorkspace<double>);
-	//INSTANTIATE_TYPED_TEST_CASE_P(Mpipm_double, TreeQpWorkspaceSolveTest, MpipmWorkspace<double>);
+	INSTANTIATE_TYPED_TEST_SUITE_P(Mpipm_double, TreeQpWorkspaceTest, MpipmWorkspace<double>);
+	//INSTANTIATE_TYPED_TEST_SUITE_P(Mpipm_double, TreeQpWorkspaceSolveTest, MpipmWorkspace<double>);
 }

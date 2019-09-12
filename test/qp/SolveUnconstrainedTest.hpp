@@ -22,7 +22,7 @@ namespace tmpc :: testing
     };
 
 
-    TYPED_TEST_CASE_P(SolveUnconstrainedTest);
+    TYPED_TEST_SUITE_P(SolveUnconstrainedTest);
 
 
     TYPED_TEST_P(SolveUnconstrainedTest, test_solveUnconstrained0)
@@ -263,7 +263,7 @@ namespace tmpc :: testing
 	}
 
 
-    REGISTER_TYPED_TEST_CASE_P(SolveUnconstrainedTest
+    REGISTER_TYPED_TEST_SUITE_P(SolveUnconstrainedTest
         , test_solveUnconstrained0
 		, test_solveUnconstrained1
     );

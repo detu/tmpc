@@ -13,11 +13,11 @@
 
 namespace tmpc :: testing
 {
-	// INSTANTIATE_TYPED_TEST_CASE_P(Hpipm_Blaze_double, TreeQpWorkspaceTest, HpipmWorkspace<BlazeKernel<double>>);
-	// INSTANTIATE_TYPED_TEST_CASE_P(Hpipm_Blaze_double, TreeQpWorkspaceSolveTest, HpipmWorkspace<BlazeKernel<double>>);
-	// //INSTANTIATE_TYPED_TEST_CASE_P(Hpipm_Blaze_double, SoftConstraintsTest, HpipmWorkspace<BlazeKernel<double>>);
+	// INSTANTIATE_TYPED_TEST_SUITE_P(Hpipm_Blaze_double, TreeQpWorkspaceTest, HpipmWorkspace<BlazeKernel<double>>);
+	// INSTANTIATE_TYPED_TEST_SUITE_P(Hpipm_Blaze_double, TreeQpWorkspaceSolveTest, HpipmWorkspace<BlazeKernel<double>>);
+	// //INSTANTIATE_TYPED_TEST_SUITE_P(Hpipm_Blaze_double, SoftConstraintsTest, HpipmWorkspace<BlazeKernel<double>>);
 
-	// INSTANTIATE_TYPED_TEST_CASE_P(Hpipm_Blaze_double, SolveUnconstrainedTest, HpipmWorkspace<BlazeKernel<double>>);	
+	// INSTANTIATE_TYPED_TEST_SUITE_P(Hpipm_Blaze_double, SolveUnconstrainedTest, HpipmWorkspace<BlazeKernel<double>>);	
 
 	TEST(HpipmVsReferenceTest, testClassicalRiccati)
 	{

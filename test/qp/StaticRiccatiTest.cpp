@@ -8,6 +8,6 @@
 
 namespace tmpc :: testing
 {
-    // INSTANTIATE_TYPED_TEST_CASE_P(ClassicalRiccati, StaticRiccatiTest, ClassicalRiccati<double>);
-    INSTANTIATE_TYPED_TEST_CASE_P(StaticFactorizedRiccati, StaticRiccatiTest, StaticFactorizedRiccati);
+    // INSTANTIATE_TYPED_TEST_SUITE_P(ClassicalRiccati, StaticRiccatiTest, ClassicalRiccati<double>);
+    INSTANTIATE_TYPED_TEST_SUITE_P(StaticFactorizedRiccati, StaticRiccatiTest, StaticFactorizedRiccati);
 }

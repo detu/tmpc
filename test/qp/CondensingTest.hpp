@@ -150,7 +150,7 @@ namespace tmpc :: testing
 	};
 
 
-	TYPED_TEST_CASE_P(CondensingTest);
+	TYPED_TEST_SUITE_P(CondensingTest);
 
 	
 	TYPED_TEST_P(CondensingTest, testCondensing)
@@ -173,7 +173,7 @@ namespace tmpc :: testing
 	}
 	
 
-	REGISTER_TYPED_TEST_CASE_P(CondensingTest,
+	REGISTER_TYPED_TEST_SUITE_P(CondensingTest,
 		testCondensing
 	);
 }

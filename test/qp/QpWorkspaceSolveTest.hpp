@@ -119,7 +119,7 @@ namespace tmpc :: testing
 		}
 	};
 
-	TYPED_TEST_CASE_P(QpWorkspaceSolveTest);
+	TYPED_TEST_SUITE_P(QpWorkspaceSolveTest);
 
 	/// \brief Check if QPSolver move constructor works and the solver works after move constructor.
 	TYPED_TEST_P(QpWorkspaceSolveTest, testMoveConstructor)
@@ -446,7 +446,7 @@ namespace tmpc :: testing
 		EXPECT_EQ(forcePrint(workspace.solution()[0].x()), forcePrint(DynamicVector<Kernel> {-1., -2., -42.}));
 	}
 
-	REGISTER_TYPED_TEST_CASE_P(QpWorkspaceSolveTest,
+	REGISTER_TYPED_TEST_SUITE_P(QpWorkspaceSolveTest,
 		testMoveConstructor, 
 		testSolve0, 
 		testSolve1, 

@@ -21,7 +21,7 @@ namespace tmpc :: testing
     };
 
 
-    TYPED_TEST_CASE_P(RiccatiTest);
+    TYPED_TEST_SUITE_P(RiccatiTest);
 
 
     TYPED_TEST_P(RiccatiTest, test_riccati0)
@@ -294,7 +294,7 @@ namespace tmpc :: testing
 	}
 
 
-    REGISTER_TYPED_TEST_CASE_P(RiccatiTest
+    REGISTER_TYPED_TEST_SUITE_P(RiccatiTest
         , test_riccati0
 		, test_riccati1
 		, testSingleStageNoState

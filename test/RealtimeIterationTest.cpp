@@ -202,7 +202,7 @@ namespace tmpc :: testing
 			,	tmpc::MpcRealtimeIteration<double, OCP, tmpc::HpmpcWorkspace<BlazeKernel<double>>>
 		> RTITypes;
 
-	TYPED_TEST_CASE(RealtimeIterationTest, RTITypes);
+	TYPED_TEST_SUITEE(RealtimeIterationTest, RTITypes);
 
 	TYPED_TEST(RealtimeIterationTest, GivesCorrectU0)
 	{

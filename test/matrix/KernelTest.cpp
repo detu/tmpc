@@ -10,5 +10,5 @@ namespace tmpc :: testing
         using Kernel = Kernel_;
     };
 
-    TYPED_TEST_CASE(KernelTest, Kernels);
+    TYPED_TEST_SUITE(KernelTest, Kernels);
 }

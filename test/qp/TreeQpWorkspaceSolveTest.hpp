@@ -290,7 +290,7 @@ namespace tmpc :: testing
 		*/
 	};
 
-	TYPED_TEST_CASE_P(TreeQpWorkspaceSolveTest);
+	TYPED_TEST_SUITE_P(TreeQpWorkspaceSolveTest);
 
 	/// \brief Check if QPSolver move constructor works and the solver works after move constructor.
 	/*
@@ -824,7 +824,7 @@ namespace tmpc :: testing
 	}
 #endif
 
-	REGISTER_TYPED_TEST_CASE_P(TreeQpWorkspaceSolveTest,
+	REGISTER_TYPED_TEST_SUITE_P(TreeQpWorkspaceSolveTest,
 		//testMoveConstructor, 
 		testSolve0
 		, testSolve0Unconstrained
