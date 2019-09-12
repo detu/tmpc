@@ -3,7 +3,7 @@
 #include <tmpc/ocp/OcpSizeProperties.hpp>
 #include <tmpc/qp/ClassicalRiccati.hpp>
 #include <tmpc/qp/FactorizedRiccati.hpp>
-#include <tmpc/qp/FactorizedRiccatiStatic.hpp>
+#include <tmpc/qp/StaticFactorizedRiccati.hpp>
 #include <tmpc/qp/OcpQp.hpp>
 #include <tmpc/BlazeKernel.hpp>
 #include <tmpc/Testing.hpp>
@@ -67,7 +67,7 @@ namespace tmpc :: testing
 	}
 
 
-    TEST(HpipmVsReferenceTest, testFactorizedRiccatiStatic)
+    TEST(HpipmVsReferenceTest, testStaticFactorizedRiccati)
 	{
 		size_t constexpr N = 5, NX = 3, NU = 2;
 
@@ -76,7 +76,7 @@ namespace tmpc :: testing
         
         HpipmWorkspace<BlazeKernel<double>> ws_hpipm(g, sz);
         MpipmWorkspace<double> ws_mpipm(g, sz);
-        FactorizedRiccatiStatic<double, NX, NU> riccati(g);
+        StaticFactorizedRiccati<double, NX, NU> riccati(g);
 
         randomizeQp(ws_mpipm);        
         copyQpProperties(ws_mpipm, ws_hpipm);
@@ -92,7 +92,7 @@ namespace tmpc :: testing
 	}
 
 
-    TEST(HpipmVsReferenceTest, DISABLED_testFactorizedRiccatiStatic1)
+    TEST(HpipmVsReferenceTest, DISABLED_testStaticFactorizedRiccati1)
 	{
 		size_t constexpr N = 100, NX = 2, NU = 1;
 
@@ -101,7 +101,7 @@ namespace tmpc :: testing
         
         HpipmWorkspace<BlazeKernel<double>> ws_hpipm(g, sz);
         MpipmWorkspace<double> ws_mpipm(g, sz);
-        FactorizedRiccatiStatic<double, NX, NU> riccati(g);
+        StaticFactorizedRiccati<double, NX, NU> riccati(g);
 
         randomizeQp(ws_mpipm);        
         copyQpProperties(ws_mpipm, ws_hpipm);

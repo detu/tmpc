@@ -16,7 +16,7 @@ add_executable(tmpc_bench
     RiccatiBench.cpp
     ClassicalRiccatiBench.cpp
     FactorizedRiccatiBench.cpp
-    FactorizedRiccatiStaticBench.cpp
+    StaticFactorizedRiccatiBench.cpp
     OcpGraphBench.cpp
 )
 

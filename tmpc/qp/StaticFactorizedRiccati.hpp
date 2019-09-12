@@ -20,10 +20,10 @@ namespace tmpc
     /// for static matrix sizes.
     ///
     template <typename Real, size_t NX, size_t NU>
-    class FactorizedRiccatiStatic
+    class StaticFactorizedRiccati
     {
     public:
-        FactorizedRiccatiStatic(OcpGraph const& g)
+        StaticFactorizedRiccati(OcpGraph const& g)
         :   graph_(g)
         ,   vertexData_(num_vertices(g))
         {
@@ -113,7 +113,7 @@ namespace tmpc
                 }
                 else
                 {
-                    throw std::invalid_argument("FactorizedRiccatiStatic solver is not implemented on tree QPs yet");
+                    throw std::invalid_argument("StaticFactorizedRiccati solver is not implemented on tree QPs yet");
                 }
             }
         }
@@ -244,7 +244,7 @@ namespace tmpc
 
 
     template <typename Real, size_t NX, size_t NU>
-    struct RealOf<FactorizedRiccatiStatic<Real, NX, NU>>
+    struct RealOf<StaticFactorizedRiccati<Real, NX, NU>>
     {
         using type = Real;
     };
