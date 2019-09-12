@@ -7,8 +7,7 @@
 #include <tmpc/core/PropertyMap.hpp>
 #include <tmpc/graph/Graph.hpp>
 #include <tmpc/Math.hpp>
-
-#include <boost/throw_exception.hpp>
+#include <tmpc/Traits.hpp>
 
 #include <vector>
 
@@ -21,19 +20,20 @@ namespace tmpc
     public:
         StaticOcpQp(OcpGraph const& g)
         :   graph_(g)
-        ,   size_(num_vertices(g))
         ,   vertexProperties_(num_vertices(g))
         ,   edgeProperties_(num_edges(g))
         {
-            // copyProperty(size_map, make_iterator_property_map(size_.begin(), vertexIndex(graph_)), graph::vertices(graph_));
         }
 
 
         auto size() const
         {
-            BOOST_THROW_EXCEPTION(std::logic_error("Function not implemented"));
-
-            return make_iterator_property_map(size_.begin(), vertexIndex(graph_));
+            return make_function_property_map<OcpVertexDescriptor>(
+                [] (OcpVertexDescriptor v) 
+                { 
+                    return OcpSize {NX, NU, NC};
+                }
+            );
         }
 
 
@@ -336,8 +336,56 @@ namespace tmpc
 
 
         OcpGraph graph_;
-        std::vector<OcpSize> size_;
         std::vector<VertexPropertyBundle> vertexProperties_;
         std::vector<EdgePropertyBundle> edgeProperties_;
     };
+
+
+    template <typename Real, size_t NX, size_t NU, size_t NC>
+    struct RealOf<StaticOcpQp<Real, NX, NU, NC>>
+    {
+        using type = Real;
+    };
+
+
+    /// @brief Specialize copyQpProperties for StaticOcpQp<> source.
+    ///
+    /// This is necessary to avoid copying elements which are "logically" empty but physically non-empty.
+    /// Such elements are S, R, r, lu, uu, D for leaf nodes.
+    /// If we try to copy them to a dynamically-sized QP, we will get a runtime-error because of matrix/vector size mismatch.
+    ///
+    template <typename Real, size_t NX, size_t NU, size_t NC, typename QpDst>
+	inline void copyQpProperties(StaticOcpQp<Real, NX, NU, NC> const& src, QpDst& dst)
+	{
+		auto const vert = graph::vertices(src.graph());
+		copyProperty(src.Q(), dst.Q(), vert);
+		copyProperty(src.q(), dst.q(), vert);
+		copyProperty(src.lx(), dst.lx(), vert);
+		copyProperty(src.ux(), dst.ux(), vert);
+		copyProperty(src.C(), dst.C(), vert);
+		copyProperty(src.ld(), dst.ld(), vert);
+		copyProperty(src.ud(), dst.ud(), vert);
+
+        // "A vertex of a path or tree is *internal* if it is not a leaf"
+        // https://en.wikipedia.org/wiki/Glossary_of_graph_theory_terms
+        //
+        // Copy S, R, r, lu, uu, D only for internal vertices, since leaf vertices don't have u.
+        for (auto v : vert)
+        {
+            if (out_degree(v, src.graph()) > 0)
+            {
+                put(dst.S(), v, get(src.S(), v));
+                put(dst.R(), v, get(src.R(), v));
+                put(dst.r(), v, get(src.r(), v));
+                put(dst.lu(), v, get(src.lu(), v));
+                put(dst.uu(), v, get(src.uu(), v));
+                put(dst.D(), v, get(src.D(), v));
+            }
+        }        
+		
+		auto const edg = graph::edges(src.graph());
+		copyProperty(src.A(), dst.A(), edg);
+		copyProperty(src.B(), dst.B(), edg);
+		copyProperty(src.b(), dst.b(), edg);
+	}
 }

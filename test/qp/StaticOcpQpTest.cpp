@@ -98,6 +98,8 @@ namespace tmpc :: testing
         // Reading the data and checking that they are the same that we wrote
         for (auto v : graph::vertices(g))
         {
+            EXPECT_EQ(get(qp_.size(), v), OcpSize(NX, NU, NC));
+
             EXPECT_EQ(forcePrint(get(this->qp_.Q(), v)), forcePrint(Q[v])) << "at v=" << v;
             
             EXPECT_EQ(forcePrint(get(this->qp_.R(), v)), forcePrint(R[v])) << "at v=" << v;

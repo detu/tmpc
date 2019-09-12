@@ -1,5 +1,7 @@
 #include <tmpc/qp/HpipmWorkspace.hpp>
 #include <tmpc/qp/MpipmWorkspace.hpp>
+#include <tmpc/qp/StaticOcpQp.hpp>
+#include <tmpc/ocp/StaticOcpSolution.hpp>
 #include <tmpc/ocp/OcpSizeProperties.hpp>
 #include <tmpc/qp/ClassicalRiccati.hpp>
 #include <tmpc/qp/FactorizedRiccati.hpp>
@@ -75,19 +77,23 @@ namespace tmpc :: testing
         auto const sz = ocpSizeNominalMpc(N, NX, NU, 0, 0, 0, false);
         
         HpipmWorkspace<BlazeKernel<double>> ws_hpipm(g, sz);
-        MpipmWorkspace<double> ws_mpipm(g, sz);
+        
+        StaticOcpQp<double, NX, NU> qp(g);
+        StaticOcpSolution<double, NX, NU> sol(g);
         StaticFactorizedRiccati<double, NX, NU> riccati(g);
 
-        randomizeQp(ws_mpipm);        
-        copyQpProperties(ws_mpipm, ws_hpipm);
+        randomizeQp(qp);        
+        copyQpProperties(qp, ws_hpipm);
 
         ws_hpipm.solveUnconstrained();
-        riccati(ws_mpipm, ws_mpipm);
+        riccati(qp, sol);
 
         for (auto v : graph::vertices(g))
         {
-            EXPECT_EQ(forcePrint(get(ws_mpipm.x(), v)), forcePrint(get(ws_hpipm.x(), v))) << " at node " << get(graph::vertex_index, g, v);
-            EXPECT_EQ(forcePrint(get(ws_mpipm.u(), v)), forcePrint(get(ws_hpipm.u(), v))) << " at node " << get(graph::vertex_index, g, v);
+            EXPECT_EQ(forcePrint(get(sol.x(), v)), forcePrint(get(ws_hpipm.x(), v))) << " at node " << get(graph::vertex_index, g, v);
+
+            if (out_degree(v, g) > 0)
+                EXPECT_EQ(forcePrint(get(sol.u(), v)), forcePrint(get(ws_hpipm.u(), v))) << " at node " << get(graph::vertex_index, g, v);
         }
 	}
 

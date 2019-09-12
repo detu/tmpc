@@ -98,6 +98,7 @@ namespace tmpc :: testing
         for (auto v : graph::vertices(graph_))
         {
             OcpSize const s {NX, NU, NC};
+            EXPECT_EQ(get(sol_.size(), v), s);
             
             EXPECT_EQ(size(get(sol_.x(), v)), s.nx());
             EXPECT_EQ(size(get(sol_.lam_lx(), v)), s.nx());

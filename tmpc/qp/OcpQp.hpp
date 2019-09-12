@@ -435,7 +435,7 @@ namespace tmpc
 	inline void randomizeQp(Qp& qp)
 	{
 		using Real = typename RealOf<Qp>::type;
-		using DynamicMatrix = blaze::DynamicMatrix<Real>;
+		using DynamicMatrix = blaze::DynamicMatrix<Real, blaze::columnMajor>;
 		using DynamicVector = blaze::DynamicVector<Real>;
 		typename blaze::Rand<DynamicMatrix> rand_matrix;
 		typename blaze::Rand<DynamicVector> rand_vector;

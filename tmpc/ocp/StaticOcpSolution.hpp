@@ -8,8 +8,6 @@
 #include <tmpc/graph/Graph.hpp>
 #include <tmpc/Math.hpp>
 
-#include <boost/throw_exception.hpp>
-
 #include <vector>
 
 
@@ -23,19 +21,20 @@ namespace tmpc
     public:
         StaticOcpSolution(OcpGraph const& g)
         :   graph_(g)
-        ,   size_(num_vertices(g))
         ,   vertexProperties_(num_vertices(g))
         ,   edgeProperties_(num_edges(g))
         {
-            // copyProperty(size_map, make_iterator_property_map(size_.begin(), vertexIndex(graph_)), graph::vertices(graph_));
         }
 
 
         auto size() const
         {
-            BOOST_THROW_EXCEPTION(std::logic_error("Function not implemented"));
-
-            return make_iterator_property_map(size_.begin(), vertexIndex(graph_));
+            return make_function_property_map<OcpVertexDescriptor>(
+                [] (OcpVertexDescriptor v) 
+                { 
+                    return OcpSize {NX, NU, NC};
+                }
+            );
         }
 
 
@@ -205,7 +204,6 @@ namespace tmpc
 
 
         OcpGraph graph_;
-        std::vector<OcpSize> size_;
         std::vector<VertexPropertyBundle> vertexProperties_;
         std::vector<EdgePropertyBundle> edgeProperties_;
     };

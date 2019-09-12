@@ -54,6 +54,7 @@ add_executable(test-tmpc
     qp/MpipmWorkspaceTest.cpp
     qp/StaticOcpQpTest.cpp
     qp/RiccatiTest.cpp
+    # qp/StaticRiccatiTest.cpp
 
     integrator/ImplicitRungeKuttaTest.cpp
 
