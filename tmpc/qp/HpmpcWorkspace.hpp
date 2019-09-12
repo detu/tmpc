@@ -1,7 +1,7 @@
 #pragma once
 
 #include "QpSolverException.hpp"
-//#include "detail/BundlePropertyMap.hpp"
+//#include <tmpc/core/detail/BundlePropertyMap.hpp>
 
 #include <tmpc/ocp/OcpSize.hpp>
 #include <tmpc/ocp/OcpGraph.hpp>

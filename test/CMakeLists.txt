@@ -46,6 +46,7 @@ add_executable(test-tmpc
     ocp/CondensedOcpSizeTest.cpp
     ocp/OcpGraphTest.cpp
     ocp/OcpSizePropertiesTest.cpp
+    ocp/StaticOcpSolutionTest.cpp
 
     qp/CondensingN3Test.cpp
     qp/CondensingN2Test.cpp

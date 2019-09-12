@@ -1,6 +1,6 @@
 #pragma once
 
-#include "detail/BundlePropertyMap.hpp"
+#include <tmpc/core/detail/BundlePropertyMap.hpp>
 
 #include <tmpc/ocp/OcpGraph.hpp>
 #include <tmpc/ocp/OcpSize.hpp>

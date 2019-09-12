@@ -9,9 +9,6 @@
 #include <tmpc/qp/StaticOcpQp.hpp>
 #include <tmpc/Testing.hpp>
 
-#include <iostream>
-#include <array>
-
 
 namespace tmpc :: testing
 {
