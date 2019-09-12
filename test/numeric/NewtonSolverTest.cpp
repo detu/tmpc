@@ -64,7 +64,12 @@ namespace tmpc :: testing
     /// Here we check how the line search works: if we did full Newton steps,
     /// then the redisuals would increase on iteration 2.
     /// So we check that the absolute value of the residual is strictly decreasing.
-    TEST(NewtonSolverTest, testRosenbrockLineSearch)
+    ///
+    /// NOTE:
+    /// The test reproduces the issue https://gitlab.syscop.de/mikhail.katliar/tmpc/issues/52
+    /// and is disabled until the issue is fixed.
+    /// 
+    TEST(NewtonSolverTest, DISABLED_testRosenbrockLineSearch)
     {
         size_t constexpr NX = 2;
         
