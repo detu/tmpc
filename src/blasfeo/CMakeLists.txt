@@ -1,7 +1,7 @@
 find_package(BLASFEO REQUIRED)
 
 add_library(tmpc-blasfeo
-    blasfeo.cpp
+    Blasfeo.cpp
 )
 
 target_include_directories(tmpc-blasfeo

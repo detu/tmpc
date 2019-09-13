@@ -1,4 +1,4 @@
-#include <tmpc/blasfeo/blasfeo.hpp>
+#include <tmpc/blasfeo/Blasfeo.hpp>
 
 #include <tmpc/Testing.hpp>
 
