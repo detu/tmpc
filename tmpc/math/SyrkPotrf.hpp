@@ -41,21 +41,17 @@ namespace tmpc
 
         for (size_t k = 0; k < n; ++k)
         {
-            size_t const rs = n - k - 1; // remaining size
+            // auto D01 = submatrix(l, 0, k, k, 1);
+            // reset(D01);
         
-            auto D01 = submatrix(l, 0, k, k, 1);
-            auto D21 = submatrix(l, 0, k, n, 1);
-            auto const D10 = submatrix(l, k, 0, 1, k);
-            auto const D20 = submatrix(l, 0, 0, n, k);
-
-            reset(D01);
+            auto w_col = column(l, k);
+            auto const w_mat = submatrix(l, 0, 0, n, k);
+            auto const w_row = row(w_mat, k);            
         
-            Scalar x = (~C)(k, k) + dot(column(A, k), column(A, k));
-            if (k > 0) 
-                x -= sqrNorm(D10);
+            Scalar x = (~C)(k, k) + dot(column(A, k), column(A, k)) - sqrNorm(w_row);
 
             if (x <= 0)
-                throw std::runtime_error("Unable to continue Cholesky decomposition of a matrix");
+                TMPC_THROW_EXCEPTION(std::runtime_error("Unable to continue Cholesky decomposition of a matrix"));
 
             l(k, k) = x = sqrt(x);
 
@@ -66,13 +62,7 @@ namespace tmpc
             // https://bitbucket.org/blaze-lib/blaze/issues/287/is-there-a-way-to-specify-that-the
             // 
             for (size_t i = k + 1; i < n; ++i)
-            {
-                D21(i, 0) = (~C)(i, k) + dot(column(A, i), column(A, k)) - row(D20, i) * ctrans(row(D10, 0));
-
-                // NOTE: using scalar/scalar division instead of matrix/scalar division (or multiplication) here
-                // because of this issue: https://bitbucket.org/blaze-lib/blaze/issues/288/performance-issue-dmatscalarmultexpr-ctor
-                D21(i, 0) /= x;
-            }
+                w_col[i] = ((~C)(i, k) + dot(column(A, i), column(A, k)) - dot(row(w_mat, i), w_row)) / x;
         }
     }
 }

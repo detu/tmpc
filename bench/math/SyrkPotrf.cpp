@@ -1,4 +1,5 @@
 #include <tmpc/math/Llh.hpp>
+#include <tmpc/math/SyrkPotrf.hpp>
 
 #include <blaze/Math.h>
 
@@ -11,20 +12,38 @@ namespace tmpc :: benchmark
     static void BM_SyrkPotrf_blaze_Static(::benchmark::State& state)
     {
         blaze::StaticMatrix<Real, M, N, blaze::columnMajor> A;
-        blaze::StaticMatrix<Real, N, N, blaze::rowMajor> B;
-        blaze::SymmetricMatrix<blaze::StaticMatrix<Real, N, N, blaze::rowMajor>> B0;
+        blaze::StaticMatrix<Real, N, N, blaze::rowMajor> C;
+        blaze::StaticMatrix<Real, N, N, blaze::rowMajor> D;
 
         randomize(A);
-        makePositiveDefinite(B0);
+        makePositiveDefinite(C);
         
         for (auto _ : state)
         {
-            B = declsym(B0) + declsym(trans(A) * A);        
-            tmpc::llh(B);
+            D = declsym(C) + declsym(trans(A) * A);        
+            tmpc::llh(D);
         }
+    }
+
+
+    template <typename Real, size_t M, size_t N>
+    static void BM_SyrkPotrf_tmpc_Static(::benchmark::State& state)
+    {
+        blaze::StaticMatrix<Real, M, N, blaze::columnMajor> A;
+        blaze::StaticMatrix<Real, N, N, blaze::columnMajor> C;
+        blaze::StaticMatrix<Real, N, N, blaze::rowMajor> D;
+
+        randomize(A);
+        makePositiveDefinite(C);
+        
+        for (auto _ : state)
+            tmpc::syrkPotrf(A, C, D);
     }
 
     
     BENCHMARK_TEMPLATE(BM_SyrkPotrf_blaze_Static, double, 4, 5);
     BENCHMARK_TEMPLATE(BM_SyrkPotrf_blaze_Static, double, 30, 35);
+
+    BENCHMARK_TEMPLATE(BM_SyrkPotrf_tmpc_Static, double, 4, 5);
+    BENCHMARK_TEMPLATE(BM_SyrkPotrf_tmpc_Static, double, 30, 35);
 }

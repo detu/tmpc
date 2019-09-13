@@ -12,7 +12,8 @@ namespace tmpc :: testing
 
         // Init Blaze matrices
         //
-        blaze::DynamicMatrix<double, blaze::columnMajor> A(k, m), C(m, m), D, D1;
+        blaze::DynamicMatrix<double, blaze::columnMajor> A(k, m), C(m, m);
+        blaze::LowerMatrix<blaze::DynamicMatrix<double, blaze::columnMajor>> D(m), D1(m);
         randomize(A);
         makePositiveDefinite(C);
 

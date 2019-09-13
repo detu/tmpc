@@ -48,7 +48,7 @@ namespace tmpc :: benchmark
     // BENCHMARK_TEMPLATE(BM_StaticFactorizedRiccati, 8, 5)->Arg(100);
     // BENCHMARK_TEMPLATE(BM_StaticFactorizedRiccati, 9, 5)->Arg(100);
     // BENCHMARK_TEMPLATE(BM_StaticFactorizedRiccati, 10, 5)->Arg(100);
-    // BENCHMARK_TEMPLATE(BM_StaticFactorizedRiccati, 30, 5)->Arg(100);
+    BENCHMARK_TEMPLATE(BM_StaticFactorizedRiccati, 30, 5)->Arg(100);
 
     //BENCHMARK(BM_FactorizedRiccati)->Args({1, 2, 1});
 }
