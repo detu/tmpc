@@ -4,8 +4,6 @@
 
 #include <benchmark/benchmark.h>
 
-#include <iostream>
-
 
 namespace tmpc :: benchmark
 {
@@ -13,8 +11,8 @@ namespace tmpc :: benchmark
     static void BM_SyrkPotrf_blaze_Static(::benchmark::State& state)
     {
         blaze::StaticMatrix<Real, M, N, blaze::columnMajor> A;
-        blaze::StaticMatrix<Real, N, N, blaze::columnMajor> B;
-        blaze::SymmetricMatrix<blaze::StaticMatrix<Real, N, N, blaze::columnMajor>> B0;
+        blaze::StaticMatrix<Real, N, N, blaze::rowMajor> B;
+        blaze::SymmetricMatrix<blaze::StaticMatrix<Real, N, N, blaze::rowMajor>> B0;
 
         randomize(A);
         makePositiveDefinite(B0);
@@ -22,10 +20,11 @@ namespace tmpc :: benchmark
         for (auto _ : state)
         {
             B = declsym(B0) + declsym(trans(A) * A);        
-            llh(B);
+            tmpc::llh(B);
         }
     }
 
     
     BENCHMARK_TEMPLATE(BM_SyrkPotrf_blaze_Static, double, 4, 5);
+    BENCHMARK_TEMPLATE(BM_SyrkPotrf_blaze_Static, double, 30, 35);
 }

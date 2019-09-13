@@ -3,8 +3,6 @@
 
 #include <blaze/Math.h>
 
-#include <memory>
-
 
 namespace tmpc :: testing
 {

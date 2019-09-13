@@ -1,6 +1,7 @@
 add_executable(bench-tmpc-blasfeo
     Main.cpp
     BlasfeoMathBench.cpp
+    SyrkPotrfBench.cpp
 )
 
 
