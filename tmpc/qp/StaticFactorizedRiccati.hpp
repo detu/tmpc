@@ -121,9 +121,9 @@ namespace tmpc
 
         
         template <typename QpSol>
-        void forwardPassVertex(OcpVertexDescriptor u, QpSol& sol) const
+        void forwardPassVertex(OcpVertexDescriptor u, QpSol& sol)
         {
-            auto const& vd_u = vertexData_[u];
+            auto& vd_u = vertexData_[u];
 
             if (in_degree(u, graph_) == 0)
             {
@@ -143,12 +143,18 @@ namespace tmpc
             {
                 // Only non-leaf edges have u.
                 //
-                // NOTE: need a temporary StaticVector here, otherwise with -O3 we get a SEGFAULT
+                // NOTE: need a temporary StaticVector here, otherwise with -O2 we get a SEGFAULT
                 // because of improperly aligned vmovapd: 
                 // vmovapd 0x8(%rdx),%ymm7
                 // 
                 // Possibly a compiler bug.
-                blaze::StaticVector<Real, NU> const tmp1 = vd_u.l_ + trans(vd_u.L_trans()) * get(sol.x(), u);
+                // See this issue: https://bitbucket.org/blaze-lib/blaze/issues/290/segfault-in-matrix-matrix-assignment-due
+                //
+                // NOTE: splitting the x + A * y operation into two and reusing vd_u.l
+                // as a temporary, because of the same issue
+                //
+                blaze::StaticVector<Real, NU>& tmp1 = vd_u.l_;
+                tmp1 += trans(vd_u.L_trans()) * get(sol.x(), u);
                 blaze::StaticVector<Real, NU> const tmp2 = inv(trans(vd_u.Lambda())) * tmp1;
                 put(sol.u(), u, -tmp2);
             }
