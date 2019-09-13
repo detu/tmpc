@@ -3,7 +3,7 @@ find_package(Threads REQUIRED)
 
 
 #~~~~~~~~~~~~~~~~
-add_executable(tmpc_bench
+add_executable(bench-tmpc
     CondensingBench.cpp
     math/MathBench.cpp
     math/Cholesky.cpp
@@ -14,7 +14,6 @@ add_executable(tmpc_bench
     math/SqrNorm.cpp
     math/LowerMatrixScalarMultiply.cpp
     math/SyrkPotrf.cpp
-    RiccatiBench.cpp
     ClassicalRiccatiBench.cpp
     FactorizedRiccatiBench.cpp
     StaticFactorizedRiccatiBench.cpp
@@ -23,45 +22,21 @@ add_executable(tmpc_bench
 
 
 if (TMPC_WITH_CASADI_INTERFACE)
-    tmpc_generate_casadi_function(GENERATED_SRCS GENERATED_HDRS "casadi_math_bench.py")
-    
-    target_sources(tmpc_bench
-        PRIVATE CasadiMathBench.cpp ${GENERATED_SRCS} ${GENERATED_HDRS}
-    )
-
-    target_include_directories(tmpc_bench
-        PRIVATE ${CMAKE_CURRENT_BINARY_DIR}
-    )
-
-    target_link_libraries(tmpc_bench
-        tmpc-casadi
-    )
+    add_subdirectory("casadi")
 endif ()
 
 
 if (TMPC_WITH_BLASFEO)
-    target_sources(tmpc_bench
-        PRIVATE BlasfeoMathBench.cpp
-    )
-
-    target_link_libraries(tmpc_bench
-        tmpc-blasfeo
-    )
+    add_subdirectory("blasfeo")
 endif ()
 
 
 if (TMPC_WITH_HPIPM)
-    target_sources(tmpc_bench
-        PRIVATE HpipmRiccatiBench.cpp
-    )
-
-    target_link_libraries(tmpc_bench
-        tmpc-qp-hpipm
-    )
+    add_subdirectory("qp-hpipm")
 endif ()
 
 
-target_link_libraries(tmpc_bench
+target_link_libraries(bench-tmpc
     tmpc
     benchmark
     ${CMAKE_THREAD_LIBS_INIT}

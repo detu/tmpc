@@ -3,7 +3,7 @@
 #include <tmpc/ocp/OcpSizeProperties.hpp>
 #include <tmpc/BlazeKernel.hpp>
 
-#include "RiccatiBench.hpp"
+#include "../RiccatiBench.hpp"
 
 
 namespace tmpc :: benchmark
