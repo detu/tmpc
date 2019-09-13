@@ -33,6 +33,32 @@ namespace tmpc
 
 			return msg.str();
 		}
+
+
+		/// Visitor that writes out-degree of each vertex to an output iterator.
+		/// It also checks for non-tree edges and throws an std::invalid_argument() if one is found.
+		///
+		template <typename OutIter>
+		class OutDegreeVisitor
+		:   public graph::default_bfs_visitor 
+		{
+		public:
+			OutDegreeVisitor(OutIter iter)
+			:   iter_{iter}
+			{
+			}
+
+
+			template <typename Vertex, typename Graph>
+			void discover_vertex(Vertex u, const Graph& g)
+			{
+				*iter_++ = out_degree(u, g);
+			}
+
+
+		private:
+			OutIter iter_;
+		};
 	}
 
 
@@ -56,5 +82,72 @@ namespace tmpc
 			// TODO: in theory, we should set opts->qp_solver[ii] based on the structure of the Hessian
 			// matrix for problem ii. But for now we simply use QPOASES because it must always work.
 		}
+	}
+
+
+	void DualNewtonTreeWorkspace::init()
+	{
+		auto const num_nodes = num_vertices(graph_);
+		auto const vertex_id = get(graph::vertex_index, graph_);
+
+		// Fill size arrays.
+		std::vector<int> nx(num_nodes), nu(num_nodes), nc(num_nodes), nk(num_nodes);
+
+		for (auto v : graph::vertices(graph_))
+		{
+			auto const i = vertex_id[v];
+			nx[i] = size_[i].nx();
+			nu[i] = size_[i].nu();
+			nc[i] = size_[i].nc();
+		}
+		
+		// Fill the number of kids vector with out-degrees of the nodes.
+		breadth_first_search(graph_, vertex(0, graph_), visitor(OutDegreeVisitor {nk.begin()}));
+
+		// Setup the tree.
+		auto const qp_in_size = tree_qp_in_calculate_size(
+			num_nodes, nx.data(), nu.data(), nc.data(), nk.data());
+
+		qp_in_memory_.resize(qp_in_size);
+		tree_qp_in_create(num_nodes, nx.data(), nu.data(), nc.data(), nk.data(), 
+			&qp_in_, qp_in_memory_.data());
+
+		auto const qp_out_size = tree_qp_out_calculate_size(
+			num_nodes, nx.data(), nu.data(), nc.data());
+
+		qp_out_memory_.resize(qp_out_size);
+		tree_qp_out_create(num_nodes, nx.data(), nu.data(), nc.data(),
+			&qp_out_, qp_out_memory_.data());
+
+		auto const treeqp_size = treeqp_tdunes_calculate_size(&qp_in_, &opts_.nativeOptions());
+		qp_solver_memory_.resize(treeqp_size);
+		treeqp_tdunes_create(&qp_in_, &opts_.nativeOptions(), &work_, qp_solver_memory_.data());
+	}
+
+
+	void DualNewtonTreeWorkspace::print() const
+	{
+		tree_qp_in_print_dims(&qp_in_);
+		tree_qp_in_print(&qp_in_);
+	}
+
+
+	void DualNewtonTreeWorkspace::solve()
+	{
+		// A workaround for this issue: https://gitlab.syscop.de/dimitris.kouzoupis/hangover/issues/6
+		if (true)
+		{
+			size_t sum_nx = 0;
+			for (auto v : graph::vertices(graph_))
+				sum_nx += get(size(), v).nx();
+
+			std::vector<Real> lambda(sum_nx);
+			treeqp_tdunes_set_dual_initialization(lambda.data(), &work_);
+		}
+		
+		auto const ret = treeqp_tdunes_solve(&qp_in_, &qp_out_, &opts_.nativeOptions(), &work_);
+
+		if (ret != TREEQP_OPTIMAL_SOLUTION_FOUND)
+			throw DualNewtonTreeException(ret);
 	}
 }

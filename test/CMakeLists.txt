@@ -81,13 +81,6 @@ add_executable(test-tmpc
 )
 
 
-if (TMPC_WITH_BLASFEO)
-    target_sources(test-tmpc
-        PRIVATE blasfeo/SyrkPotrfTest.cpp
-    )
-endif ()
-
-
 if (TMPC_WITH_CASADI_INTERFACE)
     # Generate code and test data for rk4 test
     add_custom_command(
@@ -187,4 +180,9 @@ endif ()
 
 if (TMPC_WITH_HPIPM)
     add_subdirectory("qp-hpipm")
+endif ()
+
+
+if (TMPC_WITH_BLASFEO)
+    add_subdirectory("blasfeo")
 endif ()

@@ -3,12 +3,11 @@
 #include <tmpc/SizeT.hpp>
 #include <tmpc/graph/Graph.hpp>
 #include <tmpc/core/Range.hpp>
+#include <tmpc/graph/DepthFirstSearch.hpp>
+#include <tmpc/graph/ImpactRecorder.hpp>
+#include <tmpc/core/PropertyMap.hpp>
 
-//#include <boost/graph/adjacency_list.hpp>
-//#include <boost/graph/compressed_sparse_row_graph.hpp>
 #include <boost/iterator/iterator_facade.hpp>
-//#include <boost/graph/breadth_first_search.hpp>
-//#include <boost/graph/depth_first_search.hpp>
 
 #include <vector>
 #include <optional>
@@ -180,6 +179,61 @@ namespace tmpc
     {
         return get(graph::vertex_index, g, v) == 0 ? 0 : 1;
     }
+	
+
+    /// @brief Parent of a node.
+    ///
+    /// Since OcpGraph is always a tree, parent() is empty for the root 
+    /// and equals to source(in_edges(v, g), g) for non-root nodes.
+    inline std::optional<OcpVertexDescriptor> parent(OcpVertexDescriptor v, OcpGraph const& g)
+    {
+        std::optional<OcpVertexDescriptor> p;
+
+        if (auto const e = g.parentEdge(v))
+            p = source(*e, g);
+
+        return p;
+    }
+
+
+    /// @brief Siblings of a vertex.
+    ///
+    /// Siblings of v is the set of vertices u such as parent(u, g) == parent(v, g).
+    inline auto siblings(OcpVertexDescriptor v, OcpGraph const& g)
+    {
+        auto const p = parent(v, g);
+
+        decltype(graph::adjacent_vertices(*p, g)) sb;
+
+        if (p)
+            sb = graph::adjacent_vertices(*p, g);
+
+        return sb;
+    }
+
+
+    /// @brief Root of the graph.
+    inline OcpVertexDescriptor root(OcpGraph const& g)
+    {
+        return vertex(0, g);
+    }
+
+
+    // template <typename Graph, typename ImpactMap, typename ColorMap>
+    // inline void recordImpact(Graph const& g, ImpactMap impact, ColorMap color)
+    // {
+    //     depth_first_visit(g, root(g), dfs_visitor(ImpactRecorder(impact)), color);
+    // }
+
+
+    // template <typename Graph, typename ImpactMap>
+    // inline void recordImpact(Graph const& g, ImpactMap impact)
+    // {
+    //     std::vector<boost::default_color_type> color(num_vertices(g));
+
+    //     depth_first_visit(g, root(g), dfs_visitor(ImpactRecorder(impact)), 
+    //         make_iterator_property_map(color.begin(), get(graph::vertex_index, g)));
+    // }
 
 
     /// @brief Traverse the OcpGraph in breadth-first order (from root to leaves)

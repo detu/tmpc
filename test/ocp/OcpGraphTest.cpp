@@ -1,6 +1,8 @@
 #include <tmpc/ocp/OcpGraph.hpp>
 #include <tmpc/core/Range.hpp>
 #include <tmpc/core/PropertyMap.hpp>
+#include <tmpc/graph/ImpactRecorder.hpp>
+#include <tmpc/graph/DepthFirstSearch.hpp>
 #include <tmpc/Testing.hpp>
 
 #include <array>
@@ -20,6 +22,12 @@ namespace tmpc :: testing
 		//for (; first != last; ++first)
 		//	std::cout << first->first << ", " << first->second << std::endl;
 		EXPECT_EQ(std::distance(first, last), N - 1);
+		EXPECT_THAT(make_iterator_range(first, last), ElementsAre(
+			std::pair(0, 1),
+			std::pair(0, 2),
+			std::pair(1, 3),
+			std::pair(2, 4)
+		));
 	}
 
 
@@ -44,15 +52,17 @@ namespace tmpc :: testing
 		EXPECT_EQ(out_degree(vertex(3, g), g), 0);
 		EXPECT_EQ(out_degree(vertex(4, g), g), 0);
 
-		EXPECT_EQ(graph::adjacent_vertices(vertex(0, g), g)[0], 1);
-		EXPECT_EQ(graph::adjacent_vertices(vertex(0, g), g)[1], 2);
-		EXPECT_EQ(graph::adjacent_vertices(vertex(1, g), g)[0], 3);
-		EXPECT_EQ(graph::adjacent_vertices(vertex(2, g), g)[0], 4);
+		EXPECT_EQ(graph::adjacent_vertices(vertex(0, g), g)(0), 1);
+		EXPECT_EQ(graph::adjacent_vertices(vertex(0, g), g)(1), 2);
+		EXPECT_EQ(graph::adjacent_vertices(vertex(1, g), g)(0), 3);
+		EXPECT_EQ(graph::adjacent_vertices(vertex(2, g), g)(0), 4);
 
-		EXPECT_EQ(get(graph::edge_index, g, *next(graph::out_edges(vertex(0, g), g).begin(), 0)), 0);
-		EXPECT_EQ(get(graph::edge_index, g, *next(graph::out_edges(vertex(0, g), g).begin(), 1)), 1);
-		EXPECT_EQ(get(graph::edge_index, g, *next(graph::out_edges(vertex(1, g), g).begin(), 0)), 2);
-		EXPECT_EQ(get(graph::edge_index, g, *next(graph::out_edges(vertex(2, g), g).begin(), 0)), 3);
+		// NOTE: use () instead of [] for indexing, because of this:
+		/// https://github.com/boostorg/range/issues/83
+		EXPECT_EQ(get(graph::edge_index, g, graph::out_edges(vertex(0, g), g)(0)), 0);
+		EXPECT_EQ(get(graph::edge_index, g, graph::out_edges(vertex(0, g), g)(1)), 1);
+		EXPECT_EQ(get(graph::edge_index, g, graph::out_edges(vertex(1, g), g)(0)), 2);
+		EXPECT_EQ(get(graph::edge_index, g, graph::out_edges(vertex(2, g), g)(0)), 3);
 	}
 
 
@@ -106,6 +116,7 @@ namespace tmpc :: testing
 		{
 			EXPECT_EQ(source(e, g), expected_edge->first);
 			EXPECT_EQ(target(e, g), expected_edge->second);
+			EXPECT_EQ(get(graph::edge_index, g, e), get(graph::vertex_index, g, target(e, g)) - 1);
 			++expected_edge;
 		}
 	}
@@ -134,5 +145,58 @@ namespace tmpc :: testing
 		OcpGraph const g = ocpGraphLinear(N);
 
 		EXPECT_THAT(reverse(graph::vertices(g)), ElementsAreArray({3, 2, 1, 0}));
+	}
+	
+	
+	TEST(OcpGraphTest, test_parent)
+	{
+		OcpGraph const g = ocpGraphRobustMpc(3, 2, 1);
+
+		ASSERT_EQ(num_vertices(g), 5);
+		ASSERT_EQ(num_edges(g), 4);
+
+		EXPECT_FALSE(parent(0, g).has_value());
+		EXPECT_EQ(parent(1, g), 0);
+		EXPECT_EQ(parent(2, g), 0);
+		EXPECT_EQ(parent(3, g), 1);
+		EXPECT_EQ(parent(4, g), 2);
+	}
+
+
+	TEST(OcpGraphTest, test_siblings)
+	{
+		OcpGraph const g = ocpGraphRobustMpc(3, 2, 1);
+
+		ASSERT_EQ(num_vertices(g), 5);
+		ASSERT_EQ(num_edges(g), 4);
+
+		EXPECT_THAT(siblings(0, g), ElementsAre());
+		EXPECT_THAT(siblings(1, g), ElementsAre(1, 2));
+		EXPECT_THAT(siblings(2, g), ElementsAre(1, 2));
+		EXPECT_THAT(siblings(3, g), ElementsAre(3));
+		EXPECT_THAT(siblings(4, g), ElementsAre(4));
+	}
+
+
+	TEST(OcpGraphTest, test_impact)
+	{
+		OcpGraph const g = ocpGraphRobustMpc(3, 2, 1);
+
+		ASSERT_EQ(num_vertices(g), 5);
+		ASSERT_EQ(num_edges(g), 4);
+
+		std::vector<size_t> v_impact(num_vertices(g));
+		iterator_property_map impact(v_impact.begin(), get(graph::vertex_index, g));
+		std::vector<boost::default_color_type> color(num_vertices(g));
+
+		depth_first_visit(g, root(g), graph::dfs_visitor(graph::ImpactRecorder(impact)), 
+			make_iterator_property_map(color.begin(), get(graph::vertex_index, g)));
+		// graph::recordImpact(g, impact, make_iterator_property_map(color.begin(), get(graph::vertex_index, g)));
+
+		EXPECT_EQ(get(impact, 0), 2);
+		EXPECT_EQ(get(impact, 1), 1);
+		EXPECT_EQ(get(impact, 2), 1);
+		EXPECT_EQ(get(impact, 3), 1);
+		EXPECT_EQ(get(impact, 4), 1);
 	}
 }

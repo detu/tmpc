@@ -43,6 +43,10 @@ if (TMPC_WITH_BLASFEO)
     target_sources(tmpc_bench
         PRIVATE BlasfeoMathBench.cpp
     )
+
+    target_link_libraries(tmpc_bench
+        tmpc-blasfeo
+    )
 endif ()
 
 

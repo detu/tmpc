@@ -26,7 +26,7 @@ using namespace tmpc;
 
 using Kernel = BlazeKernel<double>;
 //using HpmpcSolver = TreeQpWorkspaceAdaptor<HpmpcWorkspace<Kernel>>;
-using DualNewtonTreeSolver = DualNewtonTreeWorkspace<Kernel>;
+using DualNewtonTreeSolver = DualNewtonTreeWorkspace;
 
 
 int main(int argc, char ** argv)

@@ -94,16 +94,10 @@ if (TMPC_WITH_treeQP)
 endif()
 
 #
-# Link to BLASFEO
+# Build tmpc-blasfeo module
 #
 if (TMPC_WITH_BLASFEO)
-    target_include_directories(tmpc
-        PUBLIC ${BLASFEO_INCLUDE_DIR}
-    )
-
-    target_link_libraries(tmpc
-        PUBLIC ${BLASFEO_STATIC_LIB}
-    )
+    add_subdirectory("blasfeo")
 endif()
 
 #
