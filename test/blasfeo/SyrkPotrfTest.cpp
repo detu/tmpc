@@ -1,6 +1,4 @@
-#include <blasfeo_d_blas.h>
-#include <blasfeo_d_aux.h>
-
+#include <tmpc/blasfeo/Blasfeo.hpp>
 #include <tmpc/Testing.hpp>
 
 #include <blaze/Math.h>
@@ -34,14 +32,7 @@ namespace tmpc :: testing
 
         // Init BLASFEO matrices
         //
-        auto mem_A = alignedAlloc(blasfeo_memsize_dmat(m, k));
-        auto mem_C = alignedAlloc(blasfeo_memsize_dmat(m, m));
-        auto mem_D = alignedAlloc(blasfeo_memsize_dmat(m, m));
-
-        blasfeo_dmat blasfeo_A, blasfeo_C, blasfeo_D;
-        blasfeo_create_dmat(m, k, &blasfeo_A, mem_A.get());
-        blasfeo_create_dmat(m, m, &blasfeo_C, mem_C.get());
-        blasfeo_create_dmat(m, m, &blasfeo_D, mem_D.get());
+        blasfeo::DynamicMatrix<double> blasfeo_A(m, k), blasfeo_C(m, m), blasfeo_D(m, m);
 
         // Copy Blaze matrices to BLASFEO matrices
         //

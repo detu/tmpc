@@ -1,5 +1,6 @@
 add_executable(test-tmpc-blasfeo
-    BlasfeoTest.cpp
+    CustomMatrixTest.cpp
+    DynamicMatrixTest.cpp
     SyrkPotrfTest.cpp
 )
 
