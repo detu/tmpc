@@ -35,10 +35,8 @@ namespace tmpc :: testing
         blasfeo::DynamicMatrix<double> blasfeo_A(m, k), blasfeo_C(m, m), blasfeo_D(m, m);
 
         // Copy Blaze matrices to BLASFEO matrices
-        //
-        // blasfeo_pack_dmat(int m, int n, double *A, int lda, struct blasfeo_dmat *sB, int bi, int bj);
-        blasfeo_pack_dmat(m, k, data(blaze_A), spacing(blaze_A), &blasfeo_A, 0, 0);
-        blasfeo_pack_dmat(m, m, data(blaze_C), spacing(blaze_C), &blasfeo_C, 0, 0);
+        blasfeo_A = blaze_A;
+        blasfeo_C = blaze_C;
         
         // Do syrk-potrf with BLASFEO
         //
@@ -50,10 +48,8 @@ namespace tmpc :: testing
         blasfeo_dsyrk_dpotrf_ln(m, k, &blasfeo_A, 0, 0, &blasfeo_A, 0, 0, &blasfeo_C, 0, 0, &blasfeo_D, 0, 0);
 
         // Copy the resulting D matrix from BLASFEO to Blaze
-        //
-        // void blasfeo_unpack_dmat(int m, int n, struct blasfeo_dmat *sA, int ai, int aj, double *B, int ldb);
-        blaze::DynamicMatrix<double, blaze::columnMajor> blaze_blasfeo_D(m, m);
-        blasfeo_unpack_dmat(m, m, &blasfeo_D, 0, 0, data(blaze_blasfeo_D), spacing(blaze_blasfeo_D));
+        blaze::DynamicMatrix<double, blaze::columnMajor> blaze_blasfeo_D;
+        blasfeo_D.unpack(blaze_blasfeo_D);
 
         // Print the result from BLASFEO
         // std::cout << "blaze_D=\n" << blaze_blasfeo_D;

@@ -116,4 +116,18 @@ namespace tmpc :: blasfeo
     {
         blasfeo_pack_smat(m, n, const_cast<float *>(A), lda, &sB, bi, bj);
     }
+
+
+    // @brief Unpack the column-major double-precision BLASFEO matrix A into the column-major matrix B
+    inline void unpack_mat(size_t m, size_t n, blasfeo_dmat& sA, size_t ai, size_t aj, double * B, size_t ldb)
+    {
+        blasfeo_unpack_dmat(m, n, &sA, ai, aj, B, ldb);
+    }
+
+    
+    // @brief Unpack the column-major single-precision BLASFEO matrix A into the column-major matrix B
+    inline void unpack_mat(size_t m, size_t n, blasfeo_smat& sA, size_t ai, size_t aj, float * B, size_t ldb)
+    {
+        blasfeo_unpack_smat(m, n, &sA, ai, aj, B, ldb);
+    }
 }

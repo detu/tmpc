@@ -79,4 +79,17 @@ namespace tmpc :: testing
 			for (size_t j = 0; j < columns(lhs); ++j)
 				EXPECT_EQ(lhs(i, j), rhs(i, j)) << "element mismatch at index (" << i << ", " << j << ")";
 	}
+
+
+	TEST(DynamicMatrixTest, testUnpack)
+	{
+		blasfeo::DynamicMatrix<double> B;
+		blaze::DynamicMatrix<double, blaze::columnMajor> A0(2, 3), A1;
+		randomize(A0);
+
+		B = std::as_const(A0);
+		B.unpack(A1);
+
+		TMPC_EXPECT_EQ(A1, A0);
+	}
 }

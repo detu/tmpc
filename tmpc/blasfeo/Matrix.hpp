@@ -2,6 +2,8 @@
 
 #include <tmpc/blasfeo/BlasfeoApi.hpp>
 
+#include <blaze/Math.h>
+
 
 namespace tmpc :: blasfeo
 {
@@ -32,6 +34,20 @@ namespace tmpc :: blasfeo
         decltype(auto) operator()(size_t i, size_t j) const noexcept
         {
             return element(~*this, i, j);
+        }
+
+
+        /// @brief Unpack BLASFEO matrix to Blaze column-major dense matrix.
+        ///
+        /// The destination matrix is resized if necessary and possible.
+        template <typename MT>
+        void unpack(blaze::DenseMatrix<MT, blaze::columnMajor>& dst)
+        {
+            auto const m = rows(~*this);
+            auto const n = columns(~*this);
+
+            resize(dst, m, n);
+            unpack_mat(m, n, ~*this, 0, 0, data(dst), spacing(dst));
         }
         
 
