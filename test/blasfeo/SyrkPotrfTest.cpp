@@ -32,11 +32,7 @@ namespace tmpc :: testing
 
         // Init BLASFEO matrices
         //
-        blasfeo::DynamicMatrix<double> blasfeo_A(m, k), blasfeo_C(m, m), blasfeo_D(m, m);
-
-        // Copy Blaze matrices to BLASFEO matrices
-        blasfeo_A = blaze_A;
-        blasfeo_C = blaze_C;
+        blasfeo::DynamicMatrix<double> blasfeo_A(blaze_A), blasfeo_C(blaze_C), blasfeo_D(m, m);
         
         // Do syrk-potrf with BLASFEO
         //

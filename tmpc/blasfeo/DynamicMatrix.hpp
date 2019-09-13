@@ -27,10 +27,20 @@ namespace tmpc :: blasfeo
         }
 
 
+        /// \brief Create a matrix of given size.
         DynamicMatrix(size_t m, size_t n)
         :   data_(detail::alignedAlloc<Real>(memsize_mat<Real>(m, n)))
         {
             create_mat(m, n, *this, data_.get());
+        }
+
+
+        /// \brief Create a copy of a Blaze dense column-major matrix.
+        template <typename MT>
+        DynamicMatrix(blaze::DenseMatrix<MT, blaze::columnMajor> const& rhs)
+        :   DynamicMatrix(rows(rhs), columns(rhs))
+        {
+            *this = rhs;
         }
 
 

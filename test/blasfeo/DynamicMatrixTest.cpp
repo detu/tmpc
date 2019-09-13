@@ -22,6 +22,21 @@ namespace tmpc :: testing
 	}
 
 
+	TEST(DynamicMatrixTest, testCtorFromBlazeMatrix)
+	{
+		blaze::DynamicMatrix<double, blaze::columnMajor> rhs(2, 3);
+		randomize(rhs);
+
+		blasfeo::DynamicMatrix<double> lhs(rhs);
+		EXPECT_EQ(rows(lhs), rows(rhs));
+		EXPECT_EQ(columns(lhs), columns(rhs));
+
+		for (size_t i = 0; i < rows(lhs); ++i)
+			for (size_t j = 0; j < columns(lhs); ++j)
+				EXPECT_EQ(lhs(i, j), rhs(i, j)) << "element mismatch at index (" << i << ", " << j << ")";
+	}
+
+
 	TEST(DynamicMatrixTest, testRows)
 	{
 		blasfeo::DynamicMatrix<double> m(2, 3);
@@ -74,6 +89,8 @@ namespace tmpc :: testing
 		randomize(rhs);
 
 		lhs = std::as_const(rhs);
+		EXPECT_EQ(rows(lhs), rows(rhs));
+		EXPECT_EQ(columns(lhs), columns(rhs));
 
 		for (size_t i = 0; i < rows(lhs); ++i)
 			for (size_t j = 0; j < columns(lhs); ++j)
