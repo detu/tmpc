@@ -4,6 +4,8 @@
 #include <tmpc/blasfeo/Matrix.hpp>
 #include <tmpc/blasfeo/Memory.hpp>
 
+#include <blaze/Math.h>
+
 
 namespace tmpc :: blasfeo
 {
@@ -37,15 +39,34 @@ namespace tmpc :: blasfeo
         /// Does not preserve matrix elements if reallocation occurs.
         void resize(size_t m, size_t n)
         {
-            auto const required_capacity = memsize_mat<Real>(m, n);
-
-            if (required_capacity > capacity_)
+            if (m != rows(*this) || n != columns(*this))
             {
-                data_.reset(detail::alignedAlloc<Real>(required_capacity));
-                capacity_ = required_capacity;
-            }
+                auto const required_capacity = memsize_mat<Real>(m, n);
 
-            create_mat(m, n, *this, data_.get());
+                if (required_capacity > capacity_)
+                {
+                    data_.reset(detail::alignedAlloc<Real>(required_capacity));
+                    capacity_ = required_capacity;
+                }
+
+                create_mat(m, n, *this, data_.get());
+            }
+        }
+
+
+        /// @brief Assign Blaze column-major dense matrix to BLASFEO matrix.
+        ///
+        /// The BLASFEO matrix is resized if needed.
+        template <typename MT>
+        DynamicMatrix& operator=(blaze::DenseMatrix<MT, blaze::columnMajor> const& rhs)
+        {
+            auto const m = rows(rhs);
+            auto const n = columns(rhs);
+
+            resize(m, n);
+            pack_mat(m, n, data(rhs), spacing(rhs), *this, 0, 0);
+
+            return *this;
         }
 
 

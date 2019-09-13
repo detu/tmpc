@@ -2,8 +2,6 @@
 
 #include <tmpc/blasfeo/BlasfeoApi.hpp>
 
-#include <blaze/Math.h>
-
 
 namespace tmpc :: blasfeo
 {

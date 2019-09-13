@@ -105,15 +105,15 @@ namespace tmpc :: blasfeo
 
 
     // @brief Pack the column-major double-precision matrix A into BLASFEO matrix B
-    inline void pack_mat(size_t m, size_t n, double * A, size_t lda, blasfeo_dmat& sB, size_t bi, size_t bj)
+    inline void pack_mat(size_t m, size_t n, double const * A, size_t lda, blasfeo_dmat& sB, size_t bi, size_t bj)
     {
-        blasfeo_pack_dmat(m, n, A, lda, &sB, bi, bj);
+        blasfeo_pack_dmat(m, n, const_cast<double *>(A), lda, &sB, bi, bj);
     }
 
 
     // @brief Pack the column-major single-precision matrix A into BLASFEO matrix B
-    inline void pack_mat(size_t m, size_t n, float * A, size_t lda, blasfeo_smat& sB, size_t bi, size_t bj)
+    inline void pack_mat(size_t m, size_t n, float const * A, size_t lda, blasfeo_smat& sB, size_t bi, size_t bj)
     {
-        blasfeo_pack_smat(m, n, A, lda, &sB, bi, bj);
+        blasfeo_pack_smat(m, n, const_cast<float *>(A), lda, &sB, bi, bj);
     }
 }
