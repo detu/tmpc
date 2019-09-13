@@ -80,6 +80,14 @@ add_executable(test-tmpc
     util/UnwrapTest.cpp
 )
 
+
+if (TMPC_WITH_BLASFEO)
+    target_sources(test-tmpc
+        PRIVATE blasfeo/SyrkPotrfTest.cpp
+    )
+endif ()
+
+
 if (TMPC_WITH_CASADI_INTERFACE)
     # Generate code and test data for rk4 test
     add_custom_command(

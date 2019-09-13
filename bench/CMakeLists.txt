@@ -13,6 +13,7 @@ add_executable(tmpc_bench
     math/Trsv.cpp
     math/SqrNorm.cpp
     math/LowerMatrixScalarMultiply.cpp
+    math/SyrkPotrf.cpp
     RiccatiBench.cpp
     ClassicalRiccatiBench.cpp
     FactorizedRiccatiBench.cpp
