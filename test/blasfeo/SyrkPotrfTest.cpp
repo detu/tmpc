@@ -8,13 +8,6 @@
 
 namespace tmpc :: testing
 {
-    static auto alignedAlloc(size_t bytes)
-    {
-        return std::unique_ptr<char[], decltype(&std::free)>(
-            reinterpret_cast<char *>(std::aligned_alloc(0x40, bytes)), &std::free);
-    }
-
-
     TEST(BlasfeoTest, testSyrkPotrf)
     {
         size_t const m = 5, k = 4;  // <-- Sic!
@@ -35,13 +28,7 @@ namespace tmpc :: testing
         blasfeo::DynamicMatrix<double> blasfeo_A(blaze_A), blasfeo_C(blaze_C), blasfeo_D(m, m);
         
         // Do syrk-potrf with BLASFEO
-        //
-        // void blasfeo_dsyrk_dpotrf_ln(int m, int k, 
-        //  struct blasfeo_dmat *sA, int ai, int aj, 
-        //  struct blasfeo_dmat *sB, int bi, int bj, 
-        //  struct blasfeo_dmat *sC, int ci, int cj, 
-        //  struct blasfeo_dmat *sD, int di, int dj)        
-        blasfeo_dsyrk_dpotrf_ln(m, k, &blasfeo_A, 0, 0, &blasfeo_A, 0, 0, &blasfeo_C, 0, 0, &blasfeo_D, 0, 0);
+        syrk_potrf(m, k, blasfeo_A, 0, 0, blasfeo_A, 0, 0, blasfeo_C, 0, 0, blasfeo_D, 0, 0);
 
         // Copy the resulting D matrix from BLASFEO to Blaze
         blaze::DynamicMatrix<double, blaze::columnMajor> blaze_blasfeo_D;
