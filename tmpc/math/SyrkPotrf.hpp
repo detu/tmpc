@@ -57,7 +57,7 @@ namespace tmpc
             auto const D20 = submatrix(l, k, 0, rs, k);
 
             // Set upper-triangular elements to 0 if the result matrix is not restricted lower
-            if constexpr(!blaze::IsLower_v<MT3>)
+            if constexpr (!blaze::IsLower_v<MT3>)
                 reset(submatrix(l, 0, k, k, 1));
             
             auto in_C = begin(C, k) + k;

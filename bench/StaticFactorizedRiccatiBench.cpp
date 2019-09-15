@@ -28,8 +28,9 @@ namespace tmpc :: benchmark
             riccati(qp, sol);
     }
 
-    // BENCHMARK_TEMPLATE(BM_StaticFactorizedRiccati, 2, 1)->Arg(100);
-    // BENCHMARK_TEMPLATE(BM_StaticFactorizedRiccati, 3, 1)->Arg(100);
+    BENCHMARK_TEMPLATE(BM_StaticFactorizedRiccati, 1, 1)->Arg(100);
+    BENCHMARK_TEMPLATE(BM_StaticFactorizedRiccati, 2, 1)->Arg(100);
+    BENCHMARK_TEMPLATE(BM_StaticFactorizedRiccati, 3, 1)->Arg(100);
     BENCHMARK_TEMPLATE(BM_StaticFactorizedRiccati, 4, 1)->Arg(100);
     BENCHMARK_TEMPLATE(BM_StaticFactorizedRiccati, 5, 1)->Arg(100);
     BENCHMARK_TEMPLATE(BM_StaticFactorizedRiccati, 6, 1)->Arg(100);
