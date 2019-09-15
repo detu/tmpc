@@ -20,8 +20,7 @@ namespace tmpc
     public:
         StaticOcpQp(OcpGraph const& g)
         :   graph_(g)
-        ,   vertexProperties_(num_vertices(g))
-        ,   edgeProperties_(num_edges(g))
+        ,   edgeVertexProperties_(num_vertices(g))
         {
         }
 
@@ -45,169 +44,169 @@ namespace tmpc
 
         auto H()
         {
-            return detail::BundlePropertyMap(&VertexPropertyBundle::H_, vertexProperties());
+            return detail::BundlePropertyMap(&EdgeVertexPropertyBundle::H_, vertexProperties());
         }
 
 
         auto H() const
         {
-            return detail::BundlePropertyMap(&VertexPropertyBundle::H_, vertexProperties());
+            return detail::BundlePropertyMap(&EdgeVertexPropertyBundle::H_, vertexProperties());
         }
 
 
         auto Q()
         {
-            return detail::BundlePropertyMap(&VertexPropertyBundle::Q_, vertexProperties());
+            return detail::BundlePropertyMap(&EdgeVertexPropertyBundle::Q_, vertexProperties());
         }
 
 
         auto Q() const
         {
-            return detail::BundlePropertyMap(&VertexPropertyBundle::Q_, vertexProperties());
+            return detail::BundlePropertyMap(&EdgeVertexPropertyBundle::Q_, vertexProperties());
         }
 
 
         auto R()
         {
-            return detail::BundlePropertyMap(&VertexPropertyBundle::R_, vertexProperties());
+            return detail::BundlePropertyMap(&EdgeVertexPropertyBundle::R_, vertexProperties());
         }
 
 
         auto R() const
         {
-            return detail::BundlePropertyMap(&VertexPropertyBundle::R_, vertexProperties());
+            return detail::BundlePropertyMap(&EdgeVertexPropertyBundle::R_, vertexProperties());
         }
 
 
         auto S()
         {
-            return detail::BundlePropertyMap(&VertexPropertyBundle::S_, vertexProperties());
+            return detail::BundlePropertyMap(&EdgeVertexPropertyBundle::S_, vertexProperties());
         }
 
 
         auto S() const
         {
-            return detail::BundlePropertyMap(&VertexPropertyBundle::S_, vertexProperties());
+            return detail::BundlePropertyMap(&EdgeVertexPropertyBundle::S_, vertexProperties());
         }
 
 
         auto q()
         {
-            return detail::BundlePropertyMap(&VertexPropertyBundle::q_, vertexProperties());
+            return detail::BundlePropertyMap(&EdgeVertexPropertyBundle::q_, vertexProperties());
         }
 
 
         auto q() const
         {
-            return detail::BundlePropertyMap(&VertexPropertyBundle::q_, vertexProperties());
+            return detail::BundlePropertyMap(&EdgeVertexPropertyBundle::q_, vertexProperties());
         }
 
 
         auto r()
         {
-            return detail::BundlePropertyMap(&VertexPropertyBundle::r_, vertexProperties());
+            return detail::BundlePropertyMap(&EdgeVertexPropertyBundle::r_, vertexProperties());
         }
 
 
         auto r() const
         {
-            return detail::BundlePropertyMap(&VertexPropertyBundle::r_, vertexProperties());
+            return detail::BundlePropertyMap(&EdgeVertexPropertyBundle::r_, vertexProperties());
         }
 
 
         auto lx()
         {
-            return detail::BundlePropertyMap(&VertexPropertyBundle::lx_, vertexProperties());
+            return detail::BundlePropertyMap(&EdgeVertexPropertyBundle::lx_, vertexProperties());
         }
 
 
         auto lx() const
         {
-            return detail::BundlePropertyMap(&VertexPropertyBundle::lx_, vertexProperties());
+            return detail::BundlePropertyMap(&EdgeVertexPropertyBundle::lx_, vertexProperties());
         }
 
 
         auto ux()
         {
-            return detail::BundlePropertyMap(&VertexPropertyBundle::ux_, vertexProperties());
+            return detail::BundlePropertyMap(&EdgeVertexPropertyBundle::ux_, vertexProperties());
         }
 
 
         auto ux() const
         {
-            return detail::BundlePropertyMap(&VertexPropertyBundle::ux_, vertexProperties());
+            return detail::BundlePropertyMap(&EdgeVertexPropertyBundle::ux_, vertexProperties());
         }
 
 
         auto lu()
         {
-            return detail::BundlePropertyMap(&VertexPropertyBundle::lu_, vertexProperties());
+            return detail::BundlePropertyMap(&EdgeVertexPropertyBundle::lu_, vertexProperties());
         }
 
 
         auto lu() const
         {
-            return detail::BundlePropertyMap(&VertexPropertyBundle::lu_, vertexProperties());
+            return detail::BundlePropertyMap(&EdgeVertexPropertyBundle::lu_, vertexProperties());
         }
 
 
         auto uu()
         {
-            return detail::BundlePropertyMap(&VertexPropertyBundle::uu_, vertexProperties());
+            return detail::BundlePropertyMap(&EdgeVertexPropertyBundle::uu_, vertexProperties());
         }
 
 
         auto uu() const
         {
-            return detail::BundlePropertyMap(&VertexPropertyBundle::uu_, vertexProperties());
+            return detail::BundlePropertyMap(&EdgeVertexPropertyBundle::uu_, vertexProperties());
         }
 
 
         auto C()
         {
-            return detail::BundlePropertyMap(&VertexPropertyBundle::C_, vertexProperties());
+            return detail::BundlePropertyMap(&EdgeVertexPropertyBundle::C_, vertexProperties());
         }
 
 
         auto C() const
         {
-            return detail::BundlePropertyMap(&VertexPropertyBundle::C_, vertexProperties());
+            return detail::BundlePropertyMap(&EdgeVertexPropertyBundle::C_, vertexProperties());
         }
 
 
         auto D()
         {
-            return detail::BundlePropertyMap(&VertexPropertyBundle::D_, vertexProperties());
+            return detail::BundlePropertyMap(&EdgeVertexPropertyBundle::D_, vertexProperties());
         }
 
 
         auto D() const
         {
-            return detail::BundlePropertyMap(&VertexPropertyBundle::D_, vertexProperties());
+            return detail::BundlePropertyMap(&EdgeVertexPropertyBundle::D_, vertexProperties());
         }
 
 
         auto ld()
         {
-            return detail::BundlePropertyMap(&VertexPropertyBundle::ld_, vertexProperties());
+            return detail::BundlePropertyMap(&EdgeVertexPropertyBundle::ld_, vertexProperties());
         }
 
 
         auto ld() const
         {
-            return detail::BundlePropertyMap(&VertexPropertyBundle::ld_, vertexProperties());
+            return detail::BundlePropertyMap(&EdgeVertexPropertyBundle::ld_, vertexProperties());
         }
 
 
         auto ud()
         {
-            return detail::BundlePropertyMap(&VertexPropertyBundle::ud_, vertexProperties());
+            return detail::BundlePropertyMap(&EdgeVertexPropertyBundle::ud_, vertexProperties());
         }
 
 
         auto ud() const
         {
-            return detail::BundlePropertyMap(&VertexPropertyBundle::ud_, vertexProperties());
+            return detail::BundlePropertyMap(&EdgeVertexPropertyBundle::ud_, vertexProperties());
         }
 
 
@@ -215,56 +214,79 @@ namespace tmpc
 		/*
         auto BA()
         {
-            return detail::BundlePropertyMap(&EdgePropertyBundle::BA_, edgeProperties());
+            return detail::BundlePropertyMap(&EdgeVertexPropertyBundle::BA_, edgeProperties());
         }
 
 
         auto BA() const
         {
-            return detail::BundlePropertyMap(&EdgePropertyBundle::BA_, edgeProperties());
+            return detail::BundlePropertyMap(&EdgeVertexPropertyBundle::BA_, edgeProperties());
         }
 		*/
 
 
         auto A()
         {
-            return detail::BundlePropertyMap(&EdgePropertyBundle::A_, edgeProperties());
+            return detail::BundlePropertyMap(&EdgeVertexPropertyBundle::A_, edgeProperties());
         }
 
 
         auto A() const
         {
-            return detail::BundlePropertyMap(&EdgePropertyBundle::A_, edgeProperties());
+            return detail::BundlePropertyMap(&EdgeVertexPropertyBundle::A_, edgeProperties());
         }
 
 
         auto B()
         {
-            return detail::BundlePropertyMap(&EdgePropertyBundle::B_, edgeProperties());
+            return detail::BundlePropertyMap(&EdgeVertexPropertyBundle::B_, edgeProperties());
         }
 
 
         auto B() const
         {
-            return detail::BundlePropertyMap(&EdgePropertyBundle::B_, edgeProperties());
+            return detail::BundlePropertyMap(&EdgeVertexPropertyBundle::B_, edgeProperties());
         }
 
 
         auto b()
         {
-            return detail::BundlePropertyMap(&EdgePropertyBundle::b_, edgeProperties());
+            return detail::BundlePropertyMap(&EdgeVertexPropertyBundle::b_, edgeProperties());
         }
 
 
         auto b() const
         {
-            return detail::BundlePropertyMap(&EdgePropertyBundle::b_, edgeProperties());
+            return detail::BundlePropertyMap(&EdgeVertexPropertyBundle::b_, edgeProperties());
         }
 
 
     private:
-        struct VertexPropertyBundle
+        /// @brief Stores properties of a vertex and its parent edge together to improve data locality.
+        struct EdgeVertexPropertyBundle
         {
+            //
+            // Edge properties
+            //
+
+            blaze::StaticMatrix<Real, NX, NX, blaze::columnMajor> A_;
+            blaze::StaticMatrix<Real, NX, NU, blaze::columnMajor> B_;
+			
+			/*
+            blaze::DynamicMatrix<Real, blaze::columnMajor> BA_;
+
+            using Submatrix = decltype(blaze::submatrix(BA_, 0, 0, 1, 1));
+
+            Submatrix A_;
+            Submatrix B_;
+			*/
+			
+            blaze::StaticVector<Real, NX> b_;
+
+            //
+            // Vertex properties
+            //
+
             // H = [ R,   S
             //       S^T, Q]
             blaze::SymmetricMatrix<blaze::StaticMatrix<Real, NU + NX, NU + NX, blaze::columnMajor>> H_;
@@ -287,57 +309,43 @@ namespace tmpc
         };
 
 
-        struct EdgePropertyBundle
-        {
-            blaze::StaticMatrix<Real, NX, NX, blaze::columnMajor> A_;
-            blaze::StaticMatrix<Real, NX, NU, blaze::columnMajor> B_;
-			
-			/*
-            blaze::DynamicMatrix<Real, blaze::columnMajor> BA_;
-
-            using Submatrix = decltype(blaze::submatrix(BA_, 0, 0, 1, 1));
-
-            Submatrix A_;
-            Submatrix B_;
-			*/
-			
-            blaze::StaticVector<Real, NX> b_;
-        };
-
-
         auto vertexProperties()
         {
-            return make_iterator_property_map(vertexProperties_.begin(), vertexIndex(graph_));
+            return make_iterator_property_map(edgeVertexProperties_.begin(), vertexIndex(graph_));
         }
 
 
         auto vertexProperties() const
         {
-            return make_iterator_property_map(vertexProperties_.begin(), vertexIndex(graph_));
+            return make_iterator_property_map(edgeVertexProperties_.begin(), vertexIndex(graph_));
         }
 
 
         auto edgeProperties()
         {
-            return make_iterator_property_map(edgeProperties_.begin(), edgeIndex());
+            return make_iterator_property_map(edgeVertexProperties_.begin(), targetVertexIndex());
         }
 
 
         auto edgeProperties() const
         {
-            return make_iterator_property_map(edgeProperties_.begin(), edgeIndex());
+            return make_iterator_property_map(edgeVertexProperties_.begin(), targetVertexIndex());
         }
 
 
-        auto edgeIndex() const
+        auto targetVertexIndex() const
         {
-            return get(graph::edge_index, graph_);
+            return make_function_property_map<OcpEdgeDescriptor>(
+                [this] (OcpEdgeDescriptor e)
+                {
+                    return get(graph::edge_index, graph_, e) + 1;
+                }
+            );
         }
 
 
         OcpGraph graph_;
-        std::vector<VertexPropertyBundle> vertexProperties_;
-        std::vector<EdgePropertyBundle> edgeProperties_;
+        std::vector<EdgeVertexPropertyBundle> edgeVertexProperties_;
     };
 
 
