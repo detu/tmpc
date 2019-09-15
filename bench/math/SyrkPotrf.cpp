@@ -13,6 +13,7 @@ namespace tmpc :: benchmark
     {
         blaze::StaticMatrix<Real, M, N, blaze::columnMajor> A;
         blaze::SymmetricMatrix<blaze::StaticMatrix<Real, N, N, blaze::columnMajor>> C;
+        blaze::SymmetricMatrix<blaze::StaticMatrix<Real, N, N, blaze::columnMajor>> D1;
         blaze::LowerMatrix<blaze::StaticMatrix<Real, N, N, blaze::columnMajor>> D;
 
         randomize(A);
@@ -20,9 +21,8 @@ namespace tmpc :: benchmark
         
         for (auto _ : state)
         {
-            decltype(auto) d = derestrict(D);
-            d = declsym(C) + declsym(trans(A) * A);        
-            tmpc::llh(d);
+            D1 = declsym(C) + declsym(trans(A) * A);
+            blaze::llh(D1, D);
         }
     }
 

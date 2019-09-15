@@ -27,5 +27,5 @@ namespace tmpc :: testing
     }
 
 
-    BENCHMARK(BM_SyrkPotrf_blasfeo)->Args({5, 4})->Args({35, 30});
+    BENCHMARK(BM_SyrkPotrf_blasfeo)->Args({5, 4})->Args({60, 30});
 }
