@@ -31,9 +31,9 @@ namespace tmpc :: benchmark
     // BENCHMARK_TEMPLATE(BM_StaticFactorizedRiccati, 2, 1)->Arg(100);
     // BENCHMARK_TEMPLATE(BM_StaticFactorizedRiccati, 3, 1)->Arg(100);
     BENCHMARK_TEMPLATE(BM_StaticFactorizedRiccati, 4, 1)->Arg(100);
-    // BENCHMARK_TEMPLATE(BM_StaticFactorizedRiccati, 5, 1)->Arg(100);
-    // BENCHMARK_TEMPLATE(BM_StaticFactorizedRiccati, 6, 1)->Arg(100);
-    // BENCHMARK_TEMPLATE(BM_StaticFactorizedRiccati, 7, 1)->Arg(100);
+    BENCHMARK_TEMPLATE(BM_StaticFactorizedRiccati, 5, 1)->Arg(100);
+    BENCHMARK_TEMPLATE(BM_StaticFactorizedRiccati, 6, 1)->Arg(100);
+    BENCHMARK_TEMPLATE(BM_StaticFactorizedRiccati, 7, 1)->Arg(100);
     // BENCHMARK_TEMPLATE(BM_StaticFactorizedRiccati, 8, 1)->Arg(100);
     // BENCHMARK_TEMPLATE(BM_StaticFactorizedRiccati, 9, 1)->Arg(100);
     // BENCHMARK_TEMPLATE(BM_StaticFactorizedRiccati, 10, 1)->Arg(100);
@@ -41,14 +41,15 @@ namespace tmpc :: benchmark
 
     // BENCHMARK_TEMPLATE(BM_StaticFactorizedRiccati, 2, 5)->Arg(100);
     // BENCHMARK_TEMPLATE(BM_StaticFactorizedRiccati, 3, 5)->Arg(100);
-    // BENCHMARK_TEMPLATE(BM_StaticFactorizedRiccati, 4, 5)->Arg(100);
-    // BENCHMARK_TEMPLATE(BM_StaticFactorizedRiccati, 5, 5)->Arg(100);
-    // BENCHMARK_TEMPLATE(BM_StaticFactorizedRiccati, 6, 5)->Arg(100);
+    BENCHMARK_TEMPLATE(BM_StaticFactorizedRiccati, 4, 4)->Arg(100);
+    BENCHMARK_TEMPLATE(BM_StaticFactorizedRiccati, 5, 5)->Arg(100);
+    BENCHMARK_TEMPLATE(BM_StaticFactorizedRiccati, 6, 6)->Arg(100);
     // BENCHMARK_TEMPLATE(BM_StaticFactorizedRiccati, 7, 5)->Arg(100);
     // BENCHMARK_TEMPLATE(BM_StaticFactorizedRiccati, 8, 5)->Arg(100);
     // BENCHMARK_TEMPLATE(BM_StaticFactorizedRiccati, 9, 5)->Arg(100);
     // BENCHMARK_TEMPLATE(BM_StaticFactorizedRiccati, 10, 5)->Arg(100);
-    BENCHMARK_TEMPLATE(BM_StaticFactorizedRiccati, 30, 5)->Arg(100);
+    BENCHMARK_TEMPLATE(BM_StaticFactorizedRiccati, 30, 1)->Arg(100);
+    BENCHMARK_TEMPLATE(BM_StaticFactorizedRiccati, 30, 30)->Arg(100);
 
     //BENCHMARK(BM_FactorizedRiccati)->Args({1, 2, 1});
 }
