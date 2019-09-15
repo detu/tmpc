@@ -8,6 +8,7 @@
 #include <tmpc/Traits.hpp>
 #include <tmpc/Math.hpp>
 #include <tmpc/math/Llh.hpp>
+#include <tmpc/math/SyrkPotrf.hpp>
 
 #include <boost/throw_exception.hpp>
 
@@ -92,11 +93,7 @@ namespace tmpc
                     blaze::submatrix<0, NU, NX, NX>(LBLA_) = trans(Lcal_next) * get(qp.A(), e);
 
                     // Alg 3 line 4, 5
-                    {
-                        decltype(auto) ABPBA = derestrict(vd_u.LL_);
-                        ABPBA = declsym(get(qp.H(), u)) + declsym(trans(LBLA_) * LBLA_);
-                        tmpc::llh(ABPBA);
-                    }
+                    tmpc::syrkPotrf(LBLA_, declsym(get(qp.H(), u)), vd_u.LL_);
 
                     // Alg 2 line 3.
                     // Pb_p = P_{n+1}^T * b_n + p_{n+1} = \mathcal{L}_{n+1} * \mathcal{L}_{n+1}^T * b_n + p_{n+1}
