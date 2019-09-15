@@ -43,8 +43,8 @@ namespace tmpc :: benchmark
 
     
     BENCHMARK_TEMPLATE(BM_SyrkPotrf_blaze_Static, double, 4, 5);
-    BENCHMARK_TEMPLATE(BM_SyrkPotrf_blaze_Static, double, 30, 35);
+    BENCHMARK_TEMPLATE(BM_SyrkPotrf_blaze_Static, double, 30, 60);
 
     BENCHMARK_TEMPLATE(BM_SyrkPotrf_tmpc_Static, double, 4, 5);
-    BENCHMARK_TEMPLATE(BM_SyrkPotrf_tmpc_Static, double, 30, 35);
+    BENCHMARK_TEMPLATE(BM_SyrkPotrf_tmpc_Static, double, 30, 60);
 }
