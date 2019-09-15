@@ -6,78 +6,97 @@
 namespace tmpc :: benchmark
 {
     template <typename Real, size_t N, bool SO>
-    static Real LowerMatrixScalarMultiplyStatic_Impl(blaze::StaticMatrix<Real, N, N, SO>& A);
-
-
-    template <typename Real, size_t N, bool SO>
-    static Real LowerMatrixScalarMultiplyStaticLoop_Impl(blaze::StaticMatrix<Real, N, N, SO>& A);
-
-
-    template <typename Real, size_t N, bool SO>
-    static void BM_LowerMatrixScalarMultiplyStatic(::benchmark::State& state)
+    static void BM_LowerMatrixScalarMultiplyStatic_Submatrix(::benchmark::State& state)
     {
         blaze::StaticMatrix<Real, N, N, SO> A;        
         randomize(A);
 
         for (auto _ : state)
-            ::benchmark::DoNotOptimize(LowerMatrixScalarMultiplyStatic_Impl(A));
+        {
+            for (size_t k = 0; k < N; ++k)
+            {
+                size_t const rs = N - k - 1;
+                auto A21 = submatrix(A, k + 1, k, rs, 1);
+
+                A21 *= 1.1;
+            }
+
+            ::benchmark::DoNotOptimize(A(N - 1, N - 1));
+        }
     }
 
 
     template <typename Real, size_t N, bool SO>
-    static void BM_LowerMatrixScalarMultiplyStaticLoop(::benchmark::State& state)
+    static void BM_LowerMatrixScalarMultiplyStatic_SubmatrixColumn(::benchmark::State& state)
     {
         blaze::StaticMatrix<Real, N, N, SO> A;        
         randomize(A);
 
         for (auto _ : state)
-            ::benchmark::DoNotOptimize(LowerMatrixScalarMultiplyStaticLoop_Impl(A));
+        {
+            for (size_t k = 0; k < N; ++k)
+            {
+                size_t const rs = N - k - 1;
+                auto A21 = submatrix(A, k + 1, k, rs, 1);
+
+                column(A21, 0) *= 1.1;
+            }
+
+            ::benchmark::DoNotOptimize(A(N - 1, N - 1));
+        }
     }
 
 
     template <typename Real, size_t N, bool SO>
-    static Real LowerMatrixScalarMultiplyStatic_Impl(blaze::StaticMatrix<Real, N, N, SO>& A)
+    static void BM_LowerMatrixScalarMultiplyStatic_ColumnSubvector(::benchmark::State& state)
     {
-        for (size_t k = 0; k < N; ++k)
+        blaze::StaticMatrix<Real, N, N, SO> A;        
+        randomize(A);
+
+        for (auto _ : state)
         {
-            size_t const rs = N - k - 1;
-            auto A21 = submatrix(A, k + 1, k, rs, 1);
+            for (size_t k = 0; k < N; ++k)
+            {
+                size_t const rs = N - k - 1;
+                auto A_k = column(A, k);
 
-            A21 *= 1.1;
+                subvector(A_k, k + 1, rs) *= 1.1;
+            }
+
+            ::benchmark::DoNotOptimize(A(N - 1, N - 1));
         }
-
-        return A(N - 1, N - 1);
-
-        // auto A21 = submatrix(A, 1, 0, N - 1, 1);
-        // A21 *= 1.1;
-
-        // return A21(N - 2, 0);
     }
 
 
     template <typename Real, size_t N, bool SO>
-    static Real LowerMatrixScalarMultiplyStaticLoop_Impl(blaze::StaticMatrix<Real, N, N, SO>& A)
+    static void BM_LowerMatrixScalarMultiplyStatic_Loop(::benchmark::State& state)
     {
-        for (size_t k = 0; k < N; ++k)
+        blaze::StaticMatrix<Real, N, N, SO> A;
+        randomize(A);
+
+        for (auto _ : state)
         {
-            size_t const rs = N - k - 1;
-            auto A21 = submatrix(A, k + 1, k, rs, 1);
+            for (size_t k = 0; k < N; ++k)
+            {
+                size_t const rs = N - k - 1;
+                auto A21 = submatrix(A, k + 1, k, rs, 1);
 
-            for (size_t i = 0; i < rs; ++i)
-                A21(i, 0) *= 1.1;
+                for (size_t i = 0; i < rs; ++i)
+                    A21(i, 0) *= 1.1;
+            }
+
+            ::benchmark::DoNotOptimize(A(N - 1, N - 1));
         }
-
-        return A(N - 1, N - 1);
-
-        // auto A21 = submatrix(A, 1, 0, N - 1, 1);
-
-        // for (size_t i = 0; i < N - 1; ++i)
-        //     A21(i, 0) *= 1.1;
-
-        // return A(N - 2, 0);
     }
     
     
-    BENCHMARK_TEMPLATE(BM_LowerMatrixScalarMultiplyStatic, double, 5, blaze::columnMajor);
-    BENCHMARK_TEMPLATE(BM_LowerMatrixScalarMultiplyStaticLoop, double, 5, blaze::columnMajor);
+    BENCHMARK_TEMPLATE(BM_LowerMatrixScalarMultiplyStatic_Submatrix, double, 5, blaze::columnMajor);
+    BENCHMARK_TEMPLATE(BM_LowerMatrixScalarMultiplyStatic_SubmatrixColumn, double, 5, blaze::columnMajor);
+    BENCHMARK_TEMPLATE(BM_LowerMatrixScalarMultiplyStatic_ColumnSubvector, double, 5, blaze::columnMajor);
+    BENCHMARK_TEMPLATE(BM_LowerMatrixScalarMultiplyStatic_Loop, double, 5, blaze::columnMajor);
+
+    BENCHMARK_TEMPLATE(BM_LowerMatrixScalarMultiplyStatic_Submatrix, double, 50, blaze::columnMajor);
+    BENCHMARK_TEMPLATE(BM_LowerMatrixScalarMultiplyStatic_SubmatrixColumn, double, 50, blaze::columnMajor);
+    BENCHMARK_TEMPLATE(BM_LowerMatrixScalarMultiplyStatic_ColumnSubvector, double, 50, blaze::columnMajor);
+    BENCHMARK_TEMPLATE(BM_LowerMatrixScalarMultiplyStatic_Loop, double, 50, blaze::columnMajor);
 }
