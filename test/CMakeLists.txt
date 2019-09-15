@@ -67,6 +67,7 @@ add_executable(test-tmpc
     math/RankTest.cpp
     math/LlhTest.cpp
     math/SyrkPotrfTest.cpp
+    math/TrsvTest.cpp
 
     numeric/CentralDifferenceDerivativeTest.cpp
     numeric/NewtonSolverTest.cpp
