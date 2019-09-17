@@ -5,12 +5,13 @@ find_package(Threads REQUIRED)
 #~~~~~~~~~~~~~~~~
 add_executable(bench-tmpc
     CondensingBench.cpp
-    math/MathBench.cpp
+    math/ZeroMatrixAssign.cpp
     math/Cholesky.cpp
     math/Syrk.cpp
     math/Trmm.cpp
     math/Trmv.cpp
     math/Trsv.cpp
+    math/Gemm.cpp
     math/SqrNorm.cpp
     math/LowerMatrixScalarMultiply.cpp
     math/SyrkPotrf.cpp
