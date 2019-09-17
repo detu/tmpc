@@ -30,6 +30,7 @@ namespace tmpc :: benchmark
 
         randomize(A);
         randomize(B);
+        randomize(C);
 
         /// @brief D <= beta * C + alpha * A^T * B
         // inline void gemm_tn(size_t m, size_t n, size_t k,
@@ -43,8 +44,8 @@ namespace tmpc :: benchmark
         for (auto _ : state)
             gemm_tn(m, n, k, 1., A, 0, 0, B, 0, 0, 1., C, 0, 0, D, 0, 0);
     }
-
     
+
     ADD_BM_GEMM(2, 2, 2);
     ADD_BM_GEMM(3, 3, 3);
     ADD_BM_GEMM(5, 5, 5);
