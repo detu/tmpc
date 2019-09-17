@@ -60,32 +60,36 @@ namespace tmpc
             if constexpr (!blaze::IsLower_v<MT3>)
                 reset(submatrix(l, 0, k, k, 1));
             
-            auto in_C = begin(C, k) + k;
-            auto out_D = begin(l, k) + k;
-            
         #if 1
             for (size_t j = k; j < n; ++j)
-                *out_D++ = *in_C++ + dot(column(A, j), column(A, k));
+                l(j, k) = (~C)(j, k) + dot(column(A, j), column(A, k));
         #else
-            for (size_t j = k; j < n; ++j, ++in_C, ++out_D)
+            for (size_t j = k; j < n; ++j)
             {
-                auto in_Aj = begin(~A, j);
-                auto in_Ak = begin(~A, k);
-
-                SIMDType simd_s = blaze::set(0.);
+                SIMDType xmm0, xmm1, xmm2, xmm3;
                 size_t jj = 0;
 
-                for ( ; jj + SIMDSIZE <= m; jj += SIMDSIZE)
+                for ( ; jj + 4 * SIMDSIZE <= m; jj += 4 * SIMDSIZE)
                 {
-                    simd_s += in_Aj.load() * in_Ak.load();
-                    in_Aj += SIMDSIZE;
-                    in_Ak += SIMDSIZE;
+                    xmm0 = xmm0 + (~A).load(jj, j) * (~A).load(jj, k);
+                    xmm1 = xmm1 + (~A).load(jj + 1 * SIMDSIZE, j) * (~A).load(jj + 1 * SIMDSIZE, k);
+                    xmm2 = xmm2 + (~A).load(jj + 2 * SIMDSIZE, j) * (~A).load(jj + 2 * SIMDSIZE, k);
+                    xmm3 = xmm3 + (~A).load(jj + 3 * SIMDSIZE, j) * (~A).load(jj + 3 * SIMDSIZE, k);
                 }
 
-                Scalar s = sum(simd_s);
+                for ( ; jj + 2 * SIMDSIZE <= m; jj += 2 * SIMDSIZE)
+                {
+                    xmm0 = xmm0 + (~A).load(jj, j) * (~A).load(jj, k);
+                    xmm1 = xmm1 + (~A).load(jj + SIMDSIZE, j) * (~A).load(jj + SIMDSIZE, k);
+                }
+
+                for ( ; jj + SIMDSIZE <= m; jj += SIMDSIZE)
+                    xmm0 = xmm0 + (~A).load(jj, j) * (~A).load(jj, k);
+
+                Scalar s = sum(xmm0 + xmm1 + xmm2 + xmm3);
 
                 for ( ; jj < m; ++jj)
-                    s += *in_Aj++ * *in_Ak++;
+                    s += (~A)(jj, j) * (~A)(jj, k);
 
                 *out_D = *in_C + s;
             }
@@ -95,41 +99,59 @@ namespace tmpc
         #if 1
             // TODO: rewrite this loop as matrix-vector multiplication when this issue is fixed:
             // https://bitbucket.org/blaze-lib/blaze/issues/287/is-there-a-way-to-specify-that-the
+            //
+            // submatrix(l, k, k, rs, 1) -= submatrix(l, k, 0, rs, k) * trans(submatrix(l, k, 0, 1, k));
+            //
             for (size_t j = 0; j < k; ++j)
+                // NOTE 1:
                 // Blaze detects that the columns are different and therefore there is no aliasing.
+                //
+                // NOTE 2:
+                // "unchecked" on the left-hand side of the assignment seems to make the code faster,
+                // whereas on the right side it slows it dows.
+                //
+                // NOTE: regarding checked vs unchecked performance, see this issue:
+                // https://bitbucket.org/blaze-lib/blaze/issues/291/unchecked-column-of-a-checked-submatrix-is
+                //
                 column(D21, 0) -= (~D)(k, j) * column(D20, j);
-        
         #else
             for (size_t j = 0; j < k; ++j)
             {
-                auto in = begin(l, j) + k;
-                auto out = begin(l, k) + k;
-
-                Scalar const D_kj = *in;
+                Scalar const D_kj = (~D)(k, j);
                 SIMDType const simd_D_kj = blaze::set(D_kj);
                 size_t i = k;
 
-                bool constexpr remainder = true;
-                size_t const ipos( ( remainder )?( n & size_t(-SIMDSIZE) ):( n ) );
+                // bool constexpr remainder = true;
+                // size_t const ipos( ( remainder )?( n & size_t(-SIMDSIZE) ):( n ) );
 
-                for ( ; i < ipos; i += SIMDSIZE)
+                for ( ; i % SIMDSIZE != 0; ++i)
+                    l(i, k) -= l(i, j) * D_kj;
+
+                for ( ; i + 4 * SIMDSIZE <= n; i += 4 * SIMDSIZE)
                 {
-                    out.storeu(out.loadu() - in.loadu() * simd_D_kj);
-                    in += SIMDSIZE;
-                    out += SIMDSIZE;
+                    l.storea(i, k, l.loada(i, k) - l.loada(i, j) * simd_D_kj);
+                    l.storea(i + 1 * SIMDSIZE, k, l.loada(i + 1 * SIMDSIZE, k) - l.loada(i + 1 * SIMDSIZE, j) * simd_D_kj);
+                    l.storea(i + 2 * SIMDSIZE, k, l.loada(i + 2 * SIMDSIZE, k) - l.loada(i + 2 * SIMDSIZE, j) * simd_D_kj);
+                    l.storea(i + 3 * SIMDSIZE, k, l.loada(i + 3 * SIMDSIZE, k) - l.loada(i + 3 * SIMDSIZE, j) * simd_D_kj);
                 }
 
+                for ( ; i + 2 * SIMDSIZE <= n; i += 2 * SIMDSIZE)
+                {
+                    l.storea(i, k, l.loada(i, k) - l.loada(i, j) * simd_D_kj);
+                    l.storea(i + SIMDSIZE, k, l.loada(i + SIMDSIZE, k) - l.loada(i + SIMDSIZE, j) * simd_D_kj);
+                }
+
+                for ( ; i + SIMDSIZE <= n; i += SIMDSIZE)
+                    l.storea(i, k, l.loada(i, k) - l.loada(i, j) * simd_D_kj);
+
                 for ( ; i < n; ++i)
-                    *out++ -= *in++ * D_kj;
+                    l(i, k) -= l(i, j) * D_kj;
             }
         #endif
 
-            out_D = begin(l, k) + k;
-            Scalar x = *out_D;
+            Scalar x = l(k, k);
             if (x <= 0)
                 throw std::runtime_error("Unable to continue Cholesky decomposition of a matrix");
-
-            *out_D++ = x = sqrt(x);
 
             // D21 /= x;
             //
@@ -138,9 +160,32 @@ namespace tmpc
             //
             // NOTE 2: from looking from assembly, this loop is not vectorized.
             //
-            Scalar const x_inv = 1. / x;
-            for (size_t i = k + 1; i < n; ++i)
-                *out_D++ *= x_inv;
+            // NOTE 3: don't do l(k, k) = sqrt(x) to avoid transferring a single value to memory.
+            // Instead, assign it as a part of vectorized multiply operation.
+            //
+            Scalar const x_inv = 1. / sqrt(x);
+            SIMDType simd_x_inv = blaze::set(x_inv);
+            size_t i = k;
+
+            for ( ; i % SIMDSIZE != 0; ++i)
+                l(i, k) *= x_inv;
+
+            for ( ; i + 4 * SIMDSIZE <= n; i += 4 * SIMDSIZE)
+            {
+                l.storea(i, k, l.loada(i, k) * simd_x_inv);
+                l.storea(i + 1 * SIMDSIZE, k, l.loada(i + 1 * SIMDSIZE, k) * simd_x_inv);
+                l.storea(i + 2 * SIMDSIZE, k, l.loada(i + 2 * SIMDSIZE, k) * simd_x_inv);
+                l.storea(i + 3 * SIMDSIZE, k, l.loada(i + 3 * SIMDSIZE, k) * simd_x_inv);
+            }
+
+            for ( ; i + 2 * SIMDSIZE <= n; i += 2 * SIMDSIZE)
+            {
+                l.storea(i, k, l.loada(i, k) * simd_x_inv);
+                l.storea(i + SIMDSIZE, k, l.loada(i + SIMDSIZE, k) * simd_x_inv);
+            }
+
+            for ( ; i < n; ++i)
+                l(i, k) *= x_inv;
         }
     }
 }
