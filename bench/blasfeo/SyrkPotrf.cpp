@@ -5,7 +5,7 @@
 #include <benchmark/benchmark.h>
 
 
-namespace tmpc :: testing
+namespace tmpc :: benchmark
 {
     void BM_SyrkPotrf_blasfeo(::benchmark::State& state)
     {

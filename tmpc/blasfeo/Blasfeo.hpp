@@ -7,3 +7,5 @@
 #include <tmpc/blasfeo/DynamicMatrix.hpp>
 
 #include <tmpc/blasfeo/SyrkPotrf.hpp>
+#include <tmpc/blasfeo/Trmm.hpp>
+#include <tmpc/blasfeo/Gemm.hpp>
