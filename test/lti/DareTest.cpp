@@ -52,6 +52,6 @@ namespace tmpc :: testing
 
         // Substitute the solution into the Riccati equation and check the residual.
         EXPECT_TRUE(approxEqual(evaluate(trans(A) * X * A - X - trans(A) * X * B * inv(trans(B) * X * B + R) * trans(B) * X * A + Q),
-            blaze::ZeroMatrix<double>(5, 5), 1e-13));
+            blaze::ZeroMatrix<double>(5, 5), 1e-12));
     }
 }
