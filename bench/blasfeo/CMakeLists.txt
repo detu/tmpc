@@ -2,6 +2,7 @@ add_executable(bench-tmpc-blasfeo
     Main.cpp
     Trmm.cpp
     Gemm.cpp
+    GemmNoWrapper.cpp
     SyrkPotrf.cpp
 )
 
