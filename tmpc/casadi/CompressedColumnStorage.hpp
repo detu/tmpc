@@ -1,7 +1,7 @@
 #pragma once
 
 #include <tmpc/SizeT.hpp>
-#include <tmpc/casadi_interface/Sparsity.hpp>
+#include <tmpc/casadi/Sparsity.hpp>
 
 #include <casadi/mem.h>
 
@@ -10,7 +10,7 @@
 #include <stdexcept>
 
 
-namespace casadi_interface
+namespace tmpc :: casadi
 {
 	/// @brief Copy data from a compressed column storage to a Blaze matrix.
 	///

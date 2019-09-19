@@ -1,8 +1,8 @@
-tmpc_generate_casadi_function(GENERATED_SRCS GENERATED_HDRS "casadi_math_bench.py")
+tmpc_generate_casadi_function(GENERATED_SRCS GENERATED_HDRS "generated_gemm.py")
 
 add_executable(bench-tmpc-casadi
     Main.cpp
-    CasadiMathBench.cpp
+    Gemm.cpp
     ${GENERATED_SRCS} 
     ${GENERATED_HDRS}
 )

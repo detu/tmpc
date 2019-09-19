@@ -8,8 +8,8 @@
 #pragma once
 
 #include <tmpc/SizeT.hpp>
-#include <tmpc/casadi_interface/Sparsity.hpp>
-#include <tmpc/casadi_interface/CompressedColumnStorage.hpp>
+#include <tmpc/casadi/Sparsity.hpp>
+#include <tmpc/casadi/CompressedColumnStorage.hpp>
 
 #include <vector>
 #include <string>
@@ -26,7 +26,7 @@
 #include <blaze/Math.h>
 
 
-namespace casadi_interface
+namespace tmpc :: casadi
 {
 	/// TODO: implement move constructor.
 	class GeneratedFunction

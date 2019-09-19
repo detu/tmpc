@@ -1,6 +1,6 @@
 #pragma once
 
-#include <tmpc/casadi_interface/GeneratedFunction.hpp>
+#include <tmpc/casadi/GeneratedFunction.hpp>
 
 #include <pendulum_ode_generated.h>
 
@@ -32,7 +32,7 @@ namespace tmpc :: testing
 		typedef blaze::StaticMatrix<double, NR, NU, blaze::columnMajor> ResInputMatrix;
 
 	protected:
-		casadi_interface::GeneratedFunction const _ode {pendulum_ode_functions()};
+		casadi::GeneratedFunction const _ode {pendulum_ode_functions()};
 	};
 
 
@@ -80,7 +80,7 @@ namespace tmpc :: testing
 				StateVector const& x0_seed, InputVector const& u_seed, StateVector& xdot, StateVector& xdot_sens) const
 		{
 			std::nullptr_t null;
-			static casadi_interface::GeneratedFunction const _ode(pendulum_ode_sens_functions());
+			static casadi::GeneratedFunction const _ode(pendulum_ode_sens_functions());
 			_ode(std::tie(t, x0, u0, x0_seed, u_seed), std::tie(xdot, xdot_sens));
 		}
 

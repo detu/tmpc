@@ -1,4 +1,4 @@
-#include <tmpc/casadi_interface/CompressedColumnStorage.hpp>
+#include <tmpc/casadi/CompressedColumnStorage.hpp>
 #include <tmpc/Testing.hpp>
 
 #include <blaze/Math.h>
@@ -8,7 +8,7 @@
 
 namespace tmpc :: testing
 {
-	using namespace casadi_interface;
+	using namespace tmpc :: casadi;
 
 
 	TEST(FromCompressedColumnStorageTest, testDense)

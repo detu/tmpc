@@ -83,7 +83,7 @@ add_executable(test-tmpc
 )
 
 
-if (TMPC_WITH_CASADI_INTERFACE)
+if (TMPC_WITH_CASADI)
     # Generate code and test data for rk4 test
     add_custom_command(
         OUTPUT
@@ -154,8 +154,8 @@ if (TARGET casadi)
 endif ()
 
 
-if (TMPC_WITH_CASADI_INTERFACE)
-    add_subdirectory(casadi_interface)
+if (TMPC_WITH_CASADI)
+    add_subdirectory(casadi)
 endif ()
 
 if (TMPC_WITH_JSON)

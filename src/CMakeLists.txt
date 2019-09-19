@@ -44,9 +44,9 @@ target_link_libraries(tmpc
 #
 # Add CasADi interface
 #
-if (TMPC_WITH_CASADI_INTERFACE)
+if (TMPC_WITH_CASADI)
     add_library(tmpc-casadi STATIC 
-        casadi_interface/GeneratedFunction.cpp
+        casadi/GeneratedFunction.cpp
     )
 
     target_include_directories(tmpc-casadi

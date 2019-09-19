@@ -1,4 +1,4 @@
-#include <tmpc/casadi_interface/GeneratedFunction.hpp>
+#include <tmpc/casadi/GeneratedFunction.hpp>
 #include <tmpc/Testing.hpp>
 
 #include <test_functions.h>
@@ -18,14 +18,14 @@ namespace tmpc :: testing
 	using blaze::columnMajor;
 	using blaze::rowVector;
 	using blaze::columnVector;
-	using namespace casadi_interface;	
+	using namespace tmpc :: casadi;	
 
 
 	class GeneratedFunctionTest 
 	: 	public Test
 	{
 	protected:
-		casadi_interface::GeneratedFunction fun_ {f_functions()};
+		casadi::GeneratedFunction fun_ {f_functions()};
 		using MatrixA = StaticMatrix<Real, 3, 2, columnMajor>;
 		using MatrixB = StaticMatrix<Real, 2, 2, columnMajor>;
 		using MatrixX = StaticMatrix<Real, 3, 2>;
@@ -136,7 +136,7 @@ namespace tmpc :: testing
 		StaticMatrix<Real, 3, 2, columnMajor> X, X1;
 		StaticVector<Real, 2, rowVector> Y, Y1;
 
-		casadi_interface::GeneratedFunction const fun_copy = fun_;
+		casadi::GeneratedFunction const fun_copy = fun_;
 		fun_(std::tie(A, B, x), std::tie(X, Y));
 		fun_copy(std::tie(A, B, x), std::tie(X1, Y1));
 

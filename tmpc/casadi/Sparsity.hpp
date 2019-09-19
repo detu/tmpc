@@ -7,7 +7,7 @@
 #include <stdexcept>
 
 
-namespace casadi_interface
+namespace tmpc :: casadi
 {
 	/// @brief Object-oriented view of Compressed Column Storage sparsity patterns.
     class Sparsity

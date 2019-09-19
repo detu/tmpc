@@ -23,7 +23,7 @@ add_executable(bench-tmpc
 )
 
 
-if (TMPC_WITH_CASADI_INTERFACE)
+if (TMPC_WITH_CASADI)
     add_subdirectory("casadi")
 endif ()
 

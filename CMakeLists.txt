@@ -55,14 +55,14 @@ else ()
 endif ()
 
 
-# TMPC_WITH_CASADI_INTERFACE
-set(TMPC_WITH_CASADI_INTERFACE ON CACHE BOOL "Build tmpc with CasADi generated function support classes")
+# TMPC_WITH_CASADI
+set(TMPC_WITH_CASADI ON CACHE BOOL "Build tmpc with CasADi generated function support classes")
 
-if (TMPC_WITH_CASADI_INTERFACE)
+if (TMPC_WITH_CASADI)
     if (TARGET casadi)
         include("CMakeModules/GenerateCasadiFunction.cmake")
     else ()
-        message(SEND_ERROR, "You have selected TMPC_WITH_CASADI_INTERFACE, but CasADi was not found")
+        message(SEND_ERROR, "You have selected TMPC_WITH_CASADI, but CasADi was not found")
     endif ()
 endif ()
 

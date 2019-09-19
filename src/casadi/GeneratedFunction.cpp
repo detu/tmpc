@@ -1,7 +1,7 @@
-#include <tmpc/casadi_interface/GeneratedFunction.hpp>
+#include <tmpc/casadi/GeneratedFunction.hpp>
 
 
-namespace casadi_interface
+namespace tmpc :: casadi
 {
     GeneratedFunction::GeneratedFunction(casadi_functions const * f, std::string const& n)
     :	fun_(f)
