@@ -29,7 +29,7 @@ namespace tmpc :: blasfeo
 
         /// \brief Create a matrix of given size.
         DynamicMatrix(size_t m, size_t n)
-        :   data_(detail::alignedAlloc<Real>(memsize_mat<Real>(m, n)))
+        :   data_(memsize_mat<Real>(m, n))
         {
             create_mat(m, n, *this, data_.get());
         }
@@ -55,7 +55,7 @@ namespace tmpc :: blasfeo
 
                 if (required_capacity > capacity_)
                 {
-                    data_.reset(detail::alignedAlloc<Real>(required_capacity));
+                    data_ = detail::AlignedStorage(required_capacity);
                     capacity_ = required_capacity;
                 }
 
@@ -81,7 +81,7 @@ namespace tmpc :: blasfeo
 
 
     private:
-        std::unique_ptr<Real[], detail::AlignedDeleter> data_;
+        detail::AlignedStorage data_;
 
         /// @brief Actually allocated bytes pointed by data_
         size_t capacity_ = 0;

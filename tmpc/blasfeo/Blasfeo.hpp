@@ -9,3 +9,4 @@
 #include <tmpc/blasfeo/SyrkPotrf.hpp>
 #include <tmpc/blasfeo/Trmm.hpp>
 #include <tmpc/blasfeo/Gemm.hpp>
+#include <tmpc/blasfeo/Alloc.hpp>
