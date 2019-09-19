@@ -13,6 +13,26 @@
 #include <iostream>
 
 
+extern "C"
+{
+    void dgemm_(
+        const char   *transa,
+        const char   *transb,
+        const int *m,
+        const int *n,
+        const int *k,
+        const double *alpha,
+        const double *a,
+        const int *lda,
+        const double *b,
+        const int *ldb,
+        const double *beta,
+        double *c,
+        const int *ldc
+    );
+}
+
+
 namespace tmpc :: benchmark
 {
     using std::size_t;
@@ -195,15 +215,39 @@ namespace tmpc :: benchmark
 		    1.0, A.get(), k, B.get(), k, 1.0, C.get(), m);
 
     }
+	
+	
+    static void BM_gemm_blas(::benchmark::State& state)
+    {
+        int const m = state.range(0);
+        int const n = state.range(1);
+        int const k = state.range(2);
+
+        auto A = std::make_unique<double []>(k * m);
+        auto B = std::make_unique<double []>(k * n);
+        auto C = std::make_unique<double []>(m * n);
+
+        randomize(k, m, A.get());
+        randomize(k, n, B.get());
+        randomize(m, n, C.get());
+
+        char const trans_A = 'T';
+        char const trans_B = 'N';
+        double const alpha = 1.0;
+        double const beta = 1.0;
+
+        for (auto _ : state)
+            dgemm_(&trans_A, &trans_B, &m, &n, &k, &alpha, A.get(), &k, B.get(), &k, &beta, C.get(), &m);
+    }
 
     
     BENCHMARK(BM_gemm_blasfeo)
-        ->Args({2, 2, 2, 0x20})
-        ->Args({3, 3, 3, 0x20})
-        ->Args({5, 5, 5, 0x20})
-        ->Args({10, 10, 10, 0x20})
-        ->Args({20, 20, 20, 0x20})
-        ->Args({30, 30, 30, 0x20})
+        ->Args({2, 2, 2, 0x40})
+        ->Args({3, 3, 3, 0x40})
+        ->Args({5, 5, 5, 0x40})
+        ->Args({10, 10, 10, 0x40})
+        ->Args({20, 20, 20, 0x40})
+        ->Args({30, 30, 30, 0x40})
         ->Args({2, 2, 2, 0x1000})
         ->Args({3, 3, 3, 0x1000})
         ->Args({5, 5, 5, 0x1000})
@@ -212,28 +256,37 @@ namespace tmpc :: benchmark
         ->Args({30, 30, 30, 0x1000});
 
 
-#if 0
+#if 1
     // Run benchmarks in normal order
     BENCHMARK(BM_gemm_blasfeo_reuse_memory)
-        ->Args({2, 2, 2, 0x20})
-        ->Args({3, 3, 3, 0x20})
-        ->Args({5, 5, 5, 0x20})
-        ->Args({10, 10, 10, 0x20})
-        ->Args({20, 20, 20, 0x20})
-        ->Args({30, 30, 30, 0x20});
+        ->Args({2, 2, 2, 0x40})
+        ->Args({3, 3, 3, 0x40})
+        ->Args({5, 5, 5, 0x40})
+        ->Args({10, 10, 10, 0x40})
+        ->Args({20, 20, 20, 0x40})
+        ->Args({30, 30, 30, 0x40});
 #else
     // Run benchmarks in reverse order
     BENCHMARK(BM_gemm_blasfeo_reuse_memory)
-        ->Args({30, 30, 30, 0x20})
-        ->Args({20, 20, 20, 0x20})
-        ->Args({10, 10, 10, 0x20})
-        ->Args({5, 5, 5, 0x20})
-        ->Args({3, 3, 3, 0x20})
-        ->Args({2, 2, 2, 0x20});
+        ->Args({30, 30, 30, 0x40})
+        ->Args({20, 20, 20, 0x40})
+        ->Args({10, 10, 10, 0x40})
+        ->Args({5, 5, 5, 0x40})
+        ->Args({3, 3, 3, 0x40})
+        ->Args({2, 2, 2, 0x40});
 #endif
 
 
     BENCHMARK(BM_gemm_cblas)
+        ->Args({2, 2, 2})
+        ->Args({3, 3, 3})
+        ->Args({5, 5, 5})
+        ->Args({10, 10, 10})
+        ->Args({20, 20, 20})
+        ->Args({30, 30, 30});
+
+
+    BENCHMARK(BM_gemm_blas)
         ->Args({2, 2, 2})
         ->Args({3, 3, 3})
         ->Args({5, 5, 5})
