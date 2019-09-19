@@ -6,9 +6,6 @@
 #include <memory>
 
 
-#define ADD_BM_GEMM(m, n, p) BENCHMARK_CAPTURE(BM_gemm, m##x##n##x##p##_blasfeo, m, n, p)
-
-
 namespace tmpc :: benchmark
 {
     template <typename MT>
@@ -24,9 +21,13 @@ namespace tmpc :: benchmark
     }
 
 
-    static void BM_gemm(::benchmark::State& state, size_t m, size_t n, size_t k)
+    static void BM_gemm(::benchmark::State& state)
     {
-        blasfeo::DynamicMatrix<double> A(k, m), B(n, k), C(m, n), D(m, n);
+        size_t const m = state.range(0);
+        size_t const n = state.range(1);
+        size_t const k = state.range(2);
+
+        blasfeo::DynamicMatrix<double> A(k, m), B(k, n), C(m, n), D(m, n);
 
         randomize(A);
         randomize(B);
@@ -46,10 +47,11 @@ namespace tmpc :: benchmark
     }
     
 
-    ADD_BM_GEMM(2, 2, 2);
-    ADD_BM_GEMM(3, 3, 3);
-    ADD_BM_GEMM(5, 5, 5);
-    ADD_BM_GEMM(10, 10, 10);
-    ADD_BM_GEMM(20, 20, 20);
-    ADD_BM_GEMM(30, 30, 30);
+    BENCHMARK(BM_gemm)
+        ->Args({2, 2, 2})
+        ->Args({3, 3, 3})
+        ->Args({5, 5, 5})
+        ->Args({10, 10, 10})
+        ->Args({20, 20, 20})
+        ->Args({30, 30, 30});
 }
