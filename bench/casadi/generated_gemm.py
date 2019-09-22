@@ -19,7 +19,7 @@ def generated_gemm(m, n, k, type_name):
 def functions():
     f = []
     for T in ['MX', 'SX']:
-        for m in [2, 3, 5, 10, 20, 30]:
+        for m in range(1, 41):
             f.append(generated_gemm(m, m, m, T))
     
     return f
