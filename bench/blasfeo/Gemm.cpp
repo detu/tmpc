@@ -8,6 +8,9 @@
 
 namespace tmpc :: benchmark
 {
+    using namespace ::benchmark;
+
+    
     template <typename MT>
     static void randomize(blasfeo::Matrix<MT>& A)
     {
@@ -24,8 +27,8 @@ namespace tmpc :: benchmark
     static void BM_gemm(::benchmark::State& state)
     {
         size_t const m = state.range(0);
-        size_t const n = state.range(1);
-        size_t const k = state.range(2);
+        size_t const n = m;
+        size_t const k = m;
 
         blasfeo::DynamicMatrix<double> A(k, m), B(k, n), C(m, n), D(m, n);
 
@@ -44,14 +47,11 @@ namespace tmpc :: benchmark
         
         for (auto _ : state)
             gemm_tn(m, n, k, 1., A, 0, 0, B, 0, 0, 1., C, 0, 0, D, 0, 0);
+
+        state.counters["flops"] = Counter(m * m * m, Counter::kIsIterationInvariantRate);
+        state.counters["m"] = m;
     }
     
 
-    BENCHMARK(BM_gemm)
-        ->Args({2, 2, 2})
-        ->Args({3, 3, 3})
-        ->Args({5, 5, 5})
-        ->Args({10, 10, 10})
-        ->Args({20, 20, 20})
-        ->Args({30, 30, 30});
+    BENCHMARK(BM_gemm)->DenseRange(1, 40);
 }
