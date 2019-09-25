@@ -57,12 +57,7 @@ namespace tmpc :: testing
 		ASSERT_EQ(rows(m), 2);
 		ASSERT_EQ(columns(m), 3);
 
-		m.resize(4, 5);
-		ASSERT_EQ(rows(m), 4);
-		ASSERT_EQ(columns(m), 5);
-
-		// Assign to the last element to check that there is enough memory s.t. we don't SEGFAULT
-		m(3, 4) = 42.;
+		EXPECT_THROW(m.resize(4, 5), std::invalid_argument);
 	}
 
 
@@ -84,8 +79,11 @@ namespace tmpc :: testing
 
 	TEST(DynamicMatrixTest, testAssignBlazeMatrix)
 	{
-		blasfeo::DynamicMatrix<double> lhs;
-		blaze::DynamicMatrix<double, blaze::columnMajor> rhs(2, 3);
+		size_t constexpr M = 2;
+		size_t constexpr N = 3;
+
+		blasfeo::DynamicMatrix<double> lhs(M, N);
+		blaze::DynamicMatrix<double, blaze::columnMajor> rhs(M, N);
 		randomize(rhs);
 
 		lhs = std::as_const(rhs);
@@ -100,8 +98,11 @@ namespace tmpc :: testing
 
 	TEST(DynamicMatrixTest, testUnpack)
 	{
-		blasfeo::DynamicMatrix<double> B;
-		blaze::DynamicMatrix<double, blaze::columnMajor> A0(2, 3), A1;
+		size_t constexpr M = 2;
+		size_t constexpr N = 3;
+
+		blasfeo::DynamicMatrix<double> B(M, N);
+		blaze::DynamicMatrix<double, blaze::columnMajor> A0(M, N), A1;
 		randomize(A0);
 
 		B = std::as_const(A0);

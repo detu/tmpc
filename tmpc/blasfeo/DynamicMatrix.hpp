@@ -2,7 +2,9 @@
 
 #include <tmpc/blasfeo/BlasfeoMatrix.hpp>
 #include <tmpc/blasfeo/Matrix.hpp>
-#include <tmpc/blasfeo/Memory.hpp>
+#include <tmpc/blasfeo/Alloc.hpp>
+
+#include <tmpc/Exception.hpp>
 
 #include <blaze/Math.h>
 
@@ -22,16 +24,17 @@ namespace tmpc :: blasfeo
     
         /// \brief Create a 0-by-0 matrix.
         DynamicMatrix()
+        :   DynamicMatrix(0, 0)
         {
-            create_mat(0, 0, *this, nullptr);
         }
 
 
         /// \brief Create a matrix of given size.
         DynamicMatrix(size_t m, size_t n)
-        :   data_(memsize_mat<Real>(m, n))
         {
-            create_mat(m, n, *this, data_.get());
+            // Use the BLASFEO allocate_mat mechanism, otherwise you can run into this issue:
+            // https://github.com/giaf/blasfeo/issues/103
+            allocate_mat(m, n, *this);
         }
 
 
@@ -40,7 +43,13 @@ namespace tmpc :: blasfeo
         DynamicMatrix(blaze::DenseMatrix<MT, blaze::columnMajor> const& rhs)
         :   DynamicMatrix(rows(rhs), columns(rhs))
         {
-            *this = rhs;
+            pack_mat(rows(rhs), columns(rhs), data(rhs), spacing(rhs), *this, 0, 0);
+        }
+
+
+        ~DynamicMatrix()
+        {
+            free_mat(*this);
         }
 
 
@@ -50,17 +59,7 @@ namespace tmpc :: blasfeo
         void resize(size_t m, size_t n)
         {
             if (m != rows(*this) || n != columns(*this))
-            {
-                auto const required_capacity = memsize_mat<Real>(m, n);
-
-                if (required_capacity > capacity_)
-                {
-                    data_ = detail::AlignedStorage(required_capacity);
-                    capacity_ = required_capacity;
-                }
-
-                create_mat(m, n, *this, data_.get());
-            }
+                TMPC_THROW_EXCEPTION(std::invalid_argument("BLASFEO matrix cannot be resized"));
         }
 
 
@@ -78,12 +77,5 @@ namespace tmpc :: blasfeo
 
             return *this;
         }
-
-
-    private:
-        detail::AlignedStorage data_;
-
-        /// @brief Actually allocated bytes pointed by data_
-        size_t capacity_ = 0;
     };
 }

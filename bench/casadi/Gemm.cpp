@@ -45,7 +45,7 @@ namespace tmpc :: benchmark
 
         ::casadi::Function f("f", std::vector<X> {A, B, C}, std::vector<X> {C + mtimes(transpose(A), B)});
 
-        td::vector<double> const a(m * m);
+        std::vector<double> const a(m * m);
         std::vector<double> const b(m * m);
         std::vector<double> const c(m * m);
         std::vector<double> d(m * m);
