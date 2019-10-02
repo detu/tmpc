@@ -23,6 +23,15 @@ add_executable(bench-tmpc
 )
 
 
+target_link_libraries(bench-tmpc
+    tmpc
+    benchmark
+    ${CMAKE_THREAD_LIBS_INIT}
+)
+
+
+add_subdirectory("blas")
+
 if (TMPC_WITH_CASADI)
     add_subdirectory("casadi")
 endif ()
@@ -36,10 +45,3 @@ endif ()
 if (TMPC_WITH_HPIPM)
     add_subdirectory("qp-hpipm")
 endif ()
-
-
-target_link_libraries(bench-tmpc
-    tmpc
-    benchmark
-    ${CMAKE_THREAD_LIBS_INIT}
-)

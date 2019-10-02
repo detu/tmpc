@@ -62,30 +62,6 @@ namespace tmpc :: benchmark
 
 
     template <typename Real>
-    static void BM_gemm_blas(::benchmark::State& state)
-    {
-        size_t const m = state.range(0);
-
-        blaze::DynamicMatrix<Real, blaze::columnMajor> A(m, m);
-        randomize(A);
-
-        blaze::DynamicMatrix<Real, blaze::columnMajor> B(m, m);
-        randomize(B);
-
-        blaze::DynamicMatrix<Real, blaze::columnMajor> C(m, m);
-        randomize(C);
-
-        blaze::DynamicMatrix<Real, blaze::columnMajor> D(m, m);
-        
-        for (auto _ : state)
-            gemm(C, trans(A), B, 1.0, 1.0);
-
-        state.counters["flops"] = Counter(m * m * m, Counter::kIsIterationInvariantRate);
-        state.counters["m"] = m;
-    }
-
-
-    template <typename Real>
     static void BM_gemm_loop_naive(::benchmark::State& state)
     {
         size_t const m = state.range(0);
@@ -187,8 +163,6 @@ namespace tmpc :: benchmark
     BENCHMARK_TEMPLATE(BM_gemm_blaze_static, double, 40);    
 
     BENCHMARK_TEMPLATE(BM_gemm_blaze_dynamic, double)->DenseRange(1, 40);
-
-    BENCHMARK_TEMPLATE(BM_gemm_blas, double)->DenseRange(1, 40);
     
     BENCHMARK_TEMPLATE(BM_gemm_loop_naive, double)->DenseRange(1, 40);
     BENCHMARK_TEMPLATE(BM_gemm_loop_optimized, double)->DenseRange(1, 40);
