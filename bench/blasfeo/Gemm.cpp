@@ -46,7 +46,7 @@ namespace tmpc :: benchmark
         //     blasfeo_dmat& sD, size_t di, size_t dj);
         
         for (auto _ : state)
-            gemm_tn(m, n, k, 1., A, 0, 0, B, 0, 0, 1., C, 0, 0, D, 0, 0);
+            gemm_nn(m, n, k, 1., A, 0, 0, B, 0, 0, 1., C, 0, 0, D, 0, 0);
 
         state.counters["flops"] = Counter(m * m * m, Counter::kIsIterationInvariantRate);
         state.counters["m"] = m;

@@ -1,7 +1,7 @@
 #pragma once
 
-#include <blasfeo_d_blas.h>
-#include <blasfeo_s_blas.h>
+#include <blasfeo_d_blasfeo_api.h>
+#include <blasfeo_s_blasfeo_api.h>
 
 
 namespace tmpc :: blasfeo

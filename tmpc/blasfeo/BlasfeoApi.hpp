@@ -5,8 +5,6 @@
 
 #include <blasfeo_d_aux.h>
 #include <blasfeo_s_aux.h>
-#include <blasfeo_d_blas.h>
-#include <blasfeo_s_blas.h>
 
 #include <tmpc/SizeT.hpp>
 
