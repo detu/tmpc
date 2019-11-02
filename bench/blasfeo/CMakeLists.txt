@@ -3,6 +3,7 @@ add_executable(bench-tmpc-blasfeo
     Trmm.cpp
     Gemm.cpp
     SyrkPotrf.cpp
+    Potrf.cpp
 )
 
 

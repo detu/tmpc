@@ -7,7 +7,7 @@
 
 namespace tmpc :: benchmark
 {
-    void BM_SyrkPotrf_blasfeo(::benchmark::State& state)
+    void BM_syrkPotrf(::benchmark::State& state)
     {
         size_t const m = state.range(0), k = state.range(1);
 
@@ -27,5 +27,5 @@ namespace tmpc :: benchmark
     }
 
 
-    BENCHMARK(BM_SyrkPotrf_blasfeo)->Args({5, 4})->Args({60, 30});
+    BENCHMARK(BM_syrkPotrf)->Args({5, 4})->Args({60, 30});
 }
