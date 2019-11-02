@@ -56,7 +56,7 @@ namespace tmpc :: benchmark
         for (auto _ : state)
             f(in, out);
 
-        state.counters["flops"] = Counter(m * m * m, Counter::kIsIterationInvariantRate);
+        state.counters["flops"] = Counter(2 * m * m * m, Counter::kIsIterationInvariantRate);
         state.counters["m"] = m;
     }
 

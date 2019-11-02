@@ -30,7 +30,7 @@ namespace tmpc :: benchmark
         size_t const n = m;
         size_t const k = m;
 
-        blasfeo::DynamicMatrix<double> A(k, m), B(k, n), C(m, n), D(m, n);
+        blasfeo::DynamicMatrix<double> A(k, m), B(k, n), C(m, n);
 
         randomize(A);
         randomize(B);
@@ -46,12 +46,12 @@ namespace tmpc :: benchmark
         //     blasfeo_dmat& sD, size_t di, size_t dj);
         
         for (auto _ : state)
-            gemm_nt(m, n, k, 1., A, 0, 0, B, 0, 0, 1., C, 0, 0, D, 0, 0);
+            gemm_nt(m, n, k, 1., A, 0, 0, B, 0, 0, 1., C, 0, 0, C, 0, 0);
 
-        state.counters["flops"] = Counter(m * m * m, Counter::kIsIterationInvariantRate);
+        state.counters["flops"] = Counter(2 * m * m * m, Counter::kIsIterationInvariantRate);
         state.counters["m"] = m;
     }
     
 
-    BENCHMARK(BM_gemm)->DenseRange(1, 40);
+    BENCHMARK(BM_gemm)->DenseRange(1, 50);
 }

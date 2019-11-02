@@ -38,6 +38,19 @@ namespace tmpc :: benchmark
 
 
     template <typename Real>
+    static void BM_Cholesky_tmpc_llh_Dynamic(::benchmark::State& state)
+    {
+        size_t const N = state.range(0);
+        blaze::DynamicMatrix<Real, blaze::columnMajor> A(N, N);        
+        makePositiveDefinite(A);
+
+        blaze::DynamicMatrix<Real, blaze::columnMajor> B(N, N);        
+        for (auto _ : state)
+            tmpc::llh(A, B);
+    }
+
+
+    template <typename Real>
     static void BM_Cholesky_Blaze_llh_SymmetricDynamic(::benchmark::State& state)
     {
         size_t const N = state.range(0);
@@ -187,6 +200,8 @@ namespace tmpc :: benchmark
     BENCHMARK_TEMPLATE(BM_Cholesky_Eigen_LLT_Static, double, 5);
     BENCHMARK_TEMPLATE(BM_Cholesky_Eigen_LLT_Static, double, 10);
     BENCHMARK_TEMPLATE(BM_Cholesky_Eigen_LLT_Static, double, 35);
+
+    BENCHMARK_TEMPLATE(BM_Cholesky_tmpc_llh_Dynamic, double)->Apply(choleskyBenchArguments);
     
     BENCHMARK_TEMPLATE(BM_Cholesky_tmpc_llh_Static, double, 1, blaze::columnMajor, blaze::columnMajor);
     BENCHMARK_TEMPLATE(BM_Cholesky_tmpc_llh_Static, double, 2, blaze::columnMajor, blaze::columnMajor);

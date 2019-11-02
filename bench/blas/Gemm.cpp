@@ -23,15 +23,13 @@ namespace tmpc :: benchmark
 
         blaze::DynamicMatrix<Real, blaze::columnMajor> C(m, m);
         randomize(C);
-
-        blaze::DynamicMatrix<Real, blaze::columnMajor> D(m, m);
         
         for (auto _ : state)
             gemm(C, trans(A), B, 1.0, 1.0);
 
-        state.counters["flops"] = Counter(m * m * m, Counter::kIsIterationInvariantRate);
+        state.counters["flops"] = Counter(2 * m * m * m, Counter::kIsIterationInvariantRate);
         state.counters["m"] = m;
     }
     
-    BENCHMARK_TEMPLATE(BM_gemm_blas, double)->DenseRange(1, 40);
+    BENCHMARK_TEMPLATE(BM_gemm_blas, double)->DenseRange(1, 50);
 }

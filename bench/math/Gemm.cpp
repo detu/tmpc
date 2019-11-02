@@ -24,13 +24,16 @@ namespace tmpc :: benchmark
 
         blaze::StaticMatrix<Real, M, N, blaze::columnMajor> C;
         randomize(C);
-
-        blaze::StaticMatrix<Real, M, N, blaze::columnMajor> D;
         
         for (auto _ : state)
-            ::benchmark::DoNotOptimize(D = C + trans(A) * B);
+        {
+            C += trans(A) * B;
+            ::benchmark::DoNotOptimize(A);
+            ::benchmark::DoNotOptimize(B);
+            ::benchmark::DoNotOptimize(C);
+        }
 
-        state.counters["flops"] = Counter(M * N * K, Counter::kIsIterationInvariantRate);
+        state.counters["flops"] = Counter(2 * M * N * K, Counter::kIsIterationInvariantRate);
         state.counters["m"] = M;
         state.counters["n"] = N;
         state.counters["k"] = K;
@@ -50,13 +53,16 @@ namespace tmpc :: benchmark
 
         blaze::DynamicMatrix<Real, blaze::columnMajor> C(m, m);
         randomize(C);
-
-        blaze::DynamicMatrix<Real, blaze::columnMajor> D(m, m);
         
         for (auto _ : state)
-            ::benchmark::DoNotOptimize(D = C + trans(A) * B);
+        {
+            C += trans(A) * B;
+            ::benchmark::DoNotOptimize(A);
+            ::benchmark::DoNotOptimize(B);
+            ::benchmark::DoNotOptimize(C);
+        }
 
-        state.counters["flops"] = Counter(m * m * m, Counter::kIsIterationInvariantRate);
+        state.counters["flops"] = Counter(2 * m * m * m, Counter::kIsIterationInvariantRate);
         state.counters["m"] = m;
     }
 
@@ -83,7 +89,7 @@ namespace tmpc :: benchmark
                 }
         }
 
-        state.counters["flops"] = Counter(m * m * m, Counter::kIsIterationInvariantRate);
+        state.counters["flops"] = Counter(2 * m * m * m, Counter::kIsIterationInvariantRate);
         state.counters["m"] = m;
     }
 
@@ -116,7 +122,7 @@ namespace tmpc :: benchmark
                 }
         }
 
-        state.counters["flops"] = Counter(m * m * m, Counter::kIsIterationInvariantRate);
+        state.counters["flops"] = Counter(2 * m * m * m, Counter::kIsIterationInvariantRate);
         state.counters["m"] = m;
     }
 
@@ -160,10 +166,20 @@ namespace tmpc :: benchmark
     BENCHMARK_TEMPLATE(BM_gemm_blaze_static, double, 37);
     BENCHMARK_TEMPLATE(BM_gemm_blaze_static, double, 38);
     BENCHMARK_TEMPLATE(BM_gemm_blaze_static, double, 39);
-    BENCHMARK_TEMPLATE(BM_gemm_blaze_static, double, 40);    
+    BENCHMARK_TEMPLATE(BM_gemm_blaze_static, double, 40);
+    BENCHMARK_TEMPLATE(BM_gemm_blaze_static, double, 41);
+    BENCHMARK_TEMPLATE(BM_gemm_blaze_static, double, 42);
+    BENCHMARK_TEMPLATE(BM_gemm_blaze_static, double, 43);
+    BENCHMARK_TEMPLATE(BM_gemm_blaze_static, double, 44);
+    BENCHMARK_TEMPLATE(BM_gemm_blaze_static, double, 45);
+    BENCHMARK_TEMPLATE(BM_gemm_blaze_static, double, 46);
+    BENCHMARK_TEMPLATE(BM_gemm_blaze_static, double, 47);
+    BENCHMARK_TEMPLATE(BM_gemm_blaze_static, double, 48);
+    BENCHMARK_TEMPLATE(BM_gemm_blaze_static, double, 49);
+    BENCHMARK_TEMPLATE(BM_gemm_blaze_static, double, 50);
 
-    BENCHMARK_TEMPLATE(BM_gemm_blaze_dynamic, double)->DenseRange(1, 40);
+    BENCHMARK_TEMPLATE(BM_gemm_blaze_dynamic, double)->DenseRange(1, 50);
     
-    BENCHMARK_TEMPLATE(BM_gemm_loop_naive, double)->DenseRange(1, 40);
-    BENCHMARK_TEMPLATE(BM_gemm_loop_optimized, double)->DenseRange(1, 40);
+    BENCHMARK_TEMPLATE(BM_gemm_loop_naive, double)->DenseRange(1, 50);
+    BENCHMARK_TEMPLATE(BM_gemm_loop_optimized, double)->DenseRange(1, 50);
 }
