@@ -53,5 +53,5 @@ namespace tmpc :: benchmark
     }
     
 
-    BENCHMARK(BM_gemm)->DenseRange(1, 50);
+    BENCHMARK(BM_gemm)->DenseRange(1, 300);
 }

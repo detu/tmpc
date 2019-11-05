@@ -12,6 +12,7 @@ add_executable(bench-tmpc
     math/Trmv.cpp
     math/Trsv.cpp
     math/Gemm.cpp
+    math/GemmSubmatrix.cpp
     math/SqrNorm.cpp
     math/LowerMatrixScalarMultiply.cpp
     math/SyrkPotrf.cpp

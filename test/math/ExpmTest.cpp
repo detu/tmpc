@@ -11,7 +11,7 @@ namespace tmpc :: testing
             {0., 2.2}
         };
 
-        TMPC_EXPECT_APPROX_EQ(expm(m), (blaze::StaticMatrix<double, 2, 2> {
+        TMPC_EXPECT_APPROX_EQ(evaluate(matexp(m)), (blaze::StaticMatrix<double, 2, 2> {
             {3.0042,         0.},
             {0.,    9.0250}
         }), 1e-4, 0.);
@@ -25,10 +25,35 @@ namespace tmpc :: testing
             {0., 2.2}
         };
 
-        TMPC_EXPECT_APPROX_EQ(expm(m), (blaze::StaticMatrix<double, 2, 2> {
+        TMPC_EXPECT_APPROX_EQ(evaluate(matexp(m)), (blaze::StaticMatrix<double, 2, 2> {
             {3.0042,         0.},
             {0.,    9.0250}
         }), 1e-4, 0.);
+    }
+
+
+    TEST(MathTest, testExpm_2x2_singular)
+    {
+        blaze::StaticMatrix<double, 2, 2, blaze::columnMajor> m {
+            {0., 1.},
+            {0., 0.}
+        };
+
+        TMPC_EXPECT_APPROX_EQ(evaluate(matexp(m)), (blaze::StaticMatrix<double, 2, 2> {
+            {1., 1.},
+            {0., 1.}
+        }), 1e-15, 0.);
+    }
+
+
+    TEST(MathTest, testExpm_2x2_zero)
+    {
+        blaze::StaticMatrix<double, 2, 2, blaze::columnMajor> m {
+            {0., 0.},
+            {0., 0.}
+        };
+
+        TMPC_EXPECT_APPROX_EQ(evaluate(matexp(m)), blaze::IdentityMatrix<double>(2), 1e-15, 0.);
     }
 
 
@@ -42,13 +67,13 @@ namespace tmpc :: testing
             {0.632359246225410,   0.964888535199277,   0.800280468888800,   0.959492426392903,   0.678735154857773}
         };
 
-        TMPC_EXPECT_APPROX_EQ(expm(m), (blaze::StaticMatrix<double, 5, 5> {
+        TMPC_EXPECT_APPROX_EQ(evaluate(matexp(m)), (blaze::StaticMatrix<double, 5, 5> {
             {4.204256643154649,   2.029099147640609,   2.316816191101029,   2.301099526225243,   2.922876596587000},
             {4.053307051154341,   3.927899946799651,   4.139010062772191,   3.523504905263845,   3.285583505067035},
             {4.980810366851268,   5.016681688555301,   7.072138611807674,   5.965554741935332,   5.677295953715725},
             {6.384560022826461,   5.444182034921380,   5.724925285245762,   6.848391976712574,   5.966624393908855},
             {6.093780099340079,   5.591149359420235,   6.233313648084653,   6.208172974358048,   6.841880083058702}
-        }), 1e-14, 0.);
+        }), 1e-12, 0.);
     }
 
 
@@ -62,12 +87,12 @@ namespace tmpc :: testing
             {0.632359246225410,   0.964888535199277,   0.800280468888800,   0.959492426392903,   0.678735154857773}
         };
 
-        TMPC_EXPECT_APPROX_EQ(expm(m), (blaze::StaticMatrix<double, 5, 5> {
+        TMPC_EXPECT_APPROX_EQ(evaluate(matexp(m)), (blaze::StaticMatrix<double, 5, 5> {
             {4.204256643154649,   2.029099147640609,   2.316816191101029,   2.301099526225243,   2.922876596587000},
             {4.053307051154341,   3.927899946799651,   4.139010062772191,   3.523504905263845,   3.285583505067035},
             {4.980810366851268,   5.016681688555301,   7.072138611807674,   5.965554741935332,   5.677295953715725},
             {6.384560022826461,   5.444182034921380,   5.724925285245762,   6.848391976712574,   5.966624393908855},
             {6.093780099340079,   5.591149359420235,   6.233313648084653,   6.208172974358048,   6.841880083058702}
-        }), 1e-14, 0.);
+        }), 1e-12, 0.);
     }
 }

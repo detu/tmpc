@@ -75,7 +75,12 @@ namespace tmpc
 
             // Perform Schur decomposition and reorder matrix elements and eigenvalues
             // such that the eigeivalues outside the unit disk go first.
-            gges(&outsideUnitDisk, J_compr_, H_compr_, QZ_alpha_, QZ_beta_, QZ_q_, QZ_z_);
+            gges(J_compr_, H_compr_, QZ_q_, QZ_alpha_, QZ_beta_, QZ_z_, 
+                []( Real const * alphar, Real const * alphai, Real const * beta ) -> int
+                {
+                    return outsideUnitDisk({*alphar, *alphai}, *beta);
+                }
+            );
 
             auto X1 = submatrix(QZ_z_, 0, 0, nx_, nx_);
             auto X2 = submatrix(QZ_z_, nx_, 0, nx_, nx_);
@@ -120,12 +125,6 @@ namespace tmpc
         blaze::DynamicVector<std::complex<Real>, blaze::rowVector> QZ_alpha_;
         blaze::DynamicVector<Real, blaze::rowVector> QZ_beta_;
         std::unique_ptr<int> ipiv_;
-
-
-        static int outsideUnitDisk(Real const * alphar, Real const * alphai, Real const * beta)
-        {
-            return outsideUnitDisk({*alphar, *alphai}, *beta);
-        }
 
 
         static bool outsideUnitDisk(std::complex<Real> alpha, Real beta)
