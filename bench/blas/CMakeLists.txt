@@ -1,4 +1,4 @@
-foreach (BLAS_LIB openblas mkl_rt blasfeo)
+foreach (BLAS_LIB openblas mkl_rt)
     find_library(BLAS_LIB_PATH_${BLAS_LIB} ${BLAS_LIB} 
         PATHS 
             "/opt/intel/mkl/lib/intel64_lin" "/opt/intel/mkl/lib/intel64"
@@ -11,6 +11,7 @@ foreach (BLAS_LIB openblas mkl_rt blasfeo)
         add_executable(bench-tmpc-blas-${BLAS_LIB}
             Main.cpp
             Gemm.cpp
+            Potrf.cpp
         )
 
         target_link_libraries(bench-tmpc-blas-${BLAS_LIB}

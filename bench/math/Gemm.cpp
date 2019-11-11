@@ -5,6 +5,11 @@
 #include <vector>
 
 
+#define BENCHMARK_GEMM_STATIC(N) \
+    BENCHMARK_TEMPLATE(BM_gemm_static, double, N); \
+    BENCHMARK_TEMPLATE(BM_gemm_static, float, N);
+
+
 namespace tmpc :: benchmark
 {
     using namespace ::benchmark;
@@ -127,56 +132,56 @@ namespace tmpc :: benchmark
     }
 
 
-    BENCHMARK_TEMPLATE(BM_gemm_static, double, 1);
-    BENCHMARK_TEMPLATE(BM_gemm_static, double, 2);
-    BENCHMARK_TEMPLATE(BM_gemm_static, double, 3);
-    BENCHMARK_TEMPLATE(BM_gemm_static, double, 4);
-    BENCHMARK_TEMPLATE(BM_gemm_static, double, 5);
-    BENCHMARK_TEMPLATE(BM_gemm_static, double, 6);
-    BENCHMARK_TEMPLATE(BM_gemm_static, double, 7);
-    BENCHMARK_TEMPLATE(BM_gemm_static, double, 8);
-    BENCHMARK_TEMPLATE(BM_gemm_static, double, 9);
-    BENCHMARK_TEMPLATE(BM_gemm_static, double, 10);
-    BENCHMARK_TEMPLATE(BM_gemm_static, double, 11);
-    BENCHMARK_TEMPLATE(BM_gemm_static, double, 12);
-    BENCHMARK_TEMPLATE(BM_gemm_static, double, 13);
-    BENCHMARK_TEMPLATE(BM_gemm_static, double, 14);
-    BENCHMARK_TEMPLATE(BM_gemm_static, double, 15);
-    BENCHMARK_TEMPLATE(BM_gemm_static, double, 16);
-    BENCHMARK_TEMPLATE(BM_gemm_static, double, 17);
-    BENCHMARK_TEMPLATE(BM_gemm_static, double, 18);
-    BENCHMARK_TEMPLATE(BM_gemm_static, double, 19);
-    BENCHMARK_TEMPLATE(BM_gemm_static, double, 20);
-    BENCHMARK_TEMPLATE(BM_gemm_static, double, 21);
-    BENCHMARK_TEMPLATE(BM_gemm_static, double, 22);
-    BENCHMARK_TEMPLATE(BM_gemm_static, double, 23);
-    BENCHMARK_TEMPLATE(BM_gemm_static, double, 24);
-    BENCHMARK_TEMPLATE(BM_gemm_static, double, 25);
-    BENCHMARK_TEMPLATE(BM_gemm_static, double, 26);
-    BENCHMARK_TEMPLATE(BM_gemm_static, double, 27);
-    BENCHMARK_TEMPLATE(BM_gemm_static, double, 28);
-    BENCHMARK_TEMPLATE(BM_gemm_static, double, 29);
-    BENCHMARK_TEMPLATE(BM_gemm_static, double, 30);
-    BENCHMARK_TEMPLATE(BM_gemm_static, double, 31);
-    BENCHMARK_TEMPLATE(BM_gemm_static, double, 32);
-    BENCHMARK_TEMPLATE(BM_gemm_static, double, 33);
-    BENCHMARK_TEMPLATE(BM_gemm_static, double, 34);
-    BENCHMARK_TEMPLATE(BM_gemm_static, double, 35);
-    BENCHMARK_TEMPLATE(BM_gemm_static, double, 36);
-    BENCHMARK_TEMPLATE(BM_gemm_static, double, 37);
-    BENCHMARK_TEMPLATE(BM_gemm_static, double, 38);
-    BENCHMARK_TEMPLATE(BM_gemm_static, double, 39);
-    BENCHMARK_TEMPLATE(BM_gemm_static, double, 40);
-    BENCHMARK_TEMPLATE(BM_gemm_static, double, 41);
-    BENCHMARK_TEMPLATE(BM_gemm_static, double, 42);
-    BENCHMARK_TEMPLATE(BM_gemm_static, double, 43);
-    BENCHMARK_TEMPLATE(BM_gemm_static, double, 44);
-    BENCHMARK_TEMPLATE(BM_gemm_static, double, 45);
-    BENCHMARK_TEMPLATE(BM_gemm_static, double, 46);
-    BENCHMARK_TEMPLATE(BM_gemm_static, double, 47);
-    BENCHMARK_TEMPLATE(BM_gemm_static, double, 48);
-    BENCHMARK_TEMPLATE(BM_gemm_static, double, 49);
-    BENCHMARK_TEMPLATE(BM_gemm_static, double, 50);
+    BENCHMARK_GEMM_STATIC(1);
+    BENCHMARK_GEMM_STATIC(2);
+    BENCHMARK_GEMM_STATIC(3);
+    BENCHMARK_GEMM_STATIC(4);
+    BENCHMARK_GEMM_STATIC(5);
+    BENCHMARK_GEMM_STATIC(6);
+    BENCHMARK_GEMM_STATIC(7);
+    BENCHMARK_GEMM_STATIC(8);
+    BENCHMARK_GEMM_STATIC(9);
+    BENCHMARK_GEMM_STATIC(10);
+    BENCHMARK_GEMM_STATIC(11);
+    BENCHMARK_GEMM_STATIC(12);
+    BENCHMARK_GEMM_STATIC(13);
+    BENCHMARK_GEMM_STATIC(14);
+    BENCHMARK_GEMM_STATIC(15);
+    BENCHMARK_GEMM_STATIC(16);
+    BENCHMARK_GEMM_STATIC(17);
+    BENCHMARK_GEMM_STATIC(18);
+    BENCHMARK_GEMM_STATIC(19);
+    BENCHMARK_GEMM_STATIC(20);
+    BENCHMARK_GEMM_STATIC(21);
+    BENCHMARK_GEMM_STATIC(22);
+    BENCHMARK_GEMM_STATIC(23);
+    BENCHMARK_GEMM_STATIC(24);
+    BENCHMARK_GEMM_STATIC(25);
+    BENCHMARK_GEMM_STATIC(26);
+    BENCHMARK_GEMM_STATIC(27);
+    BENCHMARK_GEMM_STATIC(28);
+    BENCHMARK_GEMM_STATIC(29);
+    BENCHMARK_GEMM_STATIC(30);
+    BENCHMARK_GEMM_STATIC(31);
+    BENCHMARK_GEMM_STATIC(32);
+    BENCHMARK_GEMM_STATIC(33);
+    BENCHMARK_GEMM_STATIC(34);
+    BENCHMARK_GEMM_STATIC(35);
+    BENCHMARK_GEMM_STATIC(36);
+    BENCHMARK_GEMM_STATIC(37);
+    BENCHMARK_GEMM_STATIC(38);
+    BENCHMARK_GEMM_STATIC(39);
+    BENCHMARK_GEMM_STATIC(40);
+    BENCHMARK_GEMM_STATIC(41);
+    BENCHMARK_GEMM_STATIC(42);
+    BENCHMARK_GEMM_STATIC(43);
+    BENCHMARK_GEMM_STATIC(44);
+    BENCHMARK_GEMM_STATIC(45);
+    BENCHMARK_GEMM_STATIC(46);
+    BENCHMARK_GEMM_STATIC(47);
+    BENCHMARK_GEMM_STATIC(48);
+    BENCHMARK_GEMM_STATIC(49);
+    BENCHMARK_GEMM_STATIC(50);
 
     BENCHMARK_TEMPLATE(BM_gemm_blaze_dynamic, double)->DenseRange(1, 50);
     

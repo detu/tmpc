@@ -32,4 +32,5 @@ namespace tmpc :: benchmark
     }
     
     BENCHMARK_TEMPLATE(BM_gemm_blas, double)->DenseRange(1, 50);
+    BENCHMARK_TEMPLATE(BM_gemm_blas, float)->DenseRange(1, 50);
 }

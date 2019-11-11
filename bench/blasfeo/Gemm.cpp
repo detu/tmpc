@@ -24,13 +24,14 @@ namespace tmpc :: benchmark
     }
 
 
+    template <typename Real>
     static void BM_gemm(::benchmark::State& state)
     {
         size_t const m = state.range(0);
         size_t const n = m;
         size_t const k = m;
 
-        blasfeo::DynamicMatrix<double> A(k, m), B(k, n), C(m, n);
+        blasfeo::DynamicMatrix<Real> A(k, m), B(k, n), C(m, n);
 
         randomize(A);
         randomize(B);
@@ -53,5 +54,6 @@ namespace tmpc :: benchmark
     }
     
 
-    BENCHMARK(BM_gemm)->DenseRange(1, 300);
+    BENCHMARK_TEMPLATE(BM_gemm, double)->DenseRange(1, 300);
+    BENCHMARK_TEMPLATE(BM_gemm, float)->DenseRange(1, 300);
 }

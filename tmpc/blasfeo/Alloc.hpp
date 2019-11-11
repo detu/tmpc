@@ -2,6 +2,7 @@
 
 #include <blasfeo_stdlib.h>
 #include <blasfeo_d_aux_ext_dep.h>
+#include <blasfeo_s_aux_ext_dep.h>
 
 #include <tmpc/SizeT.hpp>
 
@@ -29,8 +30,20 @@ namespace tmpc :: blasfeo
     }
 
 
+    inline void allocate_mat(size_t m, size_t n, blasfeo_smat& mat)
+    {
+        blasfeo_allocate_smat(m, n, &mat);
+    }
+
+
     inline void free_mat(blasfeo_dmat& mat)
     {
         blasfeo_free_dmat(&mat);
+    }
+
+
+    inline void free_mat(blasfeo_smat& mat)
+    {
+        blasfeo_free_smat(&mat);
     }
 }
