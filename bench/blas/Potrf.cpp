@@ -35,4 +35,5 @@ namespace tmpc :: benchmark
 
 
     BENCHMARK_TEMPLATE(BM_potrf, double)->DenseRange(1, 300);
+    BENCHMARK_TEMPLATE(BM_potrf, float)->DenseRange(1, 300);
 }
