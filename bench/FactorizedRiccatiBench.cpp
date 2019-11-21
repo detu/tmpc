@@ -5,7 +5,8 @@
 #include <tmpc/qp/OcpQp.hpp>
 #include <tmpc/BlazeKernel.hpp>
 
-#include "RiccatiBench.hpp"
+#include <bench/RiccatiBench.hpp>
+#include <bench/Complexity.hpp>
 
 
 namespace tmpc :: benchmark
@@ -21,11 +22,13 @@ namespace tmpc :: benchmark
 
         randomizeQp(ws);
 
-        // Disable openblas multithreading
-        // openblas_set_num_threads(1);
-
         for (auto _ : state)
             riccati(ws, ws);
+
+        setCounters(state.counters, complexityFactorizedRiccati(nx, nu, N));
+        state.counters["nx"] = nx;
+        state.counters["nu"] = nu;
+        state.counters["n"] = N;
     }
 
 

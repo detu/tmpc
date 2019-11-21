@@ -63,6 +63,7 @@ namespace tmpc
         #if 1
             for (size_t j = k; j < n; ++j)
                 l(j, k) = (~C)(j, k) + dot(column(A, j), column(A, k));
+            // submatrix(l, k, k, rs, 1) = submatrix(C, k, k, rs, 1) + trans(submatrix(A, 0, k, m, rs)) * submatrix(A, 0, k, m, 1);
         #else
             for (size_t j = k; j < n; ++j)
             {
@@ -95,59 +96,7 @@ namespace tmpc
             }
         #endif
 
-
-        #if 1
-            // TODO: rewrite this loop as matrix-vector multiplication when this issue is fixed:
-            // https://bitbucket.org/blaze-lib/blaze/issues/287/is-there-a-way-to-specify-that-the
-            //
-            // submatrix(l, k, k, rs, 1) -= submatrix(l, k, 0, rs, k) * trans(submatrix(l, k, 0, 1, k));
-            //
-            for (size_t j = 0; j < k; ++j)
-                // NOTE 1:
-                // Blaze detects that the columns are different and therefore there is no aliasing.
-                //
-                // NOTE 2:
-                // "unchecked" on the left-hand side of the assignment seems to make the code faster,
-                // whereas on the right side it slows it dows.
-                //
-                // NOTE: regarding checked vs unchecked performance, see this issue:
-                // https://bitbucket.org/blaze-lib/blaze/issues/291/unchecked-column-of-a-checked-submatrix-is
-                //
-                column(D21, 0) -= (~D)(k, j) * column(D20, j);
-        #else
-            for (size_t j = 0; j < k; ++j)
-            {
-                Scalar const D_kj = (~D)(k, j);
-                SIMDType const simd_D_kj = blaze::set(D_kj);
-                size_t i = k;
-
-                // bool constexpr remainder = true;
-                // size_t const ipos( ( remainder )?( n & size_t(-SIMDSIZE) ):( n ) );
-
-                for ( ; i % SIMDSIZE != 0; ++i)
-                    l(i, k) -= l(i, j) * D_kj;
-
-                for ( ; i + 4 * SIMDSIZE <= n; i += 4 * SIMDSIZE)
-                {
-                    l.storea(i, k, l.loada(i, k) - l.loada(i, j) * simd_D_kj);
-                    l.storea(i + 1 * SIMDSIZE, k, l.loada(i + 1 * SIMDSIZE, k) - l.loada(i + 1 * SIMDSIZE, j) * simd_D_kj);
-                    l.storea(i + 2 * SIMDSIZE, k, l.loada(i + 2 * SIMDSIZE, k) - l.loada(i + 2 * SIMDSIZE, j) * simd_D_kj);
-                    l.storea(i + 3 * SIMDSIZE, k, l.loada(i + 3 * SIMDSIZE, k) - l.loada(i + 3 * SIMDSIZE, j) * simd_D_kj);
-                }
-
-                for ( ; i + 2 * SIMDSIZE <= n; i += 2 * SIMDSIZE)
-                {
-                    l.storea(i, k, l.loada(i, k) - l.loada(i, j) * simd_D_kj);
-                    l.storea(i + SIMDSIZE, k, l.loada(i + SIMDSIZE, k) - l.loada(i + SIMDSIZE, j) * simd_D_kj);
-                }
-
-                for ( ; i + SIMDSIZE <= n; i += SIMDSIZE)
-                    l.storea(i, k, l.loada(i, k) - l.loada(i, j) * simd_D_kj);
-
-                for ( ; i < n; ++i)
-                    l(i, k) -= l(i, j) * D_kj;
-            }
-        #endif
+            submatrix(l, k, k, rs, 1) -= submatrix(l, k, 0, rs, k) * trans(submatrix(l, k, 0, 1, k));
 
             Scalar x = l(k, k);
             if (x <= 0)

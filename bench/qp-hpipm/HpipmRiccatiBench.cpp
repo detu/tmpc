@@ -3,7 +3,9 @@
 #include <tmpc/ocp/OcpSizeProperties.hpp>
 #include <tmpc/BlazeKernel.hpp>
 
-#include "../RiccatiBench.hpp"
+#include <bench/RiccatiBench.hpp>
+#include <bench/Benchmark.hpp>
+#include <bench/Complexity.hpp>
 
 
 namespace tmpc :: benchmark
@@ -20,6 +22,11 @@ namespace tmpc :: benchmark
 
         for (auto _ : state)
             ws.solveUnconstrainedInternal();
+
+        setCounters(state.counters, complexityFactorizedRiccati(nx, nu, N));
+        state.counters["nx"] = nx;
+        state.counters["nu"] = nu;
+        state.counters["n"] = N;
     }
 
 
