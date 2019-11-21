@@ -39,7 +39,7 @@ endforeach ()
 # TODO: Eigen3 is required now, because some older tests depend on it.
 # This dependency must be removed in future.
 find_package(Eigen3 3.2.10 REQUIRED)
-find_package(blaze 3.5 REQUIRED)
+find_package(blaze 3.7 REQUIRED)
 find_package(LAPACK REQUIRED)
 
 # Find boost.

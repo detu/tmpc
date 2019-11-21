@@ -103,8 +103,7 @@ namespace tmpc
                         
                     auto& l = vd_u.l_;
                     blaze::StaticVector<Real, NU> const tmp2 = get(qp.r(), u) + trans(get(qp.B(), e)) * Pb_p;
-                    // l = inv(vd_u.Lambda()) * tmp2;
-                    tmpc::trsv(vd_u.Lambda(), tmp2, l);
+                    l = inv(vd_u.Lambda()) * tmp2;
                     
                     // Alg 2 line 4
                     auto& p = vd_u.p_;
@@ -130,16 +129,8 @@ namespace tmpc
                 
                 // Solve P*x+p=0 by using Cholesky factor of P:
                 // \mathcal{L}*(\mathcal{L}^T*x)=-p
-                // TODO: this should become faster when the following feature is implemented:
-                // https://bitbucket.org/blaze-lib/blaze/issues/284/solving-a-linear-system-with-triangular
-
-                // blaze::StaticVector<Real, NX> const tmp1 = inv(vd_u.Lcal()) * vd_u.p_;
-                blaze::StaticVector<Real, NX> tmp1;
-                tmpc::trsv(vd_u.Lcal(), vd_u.p_, tmp1);
-
-                // blaze::StaticVector<Real, NX> const tmp2 = inv(trans(vd_u.Lcal())) * tmp1;
-                blaze::StaticVector<Real, NX> tmp2;
-                tmpc::trsv(trans(vd_u.Lcal()), tmp1, tmp2);
+                blaze::StaticVector<Real, NX> const tmp1 = inv(vd_u.Lcal()) * vd_u.p_;
+                blaze::StaticVector<Real, NX> const tmp2 = inv(trans(vd_u.Lcal())) * tmp1;
 
                 put(sol.x(), u, -tmp2);
             }
@@ -161,9 +152,7 @@ namespace tmpc
                 //
                 blaze::StaticVector<Real, NU>& tmp1 = vd_u.l_;
                 tmp1 += trans(vd_u.L_trans()) * get(sol.x(), u);
-                // blaze::StaticVector<Real, NU> const tmp2 = inv(trans(vd_u.Lambda())) * tmp1;
-                blaze::StaticVector<Real, NU> tmp2;
-                tmpc::trsv(trans(vd_u.Lambda()), tmp1, tmp2);
+                blaze::StaticVector<Real, NU> const tmp2 = inv(trans(vd_u.Lambda())) * tmp1;
 
                 put(sol.u(), u, -tmp2);
             }
