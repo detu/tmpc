@@ -5,6 +5,7 @@
 
 #include <blazefeo/math/DynamicPanelMatrix.hpp>
 #include <blazefeo/math/panel/Potrf.hpp>
+#include <blazefeo/math/panel/Gemm.hpp>
 
 #include <blaze/Math.h>
 
@@ -52,11 +53,17 @@ namespace tmpc
         decltype(auto) l( derestrict( ~D ) );
         resize(l, n, n);
 
-        l = declsym(~C + trans(~A) * ~A);
+        static_assert(SO1 == blaze::columnMajor);
+        blazefeo::DynamicPanelMatrix<Scalar, SO1> A1(n, m);
+        A1 = trans(A);
+
+        static_assert(SO2 == blaze::columnMajor);
+        blazefeo::DynamicPanelMatrix<Scalar, SO2> C1(n, n);
+        C1 = C;
 
         static_assert(SO3 == blaze::columnMajor);
         blazefeo::DynamicPanelMatrix<Scalar, SO3> D1(n, n);
-        D1 = l;
+        gemm_nt(A1, A1, C1, D1);
 
         potrf(D1, D1);
         D1.unpackLower(data(l), spacing(l));
