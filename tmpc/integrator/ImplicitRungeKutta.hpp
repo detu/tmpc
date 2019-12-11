@@ -1,11 +1,9 @@
 #pragma once
 
-#include <tmpc/Math.hpp>
-#include <tmpc/SizeT.hpp>
-#include <tmpc/integrator/ButcherTableau.hpp>
+#include <tmpc/integrator/ImplicitIntegrator.hpp>
 #include <tmpc/numeric/NewtonSolver.hpp>
 
-#include <boost/throw_exception.hpp>
+#include <tmpc/Exception.hpp>
 
 #include <stdexcept>
 
@@ -23,40 +21,52 @@ namespace tmpc
 	 */
 	template <typename Real>
 	class ImplicitRungeKutta
+	:	public ImplicitIntegrator<ImplicitRungeKutta<Real>>
 	{
 	public:
-		ImplicitRungeKutta(size_t nx, size_t nu, ButcherTableau<Real> butcher) 
+		template <typename Method>
+		ImplicitRungeKutta(Method const& method, size_t nx, size_t nz, size_t nu, size_t ny = 0)
 		:	nx_(nx)
+		,	nz_(nz)
+		,	nw_(nx + nz)
 		,	nu_(nu)
-		,	butcher_(std::move(butcher))
-		,	ns_(size(butcher_))
-		,	r_(ns_ * nx)
-		,	x_(nx)
-		,	f_(nx)
-		,	df_dx_(nx, nx)
-		,	k_(ns_ * nx_, Real {})
-		,	newtonSolver_(ns_ * nx)
+		,	ny_(ny)
+		,	m_(method.stages())
+		,	s_(m_ * nx)
+		,	S_(m_ * nx, nx + nu)
+		,	df_dx_(nw_, nx)
+		,	kz_(m_ * nw_, Real {})
+		,	K_(m_ * nw_, nx + nu)
+		,	r_(ny)
+		,	Jr_(ny, nx + nu)
+		,	newtonSolver_(m_ * nw_)
 		{
+			method.butcherTableau(A_, b_, c_);
 		}
 
 
-		template <typename ODE, typename VT1, typename VT2>
-		auto const& operator()(ODE const& ode, Real t0, blaze::Vector<VT1, blaze::columnVector> const& x0, 
-			blaze::Vector<VT2, blaze::columnVector> const& u, Real h) const
+		template <typename DAE, typename VT1, typename VT2, typename VT3>
+		void operator()(DAE const& dae, Real t0, Real h,
+			blaze::Vector<VT1, blaze::columnVector> const& x0, 
+			blaze::Vector<VT2, blaze::columnVector> const& u,
+			blaze::Vector<VT3, blaze::columnVector>& xf) const
 		{
-			return (*this)(ode, t0, x0, u, h, [] (size_t, auto const&, auto const&, auto const&) {});
+			(*this)(dae, t0, h, ~x0, ~u, ~xf, [] (size_t, auto const&, auto const&, auto const&) {});
 		}
 
 
-		template <typename ODE, typename VT1, typename VT2, typename Monitor>
-		auto const& operator()(ODE const& ode, Real t0, blaze::Vector<VT1, blaze::columnVector> const& x0, 
-			blaze::Vector<VT2, blaze::columnVector> const& u, Real h, Monitor monitor) const
+		template <typename DAE, typename VT1, typename VT2, typename VT3, typename Monitor>
+		void operator()(DAE const& dae, Real t0, Real h,
+			blaze::Vector<VT1, blaze::columnVector> const& x0, 
+			blaze::Vector<VT2, blaze::columnVector> const& u,
+			blaze::Vector<VT3, blaze::columnVector>& xf,
+			Monitor monitor) const
 		{
 			if (size(x0) != nx_)
-				BOOST_THROW_EXCEPTION(std::invalid_argument("Invalid size of x0"));
+				TMPC_THROW_EXCEPTION(std::invalid_argument("Invalid size of x0"));
 
 			if (size(u) != nu_)
-				BOOST_THROW_EXCEPTION(std::invalid_argument("Invalid size of u"));
+				TMPC_THROW_EXCEPTION(std::invalid_argument("Invalid size of u"));
 
 			// Finding the root of the following equation using Newton method:
 			// 0 = f(t_0 + c_i h, x_0 + \sum_{j=1}^s a_{i,j} k_j) - k_i
@@ -64,55 +74,121 @@ namespace tmpc
 			// If warm-starting, reuse the previous value of k as the starting point,
 			// otherwise reset it to 0.
 			if (!warmStart_)
-				k_ = Real {};
+				reset(kz_);
 
-			k_ = newtonSolver_.solve(
-				[&] (auto const& k, auto& r, auto& J)
-				{
-					for (size_t i = 0; i < ns_; ++i)
-					{
-						x_ = Real {};
-						for (size_t j = 0; j < ns_; ++j)
-							x_ += a(i, j) * subvector(k, j * nx_, nx_);
-						x_ = h * x_ + ~x0;
-
-						ode(t0 + c(i) * h, x_, ~u, f_, df_dx_);
-						subvector(r, i * nx_, nx_) = f_ - subvector(k, i * nx_, nx_);
-
-						for (size_t j = 0; j < ns_; ++j)
-							submatrix(J, i * nx_, j * nx_, nx_, nx_) = (h * a(i, j)) * df_dx_;
-					}
-
-					J -= blaze::IdentityMatrix<Real>(ns_ * nx_);
-				}, 
-				k_,
-				monitor
-			);
+			newtonSolver_(newtonResidual(dae, t0, h, ~x0, ~u), kz_, kz_, monitor);
 
 			// Calculating the value of the integral
-			x_ = Real {};
-			for (size_t i = 0; i < ns_; ++i)
-				x_ += b(i) * subvector(k_, i * nx_, nx_);
-
-			x_ *= h;
-			x_ += x0;
-	
-			return x_;
+			~xf = x0;
+			for (size_t i = 0; i < m_; ++i)
+				~xf += h * b_[i] * subvector(kz_, i * nw_, nx_);
 		}
 
 		
-		template <typename ODE, typename VT1, bool TF1, typename VT2, bool TF2, 
-			typename VT3, bool TF3, typename MT1, bool SO1, typename MT2, bool SO2>
-		void operator()(ODE const& ode, Real t0, blaze::Vector<VT1, TF1> const& x0, blaze::Vector<VT2, TF2> const& u, Real h, 
-			blaze::Vector<VT3, TF3>& x_next, blaze::Matrix<MT1, SO1>& A, blaze::Matrix<MT2, SO2>& B) const
+		template <
+			typename DAE, 
+			typename DAE_S,
+			typename VT1,
+			typename MT1, bool SO1,
+			typename VT2,
+			typename VT3,
+			typename MT2, bool SO2>
+		void operator()(
+			DAE const& dae, 
+			DAE_S const& dae_s,
+			Real t0, Real h,
+			blaze::Vector<VT1, blaze::columnVector> const& x0,
+			blaze::Matrix<MT1, SO1> const& Sx,
+			blaze::Vector<VT2, blaze::columnVector> const& u,
+			blaze::Vector<VT3, blaze::columnVector>& xf,
+			blaze::Matrix<MT2, SO2>& Sf) const
 		{
 			if (size(x0) != nx_)
-				BOOST_THROW_EXCEPTION(std::invalid_argument("Invalid size of x0"));
+				TMPC_THROW_EXCEPTION(std::invalid_argument("Invalid size of x0"));
 
 			if (size(u) != nu_)
-				BOOST_THROW_EXCEPTION(std::invalid_argument("Invalid size of u"));
+				TMPC_THROW_EXCEPTION(std::invalid_argument("Invalid size of u"));
+
+			// Finding the root of the following equation using Newton method:
+			// 0 = f(t_0 + c_i h, x_0 + \sum_{j=1}^s a_{i,j} k_j) - k_i
+
+			// If warm-starting, reuse the previous value of k as the starting point,
+			// otherwise reset it to 0.
+			if (!warmStart_)
+				reset(kz_);
+
+			// Calculate implicit DAE/DAE solution k and its sensitivities
+			newtonSolver_(
+				newtonResidual(dae, t0, h, ~x0, ~u),
+				newtonParamSensitivity(dae_s, t0, h, ~x0, ~Sx, ~u),
+				kz_, kz_, K_);
+
+			// Calculating sensitivities of intermediate state variables.
+			for (size_t i = 0; i < m_; ++i)
+			{
+				S(i) = ~Sx;
 				
-			throw BOOST_THROW_EXCEPTION(std::logic_error("Function is not implemented"));
+				for (size_t j = 0; j < m_; ++j)
+					S(i) += h * A_(i, j) * submatrix(K_, j * nw_, 0, nx_, nx_ + nu_);
+			}
+
+			// Calculating the value of the integral and final state sensitivities
+			~xf = x0;
+			~Sf = ~Sx;
+
+			for (size_t i = 0; i < m_; ++i)
+			{
+				~xf += h * b_[i] * subvector(kz_, i * nw_, nx_);
+				~Sf += h * b_[i] * submatrix(K_, i * nw_, 0, nx_, nx_ + nu_);
+			}
+		}
+
+
+		template <
+			typename DAE,
+			typename DAE_S,
+			typename Residual,
+			typename VT1,
+			typename MT1, bool SO1,
+			typename VT2,
+			typename VT3,
+			typename MT2, bool SO2,
+			typename VT4,
+			typename MT3, bool SO3>
+		void operator()(
+			DAE const& dae,
+			DAE_S const& dae_s,
+			Residual const& res,
+			Real t0, Real h,
+			blaze::Vector<VT1, blaze::columnVector> const& x0,
+			blaze::Matrix<MT1, SO1> const& Sx,
+			blaze::Vector<VT2, blaze::columnVector> const& u,
+			blaze::Vector<VT3, blaze::columnVector>& xf,
+			blaze::Matrix<MT2, SO2>& Sf,
+			Real& l,
+			blaze::Vector<VT4, blaze::columnVector>& g,
+			blaze::Matrix<MT3, SO3>& H) const
+		{
+			if (size(x0) != nx_)
+				TMPC_THROW_EXCEPTION(std::invalid_argument("Invalid size of x0"));
+
+			if (size(u) != nu_)
+				TMPC_THROW_EXCEPTION(std::invalid_argument("Invalid size of u"));
+
+			// Calculate the final state value and its sensitivities
+			(*this)(dae, dae_s, t0, h, ~x0, ~Sx, ~u, ~xf, ~Sf);
+
+			// Calculate the integral of the Lagrange term, its gradient, and its Gauss-Newton Hessian
+			for (size_t i = 0; i < m_; ++i)
+			{
+				// Calculate the residual and its sensitivities at i-th intermediate point
+				res(t0 + h * c_[i], s(i), S(i), z(i), Z(i), ~u, r_, Jr_);
+
+				// Update the cost, its gradient, and its Gauss-Newton Hessian
+				l += h * b_[i] * sqrNorm(r_) / 2.;
+				~g += h * b_[i] * trans(Jr_) * r_;
+				~H += h * b_[i] * trans(Jr_) * Jr_;
+			}
 		}
 
 
@@ -160,17 +236,34 @@ namespace tmpc
 
 	private:
 		size_t const nx_;
+		size_t const nz_;
+		size_t const nw_;
 		size_t const nu_;
-		ButcherTableau<Real> butcher_;
-		size_t const ns_;
+		size_t const ny_;
+		size_t const m_;
 
-		// Vector of residuals
-		mutable blaze::DynamicVector<Real, blaze::columnVector> r_;
+		// Butcher Tableau
+		blaze::DynamicMatrix<Real> A_;
+		blaze::DynamicVector<Real, blaze::rowVector> b_;
+		blaze::DynamicVector<Real, blaze::columnVector> c_;
 
-		mutable blaze::DynamicVector<Real, blaze::columnVector> x_;
-		mutable blaze::DynamicVector<Real, blaze::columnVector> f_;
-		mutable blaze::DynamicMatrix<Real> df_dx_;
-		mutable blaze::DynamicVector<Real, blaze::columnVector> k_;
+		// Intermediate state variables
+		mutable blaze::DynamicVector<Real, blaze::columnVector> s_;
+		
+		// Sensitivity of s w.r.t. (x,u)
+		mutable blaze::DynamicMatrix<Real> S_;
+		
+		mutable blaze::DynamicMatrix<Real, blaze::columnMajor> df_dx_;
+		mutable blaze::DynamicVector<Real, blaze::columnVector> kz_;
+
+		// Sensitivity of K w.r.t. (x,u)
+		mutable blaze::DynamicMatrix<Real, blaze::columnMajor> K_;
+
+		// Holds the residual
+		mutable blaze::DynamicVector<Real> r_;
+
+		// Holds the Jacobian of the residual
+		mutable blaze::DynamicMatrix<Real> Jr_;
 
 		mutable NewtonSolver<Real> newtonSolver_;
 
@@ -178,21 +271,95 @@ namespace tmpc
 		bool warmStart_ = false;
 
 
-		Real a(size_t i, size_t j) const
+		template <typename DAE, typename VT1, typename VT2>
+		auto newtonResidual(DAE const& dae, Real t0, Real h,
+			blaze::Vector<VT1, blaze::columnVector> const& x0,
+			blaze::Vector<VT2, blaze::columnVector> const& u) const
 		{
-			return butcher_.A()(i, j);
+			return [this, &dae, t0, h, &x0, &u] (auto const& kz, auto& r, auto& J)
+			{
+				for (size_t i = 0; i < m_; ++i)
+				{
+					s(i) = ~x0;
+					for (size_t j = 0; j < m_; ++j)
+						s(i) += h * A_(i, j) * subvector(kz, j * nw_, nx_);
+
+					auto const k_i = subvector(kz, i * nw_, nx_);
+					auto const z_i = subvector(kz, i * nw_ + nx_, nz_);
+					auto f = subvector(r, i * nw_, nw_);
+					auto Jxdot = submatrix(J, i * nw_, i * nw_, nw_, nx_);
+					auto Jz = submatrix(J, i * nw_, i * nw_ + nx_, nw_, nz_);
+					dae(t0 + c_[i] * h, k_i, s(i), z_i, ~u, f, Jxdot, df_dx_, Jz);
+
+					for (size_t j = 0; j < m_; ++j)
+					{
+						auto Jx_ij = submatrix(J, i * nw_, j * nw_, nw_, nx_);
+						auto Jz_ij = submatrix(J, i * nw_, j * nw_ + nx_, nw_, nz_);
+
+						if (j != i)
+						{
+							Jx_ij = h * A_(i, j) * df_dx_;
+							reset(Jz_ij);
+						}
+						else
+						{
+							Jx_ij += h * A_(i, j) * df_dx_;
+						}						
+					}
+				}
+			};
 		}
 
 
-		Real b(size_t j) const
+		template <
+			typename DAE_S,
+			typename VT1,
+			typename MT, bool TF,
+			typename VT2
+		>
+		auto newtonParamSensitivity(
+			DAE_S const& dae_s,
+			Real t0, Real h,
+			blaze::Vector<VT1, blaze::columnVector> const& x0,
+			blaze::Matrix<MT, TF> const& Sx,
+			blaze::Vector<VT2, blaze::columnVector> const& u) const
 		{
-			return butcher_.b()[j];
+			return [this, &dae_s, t0, h, &x0, &Sx, &u] (auto const& kz, auto& df_dp)
+			{
+				for (size_t i = 0; i < m_; ++i)
+				{
+					// NOTE: s(i) have valid values here,
+					// which have already been calculated while calculating the Newton residual.
+					auto const k_i = subvector(kz, i * nw_, nx_);
+					auto const z_i = subvector(kz, i * nw_ + nx_, nz_);
+					auto dfi_dxu = submatrix(df_dp, i * nw_, 0, nw_, nx_ + nu_);
+					dae_s(t0 + c_[i] * h, k_i, s(i), ~Sx, z_i, ~u, dfi_dxu);
+				}
+			};
 		}
 
 
-		Real c(size_t i) const
+		decltype(auto) s(size_t i) const
 		{
-			return butcher_.c()[i];
+			return subvector(s_, nx_ * i, nx_);
+		}
+
+
+		decltype(auto) S(size_t i) const
+		{
+			return submatrix(S_, nx_ * i, 0, nx_, nx_ + nu_);
+		}
+
+
+		decltype(auto) z(size_t i) const
+		{
+			return subvector(kz_, nw_ * i + nx_, nz_);
+		}
+
+
+		decltype(auto) Z(size_t i) const
+		{
+			return submatrix(K_, nw_ * i + nx_, 0, nz_, nx_ + nu_);
 		}
 	};
 }

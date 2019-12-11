@@ -1,8 +1,6 @@
-#include "IrkTestParam.hpp"
-
 #include <tmpc/integrator/ImplicitRungeKutta.hpp>
-#include <tmpc/integrator/BackwardEuler.hpp>
-#include <tmpc/integrator/GaussLegendre.hpp>
+#include <tmpc/integrator/BackwardEulerMethod.hpp>
+#include <tmpc/integrator/GaussLegendreMethod.hpp>
 #include <tmpc/Testing.hpp>
 
 #include <blaze/Math.h>
@@ -57,8 +55,8 @@ namespace tmpc :: testing
 	}
 
 	
-	class PendulumTest 
-	: 	public TestWithParam<IrkTestParam<Real>>
+	class IrkPendulumTest 
+	: 	public Test
 	{
 	protected:
 		void SetUp() override
@@ -132,15 +130,52 @@ namespace tmpc :: testing
 		}
 
 
+		size_t nz() const
+		{
+			return 0;
+		}
+
+
 		size_t nu() const
 		{
 			return 1;
 		}
 
 
-		double h() const
+		template <typename Method>
+		void testIntegrate(Method const& method, double abs_tol, double rel_tol)
 		{
-			return h_;
+			ImplicitRungeKutta<double> irk(method, nx(), nz(), nu());
+
+			double t0 = 0.;
+
+			size_t const num_points = 1000;
+			blaze::DynamicVector<double, blaze::columnVector> x0(nx());
+			blaze::DynamicVector<double, blaze::columnVector> u(nu());
+
+			for (size_t i = 0; i < num_points; ++i)
+			{
+				randomize(x0);
+				randomize(u);
+
+				blaze::DynamicVector<double> xf(nx());
+				irk(
+					[this] (double t, auto const& xdot, auto const& x, auto const& z,
+						auto const& u, auto& f, auto& Jxdot, auto& Jx, auto& Jz)
+					{
+						blaze::DynamicMatrix<Real> df_du(nx(), nu());
+						ode(t, x, u, f, Jx, df_du);
+
+						f -= xdot;
+						Jxdot = -blaze::IdentityMatrix<double>(nx());
+					}, 
+					t0, h_, x0, u, xf
+				);
+
+				blaze::DynamicVector<double, blaze::columnVector> const xf_ref = refIntegrate(t0, x0, u);
+
+				TMPC_EXPECT_APPROX_EQ(xf, xf_ref, abs_tol, rel_tol);
+			}
 		}
 
 
@@ -151,42 +186,20 @@ namespace tmpc :: testing
 	};
 
 
-	TEST_P(PendulumTest, testIntegrate)
+	TEST_F(IrkPendulumTest, testBackwardEuler)
 	{
-		ImplicitRungeKutta<double> irk(nx(), nu(), GetParam().tableau);
-
-		double t0 = 0.;
-
-		size_t const num_points = 1000;
-		blaze::DynamicVector<double, blaze::columnVector> x0(nx());
-		blaze::DynamicVector<double, blaze::columnVector> u(nu());
-
-		for (size_t i = 0; i < num_points; ++i)
-		{
-			randomize(x0);
-			randomize(u);
-
-			blaze::DynamicVector<double> xf = irk(
-				[this] (double t, auto const& x, auto const& u, auto& f, auto& df_dx)
-				{
-					blaze::DynamicMatrix<double> B(nx(), nu());
-					ode(t, x, u, f, df_dx, B);
-				}, 
-				t0, x0, u, h()
-			);
-
-			blaze::DynamicVector<double, blaze::columnVector> const xf_ref = refIntegrate(t0, x0, u);
-
-			TMPC_EXPECT_APPROX_EQ(xf, xf_ref, GetParam().absTol, GetParam().relTol);
-		}
+		testIntegrate(BackwardEulerMethod(), 1e-3, 2e-3);
 	}
 
 
-	INSTANTIATE_TEST_SUITE_P(ImplicitRungeKuttaTest, PendulumTest,
-		Values(
-			IrkTestParam {"Backward Euler", backwardEuler<Real>(), 1e-3, 2e-3},
-			IrkTestParam {"Gauss-Legendre", gaussLegendre<Real>(2), 1e-6, 1e-4},
-			IrkTestParam {"Gauss-Legendre", gaussLegendre<Real>(3), 1e-6, 1e-5}
-		)
-	);
+	TEST_F(IrkPendulumTest, testGaussLegendre2)
+	{
+		testIntegrate(GaussLegendreMethod(2), 1e-6, 1e-4);
+	}
+
+
+	TEST_F(IrkPendulumTest, testGaussLegendre3)
+	{
+		testIntegrate(GaussLegendreMethod(3), 1e-6, 1e-5);
+	}
 }

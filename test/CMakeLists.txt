@@ -37,7 +37,6 @@ foreach (model pendulum)
     target_link_libraries(model_${model} PRIVATE tmpc)
 endforeach ()
 
-set(TEST_DATA_PATH ${CMAKE_CURRENT_BINARY_DIR}/data)
 
 # ~~~~~~~~~~ Our tests ~~~~~~~~~~~~~~
 add_executable(test-tmpc
@@ -56,7 +55,14 @@ add_executable(test-tmpc
     qp/RiccatiTest.cpp
     # qp/StaticRiccatiTest.cpp
 
-    integrator/ImplicitRungeKuttaTest.cpp
+    integrator/ErkMassSpringDamperTest.cpp
+    integrator/ErkDecayTest.cpp
+    integrator/IrkTest.cpp
+    integrator/IrkSimpleLinearOdeTest.cpp
+    integrator/IrkSimpleTimeDependentOdeTest.cpp
+    integrator/IrkSimpleDaeTest.cpp
+    integrator/IrkMassSpringDamperTest.cpp
+    integrator/IrkDecayTest.cpp
 
     matrix/MatrixTest.cpp
     matrix/DynamicSubmatrixTest.cpp
@@ -84,60 +90,6 @@ add_executable(test-tmpc
 )
 
 
-if (TMPC_WITH_CASADI)
-    # Generate code and test data for rk4 test
-    add_custom_command(
-        OUTPUT
-            pendulum_ode_generated.h
-            pendulum_ode_generated.c
-            ${TEST_DATA_PATH}/rk4/pendulum.txt
-        COMMAND
-            ${Python3_EXECUTABLE}
-        ARGS
-            ${CMAKE_CURRENT_SOURCE_DIR}/integrator/rk4_test_generate_data.py ${TEST_DATA_PATH}
-        #[COMMAND command2 [ARGS] [args2...] ...]
-        #[MAIN_DEPENDENCY depend]
-        DEPENDS
-            integrator/rk4_test_generate_data.py
-        #[IMPLICIT_DEPENDS <lang1> depend1
-        #                 [<lang2> depend2] ...]
-        WORKING_DIRECTORY
-            ${CMAKE_CURRENT_BINARY_DIR}
-        COMMENT
-            "Generating model code and test data for ExplicitRungeKutta4..."
-    )
-
-    target_sources(test-tmpc
-        PRIVATE
-        ${CMAKE_CURRENT_BINARY_DIR}/pendulum_ode_generated.h
-        ${CMAKE_CURRENT_BINARY_DIR}/pendulum_ode_generated.c
-        
-        # TODO: Integrator tests depend on CasADi.
-        # Remove this dependency.
-        integrator/PendulumData.cpp
-        integrator/PendulumOdeTest.cpp
-        integrator/ExplicitRungeKutta4Test.cpp
-        integrator/MultiStepIntegratorTest.cpp
-    )
-
-    target_link_libraries(test-tmpc
-        PUBLIC tmpc-casadi
-    )
-endif ()
-
-target_compile_definitions(test-tmpc
-    PRIVATE TEST_DATA_PATH="${TEST_DATA_PATH}")
-
-#if (TMPC_WITH_QPOASES)
-#    target_sources(test-tmpc
-#        PRIVATE RealtimeIterationTest.cpp
-#    )
-#endif()
-
-target_include_directories(test-tmpc
-    PRIVATE "${CMAKE_CURRENT_BINARY_DIR}"
-)
-
 target_link_libraries(test-tmpc PRIVATE
     tmpc
     GTest::GTest
@@ -146,9 +98,10 @@ target_link_libraries(test-tmpc PRIVATE
     ${CMAKE_THREAD_LIBS_INIT}    # Needed for gtest
 )
 
+
 if (TARGET casadi)
     target_sources(test-tmpc PRIVATE
-        integrator/PendulumTest.cpp
+        integrator/IrkPendulumTest.cpp
     )
 
     target_link_libraries(test-tmpc PRIVATE casadi)
