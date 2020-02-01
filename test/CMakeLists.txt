@@ -137,8 +137,3 @@ endif ()
 if (TMPC_WITH_HPIPM)
     add_subdirectory("qp-hpipm")
 endif ()
-
-
-if (TMPC_WITH_BLASFEO)
-    add_subdirectory("blasfeo")
-endif ()
