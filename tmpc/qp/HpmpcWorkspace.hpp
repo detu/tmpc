@@ -122,7 +122,7 @@ namespace tmpc
 
 			// Calculate total number of int and Real elements to be allocated.
 			size_t count_real = 0, count_int = 0;
-			breadth_first_search(graph_, vertex(0, graph_), visitor(ElementCountVisitor(this->size(), count_real, count_int)));
+			breadth_first_search(graph_, vertex(0, graph_), visitor(ElementCountVisitor<decltype(this->size())>(this->size(), count_real, count_int)));
 
 			// Allocate memory pools
 			realPool_.resize(count_real, sNaN<Real>());
