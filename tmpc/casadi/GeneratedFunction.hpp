@@ -9,7 +9,6 @@
 
 #include <tmpc/SizeT.hpp>
 #include <tmpc/casadi/Sparsity.hpp>
-#include <tmpc/casadi/CompressedColumnStorage.hpp>
 #include <tmpc/Exception.hpp>
 
 #include <vector>
@@ -207,7 +206,7 @@ namespace tmpc :: casadi
 		template <typename MT, bool SO>
 		void copyIn(size_t i, blaze::Matrix<MT, SO> const& arg) const
 		{
-			toCompressedColumnStorage(arg, dataIn_[i].get(), sparsityIn_[i]);
+			sparsityIn_[i].compress(arg, dataIn_[i].get());
 			arg_[i] = dataIn_[i].get();
 		}
 
@@ -215,7 +214,7 @@ namespace tmpc :: casadi
 		template <typename VT, bool TF>
 		void copyIn(size_t i, blaze::Vector<VT, TF> const& arg) const
 		{
-			toCompressedColumnStorage(arg, dataIn_[i].get(), sparsityIn_[i]);
+			sparsityIn_[i].compress(arg, dataIn_[i].get());
 			arg_[i] = dataIn_[i].get();
 		}
 
@@ -223,7 +222,8 @@ namespace tmpc :: casadi
 		void copyIn(size_t i, casadi_real const& arg) const
 		{
 			if (sparsityIn_[i].nnz() != 1)
-				TMPC_THROW_EXCEPTION(std::invalid_argument("Invalid size of input argument " + std::to_string(i) + " in CasADi function " + name()));
+				TMPC_THROW_EXCEPTION(std::invalid_argument("Invalid size of input argument " 
+					+ std::to_string(i) + " in CasADi function " + name()));
 
 			arg_[i] = &arg;
 		}
@@ -258,6 +258,10 @@ namespace tmpc :: casadi
 
 		void setOutPtr(size_t i, casadi_real& arg) const
 		{
+			if (sparsityOut_[i].nnz() != 1)
+				TMPC_THROW_EXCEPTION(std::invalid_argument("Invalid size of output argument " 
+					+ std::to_string(i) + " in CasADi function " + name()));
+
 			res_[i] = &arg;
 		}
 
@@ -278,20 +282,19 @@ namespace tmpc :: casadi
 		template <typename MT, bool SO>
 		void copyOut(size_t i, blaze::Matrix<MT, SO>& arg) const
 		{
-			fromCompressedColumnStorage(res_[i], sparsityOut_[i], arg);
+			sparsityOut_[i].decompress(res_[i], arg);
 		}
 
 
 		template <typename VT, bool TF>
 		void copyOut(size_t i, blaze::Vector<VT, TF>& arg) const
 		{
-			fromCompressedColumnStorage(res_[i], sparsityOut_[i], arg);
+			sparsityOut_[i].decompress(res_[i], arg);
 		}
 
 
 		void copyOut(size_t i, casadi_real& arg) const
 		{
-			arg = *res_[i];
 		}
 
 
