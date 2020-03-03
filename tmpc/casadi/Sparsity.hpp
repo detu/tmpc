@@ -4,7 +4,7 @@
 
 #include <casadi/mem.h>
 
-#include <stdexcept>
+#include <tmpc/Exception.hpp>
 
 
 namespace tmpc :: casadi
@@ -17,38 +17,38 @@ namespace tmpc :: casadi
         :   sparsity_(sparsity)
         {
             if (colind()[0] != 0)
-			    throw std::invalid_argument("Invalid sparsity pattern passed to Sparsity ctor");
+			    TMPC_THROW_EXCEPTION(std::invalid_argument("Invalid sparsity pattern"));
         }
 
 
         /// @brief Number of rows
-        size_t rows() const
+        size_t rows() const noexcept
         {
             return sparsity_[0];
         }
 
 
         /// @brief Number of columns
-        size_t columns() const
+        size_t columns() const noexcept
         {
             return sparsity_[1];
         }
 
 
         /// @brief Number of structural non-zeros
-        size_t nnz() const
+        size_t nnz() const noexcept
         {
             return colind()[columns()];
         }
 
 
-        casadi_int const * colind() const
+        casadi_int const * colind() const noexcept
         {
             return sparsity_ + 2;
         }
         
 
-		casadi_int const * rowind() const 
+		casadi_int const * rowind() const noexcept
         {
             return colind() + columns() + 1;
         }

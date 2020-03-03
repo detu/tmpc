@@ -10,13 +10,13 @@
 #include <tmpc/SizeT.hpp>
 #include <tmpc/casadi/Sparsity.hpp>
 #include <tmpc/casadi/CompressedColumnStorage.hpp>
+#include <tmpc/Exception.hpp>
 
 #include <vector>
 #include <string>
 #include <array>
 #include <initializer_list>
 #include <sstream>
-#include <stdexcept>
 #include <tuple>
 #include <utility>
 #include <memory>
@@ -33,7 +33,7 @@ namespace tmpc :: casadi
 	{
 	public:
 		/// @brief Constructor.
-		GeneratedFunction(casadi_functions const * f, std::string const& n = "Unknown CasADi function");
+		GeneratedFunction(casadi_functions const * f, std::string const& n = "CasADi function");
 
 		/// @brief Copy constructor.
 		GeneratedFunction(GeneratedFunction const& rhs);
@@ -47,55 +47,59 @@ namespace tmpc :: casadi
 		GeneratedFunction& operator=(GeneratedFunction const& rhs) = delete;
 
 
-		std::string const& name() const
+		std::string const& name() const noexcept
 		{
 			return name_;
 		}
 
-		size_t const n_in () const { return fun_.f_->n_in() ; }
-		size_t const n_out() const { return fun_.f_->n_out(); }
+
+		size_t const n_in () const noexcept { return size(sparsityIn_); }
+		size_t const n_out() const noexcept { return size(sparsityOut_); }
 
 		
 		int n_row_in(int ind) const
 		{
 			if (ind < 0 || ind >= n_in())
-				throw std::out_of_range("GeneratedFunction::n_row_in(): index is out of range");
+				TMPC_THROW_EXCEPTION(std::out_of_range("input argument index out of range"));
 
-			return fun_.f_->sparsity_in(ind)[0];
+			return sparsityIn_[ind].rows();
 		}
+
 
 		int n_col_in(int ind) const
 		{
 			if (ind < 0 || ind >= n_in())
-				throw std::out_of_range("GeneratedFunction::n_col_in(): index is out of range");
+				TMPC_THROW_EXCEPTION(std::out_of_range("input argument index out of range"));
 
-			return fun_.f_->sparsity_in(ind)[1];
+			return sparsityIn_[ind].columns();
 		}
+
 
 		int n_row_out(int ind) const
 		{
 			if (ind < 0 || ind >= n_out())
-				throw std::out_of_range("GeneratedFunction::n_row_out(): index is out of range");
+				TMPC_THROW_EXCEPTION(std::out_of_range("output argument index out of range"));
 
-			return fun_.f_->sparsity_out(ind)[0];
+			return sparsityOut_[ind].rows();
 		}
+
 
 		int n_col_out(int ind) const
 		{
 			if (ind < 0 || ind >= n_out())
-				throw std::out_of_range("GeneratedFunction::n_col_out(): index is out of range");
+				TMPC_THROW_EXCEPTION(std::out_of_range("output argument index out of range"));
 
-			return fun_.f_->sparsity_out(ind)[1];
+			return sparsityOut_[ind].columns();
 		}
 
 
 		void operator()(std::initializer_list<const casadi_real *> arg, std::initializer_list<casadi_real *> res) const
 		{
 			if (arg.size() != n_in())
-				throw std::invalid_argument("Invalid number of input arguments to " + name());
+				TMPC_THROW_EXCEPTION(std::invalid_argument("Invalid number of input arguments to " + name()));
 
 			if (res.size() != n_out())
-				throw std::invalid_argument("Invalid number of output arguments to " + name());
+				TMPC_THROW_EXCEPTION(std::invalid_argument("Invalid number of output arguments to " + name()));
 
 			std::copy(arg.begin(), arg.end(), arg_.begin());
 			std::copy(res.begin(), res.end(), res_.begin());
@@ -109,11 +113,11 @@ namespace tmpc :: casadi
 		{
 			// Check number of input arguments
 			if (sizeof...(ArgsIn) != n_in())
-				throw std::invalid_argument("Wrong number of input arguments passed to GeneratedFunction");
+				TMPC_THROW_EXCEPTION(std::invalid_argument("Wrong number of input arguments"));
 
 			// Check number of output arguments
 			if (sizeof...(ArgsOut) != n_out())
-				throw std::invalid_argument("Wrong number of output arguments passed to GeneratedFunction");
+				TMPC_THROW_EXCEPTION(std::invalid_argument("Wrong number of output arguments"));
 
 			// Copy data from input arguments to dataIn_ arrays 
 			// and/or set pointers, depending on the argument types.
@@ -171,6 +175,8 @@ namespace tmpc :: casadi
 
 		Functions const fun_;
 		std::string const name_;
+		std::vector<Sparsity> sparsityIn_;
+		std::vector<Sparsity> sparsityOut_;
 
 		//static std::string const _name { "Name" };
 
@@ -201,7 +207,7 @@ namespace tmpc :: casadi
 		template <typename MT, bool SO>
 		void copyIn(size_t i, blaze::Matrix<MT, SO> const& arg) const
 		{
-			toCompressedColumnStorage(arg, dataIn_[i].get(), sparsity_in(i));
+			toCompressedColumnStorage(arg, dataIn_[i].get(), sparsityIn_[i]);
 			arg_[i] = dataIn_[i].get();
 		}
 
@@ -209,15 +215,15 @@ namespace tmpc :: casadi
 		template <typename VT, bool TF>
 		void copyIn(size_t i, blaze::Vector<VT, TF> const& arg) const
 		{
-			toCompressedColumnStorage(arg, dataIn_[i].get(), sparsity_in(i));
+			toCompressedColumnStorage(arg, dataIn_[i].get(), sparsityIn_[i]);
 			arg_[i] = dataIn_[i].get();
 		}
 
 
 		void copyIn(size_t i, casadi_real const& arg) const
 		{
-			if (sparsity_in(i).nnz() != 1)
-				throw std::invalid_argument("Invalid size of input argument " + std::to_string(i) + " in CasADi function " + name());
+			if (sparsityIn_[i].nnz() != 1)
+				TMPC_THROW_EXCEPTION(std::invalid_argument("Invalid size of input argument " + std::to_string(i) + " in CasADi function " + name()));
 
 			arg_[i] = &arg;
 		}
@@ -272,36 +278,25 @@ namespace tmpc :: casadi
 		template <typename MT, bool SO>
 		void copyOut(size_t i, blaze::Matrix<MT, SO>& arg) const
 		{
-			fromCompressedColumnStorage(res_[i], sparsity_out(i), arg);
+			fromCompressedColumnStorage(res_[i], sparsityOut_[i], arg);
 		}
 
 
 		template <typename VT, bool TF>
 		void copyOut(size_t i, blaze::Vector<VT, TF>& arg) const
 		{
-			fromCompressedColumnStorage(res_[i], sparsity_out(i), arg);
+			fromCompressedColumnStorage(res_[i], sparsityOut_[i], arg);
 		}
 
 
 		void copyOut(size_t i, casadi_real& arg) const
 		{
+			arg = *res_[i];
 		}
 
 
 		void copyOut(size_t i, std::nullptr_t) const
 		{
-		}
-
-
-		Sparsity sparsity_in(int ind) const
-		{
-			return Sparsity(fun_.f_->sparsity_in(ind));
-		}
-
-
-		Sparsity sparsity_out(int ind) const
-		{
-			return Sparsity(fun_.f_->sparsity_out(ind));
 		}
 
 

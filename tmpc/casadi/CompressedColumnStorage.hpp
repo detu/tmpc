@@ -2,12 +2,11 @@
 
 #include <tmpc/SizeT.hpp>
 #include <tmpc/casadi/Sparsity.hpp>
+#include <tmpc/Exception.hpp>
 
 #include <casadi/mem.h>
 
 #include <blaze/Math.h>
-
-#include <stdexcept>
 
 
 namespace tmpc :: casadi
@@ -21,9 +20,8 @@ namespace tmpc :: casadi
 	inline void fromCompressedColumnStorage(casadi_real const * data, Sparsity const& sparsity, blaze::Matrix<MT, SO>& m)
 	{
         if (rows(m) != sparsity.rows() || columns(m) != sparsity.columns())
-			throw std::invalid_argument("Matrix size does not match the sparsity pattern in fromCompressedColumnStorage()");
+			TMPC_THROW_EXCEPTION(std::invalid_argument("Matrix size does not match the sparsity pattern"));
 
-		~m = 0.;
 		casadi_int ind = 0;
 		for (size_t j = 0; j < sparsity.columns(); ++j)
 		{
@@ -37,9 +35,8 @@ namespace tmpc :: casadi
 	inline void fromCompressedColumnStorage(casadi_real const * data, Sparsity const& sparsity, blaze::Vector<VT, blaze::columnVector>& v)
 	{
         if (size(v) != sparsity.rows() || 1 != sparsity.columns())
-			throw std::invalid_argument("Vector size does not match the sparsity pattern in fromCompressedColumnStorage()");
+			TMPC_THROW_EXCEPTION(std::invalid_argument("Vector size does not match the sparsity pattern"));
 
-		~v = 0.;
 		casadi_int ind = 0;
 		for (size_t j = 0; j < sparsity.columns(); ++j)
 		{
@@ -53,9 +50,8 @@ namespace tmpc :: casadi
 	inline void fromCompressedColumnStorage(casadi_real const * data, Sparsity const& sparsity, blaze::Vector<VT, blaze::rowVector>& v)
 	{
         if (1 != sparsity.rows() || size(v) != sparsity.columns())
-			throw std::invalid_argument("Vector size does not match the sparsity pattern in fromCompressedColumnStorage()");
+			TMPC_THROW_EXCEPTION(std::invalid_argument("Vector size does not match the sparsity pattern"));
 
-		~v = 0.;
 		casadi_int ind = 0;
 		for (size_t j = 0; j < sparsity.columns(); ++j)
 		{
@@ -74,7 +70,7 @@ namespace tmpc :: casadi
 	inline void toCompressedColumnStorage(blaze::Matrix<MT, SO> const& m, casadi_real * data, Sparsity const& sparsity)
 	{
 		if (rows(m) != sparsity.rows() || columns(m) != sparsity.columns())
-			throw std::invalid_argument("Matrix size does not match the sparsity pattern in fromCompressedColumnStorage()");
+			TMPC_THROW_EXCEPTION(std::invalid_argument("Matrix size does not match the sparsity pattern"));
 
 		casadi_int ind = 0;
 		for (size_t j = 0; j < sparsity.columns(); ++j)
@@ -89,7 +85,7 @@ namespace tmpc :: casadi
 	inline void toCompressedColumnStorage(blaze::Vector<VT, blaze::columnVector> const& v, casadi_real * data, Sparsity const& sparsity)
 	{
         if (size(v) != sparsity.rows() || 1 != sparsity.columns())
-			throw std::invalid_argument("Vector size does not match the sparsity pattern in fromCompressedColumnStorage()");
+			TMPC_THROW_EXCEPTION(std::invalid_argument("Vector size does not match the sparsity pattern"));
 
 		casadi_int ind = 0;
 		for (size_t j = 0; j < sparsity.columns(); ++j)
@@ -104,7 +100,7 @@ namespace tmpc :: casadi
 	inline void toCompressedColumnStorage(blaze::Vector<VT, blaze::rowVector> const& v, casadi_real * data, Sparsity const& sparsity)
 	{
         if (1 != sparsity.rows() || size(v) != sparsity.columns())
-			throw std::invalid_argument("Vector size does not match the sparsity pattern in fromCompressedColumnStorage()");
+			TMPC_THROW_EXCEPTION(std::invalid_argument("Vector size does not match the sparsity pattern"));
 
 		casadi_int ind = 0;
 		for (size_t j = 0; j < sparsity.columns(); ++j)
