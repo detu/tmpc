@@ -44,8 +44,8 @@ namespace tmpc
 			// Resize working variables
 			for (size_t i = 0; i < m_; ++i)
 			{
-				k_[i].resize(nx);
-				K_[i].resize(nx, nx + nu);
+				k_[i].resize(nx, Real {});
+				K_[i].resize(nx, nx + nu, Real {});
 			}		
 		}
 
@@ -71,7 +71,7 @@ namespace tmpc
 			for (size_t i = 0; i < m_; ++i)
 			{
 				s_ = ~x0;
-				for (size_t j = 0; j < i; ++j)
+				for (size_t j = 0; j < i; ++j) if (A_(i, j))
 					s_ += h * A_(i, j) * k_[j];
 
 				ode(t0 + h * c_[i], s_, ~u, k_[i]);
@@ -114,7 +114,7 @@ namespace tmpc
 				s_ = ~x0;
 				S_ = ~S;
 
-				for (size_t j = 0; j < i; ++j)
+				for (size_t j = 0; j < i; ++j) if (A_(i, j))
 				{
 					s_ += h * A_(i, j) * k_[j];
 					S_ += h * A_(i, j) * K_[j];
@@ -194,7 +194,7 @@ namespace tmpc
 		size_t const m_;
 
 		// Butcher Tableau
-		blaze::DynamicMatrix<Real> A_;
+		blaze::DynamicMatrix<Real, blaze::rowMajor> A_;
 		blaze::DynamicVector<Real, blaze::rowVector> b_;
 		blaze::DynamicVector<Real, blaze::columnVector> c_;
 		
