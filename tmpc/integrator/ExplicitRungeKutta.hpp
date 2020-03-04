@@ -31,8 +31,8 @@ namespace tmpc
 		,	Sf_(nx, nx + nu)
 		,	k_(m_)
 		,	K_(m_)
-		,	r_(ny)
-		,	J_(ny, nx + nu)
+		,	r_(ny, Real {})
+		,	J_(ny, nx + nu, Real {})
 		{
 			method.butcherTableau(A_, b_, c_);
 
