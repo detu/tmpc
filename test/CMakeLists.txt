@@ -83,7 +83,7 @@ add_executable(test-tmpc
     util/UnwrapTest.cpp
 )
 
-
+    
 if (TMPC_WITH_CASADI)
     # Generate code and test data for rk4 test
     add_custom_command(
@@ -143,6 +143,7 @@ target_link_libraries(test-tmpc PRIVATE
     GTest::GTest
     GTest::Main
     gmock
+    ${LAPACK_LIBRARIES}
     ${CMAKE_THREAD_LIBS_INIT}    # Needed for gtest
 )
 

@@ -40,6 +40,7 @@ endforeach ()
 # This dependency must be removed in future.
 find_package(Eigen3 3.2.10 REQUIRED)
 find_package(blaze 3.6 REQUIRED)
+find_package(BLAS REQUIRED)
 find_package(LAPACK REQUIRED)
 
 # Find boost.
