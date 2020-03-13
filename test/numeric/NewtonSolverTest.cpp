@@ -34,7 +34,8 @@ namespace tmpc :: testing
         Vec const x0 {-2., -1.};
 
         // Find the solution
-        Vec const x_star = solver.solve(fun, x0);
+        Vec x_star;
+        solver(fun, x0, x_star);
         
         // Check the solution
         TMPC_EXPECT_APPROX_EQ(x_star, (Vec {-2.48345, -1.72886}), 1.e-5, 0.);
@@ -45,6 +46,122 @@ namespace tmpc :: testing
         fun(x_star, r, J);
         EXPECT_LT(maxNorm(r), solver.residualTolerance());
         EXPECT_EQ(solver.residualMaxNorm(), maxNorm(r));
+
+        // Check number of iterations
+        EXPECT_LE(solver.iterations(), solver.maxIterations());
+    }
+
+
+    /// @brief Test solution sensitivities correctness for scalar equation 0=x^2-p
+    TEST(NewtonSolverTest, testSolutionSensitivityScalarQuadratic)
+    {
+        size_t constexpr NX = 1;
+        size_t constexpr NP = 1;
+
+        using Real = double;
+        using VecX = blaze::StaticVector<Real, NX, blaze::columnVector>;
+        using VecP = blaze::StaticVector<Real, NP, blaze::columnVector>;
+        using MatXX = blaze::StaticMatrix<Real, NX, NX, blaze::columnMajor>;
+        using MatXP = blaze::StaticMatrix<Real, NX, NP, blaze::columnMajor>;
+        Real const p = 2.;
+        
+        // Define the equation and its Jacobian
+        auto fun = [p] (auto const& x, auto& f, auto& J)
+        {
+            ~f = {pow(x[0], 2) - p};
+            ~J = {{2. * x[0]}};
+        };
+
+        // The derivative of the equation w.r.t. the parameter
+        auto dfdp = [p] (auto const& x, auto& df_dp)
+        {
+            ~df_dp = {{-1.}};
+        };
+
+        // Newton solver
+        NewtonSolver<Real> solver(NX);
+
+        // Initial guess
+        VecX const x0 {1.};
+
+        // Find the solution and its sensitivities
+        VecX x_star;
+        MatXX x_sens;
+        solver(fun, dfdp, x0, x_star, x_sens);
+        
+        // Check the solution
+        TMPC_EXPECT_APPROX_EQ(x_star, (VecX {sqrt(p)}), 1.e-10, 0.);
+
+        // Check residual at the solution
+        VecX r;
+        MatXX J;
+        fun(x_star, r, J);
+        EXPECT_LT(maxNorm(r), solver.residualTolerance());
+        EXPECT_EQ(solver.residualMaxNorm(), maxNorm(r));
+
+        // Check solution sensitivity
+        TMPC_EXPECT_APPROX_EQ(x_sens, (MatXP {{1. / (2. * sqrt(p))}}), 1.e-10, 0.);
+
+        // Check number of iterations
+        EXPECT_LE(solver.iterations(), solver.maxIterations());
+    }
+
+
+    /// @brief Test solution sensitivities correctness for vector equation 0=A*x-p
+    TEST(NewtonSolverTest, testSolutionSensitivityVectorLinear)
+    {
+        size_t constexpr NX = 2;
+        size_t constexpr NP = 2;
+
+        using Real = double;
+        using VecX = blaze::StaticVector<Real, NX, blaze::columnVector>;
+        using VecP = blaze::StaticVector<Real, NP, blaze::columnVector>;
+        using MatXX = blaze::StaticMatrix<Real, NX, NX, blaze::columnMajor>;
+        using MatXP = blaze::StaticMatrix<Real, NX, NP, blaze::columnMajor>;
+        
+        MatXX const A {
+            {1., 2.},
+            {-3., 4.}
+        };
+
+        VecP const p {1., 0.5};
+        
+        // Define the equation and its Jacobian
+        auto fun = [&A, &p] (auto const& x, auto& f, auto& J)
+        {
+            ~f = A * ~x - p;
+            ~J = A;
+        };
+
+        // The derivative of the equation w.r.t. the parameter
+        auto dfdp = [p] (auto const& x, auto& df_dp)
+        {
+            ~df_dp = -blaze::IdentityMatrix<Real>(NX);
+        };
+
+        // Newton solver
+        NewtonSolver<Real> solver(NX);
+
+        // Initial guess
+        VecX const x0 {0., 0.};
+
+        // Find the solution and its sensitivities
+        VecX x_star;
+        MatXX x_sens;
+        solver(fun, dfdp, x0, x_star, x_sens);
+        
+        // Check the solution
+        TMPC_EXPECT_APPROX_EQ(x_star, evaluate(inv(A) * p), 1.e-10, 0.);
+
+        // Check residual at the solution
+        VecX r;
+        MatXX J;
+        fun(x_star, r, J);
+        EXPECT_LT(maxNorm(r), solver.residualTolerance());
+        EXPECT_EQ(solver.residualMaxNorm(), maxNorm(r));
+
+        // Check solution sensitivity
+        TMPC_EXPECT_APPROX_EQ(x_sens, evaluate(inv(A)), 1.e-10, 0.);
 
         // Check number of iterations
         EXPECT_LE(solver.iterations(), solver.maxIterations());
@@ -106,7 +223,8 @@ namespace tmpc :: testing
         Vec r_prev(inf<Real>());
 
         // Find the solution
-        Vec const x_star = solver.solve(fun, x0,
+        Vec x_star;
+        solver(fun, x0, x_star,
             [&r_prev] (size_t iter, auto const& x, auto const& r, auto const& J)
             {
                 for (size_t i = 0; i < NX; ++i)
@@ -176,7 +294,7 @@ namespace tmpc :: testing
 
             // Find the solution
             Vec x_star;
-            ASSERT_NO_THROW(x_star = solver.solve(fun, x0))
+            ASSERT_NO_THROW(solver(fun, x0, x_star))
                 << " at starting point " << trans(x0);
             
             // Check the solution

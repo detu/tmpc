@@ -5,7 +5,7 @@ tmpc_generate_casadi_function(SRCS HDRS "test_functions.py")
 
 add_executable(test-tmpc-casadi
     GeneratedFunctionTest.cpp
-    CompressedColumnStorageTest.cpp
+    SparsityTest.cpp
     ${SRCS} ${HDRS}
 )
 

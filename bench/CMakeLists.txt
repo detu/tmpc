@@ -4,19 +4,11 @@ find_package(Threads REQUIRED)
 
 #~~~~~~~~~~~~~~~~
 add_executable(bench-tmpc
-    CondensingBench.cpp
-    math/ZeroMatrixAssign.cpp
     math/Cholesky.cpp
-    math/Syrk.cpp
-    math/Trmm.cpp
-    math/Trmv.cpp
     math/Trsv.cpp
-    math/Gemm.cpp
-    math/GemmSubmatrix.cpp
-    math/SqrNorm.cpp
-    math/LowerMatrixScalarMultiply.cpp
     math/SyrkPotrf.cpp
-    math/Column.cpp
+    
+    CondensingBench.cpp
     ClassicalRiccatiBench.cpp
     FactorizedRiccatiBench.cpp
     StaticFactorizedRiccatiBench.cpp
@@ -33,15 +25,8 @@ target_link_libraries(bench-tmpc
 )
 
 
-add_subdirectory("blas")
-
 if (TMPC_WITH_CASADI)
     add_subdirectory("casadi")
-endif ()
-
-
-if (TMPC_WITH_BLASFEO)
-    add_subdirectory("blasfeo")
 endif ()
 
 
