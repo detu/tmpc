@@ -89,7 +89,7 @@ add_executable(test-tmpc
     util/UnwrapTest.cpp
 )
 
-    
+
 target_link_libraries(test-tmpc PRIVATE
     tmpc
     GTest::GTest
