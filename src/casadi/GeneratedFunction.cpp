@@ -17,13 +17,26 @@ namespace tmpc :: casadi
         iw_.resize(sz_iw);
         w_.resize(sz_w);
 
+        // Read In and Out argument sparsity
+        size_t const n_in = fun_.f_->n_in();
+        sparsityIn_.reserve(n_in);
+        for (size_t i = 0; i < n_in; ++i)
+            sparsityIn_.emplace_back(fun_.f_->sparsity_in(i));
+
+        size_t const n_out = fun_.f_->n_out();
+        sparsityOut_.reserve(n_out);
+        for (size_t i = 0; i < n_out; ++i)
+            sparsityOut_.emplace_back(fun_.f_->sparsity_out(i));
+
         allocateDataInOut();
     }
 
 
     GeneratedFunction::GeneratedFunction(GeneratedFunction const& rhs)
-    :	fun_{rhs.fun_}
-    ,	name_{rhs.name_}
+    :	fun_ {rhs.fun_}
+    ,	name_ {rhs.name_}
+    ,   sparsityIn_ {rhs.sparsityIn_}
+    ,   sparsityOut_ {rhs.sparsityOut_}
     ,	arg_(rhs.arg_.size())
     ,	res_(rhs.res_.size())
     ,	iw_(rhs.iw_.size())
@@ -45,10 +58,10 @@ namespace tmpc :: casadi
 
         dataIn_.reserve(n_in);
         for (size_t i = 0; i < n_in; ++i)
-            dataIn_.emplace_back(new casadi_real[sparsity_in(i).nnz()]);
+            dataIn_.emplace_back(new casadi_real[sparsityIn_[i].nnz()]);
 
         dataOut_.reserve(n_out);
         for (size_t i = 0; i < n_out; ++i)
-            dataOut_.emplace_back(new casadi_real[sparsity_out(i).nnz()]);
+            dataOut_.emplace_back(new casadi_real[sparsityOut_[i].nnz()]);
     }
 }

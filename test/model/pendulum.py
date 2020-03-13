@@ -1,5 +1,4 @@
-# Generates test data for ExplicitRungeKutta4 integrator test.
-# The test system is a pendulum with friction.
+# Generates code for the pendulum with friction test system.
 # The dynamic equations and parameters are taken from ACADO pendulum example:
 # https://github.com/acado/acado/blob/master/examples/integrator/pendulum.cpp 
 

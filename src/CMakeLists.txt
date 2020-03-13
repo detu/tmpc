@@ -76,13 +76,6 @@ if (TMPC_WITH_treeQP)
 endif()
 
 #
-# Build tmpc-blasfeo module
-#
-if (TMPC_WITH_BLASFEO)
-    add_subdirectory("blasfeo")
-endif()
-
-#
 # Link to nlohmann_json
 #
 if (TMPC_WITH_JSON)

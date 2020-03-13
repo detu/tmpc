@@ -50,7 +50,8 @@ int main(int, char **)
     };
 
     // Find the solution
-    Vec const x_star = solver.solve(rosenbrock, x0, monitor);
+    Vec x_star;
+    solver(rosenbrock, x0, x_star, monitor);
     std::cout << "Rosenbrock problem solution: " << trans(x_star);
     std::cout << "Total number of Newton iterations: " << solver.iterations() << std::endl;
     std::cout << "Total number of function evaluations: " << solver.functionEvaluations() << std::endl;
