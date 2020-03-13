@@ -29,13 +29,6 @@ target_include_directories(tmpc
 )
 
 target_link_libraries(tmpc
-    # TODO: this should be unnecessary since we link to Blaze, and Blaze already does this:
-    # target_link_libraries(blaze INTERFACE $<BUILD_INTERFACE:${LAPACK_LIBRARIES}>)
-    # But for some reason it does not work.
-    PUBLIC ${LAPACK_LIBRARIES}  # This one is set by Blaze
-    # PUBLIC ${BLAS_mkl_core_LIBRARY}
-    # PUBLIC ${BLAS_mkl_sequential_LIBRARY}
-    # PUBLIC "/opt/intel/compilers_and_libraries_2019.3.199/linux/mkl/lib/intel64_lin/libmkl_rt.so"
     PUBLIC Boost::graph
     PUBLIC Boost::exception
 )
