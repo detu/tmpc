@@ -40,7 +40,8 @@ endforeach ()
 
 # ~~~~~~~~~~ Our tests ~~~~~~~~~~~~~~
 add_executable(test-tmpc
-    #mhe_test.cpp
+    ElementGroupTest.cpp
+    
     ocp/SensitivityTupleTest.cpp
     ocp/CondensedOcpSizeTest.cpp
     ocp/OcpGraphTest.cpp
