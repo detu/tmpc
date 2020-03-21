@@ -1,6 +1,7 @@
 #pragma once
 
-#include "QpSolverException.hpp"
+#include <tmpc/qp/QpSolverException.hpp>
+#include <tmpc/qp/HpmpcErrorInfo.hpp>
 //#include <tmpc/core/detail/BundlePropertyMap.hpp>
 
 #include <tmpc/ocp/OcpSize.hpp>
@@ -19,12 +20,15 @@
 //#include "TreeQpWorkspaceAdaptor.hpp"
 //#include "OcpQpVertexElement.hpp"
 #include <tmpc/core/PropertyMap.hpp>
+#include <tmpc/Exception.hpp>
+#include <tmpc/Traits.hpp>
+
+#include <c_interface.h>
 
 #include <boost/range/iterator_range_core.hpp>
 #include <boost/iterator/iterator_adaptor.hpp>
 #include <boost/graph/breadth_first_search.hpp>
 
-#include <stdexcept>
 #include <algorithm>
 #include <cmath>
 #include <vector>
@@ -33,40 +37,49 @@
 
 namespace tmpc
 {
-	namespace detail
+	// Type-parameterized HPMPC interface
+
+	namespace hpmpc
 	{
-		// Type-parameterized HPMPC interface
-		template <typename Real>
-		struct Hpmpc
+		inline int c_order_ip_ocp_hard_tv(
+			int *kk, int k_max, double mu0, double mu_tol,
+			int N, int const *nx, int const *nu, int const *nb, int const * const *hidxb, int const *ng, int N2,
+			int warm_start,
+			double const * const *A, double const * const *B, double const * const *b,
+			double const * const *Q, double const * const *S, double const * const *R, double const * const *q, double const * const *r,
+			double const * const *lb, double const * const *ub,
+			double const * const *C, double const * const *D, double const * const *lg, double const * const *ug,
+			double * const *x, double * const *u, double * const *pi, double * const *lam,
+			double *inf_norm_res,
+			void *work0,
+			double *stat)
 		{
-			static int c_order_ip_ocp_hard_tv(
-				int *kk, int k_max, Real mu0, Real mu_tol,
-				int N, int const *nx, int const *nu, int const *nb, int const * const *hidxb, int const *ng, int N2,
-				int warm_start,
-				Real const * const *A, Real const * const *B, Real const * const *b,
-				Real const * const *Q, Real const * const *S, Real const * const *R, Real const * const *q, Real const * const *r,
-				Real const * const *lb, Real const * const *ub,
-				Real const * const *C, Real const * const *D, Real const * const *lg, Real const * const *ug,
-				Real * const *x, Real * const *u, Real * const *pi, Real * const *lam,
-				Real *inf_norm_res,
-				void *work0,
-				Real *stat);
+			return ::c_order_d_ip_ocp_hard_tv(
+				kk, k_max, mu0, mu_tol,
+				N, const_cast<int*>(nx), const_cast<int*>(nu), const_cast<int*>(nb), const_cast<int **>(hidxb), const_cast<int*>(ng), N2,
+				warm_start,
+				const_cast<double**>(A), const_cast<double**>(B), const_cast<double**>(b),
+				const_cast<double**>(Q), const_cast<double**>(S), const_cast<double**>(R), const_cast<double**>(q), const_cast<double**>(r),
+				const_cast<double**>(lb), const_cast<double**>(ub),
+				const_cast<double**>(C), const_cast<double**>(D), const_cast<double**>(lg), const_cast<double**>(ug),
+				const_cast<double**>(x), const_cast<double**>(u), const_cast<double**>(pi), const_cast<double**>(lam), 
+				inf_norm_res,
+				work0,
+				stat);
+		}
 
-			static int ip_ocp_hard_tv_work_space_size_bytes(int N, int const *nx, int const *nu, int const *nb, int const * const * hidxb, int const *ng, int N2);
-		};
+		
+		template <typename Real>
+		int ip_ocp_hard_tv_work_space_size_bytes(int N, int const *nx, int const *nu, int const *nb, int const * const * hidxb, int const *ng, int N2);
+
+
+		template <>
+		inline int ip_ocp_hard_tv_work_space_size_bytes<double>(int N, int const *nx, int const *nu, int const *nb, int const * const * hidxb, int const *ng, int N2)
+		{
+			return ::hpmpc_d_ip_ocp_hard_tv_work_space_size_bytes(
+				N, const_cast<int*>(nx), const_cast<int*>(nu),  const_cast<int*>(nb), const_cast<int **>(hidxb), const_cast<int*>(ng), N2);
+		}
 	}
-
-
-	class HpmpcException 
-	:	public std::runtime_error
-	{
-	public:
-		HpmpcException(int code);
-		int code() const { return _code;	}
-
-	private:
-		int const _code;
-	};
 
 
 	/**
@@ -74,18 +87,17 @@ namespace tmpc
 	 *
 	 * \tparam <Kernel> the math kernel type
 	 */
-	template <typename Kernel_>
+	template <typename Real>
 	class HpmpcWorkspace
 	{
 	public:
-		using Kernel = Kernel_;
 		static StorageOrder constexpr SO = StorageOrder::rowMajor;
-		using Real = typename Kernel::Real;
 		
 		// Iteration statistics. HPMPC returns 5 Real numbers per iteration:
 		// step length for predictor and corrector, 
 		// centering parameter, duality measure for predictor and corrector.
 		using IterStat = std::array<Real, 5>;
+
 
 		std::string impl_solverName() const
 		{
@@ -115,10 +127,10 @@ namespace tmpc
 			auto const ne = num_edges(graph_);
 
 			if (nv < 2)
-				throw std::invalid_argument("HPMPC needs an at least 2-stages problem");
+				TMPC_THROW_EXCEPTION(std::invalid_argument("HPMPC needs an at least 2-stages problem"));
 
 			if (ne + 1 != num_vertices(graph_))
-				throw std::invalid_argument("Number of edges in HPMPC size graph must be 1 less than the number of vertices");
+				TMPC_THROW_EXCEPTION(std::invalid_argument("Number of edges in HPMPC size graph must be 1 less than the number of vertices"));
 
 			// Calculate total number of int and Real elements to be allocated.
 			size_t count_real = 0, count_int = 0;
@@ -220,14 +232,14 @@ namespace tmpc
 			Real mu0 = 1.;
 
 			// Call HPMPC
-			auto const ret = detail::Hpmpc<Real>::c_order_ip_ocp_hard_tv(&numIter_, maxIter(), mu0, muTol_, N,
+			auto const ret = hpmpc::c_order_ip_ocp_hard_tv(&numIter_, maxIter(), mu0, muTol_, N,
 					nx_.data(), nu_.data(), nb_.data(), hidxb_.data(), ng_.data(), N, _warmStart ? 1 : 0, A_.data(), B_.data(), b_.data(),
 					Q_.data(), S_.data(), R_.data(), q_.data(), r_.data(), lb_.data(), ub_.data(), C_.data(), D_.data(),
 					lg_.data(), ug_.data(), x_.data(), u_.data(), pi_.data(), lam_.data(), infNormRes_.data(),
 					solverWorkspace_.data(), stat_[0].data());
 
 			if (ret != 0)
-				throw HpmpcException(ret);
+				TMPC_THROW_EXCEPTION(QpSolverException {} << HpmpcErrorInfo {ret});
 		}
 
 
@@ -260,7 +272,7 @@ namespace tmpc
 
 
 		/// \brief Get number of iterations performed by the QP solver.
-		auto numIter() const 
+		auto numIter() const noexcept
 		{ 
 			return numIter_; 
 		}
@@ -272,7 +284,7 @@ namespace tmpc
 		}
 
 
-		auto const& graph() const
+		auto const& graph() const noexcept
 		{
 			return graph_;
 		}
@@ -280,98 +292,98 @@ namespace tmpc
 
 		auto Q()
 		{
-			return detail::makeMatrixPtrPropertyMap<OcpVertexDescriptor, CustomMatrix<Kernel, unaligned, unpadded, SO>>(
+			return detail::makeMatrixPtrPropertyMap<OcpVertexDescriptor, blaze::CustomMatrix<Real, blaze::unaligned, blaze::unpadded, SO>>(
 				make_iterator_property_map(Q_.begin(), get(graph::vertex_index, graph_)), size_Q(size()));
 		}
 
 
 		auto Q() const noexcept
 		{
-			return detail::makeMatrixPtrPropertyMap<OcpVertexDescriptor, CustomMatrix<Kernel, unaligned, unpadded, SO>>(
+			return detail::makeMatrixPtrPropertyMap<OcpVertexDescriptor, blaze::CustomMatrix<Real, blaze::unaligned, blaze::unpadded, SO>>(
 				make_iterator_property_map(Q_.begin(), get(graph::vertex_index, graph_)), size_Q(size()));
 		}
 
 
 		auto R()
 		{
-			return detail::makeMatrixPtrPropertyMap<OcpVertexDescriptor, CustomMatrix<Kernel, unaligned, unpadded, SO>>(
+			return detail::makeMatrixPtrPropertyMap<OcpVertexDescriptor, blaze::CustomMatrix<Real, blaze::unaligned, blaze::unpadded, SO>>(
 				make_iterator_property_map(R_.begin(), get(graph::vertex_index, graph_)), size_R(size()));
 		}
 
 
 		auto R() const noexcept
 		{
-			return detail::makeMatrixPtrPropertyMap<OcpVertexDescriptor, CustomMatrix<Kernel, unaligned, unpadded, SO>>(
+			return detail::makeMatrixPtrPropertyMap<OcpVertexDescriptor, blaze::CustomMatrix<Real, blaze::unaligned, blaze::unpadded, SO>>(
 				make_iterator_property_map(R_.begin(), get(graph::vertex_index, graph_)), size_R(size()));
 		}
 
 
 		auto S()
 		{
-			return detail::makeMatrixPtrPropertyMap<OcpVertexDescriptor, CustomMatrix<Kernel, unaligned, unpadded, SO>>(
+			return detail::makeMatrixPtrPropertyMap<OcpVertexDescriptor, blaze::CustomMatrix<Real, blaze::unaligned, blaze::unpadded, SO>>(
 				make_iterator_property_map(S_.begin(), get(graph::vertex_index, graph_)), size_S(size()));
 		}
 
 
 		auto S() const noexcept
 		{
-			return detail::makeMatrixPtrPropertyMap<OcpVertexDescriptor, CustomMatrix<Kernel, unaligned, unpadded, SO>>(
+			return detail::makeMatrixPtrPropertyMap<OcpVertexDescriptor, blaze::CustomMatrix<Real, blaze::unaligned, blaze::unpadded, SO>>(
 				make_iterator_property_map(S_.begin(), get(graph::vertex_index, graph_)), size_S(size()));
 		}
 
 
 		auto C()
 		{
-			return detail::makeMatrixPtrPropertyMap<OcpVertexDescriptor, CustomMatrix<Kernel, unaligned, unpadded, SO>>(
+			return detail::makeMatrixPtrPropertyMap<OcpVertexDescriptor, blaze::CustomMatrix<Real, blaze::unaligned, blaze::unpadded, SO>>(
 				make_iterator_property_map(C_.begin(), get(graph::vertex_index, graph_)), size_C(size()));
 		}
 
 
 		auto C() const noexcept
 		{
-			return detail::makeMatrixPtrPropertyMap<OcpVertexDescriptor, CustomMatrix<Kernel, unaligned, unpadded, SO>>(
+			return detail::makeMatrixPtrPropertyMap<OcpVertexDescriptor, blaze::CustomMatrix<Real, blaze::unaligned, blaze::unpadded, SO>>(
 				make_iterator_property_map(C_.begin(), get(graph::vertex_index, graph_)), size_C(size()));
 		}
 
 
 		auto D()
 		{
-			return detail::makeMatrixPtrPropertyMap<OcpVertexDescriptor, CustomMatrix<Kernel, unaligned, unpadded, SO>>(
+			return detail::makeMatrixPtrPropertyMap<OcpVertexDescriptor, blaze::CustomMatrix<Real, blaze::unaligned, blaze::unpadded, SO>>(
 				make_iterator_property_map(D_.begin(), get(graph::vertex_index, graph_)), size_D(size()));
 		}
 
 
 		auto D() const noexcept
 		{
-			return detail::makeMatrixPtrPropertyMap<OcpVertexDescriptor, CustomMatrix<Kernel, unaligned, unpadded, SO>>(
+			return detail::makeMatrixPtrPropertyMap<OcpVertexDescriptor, blaze::CustomMatrix<Real, blaze::unaligned, blaze::unpadded, SO>>(
 				make_iterator_property_map(D_.begin(), get(graph::vertex_index, graph_)), size_D(size()));
 		}
 
 
 		auto q()
 		{
-			return detail::makeVectorPtrPropertyMap<OcpVertexDescriptor, CustomVector<Kernel, unaligned, unpadded>>(
+			return detail::makeVectorPtrPropertyMap<OcpVertexDescriptor, blaze::CustomVector<Real, blaze::unaligned, blaze::unpadded>>(
 				make_iterator_property_map(q_.begin(), get(graph::vertex_index, graph_)), size_x(size()));
 		}
 
 
 		auto q() const noexcept
 		{
-			return detail::makeVectorPtrPropertyMap<OcpVertexDescriptor, CustomVector<Kernel, unaligned, unpadded>>(
+			return detail::makeVectorPtrPropertyMap<OcpVertexDescriptor, blaze::CustomVector<Real, blaze::unaligned, blaze::unpadded>>(
 				make_iterator_property_map(q_.begin(), get(graph::vertex_index, graph_)), size_x(size()));
 		}
 
 
 		auto r()
 		{
-			return detail::makeVectorPtrPropertyMap<OcpVertexDescriptor, CustomVector<Kernel, unaligned, unpadded>>(
+			return detail::makeVectorPtrPropertyMap<OcpVertexDescriptor, blaze::CustomVector<Real, blaze::unaligned, blaze::unpadded>>(
 				make_iterator_property_map(r_.begin(), get(graph::vertex_index, graph_)), size_u(size()));
 		}
 
 
 		auto r() const noexcept
 		{
-			return detail::makeVectorPtrPropertyMap<OcpVertexDescriptor, CustomVector<Kernel, unaligned, unpadded>>(
+			return detail::makeVectorPtrPropertyMap<OcpVertexDescriptor, blaze::CustomVector<Real, blaze::unaligned, blaze::unpadded>>(
 				make_iterator_property_map(r_.begin(), get(graph::vertex_index, graph_)), size_u(size()));
 		}
 
@@ -434,84 +446,84 @@ namespace tmpc
 
 		auto ld()
 		{
-			return detail::makeVectorPtrPropertyMap<OcpVertexDescriptor, CustomVector<Kernel, unaligned, unpadded>>(
+			return detail::makeVectorPtrPropertyMap<OcpVertexDescriptor, blaze::CustomVector<Real, blaze::unaligned, blaze::unpadded>>(
 				make_iterator_property_map(lg_.begin(), get(graph::vertex_index, graph_)), size_d(size()));
 		}
 
 
 		auto ld() const noexcept
 		{
-			return detail::makeVectorPtrPropertyMap<OcpVertexDescriptor, CustomVector<Kernel, unaligned, unpadded>>(
+			return detail::makeVectorPtrPropertyMap<OcpVertexDescriptor, blaze::CustomVector<Real, blaze::unaligned, blaze::unpadded>>(
 				make_iterator_property_map(lg_.begin(), get(graph::vertex_index, graph_)), size_d(size()));
 		}
 
 
 		auto ud()
 		{
-			return detail::makeVectorPtrPropertyMap<OcpVertexDescriptor, CustomVector<Kernel, unaligned, unpadded>>(
+			return detail::makeVectorPtrPropertyMap<OcpVertexDescriptor, blaze::CustomVector<Real, blaze::unaligned, blaze::unpadded>>(
 				make_iterator_property_map(ug_.begin(), get(graph::vertex_index, graph_)), size_d(size()));
 		}
 
 
 		auto ud() const noexcept
 		{
-			return detail::makeVectorPtrPropertyMap<OcpVertexDescriptor, CustomVector<Kernel, unaligned, unpadded>>(
+			return detail::makeVectorPtrPropertyMap<OcpVertexDescriptor, blaze::CustomVector<Real, blaze::unaligned, blaze::unpadded>>(
 				make_iterator_property_map(ug_.begin(), get(graph::vertex_index, graph_)), size_d(size()));
 		}
 
 
 		auto A()
 		{
-			return detail::makeMatrixPtrPropertyMap<OcpEdgeDescriptor, CustomMatrix<Kernel, unaligned, unpadded, SO>>(
+			return detail::makeMatrixPtrPropertyMap<OcpEdgeDescriptor, blaze::CustomMatrix<Real, blaze::unaligned, blaze::unpadded, SO>>(
 				make_iterator_property_map(A_.begin(), get(graph::edge_index, graph_)), size_A(size(), graph_));
 		}
 
 
 		auto A() const noexcept
 		{
-			return detail::makeMatrixPtrPropertyMap<OcpEdgeDescriptor, CustomMatrix<Kernel, unaligned, unpadded, SO>>(
+			return detail::makeMatrixPtrPropertyMap<OcpEdgeDescriptor, blaze::CustomMatrix<Real, blaze::unaligned, blaze::unpadded, SO>>(
 				make_iterator_property_map(A_.begin(), get(graph::edge_index, graph_)), size_A(size(), graph_));
 		}
 
 
 		auto B()
 		{
-			return detail::makeMatrixPtrPropertyMap<OcpEdgeDescriptor, CustomMatrix<Kernel, unaligned, unpadded, SO>>(
+			return detail::makeMatrixPtrPropertyMap<OcpEdgeDescriptor, blaze::CustomMatrix<Real, blaze::unaligned, blaze::unpadded, SO>>(
 				make_iterator_property_map(B_.begin(), get(graph::edge_index, graph_)), size_B(size(), graph_));
 		}
 
 
 		auto B() const noexcept
 		{
-			return detail::makeMatrixPtrPropertyMap<OcpEdgeDescriptor, CustomMatrix<Kernel, unaligned, unpadded, SO>>(
+			return detail::makeMatrixPtrPropertyMap<OcpEdgeDescriptor, blaze::CustomMatrix<Real, blaze::unaligned, blaze::unpadded, SO>>(
 				make_iterator_property_map(B_.begin(), get(graph::edge_index, graph_)), size_B(size(), graph_));
 		}
 
 
 		auto b()
 		{
-			return detail::makeVectorPtrPropertyMap<OcpEdgeDescriptor, CustomVector<Kernel, unaligned, unpadded>>(
+			return detail::makeVectorPtrPropertyMap<OcpEdgeDescriptor, blaze::CustomVector<Real, blaze::unaligned, blaze::unpadded>>(
 				make_iterator_property_map(b_.begin(), get(graph::edge_index, graph_)), size_b(size(), graph_));
 		}
 
 
 		auto b() const noexcept
 		{
-			return detail::makeVectorPtrPropertyMap<OcpEdgeDescriptor, CustomVector<Kernel, unaligned, unpadded>>(
+			return detail::makeVectorPtrPropertyMap<OcpEdgeDescriptor, blaze::CustomVector<Real, blaze::unaligned, blaze::unpadded>>(
 				make_iterator_property_map(b_.begin(), get(graph::edge_index, graph_)), size_b(size(), graph_));
 		}
 
 
 		auto x() const noexcept
 		{
-			return detail::makeVectorPtrPropertyMap<OcpVertexDescriptor, CustomVector<Kernel, unaligned, unpadded>>(
+			return detail::makeVectorPtrPropertyMap<OcpVertexDescriptor, blaze::CustomVector<Real, blaze::unaligned, blaze::unpadded>>(
 				make_iterator_property_map(x_.begin(), get(graph::vertex_index, graph_)), size_x(size()));
 		}
 
 
 		auto u() const noexcept
 		{
-			return detail::makeVectorPtrPropertyMap<OcpVertexDescriptor, CustomVector<Kernel, unaligned, unpadded>>(
+			return detail::makeVectorPtrPropertyMap<OcpVertexDescriptor, blaze::CustomVector<Real, blaze::unaligned, blaze::unpadded>>(
 				make_iterator_property_map(u_.begin(), get(graph::vertex_index, graph_)), size_u(size()));
 		}
 
@@ -548,10 +560,10 @@ namespace tmpc
 		std::vector<int> ng_;
 		std::vector<int *> hidxb_;
 
-		std::vector<DynamicVector<Kernel>> lx_;
-		std::vector<DynamicVector<Kernel>> ux_;
-		std::vector<DynamicVector<Kernel>> lu_;
-		std::vector<DynamicVector<Kernel>> uu_;
+		std::vector<blaze::DynamicVector<Real, blaze::columnVector>> lx_;
+		std::vector<blaze::DynamicVector<Real, blaze::columnVector>> ux_;
+		std::vector<blaze::DynamicVector<Real, blaze::columnVector>> lu_;
+		std::vector<blaze::DynamicVector<Real, blaze::columnVector>> uu_;
 
 		// --------------------------------
 		//
@@ -708,7 +720,7 @@ namespace tmpc
 				auto const v = target(e, g);
 
 				if (v != u + 1)
-					throw std::invalid_argument("Invalid tree structure in HpmpcWorkspace ctor:	vertices are not sequentially connected");
+					TMPC_THROW_EXCEPTION(std::invalid_argument("Invalid tree structure in HpmpcWorkspace ctor:	vertices are not sequentially connected"));
 
 				auto const& sz_u = get(ws_.size(), u);
 				auto const& sz_v = get(ws_.size(), v);
@@ -722,7 +734,7 @@ namespace tmpc
 
 			void non_tree_edge(OcpEdgeDescriptor e, OcpGraph const& g)
 			{
-				throw std::invalid_argument("Invalid tree structure in HpmpcWorkspace ctor:	non-tree graph structure detected.");
+				TMPC_THROW_EXCEPTION(std::invalid_argument("Invalid tree structure in HpmpcWorkspace ctor:	non-tree graph structure detected."));
 			}
 
         
@@ -735,7 +747,7 @@ namespace tmpc
 			Real * allocReal(size_t n)
 			{
 				if (allocatedReal_ + n > ws_.realPool_.size())
-					throw std::bad_alloc();
+					TMPC_THROW_EXCEPTION(std::bad_alloc());
 
 				Real * const ptr = ws_.realPool_.data() + allocatedReal_;
 				allocatedReal_ += n;
@@ -747,7 +759,7 @@ namespace tmpc
 			int * allocInt(size_t n)
 			{
 				if (allocatedInt_ + n > ws_.intPool_.size())
-					throw std::bad_alloc();
+					TMPC_THROW_EXCEPTION(std::bad_alloc());
 
 				int * const ptr = ws_.intPool_.data() + allocatedInt_;
 				allocatedInt_ += n;
@@ -785,8 +797,8 @@ namespace tmpc
 				{
 					// Otherwise, check that the values are [-inf, inf]
 					if (!(l == -inf<Real>() && u == inf<Real>()))
-						throw std::invalid_argument("An invalid QP bound is found. For HPMPC/HPIPM, "
-							"the bounds should be either both finite or [-inf, inf]");
+						TMPC_THROW_EXCEPTION(std::invalid_argument("An invalid QP bound is found. For HPMPC/HPIPM, "
+							"the bounds should be either both finite or [-inf, inf]"));
 				}
 
 				++count_;
@@ -808,8 +820,15 @@ namespace tmpc
 			// Number of QP steps for HPMPC
 			auto const N = num_vertices(graph_) - 1;
 	
-			solverWorkspace_.resize(detail::Hpmpc<Real>::ip_ocp_hard_tv_work_space_size_bytes(
+			solverWorkspace_.resize(hpmpc::ip_ocp_hard_tv_work_space_size_bytes<Real>(
 				static_cast<int>(N), nx_.data(), nu_.data(), nb_.data(), hidxb_.data(), ng_.data(), static_cast<int>(N)));
 		}
 	};
+
+
+	template <typename Real>
+    struct RealOf<HpmpcWorkspace<Real>>
+    {
+        using type = Real;
+    };
 }

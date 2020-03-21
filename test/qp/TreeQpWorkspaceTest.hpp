@@ -25,10 +25,9 @@ namespace tmpc :: testing
         using Workspace = WS;
 
     protected:
-        using Kernel = typename KernelOf<Workspace>::type;
         using Real = typename RealOf<Workspace>::type;
-        using Vector = DynamicVector<Kernel>;
-        using Matrix = DynamicMatrix<Kernel>;
+        using Vector = blaze::DynamicVector<Real, blaze::columnVector>;
+        using Matrix = blaze::DynamicMatrix<Real>;
 
 
         TreeQpWorkspaceTest()
@@ -71,8 +70,8 @@ namespace tmpc :: testing
         std::map<OcpVertexDescriptor, typename TestFixture::Vector> d_min, d_max;
 
         // Writing random data
-        Rand<typename TestFixture::Kernel, typename TestFixture::Matrix> rand_matrix;
-        Rand<typename TestFixture::Kernel, typename TestFixture::Vector> rand_vector;
+        blaze::Rand<typename TestFixture::Matrix> rand_matrix;
+        blaze::Rand<typename TestFixture::Vector> rand_vector;
 
         for (auto v : graph::vertices(g))
         {
