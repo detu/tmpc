@@ -30,6 +30,7 @@ namespace tmpc
 	private:
 		qpOASES::returnValue const _code;
 	};
+	
 
 	namespace detail 
 	{

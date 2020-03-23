@@ -17,23 +17,7 @@ namespace tmpc
 	public:
 		void solve()
 		{
-			try
-			{
-				derived().impl_solve();
-			}
-			catch (std::exception const& e)
-			{
-				std::throw_with_nested(QpSolverException {solverName()});
-			}
-
-			// Check the solution for NaNs
-			auto const sol = derived().impl_solution();
-
-			if (std::find_if(sol.begin(), sol.end(), 
-				[] (auto const& s) { return isnan(s); }) != sol.end())
-			{
-				throw QpSolverException {solverName(), solverName() + " returned a solution with NaNs"};
-			}
+			derived().impl_solve();
 		}
 
 
