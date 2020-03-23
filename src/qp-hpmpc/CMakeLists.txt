@@ -1,17 +1,14 @@
 find_package(BLASFEO REQUIRED)
 
-add_library(tmpc-qp-hpmpc
-    ${TMPC_INCLUDE_DIR}/qp/HpmpcWorkspace.hpp
-    HpmpcWorkspace.cpp
-)
+add_library(tmpc-qp-hpmpc INTERFACE)
 
 target_include_directories(tmpc-qp-hpmpc
-    PUBLIC ${HPMPC_INCLUDE_DIR}
-    PUBLIC ${BLASFEO_INCLUDE_DIR}
+    INTERFACE ${HPMPC_INCLUDE_DIR}
+    INTERFACE ${BLASFEO_INCLUDE_DIR}
 )
 
 target_link_libraries(tmpc-qp-hpmpc
-    PUBLIC tmpc
-    PUBLIC ${HPMPC_STATIC_LIB}
-    PUBLIC ${BLASFEO_STATIC_LIB}
+    INTERFACE tmpc
+    INTERFACE ${HPMPC_STATIC_LIB}
+    INTERFACE ${BLASFEO_STATIC_LIB}
 )
