@@ -5,5 +5,5 @@
 
 namespace tmpc
 {
-    using HpmpcErrorInfo = boost::error_info<struct TagHpmpcErrorInfo, int>;
+    using HpmpcReturnCodeInfo = boost::error_info<struct TagHpmpcReturnCodeInfo, int>;
 }

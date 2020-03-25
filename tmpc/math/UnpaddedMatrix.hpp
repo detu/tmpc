@@ -13,6 +13,12 @@ namespace tmpc
 
 
     public:
+        UnpaddedMatrix()
+        :   UnpaddedMatrix(0, 0)
+        {
+        }
+
+
         UnpaddedMatrix(UnpaddedMatrix const&) = delete;
         UnpaddedMatrix(UnpaddedMatrix &&) = default;
 

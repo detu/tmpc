@@ -8,8 +8,6 @@
 
 #include <tmpc/Testing.hpp>
 
-#include <tmpc/Testing.hpp>
-
 #include <iostream>
 #include <fstream>
 
