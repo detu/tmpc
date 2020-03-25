@@ -8,7 +8,7 @@
 #include <tmpc/qp/OcpQp.hpp>
 #include <tmpc/ocp/OcpSizeProperties.hpp>
 #include <tmpc/Matrix.hpp>
-#include <tmpc/core/PropertyMap.hpp>
+#include <tmpc/property_map/PropertyMap.hpp>
 #include <tmpc/core/Range.hpp>
 #include <tmpc/Traits.hpp>
 

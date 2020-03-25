@@ -1,5 +1,10 @@
 #pragma once
 
+#include <tmpc/ocp/OcpKktResidual.hpp>
+#include <tmpc/ocp/OcpSizeProperties.hpp>
+#include <tmpc/qp/OcpQp.hpp>
+#include <tmpc/testing/qp/IsSolution.hpp>
+
 #include <tmpc/Testing.hpp>
 
 #include <blaze/Math.h>
@@ -15,10 +20,9 @@ namespace tmpc :: testing
         using Workspace = WS;
 
     protected:
-        using Kernel = typename KernelOf<Workspace>::type;
         using Real = typename RealOf<Workspace>::type;
-        using Vector = DynamicVector<Kernel>;
-        using Matrix = DynamicMatrix<Kernel>;
+        using Vector = blaze::DynamicVector<Real, blaze::columnVector>;
+        using Matrix = blaze::DynamicMatrix<Real>;
     };
 
 
@@ -140,6 +144,27 @@ namespace tmpc :: testing
 		EXPECT_TRUE(approxEqual(get(ws.pi(), e1), (DynamicVector<double> {15.036417437909771, 21.143596583220845}), 1e-6));
 
 		EXPECT_TRUE(approxEqual(get(ws.x(), 2), (DynamicVector<double> {1.1794991482758881, 0.23153042536792068}), 1e-6));
+	}
+
+
+	TYPED_TEST_P(SolveUnconstrainedTest, testKktResidual)
+	{
+		using Real = typename TestFixture::Real;
+		using Workspace = typename TestFixture::Workspace;
+
+		size_t constexpr NX = 2;
+		size_t constexpr NU = 1;
+		size_t constexpr NC = 0;
+		size_t constexpr NCT = 0;
+		size_t constexpr NT = 2;
+
+		OcpGraph const g = ocpGraphLinear(NT + 1);
+		auto const size_map = ocpSizeNominalMpc(NT, NX, NU, NC, 0, NCT, false);
+		Workspace ws {g, size_map};
+		randomizeQp(ws);
+		ws.solveUnconstrained();
+
+		EXPECT_TRUE(isSolution(ws, ws, 1e-14));
 	}
 
 
@@ -266,5 +291,6 @@ namespace tmpc :: testing
     REGISTER_TYPED_TEST_SUITE_P(SolveUnconstrainedTest
         , test_solveUnconstrained0
 		, test_solveUnconstrained1
+		, testKktResidual
     );
 }

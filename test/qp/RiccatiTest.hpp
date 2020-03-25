@@ -1,8 +1,11 @@
 #pragma once
 
 #include <tmpc/qp/MpipmWorkspace.hpp>
+#include <tmpc/qp/OcpQp.hpp>
+#include <tmpc/qp/KktResidual.hpp>
 #include <tmpc/ocp/OcpSizeProperties.hpp>
 #include <tmpc/Testing.hpp>
+#include <tmpc/testing/qp/IsSolution.hpp>
 
 #include <blaze/Math.h>
 
@@ -294,9 +297,34 @@ namespace tmpc :: testing
 	}
 
 
+	TYPED_TEST_P(RiccatiTest, testKktResidual)
+	{
+		using Real = double;
+		using Workspace = typename TestFixture::Workspace;
+
+		size_t constexpr NX = 2;
+		size_t constexpr NU = 1;
+		size_t constexpr NC = 0;
+		size_t constexpr NCT = 0;
+		size_t constexpr NT = 2;
+
+		OcpGraph const g = ocpGraphLinear(NT + 1);
+		auto const size_map = ocpSizeNominalMpc(NT, NX, NU, NC, 0, NCT, false);
+		
+		MpipmWorkspace<Real> ws(g, size_map);
+        randomizeQp(ws);
+		
+		typename TestFixture::RiccatiImpl riccati(g, size_map);
+		riccati(ws, ws);
+
+		EXPECT_TRUE(isSolution(ws, ws, 1e-14));
+	}
+
+
     REGISTER_TYPED_TEST_SUITE_P(RiccatiTest
         , test_riccati0
 		, test_riccati1
 		, testSingleStageNoState
+		, testKktResidual
     );
 }

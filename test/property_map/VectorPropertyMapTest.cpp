@@ -1,6 +1,6 @@
-#include <tmpc/qp/detail/VectorPropertyMap.hpp>
+#include <tmpc/property_map/VectorPropertyMap.hpp>
 #include <tmpc/ocp/OcpSizeProperties.hpp>
-#include <tmpc/core/PropertyMap.hpp>
+#include <tmpc/property_map/PropertyMap.hpp>
 #include <tmpc/Testing.hpp>
 
 #include <blaze/Blaze.h>
@@ -52,7 +52,7 @@ namespace tmpc :: testing
                 dst[i] = index + i * 0.1;
         };
 
-        auto map = tmpc::detail::makeVectorPropertyMap<OcpVertexDescriptor, Vector>(index_map, size_x(size_map), setter, getter);
+        auto map = makeVectorPropertyMap<OcpVertexDescriptor, Vector>(index_map, size_x(size_map), setter, getter);
         
         expected_index = 0;
         EXPECT_EQ(forcePrint(get(map, 0)), (Vector {0.0, 0.1}));

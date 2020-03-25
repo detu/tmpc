@@ -1,6 +1,6 @@
 #include <tmpc/ocp/OcpGraph.hpp>
 #include <tmpc/core/Range.hpp>
-#include <tmpc/core/PropertyMap.hpp>
+#include <tmpc/property_map/PropertyMap.hpp>
 #include <tmpc/graph/ImpactRecorder.hpp>
 #include <tmpc/graph/DepthFirstSearch.hpp>
 #include <tmpc/Testing.hpp>

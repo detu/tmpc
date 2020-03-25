@@ -1,10 +1,10 @@
 #pragma once
 
-#include <tmpc/core/detail/BundlePropertyMap.hpp>
+#include <tmpc/property_map/BundlePropertyMap.hpp>
 
 #include <tmpc/ocp/OcpGraph.hpp>
 #include <tmpc/ocp/OcpSize.hpp>
-#include <tmpc/core/PropertyMap.hpp>
+#include <tmpc/property_map/PropertyMap.hpp>
 #include <tmpc/graph/Graph.hpp>
 #include <tmpc/Math.hpp>
 
@@ -46,109 +46,109 @@ namespace tmpc
 
         auto x()
         {
-            return detail::BundlePropertyMap(&VertexPropertyBundle::x_, vertexProperties());
+            return BundlePropertyMap(&VertexPropertyBundle::x_, vertexProperties());
         }
 
 
         auto x() const
         {
-            return detail::BundlePropertyMap(&VertexPropertyBundle::x_, vertexProperties());
+            return BundlePropertyMap(&VertexPropertyBundle::x_, vertexProperties());
         }
 
 
         auto u()
         {
-            return detail::BundlePropertyMap(&VertexPropertyBundle::u_, vertexProperties());
+            return BundlePropertyMap(&VertexPropertyBundle::u_, vertexProperties());
         }
 
 
         auto u() const
         {
-            return detail::BundlePropertyMap(&VertexPropertyBundle::u_, vertexProperties());
+            return BundlePropertyMap(&VertexPropertyBundle::u_, vertexProperties());
         }
 
 
         auto lam_lx()
         {
-            return detail::BundlePropertyMap(&VertexPropertyBundle::lam_lx_, vertexProperties());
+            return BundlePropertyMap(&VertexPropertyBundle::lam_lx_, vertexProperties());
         }
 
 
         auto lam_lx() const
         {
-            return detail::BundlePropertyMap(&VertexPropertyBundle::lam_lx_, vertexProperties());
+            return BundlePropertyMap(&VertexPropertyBundle::lam_lx_, vertexProperties());
         }
 
 
         auto lam_ux()
         {
-            return detail::BundlePropertyMap(&VertexPropertyBundle::lam_ux_, vertexProperties());
+            return BundlePropertyMap(&VertexPropertyBundle::lam_ux_, vertexProperties());
         }
 
 
         auto lam_ux() const
         {
-            return detail::BundlePropertyMap(&VertexPropertyBundle::lam_ux_, vertexProperties());
+            return BundlePropertyMap(&VertexPropertyBundle::lam_ux_, vertexProperties());
         }
 
 
         auto lam_lu()
         {
-            return detail::BundlePropertyMap(&VertexPropertyBundle::lam_lu_, vertexProperties());
+            return BundlePropertyMap(&VertexPropertyBundle::lam_lu_, vertexProperties());
         }
 
 
         auto lam_lu() const
         {
-            return detail::BundlePropertyMap(&VertexPropertyBundle::lam_lu_, vertexProperties());
+            return BundlePropertyMap(&VertexPropertyBundle::lam_lu_, vertexProperties());
         }
 
 
         auto lam_uu()
         {
-            return detail::BundlePropertyMap(&VertexPropertyBundle::lam_uu_, vertexProperties());
+            return BundlePropertyMap(&VertexPropertyBundle::lam_uu_, vertexProperties());
         }
 
 
         auto lam_uu() const
         {
-            return detail::BundlePropertyMap(&VertexPropertyBundle::lam_uu_, vertexProperties());
+            return BundlePropertyMap(&VertexPropertyBundle::lam_uu_, vertexProperties());
         }
 
 
         auto lam_ld()
         {
-            return detail::BundlePropertyMap(&VertexPropertyBundle::lam_ld_, vertexProperties());
+            return BundlePropertyMap(&VertexPropertyBundle::lam_ld_, vertexProperties());
         }
 
 
         auto lam_ld() const
         {
-            return detail::BundlePropertyMap(&VertexPropertyBundle::lam_ld_, vertexProperties());
+            return BundlePropertyMap(&VertexPropertyBundle::lam_ld_, vertexProperties());
         }
 
 
         auto lam_ud()
         {
-            return detail::BundlePropertyMap(&VertexPropertyBundle::lam_ud_, vertexProperties());
+            return BundlePropertyMap(&VertexPropertyBundle::lam_ud_, vertexProperties());
         }
 
 
         auto lam_ud() const
         {
-            return detail::BundlePropertyMap(&VertexPropertyBundle::lam_ud_, vertexProperties());
+            return BundlePropertyMap(&VertexPropertyBundle::lam_ud_, vertexProperties());
         }
 
 
         auto pi()
         {
-            return detail::BundlePropertyMap(&EdgePropertyBundle::pi_, edgeProperties());
+            return BundlePropertyMap(&EdgePropertyBundle::pi_, edgeProperties());
         }
 
 
         auto pi() const
         {
-            return detail::BundlePropertyMap(&EdgePropertyBundle::pi_, edgeProperties());
+            return BundlePropertyMap(&EdgePropertyBundle::pi_, edgeProperties());
         }
 
 

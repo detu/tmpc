@@ -1,7 +1,6 @@
 #include <tmpc/qp/HpipmWorkspace.hpp>
 #include <tmpc/qp/OcpQp.hpp>
 #include <tmpc/ocp/OcpSizeProperties.hpp>
-#include <tmpc/BlazeKernel.hpp>
 
 #include <bench/RiccatiBench.hpp>
 #include <bench/Benchmark.hpp>
@@ -15,7 +14,7 @@ namespace tmpc :: benchmark
         size_t const N = state.range(0), nx = state.range(1), nu = state.range(2);
 
         OcpGraph const g = ocpGraphLinear(N + 1);
-        HpipmWorkspace<BlazeKernel<double>> ws(g, ocpSizeNominalMpc(N, nx, nu, 0, 0, 0, true));
+        HpipmWorkspace<double> ws(g, ocpSizeNominalMpc(N, nx, nu, 0, 0, 0, true));
 
         randomizeQp(ws);
         ws.convertProblem();

@@ -3,7 +3,7 @@
 #include <stdexcept>
 
 
-namespace tmpc :: detail
+namespace tmpc
 {
     template <
         typename Key,

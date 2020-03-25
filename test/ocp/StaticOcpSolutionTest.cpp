@@ -5,7 +5,7 @@
 #include <tmpc/ocp/OcpGraph.hpp>
 #include <tmpc/ocp/OcpSize.hpp>
 #include <tmpc/Matrix.hpp>
-#include <tmpc/core/PropertyMap.hpp>
+#include <tmpc/property_map/PropertyMap.hpp>
 #include <tmpc/ocp/StaticOcpSolution.hpp>
 #include <tmpc/Testing.hpp>
 

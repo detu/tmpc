@@ -5,7 +5,7 @@
 #include <tmpc/core/Range.hpp>
 #include <tmpc/graph/DepthFirstSearch.hpp>
 #include <tmpc/graph/ImpactRecorder.hpp>
-#include <tmpc/core/PropertyMap.hpp>
+#include <tmpc/property_map/PropertyMap.hpp>
 
 #include <boost/iterator/iterator_facade.hpp>
 

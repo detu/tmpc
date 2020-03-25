@@ -3,7 +3,7 @@
 #include <tmpc/Matrix.hpp>
 
 
-namespace tmpc :: detail
+namespace tmpc
 {
     template <
         typename Key,

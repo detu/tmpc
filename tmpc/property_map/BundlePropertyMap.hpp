@@ -1,11 +1,10 @@
 #pragma once
 
-#include <tmpc/core/PropertyMap.hpp>
+#include <tmpc/property_map/PropertyMap.hpp>
+#include <tmpc/Exception.hpp>
 
-#include <boost/throw_exception.hpp>
 
-
-namespace tmpc :: detail
+namespace tmpc
 {
     template <
         typename Value,

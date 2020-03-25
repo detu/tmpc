@@ -1,6 +1,6 @@
 #include <tmpc/ocp/OcpSizeProperties.hpp>
 #include <tmpc/core/Range.hpp>
-#include <tmpc/core/PropertyMap.hpp>
+#include <tmpc/property_map/PropertyMap.hpp>
 #include <tmpc/print/ocp/OcpSize.hpp>
 #include <tmpc/Testing.hpp>
 

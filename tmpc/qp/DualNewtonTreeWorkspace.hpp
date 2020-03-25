@@ -1,11 +1,11 @@
 #include <tmpc/ocp/OcpGraph.hpp>
 #include <tmpc/ocp/OcpSizeProperties.hpp>
 #include <tmpc/Matrix.hpp>
-#include <tmpc/core/PropertyMap.hpp>
+#include <tmpc/property_map/PropertyMap.hpp>
 #include <tmpc/graph/Graph.hpp>
 #include <tmpc/core/Range.hpp>
-#include <tmpc/qp/detail/MatrixPropertyMap.hpp>
-#include <tmpc/qp/detail/VectorPropertyMap.hpp>
+#include <tmpc/property_map/MatrixPropertyMap.hpp>
+#include <tmpc/property_map/VectorPropertyMap.hpp>
 
 #include <tmpc/Traits.hpp>
 

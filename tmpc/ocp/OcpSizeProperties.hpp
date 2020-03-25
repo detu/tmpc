@@ -3,7 +3,7 @@
 #include <tmpc/ocp/OcpSize.hpp>
 #include <tmpc/ocp/OcpGraph.hpp>
 #include <tmpc/SizeT.hpp>
-#include <tmpc/core/PropertyMap.hpp>
+#include <tmpc/property_map/PropertyMap.hpp>
 
 
 namespace tmpc

@@ -2,7 +2,7 @@
 
 #include <tmpc/qp/QpSolverException.hpp>
 #include <tmpc/qp/HpmpcErrorInfo.hpp>
-//#include <tmpc/core/detail/BundlePropertyMap.hpp>
+//#include <tmpc/property_map/BundlePropertyMap.hpp>
 
 #include <tmpc/ocp/OcpSize.hpp>
 #include <tmpc/ocp/OcpGraph.hpp>
@@ -15,11 +15,11 @@
 
 //#include "detail/HpxxxVertexData.hpp"
 //#include "detail/HpxxxEdgeData.hpp"
-#include "detail/VectorPtrPropertyMap.hpp"
-#include "detail/MatrixPtrPropertyMap.hpp"
+#include <tmpc/property_map/VectorPtrPropertyMap.hpp>
+#include <tmpc/property_map/MatrixPtrPropertyMap.hpp>
 //#include "TreeQpWorkspaceAdaptor.hpp"
 //#include "OcpQpVertexElement.hpp"
-#include <tmpc/core/PropertyMap.hpp>
+#include <tmpc/property_map/PropertyMap.hpp>
 #include <tmpc/Exception.hpp>
 #include <tmpc/Traits.hpp>
 

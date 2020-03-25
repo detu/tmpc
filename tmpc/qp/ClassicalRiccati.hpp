@@ -1,10 +1,10 @@
 #pragma once
 
-#include <tmpc/core/detail/BundlePropertyMap.hpp>
+#include <tmpc/property_map/BundlePropertyMap.hpp>
 
 #include <tmpc/ocp/OcpGraph.hpp>
 #include <tmpc/ocp/OcpSize.hpp>
-#include <tmpc/core/PropertyMap.hpp>
+#include <tmpc/property_map/PropertyMap.hpp>
 #include <tmpc/graph/Graph.hpp>
 #include <tmpc/core/Range.hpp>
 #include <tmpc/Traits.hpp>

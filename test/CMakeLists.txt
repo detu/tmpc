@@ -41,16 +41,18 @@ endforeach ()
 # ~~~~~~~~~~ Our tests ~~~~~~~~~~~~~~
 add_executable(test-tmpc
     ElementGroupTest.cpp
+
+    property_map/VectorPropertyMapTest.cpp
     
     ocp/SensitivityTupleTest.cpp
     ocp/CondensedOcpSizeTest.cpp
     ocp/OcpGraphTest.cpp
     ocp/OcpSizePropertiesTest.cpp
     ocp/StaticOcpSolutionTest.cpp
+    ocp/OcpKktResidualTest.cpp
 
     qp/CondensingN3Test.cpp
     qp/CondensingN2Test.cpp
-    qp/VectorPropertyMapTest.cpp
     qp/MpipmWorkspaceTest.cpp
     qp/StaticOcpQpTest.cpp
     qp/RiccatiTest.cpp
