@@ -754,43 +754,6 @@ namespace tmpc
         };
 
 
-		template <typename VT>
-		static int populateBounds(
-			blaze::Vector<VT, blaze::columnVector> const& lv,
-			blaze::Vector<VT, blaze::columnVector> const& uv,
-			Real * lb, Real * ub, int * idxb)
-		{
-			size_t const n = (~lv).size();
-			assert((~uv).size() == n);
-
-			int count = 0;			
-			for (size_t i = 0; i < n; ++i)
-			{
-				auto l = (~lv)[i];
-				auto u = (~uv)[i];
-
-				if (std::isfinite(l) && std::isfinite(u))
-				{
-					// If both bounds are finite, add i to the bounds index idxb,
-					// and copy values to lb and ub.
-					*idxb++ = i;
-					*lb++ = l;
-					*ub++ = u;
-					++count;
-				}
-				else 
-				{
-					// Otherwise, check that the values are [-inf, inf]
-					if (!(l == -inf<Real>() && u == inf<Real>()))
-						TMPC_THROW_EXCEPTION(std::invalid_argument("An invalid QP bound is found. For HPIPM, "
-							"the bounds should be either both finite or [-inf, inf]"));
-				}
-			}
-			
-			return count;
-		}
-
-
 		template <typename SizeMap>
 		static std::unique_ptr<hpipm::OcpQpDim<Real>> makeOcpQpDim(OcpGraph const& graph, SizeMap size)
 		{
