@@ -49,7 +49,10 @@ namespace tmpc :: hpmpc
 
             if (!detail::isfinite(b[i], nx[i + 1]))
                 TMPC_THROW_EXCEPTION(std::invalid_argument("b is inf or nan"));
+        }
 
+        for (int i = 0; i <= N; ++i)
+        {
             if (!detail::isfinite(Q[i], nx[i] * nx[i]))
                 TMPC_THROW_EXCEPTION(std::invalid_argument("Q is inf or nan"));
 
@@ -101,8 +104,8 @@ namespace tmpc :: hpmpc
         // assert(kk <= k_max);
 
         // HPMPC returns garbage in the kk variable.
-        // We set it to 0 as a workaround.
-        kk = 0;
+        // We set it to k_max as a workaround.
+        kk = k_max;
 
         if (ret != 0)
             TMPC_THROW_EXCEPTION(QpSolverException {}

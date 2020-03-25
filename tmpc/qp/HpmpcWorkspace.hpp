@@ -3,6 +3,7 @@
 #include <tmpc/qp/QpSolverException.hpp>
 #include <tmpc/qp/HpmpcErrorInfo.hpp>
 #include <tmpc/qp/HpmpcIterationInfo.hpp>
+#include <tmpc/qp/HpmpcResidualNorm.hpp>
 
 #include <tmpc/ocp/OcpSize.hpp>
 #include <tmpc/ocp/OcpGraph.hpp>
@@ -59,6 +60,12 @@ namespace tmpc
 		}
 
 
+        auto const& residualNorm() const noexcept
+        {
+            return infNormRes_;
+        }
+
+
 		/**
 		 * \brief Takes QP problem size to preallocate workspace.
 		 */
@@ -68,65 +75,13 @@ namespace tmpc
 		,	maxIter_(max_iter)
 		,	size_(num_vertices(graph))
 		{
-			iterationInfo_.reserve(maxIter_);
-
 			copyProperty(size, iterator_property_map(size_.begin(), get(graph::vertex_index, graph_)), graph::vertices(graph_));
-			// std::fill(infNormRes_.begin(), infNormRes_.end(), sNaN<Real>());
-			std::fill(infNormRes_.begin(), infNormRes_.end(), -42.);
 
-			auto const nv = num_vertices(graph_);
-			auto const ne = num_edges(graph_);
+            // Init vertex and edge data
+			initData();
 
-			if (nv < 2)
-				TMPC_THROW_EXCEPTION(std::invalid_argument("HPMPC needs a graph with at least 2 nodes"));
-
-			if (ne + 1 != num_vertices(graph_))
-				TMPC_THROW_EXCEPTION(std::invalid_argument("Number of edges in HPMPC size graph must be 1 less than the number of vertices"));
-
-            // Preallocate arrays holding QP edge and vertex data.
-            vertexData_.reserve(nv);
-            edgeData_.reserve(ne);
-			
-			// Preallocate arrays holding HPMPC data pointers.
-			nx_.reserve(nv);
-			nu_.reserve(nv);
-			nb_.reserve(nv);
-			ng_.reserve(nv);
-			hidxb_.reserve(nv);
-	
-			Q_ .reserve(nv);
-			S_ .reserve(nv);
-			R_ .reserve(nv);
-			q_ .reserve(nv);
-			r_ .reserve(nv);
-			lb_.reserve(nv);
-			ub_.reserve(nv);
-			lx_.reserve(nv);
-			ux_.reserve(nv);
-			lu_.reserve(nv);
-			uu_.reserve(nv);
-			C_ .reserve(nv);
-			D_ .reserve(nv);
-			lg_.reserve(nv);
-			ug_.reserve(nv);
-			
-			x_.reserve(nv);
-			u_.reserve(nv);
-			lam_.reserve(nv);
-
-			A_ .reserve(ne);
-			B_ .reserve(ne);
-			b_ .reserve(ne);
-			pi_.reserve(ne);
-
-			// Traverse the graph and init vertex and edge data pointers.
-			breadth_first_search(graph_, vertex(0, graph_), visitor(InitVisitor(*this)));
-
-			// Allocate HPMPC working memory according to nx, nu, nb, ng etc.
-			// Number of QP steps for HPMPC
-			auto const N = nv - 1;
-			solverWorkspace_.reset(new char[hpmpc::ip_ocp_hard_tv_work_space_size_bytes<Real>(
-				N, nx_.data(), nu_.data(), nb_.data(), hidxb_.data(), ng_.data(), N)]);
+            // Initialize hpmpc data structures
+            initHpmpcData();
 		}
 
 
@@ -710,6 +665,115 @@ namespace tmpc
         }
 
 
+        void initData()
+        {
+            // Preallocate arrays holding QP edge and vertex data.
+            vertexData_.reserve(num_vertices(graph_));
+            edgeData_.reserve(num_edges(graph_));
+			
+			// Traverse the graph and init vertex and edge data pointers.
+			breadth_first_search(graph_, vertex(0, graph_), visitor(InitVisitor(*this)));
+        }
+
+
+        /// @brief Preallocate arrays holding HPMPC data pointers.
+        void initHpmpcData()
+        {
+            // Init vertex data
+            auto const nv = vertexData_.size();
+            if (nv < 2)
+				TMPC_THROW_EXCEPTION(std::invalid_argument("HPMPC needs a graph with at least 2 nodes"));
+
+            nx_.reserve(nv);
+			nu_.reserve(nv);
+			nb_.reserve(nv);
+			ng_.reserve(nv);
+			hidxb_.reserve(nv);
+	
+			Q_ .reserve(nv);
+			S_ .reserve(nv);
+			R_ .reserve(nv);
+			q_ .reserve(nv);
+			r_ .reserve(nv);
+			lb_.reserve(nv);
+			ub_.reserve(nv);
+			lx_.reserve(nv);
+			ux_.reserve(nv);
+			lu_.reserve(nv);
+			uu_.reserve(nv);
+			C_ .reserve(nv);
+			D_ .reserve(nv);
+			lg_.reserve(nv);
+			ug_.reserve(nv);
+			
+			x_.reserve(nv);
+			u_.reserve(nv);
+			lam_.reserve(nv);
+
+			for (auto v : graph::vertices(graph_))
+            {
+                auto const& sz = get(size(), v);
+                auto& vd = get(vertexProperties(), v);
+
+                nx_.push_back(sz.nx());
+				nu_.push_back(sz.nu());
+				nb_.push_back(sz.nu() + sz.nx());
+				ng_.push_back(sz.nc());
+
+				hidxb_.push_back(vd.idxb_.get());
+
+				Q_.push_back(vd.Q_.data());
+				S_.push_back(vd.S_.data());
+				R_.push_back(vd.R_.data());
+				q_.push_back(vd.q_.data());
+				r_.push_back(vd.r_.data());
+
+				lb_.push_back(vd.lb_.data());
+				ub_.push_back(vd.ub_.data());
+
+				C_ .push_back(vd.C_.data());
+				D_ .push_back(vd.D_.data());
+				lg_.push_back(vd.lg_.data());
+				ug_.push_back(vd.ug_.data());
+
+				x_.push_back(vd.x_.data());
+				u_.push_back(vd.u_.data());
+				lam_.push_back(vd.lam_.data());
+            }
+
+
+            // Init edge data
+            auto const ne = edgeData_.size();
+            if (ne + 1 != num_vertices(graph_))
+				TMPC_THROW_EXCEPTION(std::invalid_argument("Number of edges in HPMPC size graph must be 1 less than the number of vertices"));
+
+            A_.reserve(ne);
+			B_.reserve(ne);
+			b_.reserve(ne);
+			pi_.reserve(ne);
+
+            for (auto e : graph::edges(graph_))
+            {
+                auto& ed = get(edgeProperties(), e);
+
+				A_.push_back(ed.A_.data());
+				B_.push_back(ed.B_.data());
+				b_.push_back(ed.b_.data());
+				pi_.push_back(ed.pi_.data());
+            }
+
+
+            // Allocate HPMPC working memory according to nx, nu, nb, ng etc.
+			// Number of QP steps for HPMPC
+			auto const N = nv - 1;
+			solverWorkspace_.reset(new char[hpmpc::ip_ocp_hard_tv_work_space_size_bytes<Real>(
+				N, nx_.data(), nu_.data(), nb_.data(), hidxb_.data(), ng_.data(), N)]);
+
+            iterationInfo_.reserve(maxIter_);            
+			std::fill(infNormRes_.begin(), infNormRes_.end(), sNaN<Real>());
+        }
+
+
 		OcpGraph graph_;
 		std::vector<OcpSize> size_;
 
@@ -755,7 +819,7 @@ namespace tmpc
 		std::vector<Real *> u_;
 		std::vector<Real *> pi_;
 		std::vector<Real *> lam_;
-		std::array<Real, 4> infNormRes_;
+		HpmpcResidualNorm<Real> infNormRes_;
 
 		/// \brief Number of iterations performed by the QP solver.
 		int numIter_ = 0;
@@ -795,36 +859,7 @@ namespace tmpc
         
             void discover_vertex(OcpVertexDescriptor u, OcpGraph const& g)
             {
-				auto const& sz = get(ws_.size(), u);
-				auto const max_nb = sz.nu() + sz.nx();
-
-                ws_.nx_.push_back(sz.nx());
-				ws_.nu_.push_back(sz.nu());
-				ws_.nb_.push_back(max_nb);	// this will be updated during solve()
-				ws_.ng_.push_back(sz.nc());
-
-				ws_.vertexData_.emplace_back(sz);
-				auto& vd = ws_.vertexData_.back();
-				
-				ws_.hidxb_.push_back(vd.idxb_.get());
-
-				ws_.Q_.push_back(vd.Q_.data());
-				ws_.S_.push_back(vd.S_.data());
-				ws_.R_.push_back(vd.R_.data());
-				ws_.q_.push_back(vd.q_.data());
-				ws_.r_.push_back(vd.r_.data());
-
-				ws_.lb_.push_back(vd.lb_.data());
-				ws_.ub_.push_back(vd.ub_.data());
-
-				ws_.C_ .push_back(vd.C_.data());
-				ws_.D_ .push_back(vd.D_.data());
-				ws_.lg_.push_back(vd.lg_.data());
-				ws_.ug_.push_back(vd.ug_.data());
-
-				ws_.x_.push_back(vd.x_.data());
-				ws_.u_.push_back(vd.u_.data());
-				ws_.lam_.push_back(vd.lam_.data());
+				ws_.vertexData_.emplace_back(get(ws_.size(), u));
             }
 
 
@@ -838,14 +873,7 @@ namespace tmpc
 
 				auto const& sz_u = get(ws_.size(), u);
 				auto const& sz_v = get(ws_.size(), v);
-
 				ws_.edgeData_.emplace_back(sz_u, sz_v);
-				auto& ed = ws_.edgeData_.back();
-
-				ws_.A_.push_back(ed.A_.data());
-				ws_.B_.push_back(ed.B_.data());
-				ws_.b_.push_back(ed.b_.data());
-				ws_.pi_.push_back(ed.pi_.data());
 			}
 
 
