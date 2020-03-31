@@ -534,7 +534,19 @@ namespace tmpc
 		}
 
 
+		auto x()
+		{
+			return make_iterator_property_map(x_.begin(), get(graph::vertex_index, graph_));
+		}
+
+
 		auto u() const
+		{
+			return make_iterator_property_map(u_.begin(), get(graph::vertex_index, graph_));
+		}
+
+
+		auto u()
 		{
 			return make_iterator_property_map(u_.begin(), get(graph::vertex_index, graph_));
 		}
@@ -704,8 +716,8 @@ namespace tmpc
 				ws_.lg_.emplace_back(sz.nc());
 				ws_.ug_.emplace_back(sz.nc());
 
-				ws_.x_.emplace_back(sz.nx());
-				ws_.u_.emplace_back(sz.nu());
+				ws_.x_.emplace_back(blaze::ZeroVector<Real>(sz.nx()));
+				ws_.u_.emplace_back(blaze::ZeroVector<Real>(sz.nu()));
 				ws_.ls_.emplace_back(sz.ns());
 				ws_.us_.emplace_back(sz.ns());
 				

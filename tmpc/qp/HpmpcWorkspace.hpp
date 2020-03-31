@@ -502,8 +502,8 @@ namespace tmpc
             ,   D_(sz.nc(), sz.nu())
             ,   lg_(sz.nc())
             ,   ug_(sz.nc())
-            ,   x_(sz.nx())
-            ,   u_(sz.nu())
+            ,   x_(blaze::ZeroVector<Real>(sz.nx()))
+            ,   u_(blaze::ZeroVector<Real>(sz.nu()))
 			,	lam_(sz.nu() + sz.nx() + sz.nc() + sz.nu() + sz.nx() + sz.nc())
 			//	I am not sure about the order of lambdas returned by HPMPC
             ,   lam_lu_(subvector(lam_, 0, sz.nu()))
