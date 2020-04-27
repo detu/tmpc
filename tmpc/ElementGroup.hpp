@@ -79,4 +79,16 @@ namespace tmpc
     {
         return blaze::subvector<From, Len>(v);
     }
+
+
+    /// @brief Get subvector corresponding to an element group.
+    ///
+    /// @param v the vector from which the subvector is taken
+    /// @param c element group defining elements of the returned subvector
+    /// @return subvector of \a v with elements defined by \a c
+    template <typename VT, bool TF, size_t From, size_t Len>
+    inline decltype(auto) subvector(blaze::Vector<VT, TF>&& v, ElementGroup<From, Len> c)
+    {
+        return blaze::subvector<From, Len>(v);
+    }
 }

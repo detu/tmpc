@@ -67,7 +67,7 @@ namespace tmpc :: hpipm
         
         int const status = ocp_qp_ipm_get_status(ws);
         if (status != SUCCESS)
-            TMPC_THROW_EXCEPTION(QpSolverException {} << StatusErrorInfo {status});
+            TMPC_THROW_EXCEPTION(QpSolverException {} << StatusErrorInfo {status} << boost::errinfo_api_function {"d_ocp_qp_ipm_solve"});
     }
 
 
