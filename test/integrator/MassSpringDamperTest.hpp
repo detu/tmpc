@@ -35,7 +35,7 @@ namespace tmpc :: testing
 			blaze::DynamicVector<Real> xf(NX);
 			integrate(~integrator, 
 				[this] (auto&&... args) { this->explicitOde(std::forward<decltype(args)>(args)...); }, 
-				0., T_, hMax_, x0_, u_, xf);
+				0., T_, numSteps_, x0_, u_, xf);
 
 			EXPECT_TRUE(approxEqual(xf, xf_ref_, 1e-5));
 		}
@@ -48,7 +48,7 @@ namespace tmpc :: testing
 			blaze::DynamicMatrix<Real> Sf {NX, NX + NU};
 			integrate(~integrator, 
 				[this] (auto&&... args) { this->explicitOdeSensitivity(std::forward<decltype(args)>(args)...); }, 
-				0., T_, hMax_, x0_, S_, u_, xf, Sf);
+				0., T_, numSteps_, x0_, S_, u_, xf, Sf);
 
 			double const tol = 1e-5;
 			EXPECT_TRUE(approxEqual(xf, xf_ref_, tol));
@@ -67,7 +67,7 @@ namespace tmpc :: testing
 			
 			integrate(integrator, 
 				[this] (auto&&... args) { this->explicitOdeSensitivityResidual(std::forward<decltype(args)>(args)...); },
-				0., T_, hMax_, x0_, S_, u_, xf, Sf, l, g, H);
+				0., T_, numSteps_, x0_, S_, u_, xf, Sf, l, g, H);
 
 			EXPECT_TRUE(approxEqual(xf, xf_ref_, 1e-10, 1e-5));
 			EXPECT_TRUE(approxEqual(Sf, Sf_ref_, 1e-10, 1e-3));
@@ -83,7 +83,7 @@ namespace tmpc :: testing
 			blaze::DynamicVector<Real> xf(NX);
 			integrate(~integrator,
 				[this] (auto&&... args) { this->implicitOde(std::forward<decltype(args)>(args)...); },
-				0., T_, hMax_, x0_, u_, xf);
+				0., T_, numSteps_, x0_, u_, xf);
 
 			EXPECT_TRUE(approxEqual(xf, xf_ref_, 1e-5));
 		}
@@ -97,7 +97,7 @@ namespace tmpc :: testing
 			integrate(~integrator, 
 				[this] (auto&&... args) { this->implicitOde(std::forward<decltype(args)>(args)...); },
 				[this] (auto&&... args) { this->implicitOdeSensitivity(std::forward<decltype(args)>(args)...); },
-				0., T_, hMax_, x0_, S_, u_, xf, Sf);
+				0., T_, numSteps_, x0_, S_, u_, xf, Sf);
 
 			double const tol = 1e-5;
 			EXPECT_TRUE(approxEqual(xf, xf_ref_, tol));
@@ -118,7 +118,7 @@ namespace tmpc :: testing
 				[this] (auto&&... args) { this->implicitOde(std::forward<decltype(args)>(args)...); },
 				[this] (auto&&... args) { this->implicitOdeSensitivity(std::forward<decltype(args)>(args)...); },
 				[this] (auto&&... args) { this->residual(std::forward<decltype(args)>(args)...); },
-				0., T_, hMax_, x0_, S_, u_, xf, Sf, l, g, H);
+				0., T_, numSteps_, x0_, S_, u_, xf, Sf, l, g, H);
 
 			EXPECT_TRUE(approxEqual(xf, xf_ref_, 1e-10, 1e-5));
 			EXPECT_TRUE(approxEqual(Sf, Sf_ref_, 1e-10, 1e-3));
@@ -452,7 +452,7 @@ namespace tmpc :: testing
 		Real k_ = 1.;
 		Real kappa_ = 0.2;
 		Real const T_ = 5.;
-		Real hMax_ = 0.1;
+		size_t const numSteps_ = 50;
 		blaze::DynamicVector<Real> x0_ {1., 1.};
 		blaze::DynamicVector<Real> u_ {1.};
 

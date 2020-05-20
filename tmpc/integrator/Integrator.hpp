@@ -41,14 +41,11 @@ namespace tmpc
     inline void integrate(
         Integrator<I> const& integrator, 
         DE const& de,
-        Real t0, Real h, Real h_max,
+        Real t0, Real h, size_t num_integrator_steps,
         blaze::Vector<VT1, blaze::columnVector> const& x0, 
         blaze::Vector<VT2, blaze::columnVector> const& u,
         blaze::Vector<VT3, blaze::columnVector>& xf)
     {
-        // Number of integrator steps per simulation step.
-        size_t const num_integrator_steps = std::ceil(h / h_max);
-
         // Actual integrator step
         Real const integrator_step = h / num_integrator_steps;
 

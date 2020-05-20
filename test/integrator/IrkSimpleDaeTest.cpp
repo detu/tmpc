@@ -39,7 +39,7 @@ namespace tmpc :: testing
 			VecX xf;
 			integrate(irk,
 				[this] (auto&&... args) { this->implicitDae(std::forward<decltype(args)>(args)...); },
-				0., T_, hMax_, x0_, u_, xf
+				0., T_, numSteps_, x0_, u_, xf
 			);
 
 			TMPC_EXPECT_APPROX_EQ(xf, xf_ref_, abs_tol, rel_tol);
@@ -57,7 +57,7 @@ namespace tmpc :: testing
 			integrate(irk,
 				[this] (auto&&... args) { this->implicitDae(std::forward<decltype(args)>(args)...); },
 				[this] (auto&&... args) { this->implicitDaeSensitivity(std::forward<decltype(args)>(args)...); },
-				0., T_, hMax_, x0_, S_, u_, xf, Sf
+				0., T_, numSteps_, x0_, S_, u_, xf, Sf
 			);
 
 			TMPC_EXPECT_APPROX_EQ(xf, xf_ref_, abs_tol, rel_tol);
@@ -81,7 +81,7 @@ namespace tmpc :: testing
 				[this] (auto&&... args) { this->implicitDae(std::forward<decltype(args)>(args)...); },
 				[this] (auto&&... args) { this->implicitDaeSensitivity(std::forward<decltype(args)>(args)...); },
 				[this] (auto&&... args) { this->residual(std::forward<decltype(args)>(args)...); },
-				0., T_, hMax_, x0_, S_, u_, xf, Sf, l, g, H);
+				0., T_, numSteps_, x0_, S_, u_, xf, Sf, l, g, H);
 
 			EXPECT_TRUE(approxEqual(xf, xf_ref_, 1e-10, 1e-5));
 			EXPECT_TRUE(approxEqual(Sf, Sf_ref_, 1e-10, 1e-3));
@@ -98,7 +98,7 @@ namespace tmpc :: testing
 		VecX const x0_ {1.};
 		VecU const u_ {};
 		Real const T_ = 1.;
-		Real const hMax_ = 0.01;
+		size_t const numSteps_ = 100;
 		
 		VecX xf_ref_;
 		blaze::DynamicMatrix<Real> Sf_ref_ {NX, NX + NU};

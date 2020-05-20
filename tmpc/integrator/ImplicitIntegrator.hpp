@@ -35,16 +35,13 @@ namespace tmpc
         ImplicitIntegrator<I> const& integrator,
         DAE const& dae,
         DAE_S const& dae_s,
-        Real t0, Real h, Real h_max, 
+        Real t0, Real h, size_t num_integrator_steps, 
         blaze::Vector<VT1, blaze::columnVector> const& x0,
         blaze::Matrix<MT1, SO1> const& Sx,
         blaze::Vector<VT2, blaze::columnVector> const& u,
         blaze::Vector<VT3, blaze::columnVector>& xf,
         blaze::Matrix<MT2, SO2>& Sf)
     {
-        // Number of integrator steps per simulation step.
-        size_t const num_integrator_steps = std::ceil(h / h_max);
-
         // Actual integrator step
         Real const integrator_step = h / num_integrator_steps;
 
@@ -75,7 +72,7 @@ namespace tmpc
         DAE const& dae,
         DAE_S const& dae_s,
         Residual const& res, 
-        Real t0, Real h, Real h_max, 
+        Real t0, Real h, size_t num_integrator_steps, 
         blaze::Vector<VT1, blaze::columnVector> const& x0,
         blaze::Matrix<MT1, SO1>& S,
         blaze::Vector<VT2, blaze::columnVector> const& u,
@@ -85,9 +82,6 @@ namespace tmpc
         blaze::Vector<VT4, blaze::columnVector>& g,
         blaze::Matrix<MT3, SO3>& H)
     {
-        // Number of integrator steps per simulation step.
-        size_t const num_integrator_steps = std::ceil(h / h_max);
-
         // Actual integrator step
         Real const integrator_step = h / num_integrator_steps;
 
