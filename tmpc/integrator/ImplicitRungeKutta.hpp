@@ -324,7 +324,7 @@ namespace tmpc
 			blaze::Matrix<MT, TF> const& Sx,
 			blaze::Vector<VT2, blaze::columnVector> const& u) const
 		{
-			return [this, &dae_s, t0, h, &x0, &Sx, &u] (auto const& kz, auto& df_dp)
+			return [this, &dae_s, t0, h, &Sx, &u] (auto const& kz, auto& df_dp)
 			{
 				for (size_t i = 0; i < m_; ++i)
 				{

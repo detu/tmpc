@@ -72,8 +72,8 @@ namespace tmpc
 		template <typename SizeMap>
 		explicit HpmpcWorkspace(OcpGraph const& graph, SizeMap size, size_t max_iter = 100)
 		:	graph_ {graph}
-		,	maxIter_(max_iter)
 		,	size_(num_vertices(graph))
+        ,	maxIter_(max_iter)
 		{
 			copyProperty(size, iterator_property_map(size_.begin(), get(graph::vertex_index, graph_)), graph::vertices(graph_));
 
@@ -586,11 +586,11 @@ namespace tmpc
             blaze::DynamicVector<Real> x_;
             blaze::DynamicVector<Real> u_;
 			blaze::DynamicVector<Real> lam_;
-            Subvector lam_lx_;
-            Subvector lam_ux_;
             Subvector lam_lu_;
-            Subvector lam_uu_;
+            Subvector lam_lx_;
             Subvector lam_ld_;
+            Subvector lam_uu_;
+            Subvector lam_ux_;
             Subvector lam_ud_;
 
 			std::unique_ptr<int []> idxb_;

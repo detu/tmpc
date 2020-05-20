@@ -44,12 +44,6 @@ namespace tmpc :: benchmark
     }
 
 
-    static void trsvBenchArguments(::benchmark::internal::Benchmark* b) 
-    {
-        b->Arg(1)->Arg(4)->Arg(35)->Arg(60);
-    }
-
-
     BENCHMARK_TEMPLATE(BM_trsv_Lower_tmpc_Static, double, 1, blaze::rowMajor);
     BENCHMARK_TEMPLATE(BM_trsv_Lower_tmpc_Static, double, 4, blaze::rowMajor);
     BENCHMARK_TEMPLATE(BM_trsv_Lower_tmpc_Static, double, 35, blaze::rowMajor);

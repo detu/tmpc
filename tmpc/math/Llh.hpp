@@ -39,8 +39,6 @@ namespace tmpc
             BLAZE_THROW_INVALID_ARGUMENT( "Dimensions of fixed size matrix do not match" );
         }
 
-        using Scalar = blaze::ElementType_t<MT1>;
-
         // Copy A to L
         decltype(auto) l( derestrict( ~L ) );
         l = ~A;

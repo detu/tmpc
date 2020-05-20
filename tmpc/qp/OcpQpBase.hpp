@@ -54,7 +54,6 @@ namespace tmpc
 		OcpQpBase& setNaN()
 		{
 			using Kernel = typename Derived::Kernel;
-			using Real = typename Kernel::Real;
 
 			static_cast<OcpQpVertexBase<Derived>&>(*this).setNaN();
 			static_cast<OcpQpEdgeBase<Derived>&>(*this).setNaN();
@@ -94,8 +93,6 @@ namespace tmpc
         using Kernel = typename QP::Kernel;
 		using DynamicMatrix = DynamicMatrix<Kernel>;
 		using DynamicVector = DynamicVector<Kernel>;
-		typename Kernel::template Rand<DynamicMatrix> rand_matrix;
-		typename Kernel::template Rand<DynamicVector> rand_vector;
 
 		randomize(static_cast<OcpQpVertexBase<QP>&>(qp));
 		randomize(static_cast<OcpQpEdgeBase<QP>&>(qp));

@@ -140,7 +140,6 @@ namespace tmpc :: testing
 	
 		for (auto e : make_iterator_range(edges(g_)))
 		{
-			auto const u = source(e, g_);
 			auto const v = target(e, g_);
 			EXPECT_EQ(get(map, e), sz_[v].nx());
 		}

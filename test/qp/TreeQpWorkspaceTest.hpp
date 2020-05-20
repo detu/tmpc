@@ -53,8 +53,7 @@ namespace tmpc :: testing
     TYPED_TEST_P(TreeQpWorkspaceTest, testQpInterface)
     {
         auto& g = this->ws_.graph();
-        auto const N = num_vertices(g);
-
+        
         std::map<OcpVertexDescriptor, typename TestFixture::Matrix> Q;
         std::map<OcpVertexDescriptor, typename TestFixture::Vector> q;
         std::map<OcpVertexDescriptor, typename TestFixture::Vector> r;

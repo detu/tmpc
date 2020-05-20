@@ -26,7 +26,6 @@ namespace tmpc :: benchmark
         size_t const N = state.range(0);
 
         OcpGraph const g = ocpGraphLinear(N + 1);
-        auto const sz = ocpSizeNominalMpc(N, NX, NU, 0, 0, 0, false);
         StaticOcpQp<double, NX, NU> qp(g);
         StaticOcpSolution<double, NX, NU> sol(g);
         StaticFactorizedRiccati<double, NX, NU> riccati(g);

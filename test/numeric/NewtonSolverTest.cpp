@@ -73,7 +73,7 @@ namespace tmpc :: testing
         };
 
         // The derivative of the equation w.r.t. the parameter
-        auto dfdp = [p] (auto const& x, auto& df_dp)
+        auto dfdp = [] (auto const& x, auto& df_dp)
         {
             ~df_dp = {{-1.}};
         };

@@ -32,7 +32,7 @@ namespace tmpc :: testing
 		{
 			blaze::DynamicVector<Real> xf(NX);
 			integrate(~integrator, 
-				[this] (auto&&... args) { explicitOde(std::forward<decltype(args)>(args)...); },
+				[this] (auto&&... args) { this->explicitOde(std::forward<decltype(args)>(args)...); },
 				0., T_, hMax_, x0_, u_, xf);
 
 			EXPECT_TRUE(approxEqual(xf, xf_ref_, 1e-5));
@@ -45,7 +45,7 @@ namespace tmpc :: testing
 			blaze::DynamicVector<Real> xf {NX};
 			blaze::DynamicMatrix<Real> Sf {NX, NX + NU};
 			integrate(~integrator, 
-				[this] (auto&&... args) { explicitOdeSensitivity(std::forward<decltype(args)>(args)...); },
+				[this] (auto&&... args) { this->explicitOdeSensitivity(std::forward<decltype(args)>(args)...); },
 				0., T_, hMax_, x0_, S_, u_, xf, Sf);
 
 			double const tol = 1e-5;
@@ -64,7 +64,7 @@ namespace tmpc :: testing
 			blaze::DynamicMatrix<Real> H(NX + NU, NX + NU, 0.);
 			
 			integrate(~integrator, 
-				[this] (auto&&... args) { explicitOdeSensitivityResidual(std::forward<decltype(args)>(args)...); },
+				[this] (auto&&... args) { this->explicitOdeSensitivityResidual(std::forward<decltype(args)>(args)...); },
 				0., T_, hMax_, x0_, S_, u_, xf, Sf, l, g, H);
 
 			EXPECT_TRUE(approxEqual(xf, xf_ref_, 1e-10, 1e-5));
@@ -80,7 +80,7 @@ namespace tmpc :: testing
 		{
 			blaze::DynamicVector<Real> xf(NX);
 			integrate(~integrator, 
-				[this] (auto&&... args) { implicitOde(std::forward<decltype(args)>(args)...); },
+				[this] (auto&&... args) { this->implicitOde(std::forward<decltype(args)>(args)...); },
 				0., T_, hMax_, x0_, u_, xf);
 
 			EXPECT_TRUE(approxEqual(xf, xf_ref_, 1e-5));
@@ -93,8 +93,8 @@ namespace tmpc :: testing
 			blaze::DynamicVector<Real> xf {NX};
 			blaze::DynamicMatrix<Real> Sf {NX, NX + NU};
 			integrate(~integrator, 
-				[this] (auto&&... args) { implicitOde(std::forward<decltype(args)>(args)...); },
-				[this] (auto&&... args) { implicitOdeSensitivity(std::forward<decltype(args)>(args)...); },
+				[this] (auto&&... args) { this->implicitOde(std::forward<decltype(args)>(args)...); },
+				[this] (auto&&... args) { this->implicitOdeSensitivity(std::forward<decltype(args)>(args)...); },
 				0., T_, hMax_, x0_, S_, u_, xf, Sf);
 
 			double const tol = 1e-5;
@@ -113,9 +113,9 @@ namespace tmpc :: testing
 			blaze::DynamicMatrix<Real> H(NX + NU, NX + NU, 0.);
 			
 			integrate(~integrator, 
-				[this] (auto&&... args) { implicitOde(std::forward<decltype(args)>(args)...); },
-				[this] (auto&&... args) { implicitOdeSensitivity(std::forward<decltype(args)>(args)...); },
-				[this] (auto&&... args) { residual(std::forward<decltype(args)>(args)...); },
+				[this] (auto&&... args) { this->implicitOde(std::forward<decltype(args)>(args)...); },
+				[this] (auto&&... args) { this->implicitOdeSensitivity(std::forward<decltype(args)>(args)...); },
+				[this] (auto&&... args) { this->residual(std::forward<decltype(args)>(args)...); },
 				0., T_, hMax_, x0_, S_, u_, xf, Sf, l, g, H);
 
 			EXPECT_TRUE(approxEqual(xf, xf_ref_, 1e-10, 1e-5));
@@ -328,8 +328,6 @@ namespace tmpc :: testing
 			if (size(x0) != NX || size(uu) != NU)
 				TMPC_THROW_EXCEPTION(std::invalid_argument("Invalid vector size"));
 
-			auto const& q0 = (~x0)[0];
-			auto const& v0 = (~x0)[1];
 			auto const& u = (~uu)[0];
 
 			// IVP solution

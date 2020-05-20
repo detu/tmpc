@@ -38,7 +38,7 @@ namespace tmpc :: testing
 
 			VecX xf;
 			integrate(irk,
-				[this] (auto&&... args) { implicitDae(std::forward<decltype(args)>(args)...); },
+				[this] (auto&&... args) { this->implicitDae(std::forward<decltype(args)>(args)...); },
 				0., T_, hMax_, x0_, u_, xf
 			);
 
@@ -55,8 +55,8 @@ namespace tmpc :: testing
 			VecX xf;
 			blaze::DynamicMatrix<Real> Sf(NX, NX + NU);
 			integrate(irk,
-				[this] (auto&&... args) { implicitDae(std::forward<decltype(args)>(args)...); },
-				[this] (auto&&... args) { implicitDaeSensitivity(std::forward<decltype(args)>(args)...); },
+				[this] (auto&&... args) { this->implicitDae(std::forward<decltype(args)>(args)...); },
+				[this] (auto&&... args) { this->implicitDaeSensitivity(std::forward<decltype(args)>(args)...); },
 				0., T_, hMax_, x0_, S_, u_, xf, Sf
 			);
 
@@ -78,9 +78,9 @@ namespace tmpc :: testing
 			blaze::DynamicMatrix<Real> H(NX + NU, NX + NU, 0.);
 			
 			integrate(irk, 
-				[this] (auto&&... args) { implicitDae(std::forward<decltype(args)>(args)...); },
-				[this] (auto&&... args) { implicitDaeSensitivity(std::forward<decltype(args)>(args)...); },
-				[this] (auto&&... args) { residual(std::forward<decltype(args)>(args)...); },
+				[this] (auto&&... args) { this->implicitDae(std::forward<decltype(args)>(args)...); },
+				[this] (auto&&... args) { this->implicitDaeSensitivity(std::forward<decltype(args)>(args)...); },
+				[this] (auto&&... args) { this->residual(std::forward<decltype(args)>(args)...); },
 				0., T_, hMax_, x0_, S_, u_, xf, Sf, l, g, H);
 
 			EXPECT_TRUE(approxEqual(xf, xf_ref_, 1e-10, 1e-5));

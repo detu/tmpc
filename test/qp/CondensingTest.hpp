@@ -61,7 +61,6 @@ namespace tmpc :: testing
 			const auto Q0  = submatrix(H0,  0,  0, NX, NX);
 			const auto R0  = submatrix(H0, NX, NX, NU, NU);
 			const auto S0  = submatrix(H0,  0, NX, NX, NU);
-			const auto S0T = submatrix(H0, NX,  0, NU, NX);
 
 			StateStateMatrix A0 {
 				{1, 1},
@@ -86,7 +85,6 @@ namespace tmpc :: testing
 			const auto Q1  = submatrix(H1,  0,  0, NX, NX);
 			const auto R1  = submatrix(H1, NX, NX, NU, NU);
 			const auto S1  = submatrix(H1,  0, NX, NX, NU);
-			const auto S1T = submatrix(H1, NX,  0, NU, NX);
 
 			StateStateMatrix A1 {
 				{1, 1},

@@ -149,7 +149,6 @@ namespace tmpc :: testing
 
 	TYPED_TEST_P(SolveUnconstrainedTest, testKktResidual)
 	{
-		using Real = typename TestFixture::Real;
 		using Workspace = typename TestFixture::Workspace;
 
 		size_t constexpr NX = 2;
