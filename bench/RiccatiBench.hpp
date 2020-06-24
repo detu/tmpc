@@ -5,5 +5,12 @@
 
 namespace tmpc :: benchmark
 {
-    void riccatiBenchArguments(::benchmark::internal::Benchmark* b);
+    inline void riccatiBenchArguments(::benchmark::internal::Benchmark* b) 
+    {
+        for (int nx = 1; nx <= 39; ++nx)
+           b->Args({100, nx, 1});
+
+        for (int nx = 2; nx <= 39; ++nx)
+            b->Args({100, nx, nx});
+    }
 }

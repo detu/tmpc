@@ -67,7 +67,7 @@ namespace tmpc
     }
 
 
-    /// @brief Set the scaled Gauss-Newton approximation of the hessian Hessian and the gradient.
+    /// @brief Set the scaled Gauss-Newton approximation of the Hessian and the gradient.
     template <typename QP, typename ResidualVector, typename CMatrix, typename DMatrix, typename Real>
     inline void gaussNewtonCostApproximation(QP& qp, OcpVertexDescriptor v, ResidualVector const& res, CMatrix const& C, DMatrix const& D, Real scale)
     {

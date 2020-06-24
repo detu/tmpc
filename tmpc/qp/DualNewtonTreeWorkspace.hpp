@@ -3,14 +3,13 @@
 #include <tmpc/ocp/OcpGraph.hpp>
 #include <tmpc/ocp/OcpSizeProperties.hpp>
 #include <tmpc/Matrix.hpp>
-#include <tmpc/core/PropertyMap.hpp>
+#include <tmpc/property_map/PropertyMap.hpp>
 #include <tmpc/graph/Graph.hpp>
 #include <tmpc/core/Range.hpp>
-#include <tmpc/qp/detail/MatrixPropertyMap.hpp>
-#include <tmpc/qp/detail/VectorPropertyMap.hpp>
+#include <tmpc/property_map/MatrixPropertyMap.hpp>
+#include <tmpc/property_map/VectorPropertyMap.hpp>
 
 #include <tmpc/Traits.hpp>
-#include <tmpc/BlazeKernel.hpp>
 
 #define TMPC_TREEQP_USE_HPMPC
 
@@ -94,6 +93,12 @@ namespace tmpc
         {
             opts_.lineSearchTol = val;
             return *this;
+        }
+		
+		
+        treeqp_tdunes_opts_t const& nativeOptions() const
+        {
+            return opts_;
         }
 
 
@@ -537,13 +542,6 @@ namespace tmpc
         std::vector<char> qp_solver_memory_;
 
         void init();
-    };
-
-
-    template <>
-    struct KernelOf<DualNewtonTreeWorkspace>
-    {
-        using type = BlazeKernel<double>;
     };
 
 

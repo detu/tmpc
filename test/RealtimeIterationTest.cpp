@@ -11,8 +11,8 @@
 
 #include "gtest_tools_eigen.hpp"
 
-#include <gtest/gtest.h>
-#include <gmock/gmock.h>
+#include <tmpc/Testing.hpp>
+
 
 #include <boost/range/iterator_range_core.hpp>
 
@@ -170,7 +170,7 @@ namespace tmpc :: testing
 	typedef SampleOCP OCP;
 
 	template <typename RealtimeIteration>
-	class RealtimeIterationTest : public ::testing::Test
+	class RealtimeIterationTest : public Test
 	{
 	public:
 		RealtimeIterationTest(unsigned Nt = 2)
@@ -202,7 +202,7 @@ namespace tmpc :: testing
 			,	tmpc::MpcRealtimeIteration<double, OCP, tmpc::HpmpcWorkspace<BlazeKernel<double>>>
 		> RTITypes;
 
-	TYPED_TEST_CASE(RealtimeIterationTest, RTITypes);
+	TYPED_TEST_SUITEE(RealtimeIterationTest, RTITypes);
 
 	TYPED_TEST(RealtimeIterationTest, GivesCorrectU0)
 	{
@@ -217,8 +217,7 @@ namespace tmpc :: testing
 			u = this->Feedback(x);
 
 			PS::InputVector u_expected {-0.690877362606266};
-
-			EXPECT_PRED2(MatrixApproxEquality(1e-6), u, u_expected);
+			EXPECT_TRUE(approxEqual(u, u_expected, 1e-6));
 		}
 
 		// Step 1
@@ -228,7 +227,7 @@ namespace tmpc :: testing
 			{
 				PS::StateVector x;
 				PS::InputVector u;
-				MatrixApproxEquality is_approx(1e-6);
+				double const tol = 1e-6;
 
 				x = {0.654561318696867,	 -0.690877362606266};	u = {0.215679569867116};
 				//EXPECT_PRED2(is_approx, this->_rti.workingPoint()[0].x(), x);
@@ -236,17 +235,17 @@ namespace tmpc :: testing
 
 				x = {0.0715237410241597, -0.475197792739149};	u = {0.215679569867116};
 				//EXPECT_PRED2(is_approx, this->_rti.workingPoint()[1].x(), x);
-				EXPECT_PRED2(is_approx, this->_rti.workingPoint()[1].u(), u);
+				EXPECT_TRUE(approxEqual(this->_rti.workingPoint()[1].u(), u, tol));
 
 				x = {0.0715237410241597, -0.475197792739149};
-				EXPECT_PRED2(is_approx, this->_rti.workingPoint()[2].x(), x);
+				EXPECT_TRUE(approxEqual(this->_rti.workingPoint()[2].x(), x, tol));
 			}
 
 			x = {0.654561318696867,	-0.690877362606266};
 			u = this->Feedback(x);
 
 			PS::InputVector u_expected { 0.218183 };
-			//EXPECT_PRED2(MatrixApproxEquality(1e-5), u, u_expected);
+			//EXPECT_PRED2(ApproxEqual(1e-5), u, u_expected);
 		}
 	}
 

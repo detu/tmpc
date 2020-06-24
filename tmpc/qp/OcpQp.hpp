@@ -435,7 +435,7 @@ namespace tmpc
 	inline void randomizeQp(Qp& qp)
 	{
 		using Real = typename RealOf<Qp>::type;
-		using DynamicMatrix = blaze::DynamicMatrix<Real>;
+		using DynamicMatrix = blaze::DynamicMatrix<Real, blaze::columnMajor>;
 		using DynamicVector = blaze::DynamicVector<Real>;
 		typename blaze::Rand<DynamicMatrix> rand_matrix;
 		typename blaze::Rand<DynamicVector> rand_vector;
@@ -446,8 +446,8 @@ namespace tmpc
 			auto const sz = get(qp.size(), v);
 
 			{
-				DynamicMatrix H = rand_matrix.generate(sz.nx() + sz.nu(), sz.nx() + sz.nu());
-				H *= ctrans(H);
+				DynamicMatrix H(sz.nx() + sz.nu(), sz.nx() + sz.nu());
+				makePositiveDefinite(H);
 
 				put(qp.Q(), v, submatrix(H, 0, 0, sz.nx(), sz.nx()));
 				put(qp.R(), v, submatrix(H, sz.nx(), sz.nx(), sz.nu(), sz.nu()));

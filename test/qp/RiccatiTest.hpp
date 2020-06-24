@@ -1,8 +1,11 @@
 #pragma once
 
 #include <tmpc/qp/MpipmWorkspace.hpp>
+#include <tmpc/qp/OcpQp.hpp>
+#include <tmpc/qp/KktResidual.hpp>
 #include <tmpc/ocp/OcpSizeProperties.hpp>
-#include <tmpc/test_tools.hpp>
+#include <tmpc/Testing.hpp>
+#include <tmpc/testing/qp/IsSolution.hpp>
 
 #include <blaze/Math.h>
 
@@ -11,7 +14,7 @@ namespace tmpc :: testing
 {
     template <typename RiccatiImpl_>
     class RiccatiTest 
-    :   public ::testing::Test
+    :   public Test
     {
     public:
         using Workspace = MpipmWorkspace<double>;
@@ -21,7 +24,7 @@ namespace tmpc :: testing
     };
 
 
-    TYPED_TEST_CASE_P(RiccatiTest);
+    TYPED_TEST_SUITE_P(RiccatiTest);
 
 
     TYPED_TEST_P(RiccatiTest, test_riccati0)
@@ -133,15 +136,15 @@ namespace tmpc :: testing
 		typename TestFixture::RiccatiImpl riccati(g, sz);
 		riccati(ws, ws);
 
-		EXPECT_PRED2(MatrixApproxEquality(1e-6), get(ws.x(), 0), (DynamicVector<double> {4.2376727217537882, -3.2166970575479454}));
-		EXPECT_PRED2(MatrixApproxEquality(1e-6), get(ws.u(), 0), (DynamicVector<double> {-0.34889319983994238}));
-		EXPECT_PRED2(MatrixApproxEquality(1e-6), get(ws.pi(), e0), (DynamicVector<double> {-1.621313883169287, 11.132830578594472}));
+		EXPECT_TRUE(approxEqual(get(ws.x(), 0), (DynamicVector<double> {4.2376727217537882, -3.2166970575479454}), 1e-6));
+		EXPECT_TRUE(approxEqual(get(ws.u(), 0), (DynamicVector<double> {-0.34889319983994238}), 1e-6));
+		EXPECT_TRUE(approxEqual(get(ws.pi(), e0), (DynamicVector<double> {-1.621313883169287, 11.132830578594472}), 1e-6));
 
-		EXPECT_PRED2(MatrixApproxEquality(1e-6), get(ws.x(), 1), (DynamicVector<double> {1.8465290642858716, -1.5655902573878877}));
-		EXPECT_PRED2(MatrixApproxEquality(1e-6), get(ws.u(), 1), (DynamicVector<double> {-0.20287931724419153}));
-		EXPECT_PRED2(MatrixApproxEquality(1e-6), get(ws.pi(), e1), (DynamicVector<double> {15.036417437909771, 21.143596583220845}));
+		EXPECT_TRUE(approxEqual(get(ws.x(), 1), (DynamicVector<double> {1.8465290642858716, -1.5655902573878877}), 1e-6));
+		EXPECT_TRUE(approxEqual(get(ws.u(), 1), (DynamicVector<double> {-0.20287931724419153}), 1e-6));
+		EXPECT_TRUE(approxEqual(get(ws.pi(), e1), (DynamicVector<double> {15.036417437909771, 21.143596583220845}), 1e-6));
 
-		EXPECT_PRED2(MatrixApproxEquality(1e-6), get(ws.x(), 2), (DynamicVector<double> {1.1794991482758881, 0.23153042536792068}));
+		EXPECT_TRUE(approxEqual(get(ws.x(), 2), (DynamicVector<double> {1.1794991482758881, 0.23153042536792068}), 1e-6));
 	}
 
 
@@ -256,20 +259,72 @@ namespace tmpc :: testing
 		typename TestFixture::RiccatiImpl riccati(g, sz);
 		riccati(ws, ws);
 
-		EXPECT_PRED2(MatrixApproxEquality(1e-6), get(ws.x(), 0), (DynamicVector<double> {}));
-		EXPECT_PRED2(MatrixApproxEquality(1e-6), get(ws.u(), 0), (DynamicVector<double> {-0.32198212467473536}));
-		//EXPECT_PRED2(MatrixApproxEquality(1e-6), get(ws.pi(), e0), (DynamicVector<double> {-8.1496398536788472, 34.341139646264558}));
+		EXPECT_TRUE(approxEqual(get(ws.x(), 0), (DynamicVector<double> {}), 1e-6));
+		EXPECT_TRUE(approxEqual(get(ws.u(), 0), (DynamicVector<double> {-0.32198212467473536}), 1e-6));
+		//EXPECT_TRUE(approxEqual(get(ws.pi(), e0), (DynamicVector<double> {-8.1496398536788472, 34.341139646264558}), 1e-6));
 
-		EXPECT_PRED2(MatrixApproxEquality(1e-6), get(ws.x(), 1), (DynamicVector<double> {0.83900893766263229, 1.6780178753252646}));
-		EXPECT_PRED2(MatrixApproxEquality(1e-6), get(ws.u(), 1), (DynamicVector<double> {-2.5863408379530139}));
-		//EXPECT_PRED2(MatrixApproxEquality(1e-6), get(ws.pi(), e1), (DynamicVector<double> {37.522042463325405, 52.967530263604466}));
+		EXPECT_TRUE(approxEqual(get(ws.x(), 1), (DynamicVector<double> {0.83900893766263229, 1.6780178753252646}), 1e-6));
+		EXPECT_TRUE(approxEqual(get(ws.u(), 1), (DynamicVector<double> {-2.5863408379530139}), 1e-6));
+		//EXPECT_TRUE(approxEqual(get(ws.pi(), e1), (DynamicVector<double> {37.522042463325405, 52.967530263604466}), 1e-6));
 
-		EXPECT_PRED2(MatrixApproxEquality(1e-6), get(ws.x(), 2), (DynamicVector<double> {2.2238563940113898, 1.0916770373722506}));
+		EXPECT_TRUE(approxEqual(get(ws.x(), 2), (DynamicVector<double> {2.2238563940113898, 1.0916770373722506}), 1e-6));
 	}
 
 
-    REGISTER_TYPED_TEST_CASE_P(RiccatiTest
+	TYPED_TEST_P(RiccatiTest, testSingleStageNoState)
+	{
+		size_t const N = 1, nx = 0, nu = 2;
+
+        OcpGraph const g = ocpGraphLinear(N + 1);
+        auto const sz = ocpSizeNominalMpc(N, nx, nu, 0, 0, 0, true);
+        
+        MpipmWorkspace<double> ws_mpipm(g, sz);
+        typename TestFixture::RiccatiImpl riccati(g, sz);
+
+        put(ws_mpipm.R(), vertex(0, g), blaze::DynamicMatrix<double> {
+            {0.444923,    0.598522}, 
+            {0.598522,     1.11451}
+        });
+
+        put(ws_mpipm.r(), vertex(0, g), blaze::DynamicVector<double> {
+            0.131991, 0.585785
+        });
+
+        riccati(ws_mpipm, ws_mpipm);
+
+        auto const v = vertex(0, g);
+		EXPECT_TRUE(approxEqual(get(ws_mpipm.u(), v), blaze::DynamicVector<double> {1.4785, -1.3196}, 1e-4));
+	}
+
+
+	TYPED_TEST_P(RiccatiTest, testKktResidual)
+	{
+		using Real = double;
+		using Workspace = typename TestFixture::Workspace;
+
+		size_t constexpr NX = 2;
+		size_t constexpr NU = 1;
+		size_t constexpr NC = 0;
+		size_t constexpr NCT = 0;
+		size_t constexpr NT = 2;
+
+		OcpGraph const g = ocpGraphLinear(NT + 1);
+		auto const size_map = ocpSizeNominalMpc(NT, NX, NU, NC, 0, NCT, false);
+		
+		MpipmWorkspace<Real> ws(g, size_map);
+        randomizeQp(ws);
+		
+		typename TestFixture::RiccatiImpl riccati(g, size_map);
+		riccati(ws, ws);
+
+		EXPECT_TRUE(isSolution(ws, ws, 1e-14));
+	}
+
+
+    REGISTER_TYPED_TEST_SUITE_P(RiccatiTest
         , test_riccati0
 		, test_riccati1
+		, testSingleStageNoState
+		, testKktResidual
     );
 }

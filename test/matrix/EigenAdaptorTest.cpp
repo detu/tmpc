@@ -1,6 +1,6 @@
 #include <tmpc/EigenKernel.hpp>
 
-#include <gtest/gtest.h>
+#include <tmpc/Testing.hpp>
 
 template <typename MT, StorageOrder SO>
 std::istream& operator>>(std::istream& is, Matrix<MT, SO>& m)

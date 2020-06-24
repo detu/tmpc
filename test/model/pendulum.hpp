@@ -2,7 +2,7 @@
 
 #include <generated_pendulum.h>
 
-#include <tmpc/casadi_interface/GeneratedFunction.hpp>
+#include <tmpc/casadi/GeneratedFunction.hpp>
 #include <tmpc/Matrix.hpp>
 
 
@@ -38,7 +38,7 @@ namespace tmpc :: testing :: model_pendulum
         void operator()(double t, StateVector const& x0, InputVector const& u0,
                 StateVector const& x0_seed, InputVector const& u_seed, StateVector& xdot, StateVector& xdot_sens) const
         {
-            static casadi_interface::GeneratedFunction const _ode(pendulum_ode_sens_functions());
+            static casadi::GeneratedFunction const _ode(pendulum_ode_sens_functions());
             _ode({&t, x0.data(), u0.data(), x0_seed.data(), u_seed.data()}, {xdot.data(), xdot_sens.data()});
         }
     
@@ -53,6 +53,6 @@ namespace tmpc :: testing :: model_pendulum
         */
 
     private:
-        casadi_interface::GeneratedFunction const ode_ {pendulum_ode_functions()};
+        casadi::GeneratedFunction const ode_ {pendulum_ode_functions()};
     };
 }

@@ -7,8 +7,7 @@ set(TMPC_INCLUDE_DIR ${PROJECT_INCLUDE_DIR}/tmpc)
 
 set (SRC
     ${TMPC_INCLUDE_DIR}/Matrix.hpp
-    ${TMPC_INCLUDE_DIR}/casadi_interface/GeneratedFunction.hpp
-
+    
 	${TMPC_INCLUDE_DIR}/qp/CondensingN3.hpp
 	${TMPC_INCLUDE_DIR}/qp/OcpQp.hpp
 
@@ -26,20 +25,19 @@ add_library(tmpc STATIC ${SRC})
 
 target_include_directories(tmpc
     PUBLIC ${PROJECT_INCLUDE_DIR}
+    PUBLIC ${EIGEN3_INCLUDE_DIR}
 )
 
-
 target_link_libraries(tmpc
-    PUBLIC ${LAPACK_LIBRARIES}
+    PUBLIC Boost::graph
+    PUBLIC Boost::exception
 )
 
 #
 # Add CasADi interface
 #
-if (TMPC_WITH_CASADI_INTERFACE)
-    target_include_directories(tmpc
-        PUBLIC ${CASADI_INCLUDE_DIRS}
-    )
+if (TMPC_WITH_CASADI)
+    add_subdirectory("casadi")
 endif ()
 
 #
@@ -75,13 +73,6 @@ endif()
 #
 if (TMPC_WITH_treeQP)
     add_subdirectory("qp-treeqp")
-endif()
-
-#
-# Link to BLASFEO
-#
-if (TMPC_WITH_BLASFEO)
-    add_subdirectory("blasfeo")
 endif()
 
 #

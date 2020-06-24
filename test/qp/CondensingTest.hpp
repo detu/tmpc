@@ -1,15 +1,14 @@
 #include <tmpc/qp/OcpQp.hpp>
 #include <tmpc/mpc/MpcOcpSize.hpp>
-
 #include <test/Kernels.hpp>
-#include <tmpc/test_tools.hpp>
+#include <tmpc/Testing.hpp>
 
 
 namespace tmpc :: testing
 {
 	template <typename CA>
 	class CondensingTest 
-	: 	public ::testing::Test
+	: 	public Test
 	{
 	public:
 
@@ -62,7 +61,6 @@ namespace tmpc :: testing
 			const auto Q0  = submatrix(H0,  0,  0, NX, NX);
 			const auto R0  = submatrix(H0, NX, NX, NU, NU);
 			const auto S0  = submatrix(H0,  0, NX, NX, NU);
-			const auto S0T = submatrix(H0, NX,  0, NU, NX);
 
 			StateStateMatrix A0 {
 				{1, 1},
@@ -87,7 +85,6 @@ namespace tmpc :: testing
 			const auto Q1  = submatrix(H1,  0,  0, NX, NX);
 			const auto R1  = submatrix(H1, NX, NX, NU, NU);
 			const auto S1  = submatrix(H1,  0, NX, NX, NU);
-			const auto S1T = submatrix(H1, NX,  0, NU, NX);
 
 			StateStateMatrix A1 {
 				{1, 1},
@@ -151,7 +148,7 @@ namespace tmpc :: testing
 	};
 
 
-	TYPED_TEST_CASE_P(CondensingTest);
+	TYPED_TEST_SUITE_P(CondensingTest);
 
 	
 	TYPED_TEST_P(CondensingTest, testCondensing)
@@ -174,7 +171,7 @@ namespace tmpc :: testing
 	}
 	
 
-	REGISTER_TYPED_TEST_CASE_P(CondensingTest,
+	REGISTER_TYPED_TEST_SUITE_P(CondensingTest,
 		testCondensing
 	);
 }

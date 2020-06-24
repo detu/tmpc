@@ -8,7 +8,7 @@
 #include <tmpc/ocp/OcpGraph.hpp>
 #include <tmpc/ocp/OcpSize.hpp>
 #include <tmpc/core/Range.hpp>
-#include <tmpc/core/PropertyMap.hpp>
+#include <tmpc/property_map/PropertyMap.hpp>
 
 
 int main()

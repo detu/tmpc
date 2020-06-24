@@ -313,7 +313,7 @@ namespace tmpc
 
 		DynamicMatrix<Kernel> B_;
 		DynamicMatrix<Kernel> G_;
-		BlockMatrixView<Kernel, DynamicMatrix<Kernel>> blockG_;
+		BlockMatrixView<DynamicMatrix<Kernel>> blockG_;
 
 		/*
 		class PerStageData

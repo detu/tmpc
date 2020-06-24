@@ -26,8 +26,9 @@ namespace tmpc :: graph
     using boost::compressed_sparse_row_graph;
     
     using boost::directedS;
-    using boost::bidirectionalS;
-    
+    using boost::bidirectionalS;    
+    using boost::default_color_type;
+    using boost::color_traits;
 
     template <typename Graph>
     inline auto edges(Graph const& g)

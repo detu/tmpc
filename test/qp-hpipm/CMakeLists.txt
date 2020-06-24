@@ -8,6 +8,7 @@ target_include_directories(test-tmpc-qp-hpipm
 
 target_link_libraries(test-tmpc-qp-hpipm
     tmpc-qp-hpipm
+    ${LAPACK_LIBRARIES}
     GTest::GTest
     GTest::Main
 )

@@ -1,0 +1,2474 @@
+{
+  "context": {
+    "date": "2018-10-15 17:27:24",
+    "executable": "build/bin/tmpc_bench",
+    "num_cpus": 4,
+    "mhz_per_cpu": 4000,
+    "cpu_scaling_enabled": false,
+    "caches": [
+      {
+        "type": "Data",
+        "level": 1,
+        "size": 32000000,
+        "num_sharing": 1
+      },
+      {
+        "type": "Instruction",
+        "level": 1,
+        "size": 32000000,
+        "num_sharing": 1
+      },
+      {
+        "type": "Unified",
+        "level": 2,
+        "size": 256000000,
+        "num_sharing": 1
+      },
+      {
+        "type": "Unified",
+        "level": 3,
+        "size": 10240000000,
+        "num_sharing": 4
+      }
+    ],
+    "library_build_type": "release"
+  },
+  "benchmarks": [
+    {
+      "name": "BM_ClassicalRiccati/100/2/1_mean",
+      "iterations": 7676,
+      "real_time": 9.0574186972379073e+04,
+      "cpu_time": 9.0568882516935890e+04,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/2/1_median",
+      "iterations": 7676,
+      "real_time": 9.0598174765562580e+04,
+      "cpu_time": 9.0594774101094270e+04,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/2/1_stddev",
+      "iterations": 7676,
+      "real_time": 2.0512388038645059e+02,
+      "cpu_time": 2.0523602749619940e+02,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/2/5_mean",
+      "iterations": 5711,
+      "real_time": 1.2177525328312603e+05,
+      "cpu_time": 1.2176841744002802e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/2/5_median",
+      "iterations": 5711,
+      "real_time": 1.2171341402555483e+05,
+      "cpu_time": 1.2170304149886170e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/2/5_stddev",
+      "iterations": 5711,
+      "real_time": 4.7541108318066267e+02,
+      "cpu_time": 4.7579498344444659e+02,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/3/1_mean",
+      "iterations": 7436,
+      "real_time": 9.3581254975775068e+04,
+      "cpu_time": 9.3576372834857451e+04,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/3/1_median",
+      "iterations": 7436,
+      "real_time": 9.3566205554065615e+04,
+      "cpu_time": 9.3562962009144831e+04,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/3/1_stddev",
+      "iterations": 7436,
+      "real_time": 1.7720797420163498e+02,
+      "cpu_time": 1.7587477457890088e+02,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/3/5_mean",
+      "iterations": 5289,
+      "real_time": 1.3172193596143572e+05,
+      "cpu_time": 1.3171363314426164e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/3/5_median",
+      "iterations": 5289,
+      "real_time": 1.3230342200788905e+05,
+      "cpu_time": 1.3229236859519768e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/3/5_stddev",
+      "iterations": 5289,
+      "real_time": 1.0829560624067610e+03,
+      "cpu_time": 1.0823739355699136e+03,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/4/1_mean",
+      "iterations": 7239,
+      "real_time": 9.6233618427954847e+04,
+      "cpu_time": 9.6228269664318330e+04,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/4/1_median",
+      "iterations": 7239,
+      "real_time": 9.6175522931307816e+04,
+      "cpu_time": 9.6172068310540446e+04,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/4/1_stddev",
+      "iterations": 7239,
+      "real_time": 4.1570761251893077e+02,
+      "cpu_time": 4.1504277218268481e+02,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/4/5_mean",
+      "iterations": 5342,
+      "real_time": 1.3062835584055036e+05,
+      "cpu_time": 1.3062027135904171e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/4/5_median",
+      "iterations": 5342,
+      "real_time": 1.3054892746162176e+05,
+      "cpu_time": 1.3054216838262850e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/4/5_stddev",
+      "iterations": 5342,
+      "real_time": 5.6430451217789755e+02,
+      "cpu_time": 5.6436750931539075e+02,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/5/1_mean",
+      "iterations": 6244,
+      "real_time": 1.1148760230621431e+05,
+      "cpu_time": 1.1148133742793073e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/5/1_median",
+      "iterations": 6244,
+      "real_time": 1.1126516599938572e+05,
+      "cpu_time": 1.1125727810698283e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/5/1_stddev",
+      "iterations": 6244,
+      "real_time": 8.3028824728524444e+02,
+      "cpu_time": 8.3158062111463335e+02,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/5/5_mean",
+      "iterations": 4605,
+      "real_time": 1.5085404855590215e+05,
+      "cpu_time": 1.5084600028230200e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/5/5_median",
+      "iterations": 4605,
+      "real_time": 1.5070559967426758e+05,
+      "cpu_time": 1.5069750890336582e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/5/5_stddev",
+      "iterations": 4605,
+      "real_time": 4.8639532632639310e+02,
+      "cpu_time": 4.8648414680445717e+02,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/6/1_mean",
+      "iterations": 5924,
+      "real_time": 1.1639173602297992e+05,
+      "cpu_time": 1.1638494353477359e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/6/1_median",
+      "iterations": 5924,
+      "real_time": 1.1654374105340254e+05,
+      "cpu_time": 1.1653974434503682e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/6/1_stddev",
+      "iterations": 5924,
+      "real_time": 7.2141773452495795e+02,
+      "cpu_time": 7.2141239524224841e+02,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/6/5_mean",
+      "iterations": 4403,
+      "real_time": 1.5718956481942852e+05,
+      "cpu_time": 1.5718126924823929e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/6/5_median",
+      "iterations": 4403,
+      "real_time": 1.5715026822628369e+05,
+      "cpu_time": 1.5713688587326766e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/6/5_stddev",
+      "iterations": 4403,
+      "real_time": 4.8806965804240338e+02,
+      "cpu_time": 4.8650877191918084e+02,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/7/1_mean",
+      "iterations": 5690,
+      "real_time": 1.2204105824250822e+05,
+      "cpu_time": 1.2203424831282940e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/7/1_median",
+      "iterations": 5690,
+      "real_time": 1.2211399059751639e+05,
+      "cpu_time": 1.2210541880492188e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/7/1_stddev",
+      "iterations": 5690,
+      "real_time": 3.3726125205668569e+02,
+      "cpu_time": 3.3721605452811758e+02,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/7/5_mean",
+      "iterations": 4179,
+      "real_time": 1.6597392529311808e+05,
+      "cpu_time": 1.6596464690117238e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/7/5_median",
+      "iterations": 4179,
+      "real_time": 1.6599177674086633e+05,
+      "cpu_time": 1.6598604857621368e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/7/5_stddev",
+      "iterations": 4179,
+      "real_time": 2.1106510831844852e+02,
+      "cpu_time": 2.1203815821466080e+02,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/8/1_mean",
+      "iterations": 5761,
+      "real_time": 1.2102618470751244e+05,
+      "cpu_time": 1.2101907715674381e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/8/1_median",
+      "iterations": 5761,
+      "real_time": 1.2103252048256435e+05,
+      "cpu_time": 1.2102391399062802e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/8/1_stddev",
+      "iterations": 5761,
+      "real_time": 4.3035902025586751e+02,
+      "cpu_time": 4.3219513196025179e+02,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/8/5_mean",
+      "iterations": 4272,
+      "real_time": 1.6318631086142149e+05,
+      "cpu_time": 1.6317660933988777e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/8/5_median",
+      "iterations": 4272,
+      "real_time": 1.6317012371255105e+05,
+      "cpu_time": 1.6316087219101138e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/8/5_stddev",
+      "iterations": 4272,
+      "real_time": 3.3562208046228710e+02,
+      "cpu_time": 3.3513636453366121e+02,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/9/1_mean",
+      "iterations": 4861,
+      "real_time": 1.4389092285539271e+05,
+      "cpu_time": 1.4388230853733755e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/9/1_median",
+      "iterations": 4861,
+      "real_time": 1.4397757405877340e+05,
+      "cpu_time": 1.4397248580539043e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/9/1_stddev",
+      "iterations": 4861,
+      "real_time": 7.2128364413581528e+02,
+      "cpu_time": 7.2243799349376809e+02,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/9/5_mean",
+      "iterations": 3549,
+      "real_time": 1.9579653237536750e+05,
+      "cpu_time": 1.9578572603550254e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/9/5_median",
+      "iterations": 3549,
+      "real_time": 1.9579345984791903e+05,
+      "cpu_time": 1.9578672513384087e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/9/5_stddev",
+      "iterations": 3549,
+      "real_time": 3.3996566135944551e+02,
+      "cpu_time": 3.3667652182366521e+02,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/10/1_mean",
+      "iterations": 4570,
+      "real_time": 1.5257765908098078e+05,
+      "cpu_time": 1.5256958304157582e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/10/1_median",
+      "iterations": 4570,
+      "real_time": 1.5253899256011297e+05,
+      "cpu_time": 1.5253104923413543e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/10/1_stddev",
+      "iterations": 4570,
+      "real_time": 3.3293560903302659e+02,
+      "cpu_time": 3.3515673134888908e+02,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/10/5_mean",
+      "iterations": 3334,
+      "real_time": 2.0878730848829675e+05,
+      "cpu_time": 2.0877506553689277e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/10/5_median",
+      "iterations": 3334,
+      "real_time": 2.0888809193161564e+05,
+      "cpu_time": 2.0887360422915517e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/10/5_stddev",
+      "iterations": 3334,
+      "real_time": 7.8759542524983760e+02,
+      "cpu_time": 7.9060224329073480e+02,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/11/1_mean",
+      "iterations": 4275,
+      "real_time": 1.6283398612865063e+05,
+      "cpu_time": 1.6282548556725227e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/11/1_median",
+      "iterations": 4275,
+      "real_time": 1.6278766923980520e+05,
+      "cpu_time": 1.6277656959064241e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/11/1_stddev",
+      "iterations": 4275,
+      "real_time": 3.4490437044740514e+02,
+      "cpu_time": 3.4736600091202496e+02,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/11/5_mean",
+      "iterations": 3116,
+      "real_time": 2.2403138555847542e+05,
+      "cpu_time": 2.2401833520539175e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/11/5_median",
+      "iterations": 3116,
+      "real_time": 2.2441596437743984e+05,
+      "cpu_time": 2.2439745186135662e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/11/5_stddev",
+      "iterations": 3116,
+      "real_time": 9.3596805750776991e+02,
+      "cpu_time": 9.3863015520576607e+02,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/12/1_mean",
+      "iterations": 4193,
+      "real_time": 1.6596331139998720e+05,
+      "cpu_time": 1.6595379673264857e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/12/1_median",
+      "iterations": 4193,
+      "real_time": 1.6598377033146808e+05,
+      "cpu_time": 1.6597610159789844e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/12/1_stddev",
+      "iterations": 4193,
+      "real_time": 3.8436368256514561e+02,
+      "cpu_time": 3.8409890841449300e+02,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/12/5_mean",
+      "iterations": 3114,
+      "real_time": 2.2473589049449956e+05,
+      "cpu_time": 2.2472408150289091e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/12/5_median",
+      "iterations": 3114,
+      "real_time": 2.2471073394362701e+05,
+      "cpu_time": 2.2469993802183741e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/12/5_stddev",
+      "iterations": 3114,
+      "real_time": 6.9922150284484087e+02,
+      "cpu_time": 6.9564531091235699e+02,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/13/1_mean",
+      "iterations": 3598,
+      "real_time": 1.9301191403561638e+05,
+      "cpu_time": 1.9300122351306365e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/13/1_median",
+      "iterations": 3598,
+      "real_time": 1.9340615425246043e+05,
+      "cpu_time": 1.9339924708170854e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/13/1_stddev",
+      "iterations": 3598,
+      "real_time": 1.4325912345845070e+03,
+      "cpu_time": 1.4320824369011120e+03,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/13/5_mean",
+      "iterations": 2689,
+      "real_time": 2.5914997701752337e+05,
+      "cpu_time": 2.5913555351431886e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/13/5_median",
+      "iterations": 2689,
+      "real_time": 2.5930034101896189e+05,
+      "cpu_time": 2.5927907939754397e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/13/5_stddev",
+      "iterations": 2689,
+      "real_time": 5.9403990910539494e+02,
+      "cpu_time": 5.9628854205525067e+02,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/14/1_mean",
+      "iterations": 3423,
+      "real_time": 2.0300987300616276e+05,
+      "cpu_time": 2.0299800108092185e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/14/1_median",
+      "iterations": 3423,
+      "real_time": 2.0276694639209087e+05,
+      "cpu_time": 2.0275004075372487e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/14/1_stddev",
+      "iterations": 3423,
+      "real_time": 5.1643516635968456e+02,
+      "cpu_time": 5.1875778945515640e+02,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/14/5_mean",
+      "iterations": 2578,
+      "real_time": 2.7148695473232528e+05,
+      "cpu_time": 2.7147040911559673e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/14/5_median",
+      "iterations": 2578,
+      "real_time": 2.7131147944135568e+05,
+      "cpu_time": 2.7128871140419057e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/14/5_stddev",
+      "iterations": 2578,
+      "real_time": 8.1288769851631798e+02,
+      "cpu_time": 8.0914910267654045e+02,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/15/1_mean",
+      "iterations": 3230,
+      "real_time": 2.1591966894732375e+05,
+      "cpu_time": 2.1590864637770952e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/15/1_median",
+      "iterations": 3230,
+      "real_time": 2.1608029272442410e+05,
+      "cpu_time": 2.1606596873064904e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/15/1_stddev",
+      "iterations": 3230,
+      "real_time": 1.1746562151430260e+03,
+      "cpu_time": 1.1729872447355303e+03,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/15/5_mean",
+      "iterations": 2425,
+      "real_time": 2.8826119402066007e+05,
+      "cpu_time": 2.8824314119587489e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/15/5_median",
+      "iterations": 2425,
+      "real_time": 2.8835226000007155e+05,
+      "cpu_time": 2.8833188453607896e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/15/5_stddev",
+      "iterations": 2425,
+      "real_time": 5.2464534838061275e+02,
+      "cpu_time": 5.2300935538927160e+02,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/16/1_mean",
+      "iterations": 3166,
+      "real_time": 2.2042533025892964e+05,
+      "cpu_time": 2.2041314418824881e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/16/1_median",
+      "iterations": 3166,
+      "real_time": 2.2058658701828131e+05,
+      "cpu_time": 2.2057005211623403e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/16/1_stddev",
+      "iterations": 3166,
+      "real_time": 4.2020740076676640e+02,
+      "cpu_time": 4.1862382825608142e+02,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/16/5_mean",
+      "iterations": 2386,
+      "real_time": 2.9201257862529438e+05,
+      "cpu_time": 2.9199655201173411e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/16/5_median",
+      "iterations": 2386,
+      "real_time": 2.9183967686501268e+05,
+      "cpu_time": 2.9182482124895300e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/16/5_stddev",
+      "iterations": 2386,
+      "real_time": 8.6478324256089650e+02,
+      "cpu_time": 8.6243016151058362e+02,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/17/1_mean",
+      "iterations": 2612,
+      "real_time": 2.6716264096474857e+05,
+      "cpu_time": 2.6714775482389069e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/17/1_median",
+      "iterations": 2612,
+      "real_time": 2.6719984628622257e+05,
+      "cpu_time": 2.6718732905819663e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/17/1_stddev",
+      "iterations": 2612,
+      "real_time": 6.3393846262843647e+02,
+      "cpu_time": 6.3156946459131666e+02,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/17/5_mean",
+      "iterations": 2010,
+      "real_time": 3.4825291184085532e+05,
+      "cpu_time": 3.4823257437811024e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/17/5_median",
+      "iterations": 2010,
+      "real_time": 3.4843293457712361e+05,
+      "cpu_time": 3.4841478656717151e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/17/5_stddev",
+      "iterations": 2010,
+      "real_time": 6.7379581221939634e+02,
+      "cpu_time": 6.7287337627175805e+02,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/18/1_mean",
+      "iterations": 2484,
+      "real_time": 2.7932517564408772e+05,
+      "cpu_time": 2.7931083401771326e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/18/1_median",
+      "iterations": 2484,
+      "real_time": 2.7938368820438581e+05,
+      "cpu_time": 2.7936901892109623e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/18/1_stddev",
+      "iterations": 2484,
+      "real_time": 5.1541762965092653e+02,
+      "cpu_time": 5.1420682111107169e+02,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/18/5_mean",
+      "iterations": 1913,
+      "real_time": 3.6454967454258300e+05,
+      "cpu_time": 3.6452856722425285e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/18/5_median",
+      "iterations": 1913,
+      "real_time": 3.6442781887057773e+05,
+      "cpu_time": 3.6440781233663944e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/18/5_stddev",
+      "iterations": 1913,
+      "real_time": 5.0888429007694134e+02,
+      "cpu_time": 5.0433662007981201e+02,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/19/1_mean",
+      "iterations": 2362,
+      "real_time": 2.9613529750214930e+05,
+      "cpu_time": 2.9611846735817066e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/19/1_median",
+      "iterations": 2362,
+      "real_time": 2.9608341892457061e+05,
+      "cpu_time": 2.9607308679085353e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/19/1_stddev",
+      "iterations": 2362,
+      "real_time": 3.7808241673206595e+02,
+      "cpu_time": 3.7537970709193218e+02,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/19/5_mean",
+      "iterations": 1817,
+      "real_time": 3.8534325052281719e+05,
+      "cpu_time": 3.8532204634012247e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/19/5_median",
+      "iterations": 1817,
+      "real_time": 3.8527509988991276e+05,
+      "cpu_time": 3.8525412713262637e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/19/5_stddev",
+      "iterations": 1817,
+      "real_time": 9.2932781395677102e+02,
+      "cpu_time": 9.3357359418660019e+02,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/20/1_mean",
+      "iterations": 2335,
+      "real_time": 3.0002930976448389e+05,
+      "cpu_time": 3.0001337062098284e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/20/1_median",
+      "iterations": 2335,
+      "real_time": 2.9885609143459599e+05,
+      "cpu_time": 2.9883727537473507e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/20/1_stddev",
+      "iterations": 2335,
+      "real_time": 2.6395100275502509e+03,
+      "cpu_time": 2.6399204360717640e+03,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/20/5_mean",
+      "iterations": 1804,
+      "real_time": 3.8867099556530407e+05,
+      "cpu_time": 3.8864966579822672e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/20/5_median",
+      "iterations": 1804,
+      "real_time": 3.8755349778270035e+05,
+      "cpu_time": 3.8754017294900178e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/20/5_stddev",
+      "iterations": 1804,
+      "real_time": 2.8727468551493112e+03,
+      "cpu_time": 2.8697780419854312e+03,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/21/1_mean",
+      "iterations": 1845,
+      "real_time": 3.7586577636859624e+05,
+      "cpu_time": 3.7584689490514458e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/21/1_median",
+      "iterations": 1845,
+      "real_time": 3.7537961707352137e+05,
+      "cpu_time": 3.7537346558265248e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/21/1_stddev",
+      "iterations": 1845,
+      "real_time": 1.3311771475628514e+03,
+      "cpu_time": 1.3334287332761778e+03,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/21/5_mean",
+      "iterations": 1465,
+      "real_time": 4.7846442204769718e+05,
+      "cpu_time": 4.7843930969282595e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/21/5_median",
+      "iterations": 1465,
+      "real_time": 4.7834307201360498e+05,
+      "cpu_time": 4.7831815085324930e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/21/5_stddev",
+      "iterations": 1465,
+      "real_time": 6.5074571818439995e+02,
+      "cpu_time": 6.5693526530048985e+02,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/22/1_mean",
+      "iterations": 1790,
+      "real_time": 3.9154498502792802e+05,
+      "cpu_time": 3.9152414826814976e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/22/1_median",
+      "iterations": 1790,
+      "real_time": 3.9133204497207445e+05,
+      "cpu_time": 3.9130447541899228e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/22/1_stddev",
+      "iterations": 1790,
+      "real_time": 8.9425333249776850e+02,
+      "cpu_time": 9.0364280592889872e+02,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/22/5_mean",
+      "iterations": 1383,
+      "real_time": 4.9826491843805579e+05,
+      "cpu_time": 4.9823545683297107e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/22/5_median",
+      "iterations": 1383,
+      "real_time": 4.9824952819947281e+05,
+      "cpu_time": 4.9820860665217735e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/22/5_stddev",
+      "iterations": 1383,
+      "real_time": 4.3718104784686813e+02,
+      "cpu_time": 4.3825992387725216e+02,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/23/1_mean",
+      "iterations": 1685,
+      "real_time": 4.1393753922855237e+05,
+      "cpu_time": 4.1391364997032535e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/23/1_median",
+      "iterations": 1685,
+      "real_time": 4.1343677032667288e+05,
+      "cpu_time": 4.1341574629080197e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/23/1_stddev",
+      "iterations": 1685,
+      "real_time": 1.5877621561749727e+03,
+      "cpu_time": 1.5922656499823904e+03,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/23/5_mean",
+      "iterations": 1308,
+      "real_time": 5.2787436827219022e+05,
+      "cpu_time": 5.2784286016820045e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/23/5_median",
+      "iterations": 1308,
+      "real_time": 5.2791739296615857e+05,
+      "cpu_time": 5.2789055275230680e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/23/5_stddev",
+      "iterations": 1308,
+      "real_time": 9.3284467683296452e+02,
+      "cpu_time": 9.3401162698492260e+02,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/24/1_mean",
+      "iterations": 1676,
+      "real_time": 4.1821012016721064e+05,
+      "cpu_time": 4.1818453448687325e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/24/1_median",
+      "iterations": 1676,
+      "real_time": 4.1813257756592083e+05,
+      "cpu_time": 4.1810287410502386e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/24/1_stddev",
+      "iterations": 1676,
+      "real_time": 7.8939949656846682e+02,
+      "cpu_time": 7.9311436128921196e+02,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/24/5_mean",
+      "iterations": 1299,
+      "real_time": 5.2896986605087551e+05,
+      "cpu_time": 5.2894316227867943e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/24/5_median",
+      "iterations": 1299,
+      "real_time": 5.2888197882982495e+05,
+      "cpu_time": 5.2885185758277529e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/24/5_stddev",
+      "iterations": 1299,
+      "real_time": 1.1121190760081097e+03,
+      "cpu_time": 1.1075459094416615e+03,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/25/1_mean",
+      "iterations": 1387,
+      "real_time": 4.9936366539295000e+05,
+      "cpu_time": 4.9934000656092656e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/25/1_median",
+      "iterations": 1387,
+      "real_time": 4.9944125775043288e+05,
+      "cpu_time": 4.9941525162218907e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/25/1_stddev",
+      "iterations": 1387,
+      "real_time": 9.6634658390376956e+02,
+      "cpu_time": 9.6648357688891849e+02,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/25/5_mean",
+      "iterations": 1112,
+      "real_time": 6.2043337203239591e+05,
+      "cpu_time": 6.2040019361510908e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/25/5_median",
+      "iterations": 1112,
+      "real_time": 6.2043670773417747e+05,
+      "cpu_time": 6.2040750854316028e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/25/5_stddev",
+      "iterations": 1112,
+      "real_time": 6.2773468277304471e+02,
+      "cpu_time": 6.2514084719791219e+02,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/26/1_mean",
+      "iterations": 1310,
+      "real_time": 5.1949611679377692e+05,
+      "cpu_time": 5.1947066763358971e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/26/1_median",
+      "iterations": 1310,
+      "real_time": 5.1927787709898950e+05,
+      "cpu_time": 5.1925230343511759e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/26/1_stddev",
+      "iterations": 1310,
+      "real_time": 9.9607511314855219e+02,
+      "cpu_time": 1.0001668314385221e+03,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/26/5_mean",
+      "iterations": 1066,
+      "real_time": 6.4460468001874432e+05,
+      "cpu_time": 6.4457175938086864e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/26/5_median",
+      "iterations": 1066,
+      "real_time": 6.4460662429624738e+05,
+      "cpu_time": 6.4456186819888267e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/26/5_stddev",
+      "iterations": 1066,
+      "real_time": 6.4688843261475472e+02,
+      "cpu_time": 6.3056453874259512e+02,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/27/1_mean",
+      "iterations": 1267,
+      "real_time": 5.4782074956598727e+05,
+      "cpu_time": 5.4779130812943284e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/27/1_median",
+      "iterations": 1267,
+      "real_time": 5.4795073283321504e+05,
+      "cpu_time": 5.4792177032361820e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/27/1_stddev",
+      "iterations": 1267,
+      "real_time": 9.5786538395883713e+02,
+      "cpu_time": 9.6874197690415724e+02,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/27/5_mean",
+      "iterations": 1009,
+      "real_time": 6.8201103012890241e+05,
+      "cpu_time": 6.8197809326066368e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/27/5_median",
+      "iterations": 1009,
+      "real_time": 6.8201422299270972e+05,
+      "cpu_time": 6.8198962338952534e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/27/5_stddev",
+      "iterations": 1009,
+      "real_time": 1.2675999308381995e+03,
+      "cpu_time": 1.2649359501612107e+03,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/28/1_mean",
+      "iterations": 1250,
+      "real_time": 5.5214319728009286e+05,
+      "cpu_time": 5.5211600655999978e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/28/1_median",
+      "iterations": 1250,
+      "real_time": 5.5198385479998251e+05,
+      "cpu_time": 5.5195544760001672e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/28/1_stddev",
+      "iterations": 1250,
+      "real_time": 1.0856758151984452e+03,
+      "cpu_time": 1.0865862623322739e+03,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/28/5_mean",
+      "iterations": 1013,
+      "real_time": 6.7911544738416036e+05,
+      "cpu_time": 6.7907987216188584e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/28/5_median",
+      "iterations": 1013,
+      "real_time": 6.7919273889411101e+05,
+      "cpu_time": 6.7915956910168403e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/28/5_stddev",
+      "iterations": 1013,
+      "real_time": 7.6943811730213827e+02,
+      "cpu_time": 7.6907655069547639e+02,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/29/1_mean",
+      "iterations": 1023,
+      "real_time": 6.7598570703823934e+05,
+      "cpu_time": 6.7594899980448757e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/29/1_median",
+      "iterations": 1023,
+      "real_time": 6.7597911730264570e+05,
+      "cpu_time": 6.7594541837731411e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/29/1_stddev",
+      "iterations": 1023,
+      "real_time": 6.8395759258685007e+02,
+      "cpu_time": 6.7884011624767049e+02,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/29/5_mean",
+      "iterations": 829,
+      "real_time": 8.2431889095295500e+05,
+      "cpu_time": 8.2427143075994612e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/29/5_median",
+      "iterations": 829,
+      "real_time": 8.2404920024121436e+05,
+      "cpu_time": 8.2398052774425852e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/29/5_stddev",
+      "iterations": 829,
+      "real_time": 8.9366463829340137e+02,
+      "cpu_time": 8.8775903900642174e+02,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/30/1_mean",
+      "iterations": 987,
+      "real_time": 7.0165787315086112e+05,
+      "cpu_time": 7.0161193819654849e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/30/1_median",
+      "iterations": 987,
+      "real_time": 7.0172735308984539e+05,
+      "cpu_time": 7.0168235460991226e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/30/1_stddev",
+      "iterations": 987,
+      "real_time": 1.1895800427770469e+03,
+      "cpu_time": 1.1713428121704451e+03,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/30/5_mean",
+      "iterations": 809,
+      "real_time": 8.5373508009868267e+05,
+      "cpu_time": 8.5368587305315444e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/30/5_median",
+      "iterations": 809,
+      "real_time": 8.5414779295407468e+05,
+      "cpu_time": 8.5406419839308574e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_ClassicalRiccati/100/30/5_stddev",
+      "iterations": 809,
+      "real_time": 1.4711613339676844e+03,
+      "cpu_time": 1.4699198927251550e+03,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/2/1_mean",
+      "iterations": 32731,
+      "real_time": 2.1331445828113734e+04,
+      "cpu_time": 2.1330204167303396e+04,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/2/1_median",
+      "iterations": 32731,
+      "real_time": 2.1330166890714918e+04,
+      "cpu_time": 2.1329146038923725e+04,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/2/1_stddev",
+      "iterations": 32731,
+      "real_time": 2.7279047534412513e+01,
+      "cpu_time": 2.7104648561203586e+01,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/2/5_mean",
+      "iterations": 21899,
+      "real_time": 3.1868446645966633e+04,
+      "cpu_time": 3.1866874350427053e+04,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/2/5_median",
+      "iterations": 21899,
+      "real_time": 3.1873591008733580e+04,
+      "cpu_time": 3.1872502465867168e+04,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/2/5_stddev",
+      "iterations": 21899,
+      "real_time": 4.9425383160614629e+01,
+      "cpu_time": 4.8830527881089630e+01,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/3/1_mean",
+      "iterations": 30196,
+      "real_time": 2.3042058461390185e+04,
+      "cpu_time": 2.3040773099085844e+04,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/3/1_median",
+      "iterations": 30196,
+      "real_time": 2.3038264405879807e+04,
+      "cpu_time": 2.3037490644456022e+04,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/3/1_stddev",
+      "iterations": 30196,
+      "real_time": 2.9602917219576295e+01,
+      "cpu_time": 2.9627262081817456e+01,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/3/5_mean",
+      "iterations": 20238,
+      "real_time": 3.4676933432157217e+04,
+      "cpu_time": 3.4675017867378425e+04,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/3/5_median",
+      "iterations": 20238,
+      "real_time": 3.4690975491648423e+04,
+      "cpu_time": 3.4688752989426546e+04,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/3/5_stddev",
+      "iterations": 20238,
+      "real_time": 6.2186839343568444e+01,
+      "cpu_time": 6.2956615579226153e+01,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/4/1_mean",
+      "iterations": 21833,
+      "real_time": 3.2024359263507013e+04,
+      "cpu_time": 3.2022760468098419e+04,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/4/1_median",
+      "iterations": 21833,
+      "real_time": 3.2025739316645799e+04,
+      "cpu_time": 3.2024063390280047e+04,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/4/1_stddev",
+      "iterations": 21833,
+      "real_time": 3.0234655182702241e+01,
+      "cpu_time": 3.0246180055487745e+01,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/4/5_mean",
+      "iterations": 15628,
+      "real_time": 4.4579479907833935e+04,
+      "cpu_time": 4.4577036479396476e+04,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/4/5_median",
+      "iterations": 15628,
+      "real_time": 4.4589652546689569e+04,
+      "cpu_time": 4.4588145380087721e+04,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/4/5_stddev",
+      "iterations": 15628,
+      "real_time": 5.6416052584907789e+01,
+      "cpu_time": 5.6353991139240243e+01,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/5/1_mean",
+      "iterations": 20160,
+      "real_time": 3.4599885406741632e+04,
+      "cpu_time": 3.4597909776785571e+04,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/5/1_median",
+      "iterations": 20160,
+      "real_time": 3.4603495808527994e+04,
+      "cpu_time": 3.4600219742063673e+04,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/5/1_stddev",
+      "iterations": 20160,
+      "real_time": 2.9986122594354228e+01,
+      "cpu_time": 3.0373258969217446e+01,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/5/5_mean",
+      "iterations": 14455,
+      "real_time": 4.8149040864754934e+04,
+      "cpu_time": 4.8146457952266159e+04,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/5/5_median",
+      "iterations": 14455,
+      "real_time": 4.8156306087846337e+04,
+      "cpu_time": 4.8154528398476083e+04,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/5/5_stddev",
+      "iterations": 14455,
+      "real_time": 1.2231212428419784e+02,
+      "cpu_time": 1.2244936235617615e+02,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/6/1_mean",
+      "iterations": 18689,
+      "real_time": 3.7415940665624803e+04,
+      "cpu_time": 3.7413964208893172e+04,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/6/1_median",
+      "iterations": 18689,
+      "real_time": 3.7413672160097602e+04,
+      "cpu_time": 3.7411722350045740e+04,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/6/1_stddev",
+      "iterations": 18689,
+      "real_time": 4.6880780092644549e+01,
+      "cpu_time": 4.6813081330596951e+01,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/6/5_mean",
+      "iterations": 13117,
+      "real_time": 5.2145687291300332e+04,
+      "cpu_time": 5.2143000106732237e+04,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/6/5_median",
+      "iterations": 13117,
+      "real_time": 5.2139975070506822e+04,
+      "cpu_time": 5.2135526721049690e+04,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/6/5_stddev",
+      "iterations": 13117,
+      "real_time": 6.0889393138940576e+01,
+      "cpu_time": 6.0667612332246733e+01,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/7/1_mean",
+      "iterations": 16871,
+      "real_time": 4.1468674144984841e+04,
+      "cpu_time": 4.1466464945765008e+04,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/7/1_median",
+      "iterations": 16871,
+      "real_time": 4.1449604558077910e+04,
+      "cpu_time": 4.1447680427953732e+04,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/7/1_stddev",
+      "iterations": 16871,
+      "real_time": 5.5453002337329927e+01,
+      "cpu_time": 5.5716742265840445e+01,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/7/5_mean",
+      "iterations": 10410,
+      "real_time": 6.5971705946208138e+04,
+      "cpu_time": 6.5967593535063366e+04,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/7/5_median",
+      "iterations": 10410,
+      "real_time": 6.5970962968279026e+04,
+      "cpu_time": 6.5965463784822845e+04,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/7/5_stddev",
+      "iterations": 10410,
+      "real_time": 5.8801418855872924e+01,
+      "cpu_time": 5.9604783497773553e+01,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/8/1_mean",
+      "iterations": 13599,
+      "real_time": 5.0326954048083877e+04,
+      "cpu_time": 5.0324428068239824e+04,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/8/1_median",
+      "iterations": 13599,
+      "real_time": 5.0338303588487317e+04,
+      "cpu_time": 5.0335720604454807e+04,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/8/1_stddev",
+      "iterations": 13599,
+      "real_time": 5.3581716724840383e+01,
+      "cpu_time": 5.2999434524160044e+01,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/8/5_mean",
+      "iterations": 9032,
+      "real_time": 7.6237875553585342e+04,
+      "cpu_time": 7.6233831543401640e+04,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/8/5_median",
+      "iterations": 9032,
+      "real_time": 7.6244792681483959e+04,
+      "cpu_time": 7.6243763562891050e+04,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/8/5_stddev",
+      "iterations": 9032,
+      "real_time": 5.8055636647138371e+01,
+      "cpu_time": 5.8000992737201486e+01,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/9/1_mean",
+      "iterations": 12251,
+      "real_time": 5.6026325655061140e+04,
+      "cpu_time": 5.6023516414984741e+04,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/9/1_median",
+      "iterations": 12251,
+      "real_time": 5.6007038160199147e+04,
+      "cpu_time": 5.6004293404617616e+04,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/9/1_stddev",
+      "iterations": 12251,
+      "real_time": 8.3293949861520900e+01,
+      "cpu_time": 8.2924224863402458e+01,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/9/5_mean",
+      "iterations": 8126,
+      "real_time": 8.4948867302483603e+04,
+      "cpu_time": 8.4944095077528327e+04,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/9/5_median",
+      "iterations": 8126,
+      "real_time": 8.4921898658646154e+04,
+      "cpu_time": 8.4919164164409085e+04,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/9/5_stddev",
+      "iterations": 8126,
+      "real_time": 1.2868575361241955e+02,
+      "cpu_time": 1.2822104990395258e+02,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/10/1_mean",
+      "iterations": 11589,
+      "real_time": 5.9073539062898795e+04,
+      "cpu_time": 5.9070369893866780e+04,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/10/1_median",
+      "iterations": 11589,
+      "real_time": 5.9089604754520878e+04,
+      "cpu_time": 5.9088452929501720e+04,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/10/1_stddev",
+      "iterations": 11589,
+      "real_time": 8.0119517346034144e+01,
+      "cpu_time": 8.0034279884055351e+01,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/10/5_mean",
+      "iterations": 7967,
+      "real_time": 8.7004789017190415e+04,
+      "cpu_time": 8.7000167528557213e+04,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/10/5_median",
+      "iterations": 7967,
+      "real_time": 8.6982090310043204e+04,
+      "cpu_time": 8.6974648864063114e+04,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/10/5_stddev",
+      "iterations": 7967,
+      "real_time": 6.8600103243206121e+01,
+      "cpu_time": 6.9498072479650375e+01,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/11/1_mean",
+      "iterations": 9279,
+      "real_time": 7.4613020972092825e+04,
+      "cpu_time": 7.4609303955166208e+04,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/11/1_median",
+      "iterations": 9279,
+      "real_time": 7.4614437978266418e+04,
+      "cpu_time": 7.4610789686388292e+04,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/11/1_stddev",
+      "iterations": 9279,
+      "real_time": 7.1738088039420020e+01,
+      "cpu_time": 7.0478004794704034e+01,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/11/5_mean",
+      "iterations": 6974,
+      "real_time": 9.9390759936892835e+04,
+      "cpu_time": 9.9385503541728947e+04,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/11/5_median",
+      "iterations": 6974,
+      "real_time": 9.9369142457678725e+04,
+      "cpu_time": 9.9365290292518883e+04,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/11/5_stddev",
+      "iterations": 6974,
+      "real_time": 8.3908220651783111e+01,
+      "cpu_time": 8.2243948437646608e+01,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/12/1_mean",
+      "iterations": 7888,
+      "real_time": 8.7333388311360381e+04,
+      "cpu_time": 8.7329085078602293e+04,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/12/1_median",
+      "iterations": 7888,
+      "real_time": 8.7317976990352021e+04,
+      "cpu_time": 8.7311141163792272e+04,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/12/1_stddev",
+      "iterations": 7888,
+      "real_time": 6.5090878940705807e+01,
+      "cpu_time": 6.4670399760669085e+01,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/12/5_mean",
+      "iterations": 6197,
+      "real_time": 1.1173546010974020e+05,
+      "cpu_time": 1.1172950091979539e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/12/5_median",
+      "iterations": 6197,
+      "real_time": 1.1173931103761034e+05,
+      "cpu_time": 1.1173184468289588e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/12/5_stddev",
+      "iterations": 6197,
+      "real_time": 8.8744834870272214e+01,
+      "cpu_time": 8.7328928196909075e+01,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/13/1_mean",
+      "iterations": 7194,
+      "real_time": 9.6489835682527730e+04,
+      "cpu_time": 9.6485064359189753e+04,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/13/1_median",
+      "iterations": 7194,
+      "real_time": 9.6414812065636390e+04,
+      "cpu_time": 9.6409819710870928e+04,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/13/1_stddev",
+      "iterations": 7194,
+      "real_time": 2.1808129399550771e+02,
+      "cpu_time": 2.1856908332728375e+02,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/13/5_mean",
+      "iterations": 5663,
+      "real_time": 1.2250484947907049e+05,
+      "cpu_time": 1.2249832318558752e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/13/5_median",
+      "iterations": 5663,
+      "real_time": 1.2248417102248421e+05,
+      "cpu_time": 1.2247604008476355e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/13/5_stddev",
+      "iterations": 5663,
+      "real_time": 1.2408282561344740e+02,
+      "cpu_time": 1.2360496969342874e+02,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/14/1_mean",
+      "iterations": 6980,
+      "real_time": 9.9216266676220272e+04,
+      "cpu_time": 9.9211596232092517e+04,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/14/1_median",
+      "iterations": 6980,
+      "real_time": 9.9192639254983718e+04,
+      "cpu_time": 9.9187794555878150e+04,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/14/1_stddev",
+      "iterations": 6980,
+      "real_time": 1.1286532564753095e+02,
+      "cpu_time": 1.1297624584344774e+02,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/14/5_mean",
+      "iterations": 5456,
+      "real_time": 1.2701057470672899e+05,
+      "cpu_time": 1.2700421873166908e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/14/5_median",
+      "iterations": 5456,
+      "real_time": 1.2703406323304877e+05,
+      "cpu_time": 1.2702735447213281e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/14/5_stddev",
+      "iterations": 5456,
+      "real_time": 9.5642729897741958e+01,
+      "cpu_time": 9.8123676680330590e+01,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/15/1_mean",
+      "iterations": 6092,
+      "real_time": 1.1448935856861406e+05,
+      "cpu_time": 1.1448312327642732e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/15/1_median",
+      "iterations": 6092,
+      "real_time": 1.1449765824028195e+05,
+      "cpu_time": 1.1449194492777235e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/15/1_stddev",
+      "iterations": 6092,
+      "real_time": 7.6914685053254075e+01,
+      "cpu_time": 7.8358471083722137e+01,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/15/5_mean",
+      "iterations": 5071,
+      "real_time": 1.3654238907512242e+05,
+      "cpu_time": 1.3653563798067710e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/15/5_median",
+      "iterations": 5071,
+      "real_time": 1.3654897160318118e+05,
+      "cpu_time": 1.3654387793334434e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/15/5_stddev",
+      "iterations": 5071,
+      "real_time": 1.0630870088974083e+02,
+      "cpu_time": 1.0659502694632705e+02,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/16/1_mean",
+      "iterations": 5552,
+      "real_time": 1.2541613820243329e+05,
+      "cpu_time": 1.2540951394091740e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/16/1_median",
+      "iterations": 5552,
+      "real_time": 1.2542270956414894e+05,
+      "cpu_time": 1.2542078287103586e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/16/1_stddev",
+      "iterations": 5552,
+      "real_time": 9.2838970390999066e+01,
+      "cpu_time": 9.4515843687197631e+01,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/16/5_mean",
+      "iterations": 4644,
+      "real_time": 1.4943023354868067e+05,
+      "cpu_time": 1.4942276998277020e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/16/5_median",
+      "iterations": 4644,
+      "real_time": 1.4940182676571512e+05,
+      "cpu_time": 1.4939367129628299e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/16/5_stddev",
+      "iterations": 4644,
+      "real_time": 1.7029774773386768e+02,
+      "cpu_time": 1.7231884294515606e+02,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/17/1_mean",
+      "iterations": 5177,
+      "real_time": 1.3463833444075592e+05,
+      "cpu_time": 1.3463095497392656e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/17/1_median",
+      "iterations": 5177,
+      "real_time": 1.3462050994778541e+05,
+      "cpu_time": 1.3460909793316553e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/17/1_stddev",
+      "iterations": 5177,
+      "real_time": 1.0167447375358428e+02,
+      "cpu_time": 1.0033740190377958e+02,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/17/5_mean",
+      "iterations": 4376,
+      "real_time": 1.5886969901736284e+05,
+      "cpu_time": 1.5886157296618060e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/17/5_median",
+      "iterations": 4376,
+      "real_time": 1.5887136574498701e+05,
+      "cpu_time": 1.5886109060785343e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/17/5_stddev",
+      "iterations": 4376,
+      "real_time": 9.9109949357156083e+01,
+      "cpu_time": 9.9692534919435516e+01,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/18/1_mean",
+      "iterations": 4900,
+      "real_time": 1.4054453822446166e+05,
+      "cpu_time": 1.4053818051020848e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/18/1_median",
+      "iterations": 4900,
+      "real_time": 1.4052563489787310e+05,
+      "cpu_time": 1.4052074408163421e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/18/1_stddev",
+      "iterations": 4900,
+      "real_time": 4.9905146142561186e+01,
+      "cpu_time": 5.0030991905412378e+01,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/18/5_mean",
+      "iterations": 4352,
+      "real_time": 1.5970232709093616e+05,
+      "cpu_time": 1.5969392745864188e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/18/5_median",
+      "iterations": 4352,
+      "real_time": 1.5967136454494501e+05,
+      "cpu_time": 1.5965984811581441e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/18/5_stddev",
+      "iterations": 4352,
+      "real_time": 1.3598447207232508e+02,
+      "cpu_time": 1.3657118172958064e+02,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/19/1_mean",
+      "iterations": 4555,
+      "real_time": 1.5268053806807441e+05,
+      "cpu_time": 1.5267302649835014e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/19/1_median",
+      "iterations": 4555,
+      "real_time": 1.5262804149278364e+05,
+      "cpu_time": 1.5261600252469428e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/19/1_stddev",
+      "iterations": 4555,
+      "real_time": 1.8823632789982119e+02,
+      "cpu_time": 1.9018282161767900e+02,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/19/5_mean",
+      "iterations": 3551,
+      "real_time": 1.9590031120806903e+05,
+      "cpu_time": 1.9588912114897306e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/19/5_median",
+      "iterations": 3551,
+      "real_time": 1.9586913207533906e+05,
+      "cpu_time": 1.9586095226696151e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/19/5_stddev",
+      "iterations": 3551,
+      "real_time": 1.6193574446666932e+02,
+      "cpu_time": 1.6523827350689402e+02,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/20/1_mean",
+      "iterations": 4149,
+      "real_time": 1.6768648201972843e+05,
+      "cpu_time": 1.6767799351650834e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/20/1_median",
+      "iterations": 4149,
+      "real_time": 1.6770837310188281e+05,
+      "cpu_time": 1.6770623596046670e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/20/1_stddev",
+      "iterations": 4149,
+      "real_time": 1.7075371948040885e+02,
+      "cpu_time": 1.6828865622998353e+02,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/20/5_mean",
+      "iterations": 3274,
+      "real_time": 2.1353159156998215e+05,
+      "cpu_time": 2.1351909215027236e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/20/5_median",
+      "iterations": 3274,
+      "real_time": 2.1354410904092900e+05,
+      "cpu_time": 2.1353494731216549e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/20/5_stddev",
+      "iterations": 3274,
+      "real_time": 3.1596276389234066e+02,
+      "cpu_time": 3.1795177935527471e+02,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/21/1_mean",
+      "iterations": 3901,
+      "real_time": 1.7882857674955219e+05,
+      "cpu_time": 1.7882042401948469e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/21/1_median",
+      "iterations": 3901,
+      "real_time": 1.7881763381186046e+05,
+      "cpu_time": 1.7880766239424387e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/21/1_stddev",
+      "iterations": 3901,
+      "real_time": 1.6440402221994407e+02,
+      "cpu_time": 1.6141388786990754e+02,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/21/5_mean",
+      "iterations": 3053,
+      "real_time": 2.2870637500818586e+05,
+      "cpu_time": 2.2869489757615753e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/21/5_median",
+      "iterations": 3053,
+      "real_time": 2.2873108745477124e+05,
+      "cpu_time": 2.2871251998034614e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/21/5_stddev",
+      "iterations": 3053,
+      "real_time": 2.4166062682779207e+02,
+      "cpu_time": 2.4244880465107789e+02,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/22/1_mean",
+      "iterations": 3886,
+      "real_time": 1.7941492038087323e+05,
+      "cpu_time": 1.7940547647967550e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/22/1_median",
+      "iterations": 3886,
+      "real_time": 1.7945518167773643e+05,
+      "cpu_time": 1.7943996744725891e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/22/1_stddev",
+      "iterations": 3886,
+      "real_time": 1.5157605081609236e+02,
+      "cpu_time": 1.5301962990969653e+02,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/22/5_mean",
+      "iterations": 3002,
+      "real_time": 2.3357457148570800e+05,
+      "cpu_time": 2.3356243457695260e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/22/5_median",
+      "iterations": 3002,
+      "real_time": 2.3353324516996712e+05,
+      "cpu_time": 2.3352389590272887e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/22/5_stddev",
+      "iterations": 3002,
+      "real_time": 4.2973885827373641e+02,
+      "cpu_time": 4.2886327869691934e+02,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/23/1_mean",
+      "iterations": 3169,
+      "real_time": 2.2038489514045144e+05,
+      "cpu_time": 2.2037425323446232e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/23/1_median",
+      "iterations": 3169,
+      "real_time": 2.2035337503946346e+05,
+      "cpu_time": 2.2033938229726933e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/23/1_stddev",
+      "iterations": 3169,
+      "real_time": 2.3808393344472321e+02,
+      "cpu_time": 2.4168325087587780e+02,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/23/5_mean",
+      "iterations": 2639,
+      "real_time": 2.6489018639640656e+05,
+      "cpu_time": 2.6487595964380843e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/23/5_median",
+      "iterations": 2639,
+      "real_time": 2.6482295282315544e+05,
+      "cpu_time": 2.6480920045472676e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/23/5_stddev",
+      "iterations": 2639,
+      "real_time": 1.8689542588791997e+02,
+      "cpu_time": 1.8455381504625259e+02,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/24/1_mean",
+      "iterations": 2945,
+      "real_time": 2.3725063035653290e+05,
+      "cpu_time": 2.3723877497454057e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/24/1_median",
+      "iterations": 2945,
+      "real_time": 2.3727681561972696e+05,
+      "cpu_time": 2.3726891392190213e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/24/1_stddev",
+      "iterations": 2945,
+      "real_time": 2.3904653023784650e+02,
+      "cpu_time": 2.3526785200272823e+02,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/24/5_mean",
+      "iterations": 2503,
+      "real_time": 2.7939161981620669e+05,
+      "cpu_time": 2.7937775769076543e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/24/5_median",
+      "iterations": 2503,
+      "real_time": 2.7935530862965324e+05,
+      "cpu_time": 2.7933752636833617e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/24/5_stddev",
+      "iterations": 2503,
+      "real_time": 2.4430765910561064e+02,
+      "cpu_time": 2.4662614017104278e+02,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/25/1_mean",
+      "iterations": 2772,
+      "real_time": 2.5212373593075603e+05,
+      "cpu_time": 2.5210950714286495e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/25/1_median",
+      "iterations": 2772,
+      "real_time": 2.5209665494217855e+05,
+      "cpu_time": 2.5207710966812703e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/25/1_stddev",
+      "iterations": 2772,
+      "real_time": 1.4968903851295590e+02,
+      "cpu_time": 1.5126710828997031e+02,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/25/5_mean",
+      "iterations": 2376,
+      "real_time": 2.9453931940231618e+05,
+      "cpu_time": 2.9452442558923468e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/25/5_median",
+      "iterations": 2376,
+      "real_time": 2.9443974326591392e+05,
+      "cpu_time": 2.9442485648148769e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/25/5_stddev",
+      "iterations": 2376,
+      "real_time": 3.7914416389242780e+02,
+      "cpu_time": 3.7585779002451665e+02,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/26/1_mean",
+      "iterations": 2728,
+      "real_time": 2.5603402558655007e+05,
+      "cpu_time": 2.5602144116568650e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/26/1_median",
+      "iterations": 2728,
+      "real_time": 2.5607684145898605e+05,
+      "cpu_time": 2.5606434640763732e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/26/1_stddev",
+      "iterations": 2728,
+      "real_time": 2.0808623901842176e+02,
+      "cpu_time": 2.0782706790911533e+02,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/26/5_mean",
+      "iterations": 2321,
+      "real_time": 3.0268043571733951e+05,
+      "cpu_time": 3.0265593158122333e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/26/5_median",
+      "iterations": 2321,
+      "real_time": 3.0272704545459751e+05,
+      "cpu_time": 3.0268833412322350e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/26/5_stddev",
+      "iterations": 2321,
+      "real_time": 4.2585261219043537e+02,
+      "cpu_time": 4.2029969524899013e+02,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/27/1_mean",
+      "iterations": 2411,
+      "real_time": 2.8976695188722212e+05,
+      "cpu_time": 2.8974607892991067e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/27/1_median",
+      "iterations": 2411,
+      "real_time": 2.8970163790967572e+05,
+      "cpu_time": 2.8967159581087844e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/27/1_stddev",
+      "iterations": 2411,
+      "real_time": 1.8584024632453276e+02,
+      "cpu_time": 1.9015298245945124e+02,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/27/5_mean",
+      "iterations": 2105,
+      "real_time": 3.3216919752978050e+05,
+      "cpu_time": 3.3214400375296868e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/27/5_median",
+      "iterations": 2105,
+      "real_time": 3.3209472161542403e+05,
+      "cpu_time": 3.3205248408549541e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/27/5_stddev",
+      "iterations": 2105,
+      "real_time": 3.2081944114252781e+02,
+      "cpu_time": 3.2610262204991466e+02,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/28/1_mean",
+      "iterations": 2252,
+      "real_time": 3.1106917593244126e+05,
+      "cpu_time": 3.1104209365008416e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/28/1_median",
+      "iterations": 2252,
+      "real_time": 3.1095207571045973e+05,
+      "cpu_time": 3.1094610701598402e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/28/1_stddev",
+      "iterations": 2252,
+      "real_time": 2.6798313246002226e+02,
+      "cpu_time": 2.7811617456728533e+02,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/28/5_mean",
+      "iterations": 1987,
+      "real_time": 3.5213934635127714e+05,
+      "cpu_time": 3.5211297372922738e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/28/5_median",
+      "iterations": 1987,
+      "real_time": 3.5209120281818788e+05,
+      "cpu_time": 3.5208531957726000e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/28/5_stddev",
+      "iterations": 1987,
+      "real_time": 5.1237312547386875e+02,
+      "cpu_time": 5.2147239495451686e+02,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/29/1_mean",
+      "iterations": 2142,
+      "real_time": 3.2695917226900486e+05,
+      "cpu_time": 3.2694257857142255e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/29/1_median",
+      "iterations": 2142,
+      "real_time": 3.2687590476196742e+05,
+      "cpu_time": 3.2687170354807464e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/29/1_stddev",
+      "iterations": 2142,
+      "real_time": 3.6284956982737629e+02,
+      "cpu_time": 3.6373384746595576e+02,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/29/5_mean",
+      "iterations": 1899,
+      "real_time": 3.6764792511841614e+05,
+      "cpu_time": 3.6762783038441848e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/29/5_median",
+      "iterations": 1899,
+      "real_time": 3.6755643522916909e+05,
+      "cpu_time": 3.6754339362822397e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/29/5_stddev",
+      "iterations": 1899,
+      "real_time": 3.8193793410620691e+02,
+      "cpu_time": 3.8263845445880929e+02,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/30/1_mean",
+      "iterations": 2096,
+      "real_time": 3.3404919479957741e+05,
+      "cpu_time": 3.3403141727100924e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/30/1_median",
+      "iterations": 2096,
+      "real_time": 3.3402872065856948e+05,
+      "cpu_time": 3.3400692533395399e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/30/1_stddev",
+      "iterations": 2096,
+      "real_time": 3.5612953473584400e+02,
+      "cpu_time": 3.5372913006815844e+02,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/30/5_mean",
+      "iterations": 1900,
+      "real_time": 3.6842616163166420e+05,
+      "cpu_time": 3.6840261584210285e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/30/5_median",
+      "iterations": 1900,
+      "real_time": 3.6845806289492379e+05,
+      "cpu_time": 3.6842849263157527e+05,
+      "time_unit": "ns"
+    },
+    {
+      "name": "BM_HpipmRiccati/100/30/5_stddev",
+      "iterations": 1900,
+      "real_time": 4.4556661557466299e+02,
+      "cpu_time": 4.4941679144894488e+02,
+      "time_unit": "ns"
+    }
+  ]
+}

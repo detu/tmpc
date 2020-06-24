@@ -36,31 +36,35 @@ foreach (lib ${extern_libs})
     message(STATUS "TMPC_WITH_${lib}=${TMPC_WITH_${lib}}")
 endforeach ()
 
-find_package(Eigen3 3.2.10)
-
-if (EIGEN3_FOUND)
-    message(STATUS "Eigen3 found in ${EIGEN3_INCLUDE_DIR}")
-    include_directories(${EIGEN3_INCLUDE_DIR})
-else()
-    message(STATUS "Eigen3 NOT FOUND")
-endif()
-
-
-find_package(blaze 3.5 REQUIRED)
+# TODO: Eigen3 is required now, because some older tests depend on it.
+# This dependency must be removed in future.
+find_package(Eigen3 3.2.10 REQUIRED)
+find_package(blaze 3.6 REQUIRED)
+find_package(BLAS REQUIRED)
 find_package(LAPACK REQUIRED)
 
 # Find boost.
-find_package(Boost REQUIRED COMPONENTS graph)
+find_package(Boost REQUIRED COMPONENTS graph exception)
 
+# Find CasADi. Besides Used in some tests
+find_package(CasADi 3.2.0)
 
-# TMPC_WITH_CASADI_INTERFACE
-set(TMPC_WITH_CASADI_INTERFACE ON CACHE BOOL "Build tmpc with CasADi generated function support classes")
-
-if (TMPC_WITH_CASADI_INTERFACE)
-    find_package(CasADi 3.2.0 REQUIRED)
+if (TARGET casadi)
     message(STATUS "CASADI_INCLUDE_DIRS=${CASADI_INCLUDE_DIRS}")
+else ()
+    message(STATUS "CasADi not found; the tests depending on CasADi will not be built")
+endif ()
 
-    include ("CMakeModules/GenerateCasadiFunction.cmake")
+
+# TMPC_WITH_CASADI
+set(TMPC_WITH_CASADI ON CACHE BOOL "Build tmpc with CasADi generated function support classes")
+
+if (TMPC_WITH_CASADI)
+    if (TARGET casadi)
+        include("CMakeModules/GenerateCasadiFunction.cmake")
+    else ()
+        message(SEND_ERROR, "You have selected TMPC_WITH_CASADI, but CasADi was not found")
+    endif ()
 endif ()
 
 

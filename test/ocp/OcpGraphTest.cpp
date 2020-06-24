@@ -1,12 +1,12 @@
 #include <tmpc/ocp/OcpGraph.hpp>
 #include <tmpc/core/Range.hpp>
-#include <tmpc/core/PropertyMap.hpp>
+#include <tmpc/property_map/PropertyMap.hpp>
 #include <tmpc/graph/ImpactRecorder.hpp>
 #include <tmpc/graph/DepthFirstSearch.hpp>
-
-#include <tmpc/test_tools.hpp>
+#include <tmpc/Testing.hpp>
 
 #include <array>
+#include <iostream>
 
 
 namespace tmpc :: testing
@@ -122,6 +122,32 @@ namespace tmpc :: testing
 	}
 
 
+	// Check that the vertices(g) returns a correct sequence of vertices.
+	//
+	TEST(OcpGraphTest, test_vertices)
+	{
+		size_t const N = 4;
+		OcpGraph const g = ocpGraphLinear(N);
+
+		EXPECT_THAT(graph::vertices(g), ElementsAreArray({0, 1, 2, 3}));
+	}
+
+
+	// Check that the reverse(vertices(g)) returns a correct sequence of vertices.
+	//
+	// NOTE: It does not work however because of incorrect behavior of reversed_range:
+	// https://github.com/boostorg/range/issues/82
+	//
+	// The test is disabled until the issue is fixed.
+	TEST(OcpGraphTest, DISABLED_test_reverseVertices)
+	{
+		size_t const N = 4;
+		OcpGraph const g = ocpGraphLinear(N);
+
+		EXPECT_THAT(reverse(graph::vertices(g)), ElementsAreArray({3, 2, 1, 0}));
+	}
+	
+	
 	TEST(OcpGraphTest, test_parent)
 	{
 		OcpGraph const g = ocpGraphRobustMpc(3, 2, 1);

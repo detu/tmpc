@@ -6,18 +6,17 @@
 
 #include <tmpc/ocp/OcpSize.hpp>
 #include <tmpc/Matrix.hpp>
-
-#include <tmpc/test_tools.hpp>
-#include <gtest/gtest.h>
+#include <tmpc/Testing.hpp>
 
 #include <iostream>
 #include <array>
+
 
 namespace tmpc :: testing
 {
     template <typename WS>
     class QpWorkspaceTest 
-    :   public ::testing::Test
+    :   public Test
     {
     public:
         using Workspace = WS;
@@ -42,7 +41,7 @@ namespace tmpc :: testing
         Workspace ws_;
     };
 
-    TYPED_TEST_CASE_P(QpWorkspaceTest);
+    TYPED_TEST_SUITE_P(QpWorkspaceTest);
 
     TYPED_TEST_P(QpWorkspaceTest, testQpInterface)
     {
@@ -170,6 +169,6 @@ namespace tmpc :: testing
         }
     }
 
-    REGISTER_TYPED_TEST_CASE_P(QpWorkspaceTest,
+    REGISTER_TYPED_TEST_SUITE_P(QpWorkspaceTest,
         testQpInterface, testMatrixSizesCorrect);
 }

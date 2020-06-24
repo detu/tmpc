@@ -7,7 +7,7 @@
 #include <tmpc/BlazeKernel.hpp>
 #include <tmpc/core/Range.hpp>
 
-#include <gtest/gtest.h>
+#include <tmpc/Testing.hpp>
 
 
 namespace tmpc :: testing
@@ -228,5 +228,5 @@ namespace tmpc :: testing
     }
 
     
-    INSTANTIATE_TYPED_TEST_CASE_P(JsonQp_Blaze_double, TreeQpWorkspaceTest, JsonQp<BlazeKernel<double>>);
+    INSTANTIATE_TYPED_TEST_SUITE_P(JsonQp_Blaze_double, TreeQpWorkspaceTest, JsonQp<BlazeKernel<double>>);
 }

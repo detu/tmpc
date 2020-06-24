@@ -66,7 +66,6 @@ namespace tmpc
         std::vector<std::pair<v_size_t, v_size_t>> edge_list;
         std::vector<v_size_t> cur_layer, next_layer;
 
-        v_size_t id_u = 0, id_v = 1;
         v_size_t target_vertex = 0;
 
         for (size_t k = 0; k < depth; ++k)

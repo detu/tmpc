@@ -6,9 +6,7 @@
 #include <tmpc/ocp/OcpSizeProperties.hpp>
 #include <tmpc/Traits.hpp>
 
-#include <tmpc/test_tools.hpp>
-
-#include <gtest/gtest.h>
+#include <tmpc/Testing.hpp>
 
 #include <iostream>
 #include <fstream>
@@ -18,14 +16,13 @@ namespace tmpc :: testing
 {
 	template <typename WS>
 	class TreeQpWorkspaceSolveTest 
-	: 	public ::testing::Test
+	: 	public Test
 	{
 	protected:
 		using Workspace = WS;
-		using Kernel = typename KernelOf<WS>::type;
 		using Real = typename RealOf<WS>::type;
-		using Vector = DynamicVector<Kernel>;
-		using Matrix = DynamicMatrix<Kernel>;
+		using Vector = blaze::DynamicVector<Real, blaze::columnVector>;
+		using Matrix = blaze::DynamicMatrix<Real>;
 
 		static Workspace problem_0()
 		{
@@ -36,7 +33,7 @@ namespace tmpc :: testing
 			unsigned const NCT = 0;
 			unsigned const NT = 2;
 
-			typedef StaticMatrix<Kernel, NZ, NZ> StageHessianMatrix;
+			using StageHessianMatrix = blaze::StaticMatrix<Real, NZ, NZ>;
 
 			OcpGraph const g = ocpGraphLinear(NT + 1);
 			Workspace ws {g, ocpSizeNominalMpc(NT, NX, NU, NC, 0, NCT, false)};
@@ -50,18 +47,18 @@ namespace tmpc :: testing
 			qp[2].lbx(-1.);					qp[2].ubx(1.);
 			*/
 			
-			put(ws.lx(), 0, DynamicVector<Kernel>(NX, -1.));
-			put(ws.lu(), 0, DynamicVector<Kernel>(NU, -1.));
-			put(ws.ux(), 0, DynamicVector<Kernel>(NX, 1.));
-			put(ws.uu(), 0, DynamicVector<Kernel>(NU, 1.));
+			put(ws.lx(), 0, Vector(NX, -1.));
+			put(ws.lu(), 0, Vector(NU, -1.));
+			put(ws.ux(), 0, Vector(NX, 1.));
+			put(ws.uu(), 0, Vector(NU, 1.));
 
-			put(ws.lx(), 1, DynamicVector<Kernel>(NX, -1.));
-			put(ws.lu(), 1, DynamicVector<Kernel>(NU, -1.));
-			put(ws.ux(), 1, DynamicVector<Kernel>(NX, 1.));
-			put(ws.uu(), 1, DynamicVector<Kernel>(NU, 1.));
+			put(ws.lx(), 1, Vector(NX, -1.));
+			put(ws.lu(), 1, Vector(NU, -1.));
+			put(ws.ux(), 1, Vector(NX, 1.));
+			put(ws.uu(), 1, Vector(NU, 1.));
 
-			put(ws.lx(), 2, DynamicVector<Kernel>(NX, -1.));
-			put(ws.ux(), 2, DynamicVector<Kernel>(NX, 1.));
+			put(ws.lx(), 2, Vector(NX, -1.));
+			put(ws.ux(), 2, Vector(NX, 1.));
 			
 			// Stage 0
 			StageHessianMatrix H0 {
@@ -70,16 +67,16 @@ namespace tmpc :: testing
 				{90,  108,  127}
 			};
 
-			StaticVector<Kernel, NX> const q0 {0., 0.};
-			StaticVector<Kernel, NU> const r0 {0.};
+			blaze::StaticVector<Real, NX> const q0 {0., 0.};
+			blaze::StaticVector<Real, NU> const r0 {0.};
 
-			const DynamicMatrix<Kernel> Q0 = submatrix(H0, 0, 0, NX, NX);
-			const DynamicMatrix<Kernel> R0 = submatrix(H0, NX, NX, NU, NU);
-			const DynamicMatrix<Kernel> S0T = submatrix(H0, 0, NX, NX, NU);
-			const DynamicMatrix<Kernel> S0 = submatrix(H0, NX, 0, NU, NX);
+			const Matrix Q0 = submatrix(H0, 0, 0, NX, NX);
+			const Matrix R0 = submatrix(H0, NX, NX, NU, NU);
+			const Matrix S0T = submatrix(H0, 0, NX, NX, NU);
+			const Matrix S0 = submatrix(H0, NX, 0, NU, NX);
 
-			DynamicMatrix<Kernel> const A0 {{1., 1.}, {0., 1.}};
-			DynamicMatrix<Kernel> const B0 {{0.5}, {1.0}};
+			Matrix const A0 {{1., 1.}, {0., 1.}};
+			Matrix const B0 {{0.5}, {1.0}};
 			Vector a0 {1., 2.};
 
 			// Stage 1
@@ -89,25 +86,25 @@ namespace tmpc :: testing
 				{90,  108,  127}
 			};
 
-			StaticVector<Kernel, NX> const q1 {0., 0.};
-			StaticVector<Kernel, NU> const r1 {0.};
+			blaze::StaticVector<Real, NX> const q1 {0., 0.};
+			blaze::StaticVector<Real, NU> const r1 {0.};
 
-			const DynamicMatrix<Kernel> Q1 = submatrix(H1, 0, 0, NX, NX);
-			const DynamicMatrix<Kernel> R1 = submatrix(H1, NX, NX, NU, NU);
-			const DynamicMatrix<Kernel> S1T = submatrix(H1, 0, NX, NX, NU);
-			const DynamicMatrix<Kernel> S1 = submatrix(H1, NX, 0, NU, NX);
+			const Matrix Q1 = submatrix(H1, 0, 0, NX, NX);
+			const Matrix R1 = submatrix(H1, NX, NX, NU, NU);
+			const Matrix S1T = submatrix(H1, 0, NX, NX, NU);
+			const Matrix S1 = submatrix(H1, NX, 0, NU, NX);
 
-			DynamicMatrix<Kernel> const A1 {{1., 1.}, {0., 1.}};
-			DynamicMatrix<Kernel> const B1 {{0.5}, {1.0}};
+			Matrix const A1 {{1., 1.}, {0., 1.}};
+			Matrix const B1 {{0.5}, {1.0}};
 			Vector const a1 {1., 2.};
 
 			// Stage 2
-			DynamicMatrix<Kernel> H2 {{1., 2.}, {3., 4.}};
+			Matrix H2 {{1., 2.}, {3., 4.}};
 			H2 = trans(H2) * H2;	// Make positive definite.
 
-			StaticVector<Kernel, NX> const q2 {0., 0.};
+			blaze::StaticVector<Real, NX> const q2 {0., 0.};
 
-			const DynamicMatrix<Kernel> Q2 = submatrix(H2, 0, 0, NX, NX);
+			const Matrix Q2 = submatrix(H2, 0, 0, NX, NX);
 
 			// Setup QP
 			/*
@@ -159,7 +156,7 @@ namespace tmpc :: testing
 			unsigned const NCT = 0;
 			unsigned const NT = 2;
 
-			typedef StaticMatrix<Kernel, NZ, NZ> StageHessianMatrix;
+			typedef blaze::StaticMatrix<Real, NZ, NZ> StageHessianMatrix;
 
 			OcpGraph const g = ocpGraphLinear(NT + 1);
 			Workspace ws {g, ocpSizeNominalMpc(NT, NX, NU, NC, 0, NCT, false)};
@@ -173,18 +170,18 @@ namespace tmpc :: testing
 			qp[2].lbx(-1.);					qp[2].ubx(1.);
 			*/
 			
-			put(ws.lx(), 0, DynamicVector<Kernel>(NX, -inf<Real>()));
-			put(ws.lu(), 0, DynamicVector<Kernel>(NU, -inf<Real>()));
-			put(ws.ux(), 0, DynamicVector<Kernel>(NX, inf<Real>()));
-			put(ws.uu(), 0, DynamicVector<Kernel>(NU, inf<Real>()));
+			put(ws.lx(), 0, Vector(NX, -inf<Real>()));
+			put(ws.lu(), 0, Vector(NU, -inf<Real>()));
+			put(ws.ux(), 0, Vector(NX, inf<Real>()));
+			put(ws.uu(), 0, Vector(NU, inf<Real>()));
 
-			put(ws.lx(), 1, DynamicVector<Kernel>(NX, -inf<Real>()));
-			put(ws.lu(), 1, DynamicVector<Kernel>(NU, -inf<Real>()));
-			put(ws.ux(), 1, DynamicVector<Kernel>(NX, inf<Real>()));
-			put(ws.uu(), 1, DynamicVector<Kernel>(NU, inf<Real>()));
+			put(ws.lx(), 1, Vector(NX, -inf<Real>()));
+			put(ws.lu(), 1, Vector(NU, -inf<Real>()));
+			put(ws.ux(), 1, Vector(NX, inf<Real>()));
+			put(ws.uu(), 1, Vector(NU, inf<Real>()));
 
-			put(ws.lx(), 2, DynamicVector<Kernel>(NX, -inf<Real>()));
-			put(ws.ux(), 2, DynamicVector<Kernel>(NX, inf<Real>()));
+			put(ws.lx(), 2, Vector(NX, -inf<Real>()));
+			put(ws.ux(), 2, Vector(NX, inf<Real>()));
 			
 			// Stage 0
 			StageHessianMatrix H0 {
@@ -193,16 +190,16 @@ namespace tmpc :: testing
 				{90,  108,  127}
 			};
 
-			StaticVector<Kernel, NX> const q0 {0., 0.};
-			StaticVector<Kernel, NU> const r0 {0.};
+			blaze::StaticVector<Real, NX> const q0 {0., 0.};
+			blaze::StaticVector<Real, NU> const r0 {0.};
 
-			const DynamicMatrix<Kernel> Q0 = submatrix(H0, 0, 0, NX, NX);
-			const DynamicMatrix<Kernel> R0 = submatrix(H0, NX, NX, NU, NU);
-			const DynamicMatrix<Kernel> S0T = submatrix(H0, 0, NX, NX, NU);
-			const DynamicMatrix<Kernel> S0 = submatrix(H0, NX, 0, NU, NX);
+			const Matrix Q0 = submatrix(H0, 0, 0, NX, NX);
+			const Matrix R0 = submatrix(H0, NX, NX, NU, NU);
+			const Matrix S0T = submatrix(H0, 0, NX, NX, NU);
+			const Matrix S0 = submatrix(H0, NX, 0, NU, NX);
 
-			DynamicMatrix<Kernel> const A0 {{1., 1.}, {0., 1.}};
-			DynamicMatrix<Kernel> const B0 {{0.5}, {1.0}};
+			Matrix const A0 {{1., 1.}, {0., 1.}};
+			Matrix const B0 {{0.5}, {1.0}};
 			Vector a0 {1., 2.};
 
 			// Stage 1
@@ -212,25 +209,25 @@ namespace tmpc :: testing
 				{90,  108,  127}
 			};
 
-			StaticVector<Kernel, NX> const q1 {0., 0.};
-			StaticVector<Kernel, NU> const r1 {0.};
+			blaze::StaticVector<Real, NX> const q1 {0., 0.};
+			blaze::StaticVector<Real, NU> const r1 {0.};
 
-			const DynamicMatrix<Kernel> Q1 = submatrix(H1, 0, 0, NX, NX);
-			const DynamicMatrix<Kernel> R1 = submatrix(H1, NX, NX, NU, NU);
-			const DynamicMatrix<Kernel> S1T = submatrix(H1, 0, NX, NX, NU);
-			const DynamicMatrix<Kernel> S1 = submatrix(H1, NX, 0, NU, NX);
+			const Matrix Q1 = submatrix(H1, 0, 0, NX, NX);
+			const Matrix R1 = submatrix(H1, NX, NX, NU, NU);
+			const Matrix S1T = submatrix(H1, 0, NX, NX, NU);
+			const Matrix S1 = submatrix(H1, NX, 0, NU, NX);
 
-			DynamicMatrix<Kernel> const A1 {{1., 1.}, {0., 1.}};
-			DynamicMatrix<Kernel> const B1 {{0.5}, {1.0}};
+			Matrix const A1 {{1., 1.}, {0., 1.}};
+			Matrix const B1 {{0.5}, {1.0}};
 			Vector const a1 {1., 2.};
 
 			// Stage 2
-			DynamicMatrix<Kernel> H2 {{1., 2.}, {3., 4.}};
+			Matrix H2 {{1., 2.}, {3., 4.}};
 			H2 = trans(H2) * H2;	// Make positive definite.
 
-			StaticVector<Kernel, NX> const q2 {0., 0.};
+			blaze::StaticVector<Real, NX> const q2 {0., 0.};
 
-			const DynamicMatrix<Kernel> Q2 = submatrix(H2, 0, 0, NX, NX);
+			const Matrix Q2 = submatrix(H2, 0, 0, NX, NX);
 
 			// Setup QP
 			/*
@@ -279,7 +276,7 @@ namespace tmpc :: testing
 			Workspace ws = problem_0();
 			auto qp = ws.problem();
 
-			StaticVector<Kernel, 2> x0 {1., 0.};
+			blaze::StaticVector<Real, 2> x0 {1., 0.};
 			qp[0].lbx(x0);	qp[0].ubx(x0);
 
 			qp[0].b(0.);
@@ -290,7 +287,7 @@ namespace tmpc :: testing
 		*/
 	};
 
-	TYPED_TEST_CASE_P(TreeQpWorkspaceSolveTest);
+	TYPED_TEST_SUITE_P(TreeQpWorkspaceSolveTest);
 
 	/// \brief Check if QPSolver move constructor works and the solver works after move constructor.
 	/*
@@ -302,13 +299,13 @@ namespace tmpc :: testing
 		ws1.solve();
 		auto const sol = ws1.solution();
 
-		EXPECT_PRED2(MatrixApproxEquality(1e-6), sol[0].x(), (DynamicVector<typename TestFixture::Kernel> {1., -1.}));
-		EXPECT_PRED2(MatrixApproxEquality(1e-6), sol[0].u(), (DynamicVector<typename TestFixture::Kernel> {-1.}));
+		EXPECT_PRED2(ApproxEqual(1e-6), sol[0].x(), (typename TestFixture::Vector {1., -1.}));
+		EXPECT_PRED2(ApproxEqual(1e-6), sol[0].u(), (typename TestFixture::Vector {-1.}));
 
-		EXPECT_PRED2(MatrixApproxEquality(1e-6), sol[1].x(), (DynamicVector<typename TestFixture::Kernel> {0.5, 0.}));
-		EXPECT_PRED2(MatrixApproxEquality(1e-6), sol[1].u(), (DynamicVector<typename TestFixture::Kernel> {-1.}));
+		EXPECT_PRED2(ApproxEqual(1e-6), sol[1].x(), (typename TestFixture::Vector {0.5, 0.}));
+		EXPECT_PRED2(ApproxEqual(1e-6), sol[1].u(), (typename TestFixture::Vector {-1.}));
 
-		EXPECT_PRED2(MatrixApproxEquality(1e-6), sol[2].x(), (DynamicVector<typename TestFixture::Kernel> {1., 1.}));
+		EXPECT_PRED2(ApproxEqual(1e-6), sol[2].x(), (typename TestFixture::Vector {1., 1.}));
 	}
 	*/
 
@@ -317,13 +314,13 @@ namespace tmpc :: testing
 		auto ws = TestFixture::problem_0();
 		ws.solve();
 
-		EXPECT_PRED2(MatrixApproxEquality(1e-6), get(ws.x(), 0), (DynamicVector<typename TestFixture::Kernel> {1., -1.}));
-		EXPECT_PRED2(MatrixApproxEquality(1e-6), get(ws.u(), 0), (DynamicVector<typename TestFixture::Kernel> {-1.}));
+		EXPECT_TRUE(approxEqual(get(ws.x(), 0), (typename TestFixture::Vector {1., -1.}), 1e-6));
+		EXPECT_TRUE(approxEqual(get(ws.u(), 0), (typename TestFixture::Vector {-1.}), 1e-6));
 
-		EXPECT_PRED2(MatrixApproxEquality(1e-6), get(ws.x(), 1), (DynamicVector<typename TestFixture::Kernel> {0.5, 0.}));
-		EXPECT_PRED2(MatrixApproxEquality(1e-6), get(ws.u(), 1), (DynamicVector<typename TestFixture::Kernel> {-1.}));
+		EXPECT_TRUE(approxEqual(get(ws.x(), 1), (typename TestFixture::Vector {0.5, 0.}), 1e-6));
+		EXPECT_TRUE(approxEqual(get(ws.u(), 1), (typename TestFixture::Vector {-1.}), 1e-6));
 
-		EXPECT_PRED2(MatrixApproxEquality(1e-6), get(ws.x(), 2), (DynamicVector<typename TestFixture::Kernel> {1., 1.}));
+		EXPECT_TRUE(approxEqual(get(ws.x(), 2), (typename TestFixture::Vector {1., 1.}), 1e-6));
 	}
 
 
@@ -332,13 +329,13 @@ namespace tmpc :: testing
 		auto ws = TestFixture::problem_0_unconstrained();
 		ws.solve();
 
-		EXPECT_PRED2(MatrixApproxEquality(1e-6), get(ws.x(), 0), (DynamicVector<typename TestFixture::Kernel> {4.2376727217537882, -3.2166970575479454}));
-		EXPECT_PRED2(MatrixApproxEquality(1e-6), get(ws.u(), 0), (DynamicVector<typename TestFixture::Kernel> {-0.34889319983994238}));
+		EXPECT_TRUE(approxEqual(get(ws.x(), 0), (typename TestFixture::Vector {4.2376727217537882, -3.2166970575479454}), 1e-6));
+		EXPECT_TRUE(approxEqual(get(ws.u(), 0), (typename TestFixture::Vector {-0.34889319983994238}), 1e-6));
 
-		EXPECT_PRED2(MatrixApproxEquality(1e-6), get(ws.x(), 1), (DynamicVector<typename TestFixture::Kernel> {1.8465290642858716, -1.5655902573878877}));
-		EXPECT_PRED2(MatrixApproxEquality(1e-6), get(ws.u(), 1), (DynamicVector<typename TestFixture::Kernel> {-0.20287931724419153}));
+		EXPECT_TRUE(approxEqual(get(ws.x(), 1), (typename TestFixture::Vector {1.8465290642858716, -1.5655902573878877}), 1e-6));
+		EXPECT_TRUE(approxEqual(get(ws.u(), 1), (typename TestFixture::Vector {-0.20287931724419153}), 1e-6));
 
-		EXPECT_PRED2(MatrixApproxEquality(1e-6), get(ws.x(), 2), (DynamicVector<typename TestFixture::Kernel> {1.1794991482758881, 0.23153042536792068}));
+		EXPECT_TRUE(approxEqual(get(ws.x(), 2), (typename TestFixture::Vector {1.1794991482758881, 0.23153042536792068}), 1e-6));
 	}
 
 
@@ -373,8 +370,8 @@ namespace tmpc :: testing
 	//
 	TYPED_TEST_P(TreeQpWorkspaceSolveTest, testSolveDimitrisRandom)
 	{
-		using Vec = DynamicVector<typename TestFixture::Kernel>;
-		using Mat = DynamicMatrix<typename TestFixture::Kernel>;
+		using Vec = typename TestFixture::Vector;
+		using Mat = typename TestFixture::Matrix;
 		using Real = typename TestFixture::Real;
 
 		size_t const N = 5;
@@ -522,15 +519,14 @@ namespace tmpc :: testing
 
 		ws.solve();
 
-		EXPECT_PRED2(MatrixApproxEquality(1e-6), get(ws.x(), 0), (Vec {6.592835368068550e-02, -4.063901103087715e-01}));
-		EXPECT_PRED2(MatrixApproxEquality(1e-6), get(ws.x(), 1), (Vec {2.342956460060519e-01, 3.561800465271370e-01}));
-		EXPECT_PRED2(MatrixApproxEquality(1e-6), get(ws.x(), 2), (Vec {-4.093033514742150e-02, -3.552137307936658e-01}));
-		EXPECT_PRED2(MatrixApproxEquality(1e-6), get(ws.x(), 3), (Vec {-2.087478975092527e-01}));
-		EXPECT_PRED2(MatrixApproxEquality(1e-6), get(ws.x(), 4), (Vec {2.939583174994020e-02, 1.623760005176457e-01, -3.367157300712413e-01, 1.756957363329313e-01}));
-
-		EXPECT_PRED2(MatrixApproxEquality(1e-6), get(ws.u(), 0), (Vec {-4.301938159361802e-01, -2.070756990391132e-01}));
-		EXPECT_PRED2(MatrixApproxEquality(1e-6), get(ws.u(), 1), (Vec {-1.394097954236166e-01, -1.088549940479685e+00}));
-		EXPECT_PRED2(MatrixApproxEquality(1e-6), get(ws.u(), 2), (Vec {-1.291731382101928e-01, -7.037998096601095e-01}));
+		EXPECT_TRUE(approxEqual(get(ws.x(), 0), Vec {6.592835368068550e-02, -4.063901103087715e-01}, 1e-6));
+		EXPECT_TRUE(approxEqual(get(ws.x(), 1), Vec {2.342956460060519e-01, 3.561800465271370e-01}, 1e-6));
+		EXPECT_TRUE(approxEqual(get(ws.x(), 2), Vec {-4.093033514742150e-02, -3.552137307936658e-01}, 1e-6));
+		EXPECT_TRUE(approxEqual(get(ws.x(), 3), Vec {-2.087478975092527e-01}, 1e-6));
+		EXPECT_TRUE(approxEqual(get(ws.x(), 4), Vec {2.939583174994020e-02, 1.623760005176457e-01, -3.367157300712413e-01, 1.756957363329313e-01}, 1e-6));
+		EXPECT_TRUE(approxEqual(get(ws.u(), 0), Vec {-4.301938159361802e-01, -2.070756990391132e-01}, 1e-6));
+		EXPECT_TRUE(approxEqual(get(ws.u(), 1), Vec {-1.394097954236166e-01, -1.088549940479685e+00}, 1e-6));
+		EXPECT_TRUE(approxEqual(get(ws.u(), 2), Vec {-1.291731382101928e-01, -7.037998096601095e-01}, 1e-6));
 	}
 
 #if 0
@@ -541,13 +537,13 @@ namespace tmpc :: testing
 		ws.solve();
 		auto const sol = ws.solution();
 
-		EXPECT_PRED2(MatrixApproxEquality(1e-6), sol[0].x(), (DynamicVector<typename TestFixture::Kernel> {1., 0.}));
-		EXPECT_PRED2(MatrixApproxEquality(1e-6), sol[0].u(), (DynamicVector<typename TestFixture::Kernel> {-0.690877362606266}));
+		EXPECT_PRED2(ApproxEqual(1e-6), sol[0].x(), (typename TestFixture::Vector {1., 0.}));
+		EXPECT_PRED2(ApproxEqual(1e-6), sol[0].u(), (typename TestFixture::Vector {-0.690877362606266}));
 
-		EXPECT_PRED2(MatrixApproxEquality(1e-6), sol[1].x(), (DynamicVector<typename TestFixture::Kernel> {0.654561318696867, -0.690877362606266}));
-		EXPECT_PRED2(MatrixApproxEquality(1e-6), sol[1].u(), (DynamicVector<typename TestFixture::Kernel> {0.215679569867116}));
+		EXPECT_PRED2(ApproxEqual(1e-6), sol[1].x(), (typename TestFixture::Vector {0.654561318696867, -0.690877362606266}));
+		EXPECT_PRED2(ApproxEqual(1e-6), sol[1].u(), (typename TestFixture::Vector {0.215679569867116}));
 
-		EXPECT_PRED2(MatrixApproxEquality(1e-6), sol[2].x(), (DynamicVector<typename TestFixture::Kernel> {0.0715237410241597, -0.475197792739149}));
+		EXPECT_PRED2(ApproxEqual(1e-6), sol[2].x(), (typename TestFixture::Vector {0.0715237410241597, -0.475197792739149}));
 	}
 
 	TYPED_TEST_P(TreeQpWorkspaceSolveTest, DISABLED_testSolve1stage1d)
@@ -563,7 +559,7 @@ namespace tmpc :: testing
 		ws.solve();
 		auto solution = ws.solution();
 
-		EXPECT_PRED2(MatrixApproxEquality(1e-6), solution[0].x(), (DynamicVector<typename TestFixture::Kernel> {0.5}));
+		EXPECT_PRED2(ApproxEqual(1e-6), solution[0].x(), (typename TestFixture::Vector {0.5}));
 	}
 
 	///
@@ -598,8 +594,8 @@ namespace tmpc :: testing
 
 		Real const x0_opt = -(q0 + Q1 * A0 * b0 + q1 * A0) / (Q0 + Q1 * A0 * A0);
 
-		EXPECT_PRED2(MatrixApproxEquality(1e-6), solution[0].x(), (DynamicVector<typename TestFixture::Kernel> {x0_opt}));
-		EXPECT_PRED2(MatrixApproxEquality(1e-6), solution[1].x(), (DynamicVector<typename TestFixture::Kernel> {A0 * x0_opt + b0}));
+		EXPECT_PRED2(ApproxEqual(1e-6), solution[0].x(), (typename TestFixture::Vector {x0_opt}));
+		EXPECT_PRED2(ApproxEqual(1e-6), solution[1].x(), (typename TestFixture::Vector {A0 * x0_opt + b0}));
 	}
 
 	/**
@@ -632,13 +628,13 @@ namespace tmpc :: testing
 			{2.46061457306194,	1.94728938270016}
 		}));
 
-		problem[0].q(DynamicVector<typename TestFixture::Kernel>({
+		problem[0].q(typename TestFixture::Vector({
 			0.276025076998578,
 			0.679702676853675,
 			0.655098003973841
 		}));
 
-		problem[0].r(DynamicVector<typename TestFixture::Kernel>({
+		problem[0].r(typename TestFixture::Vector({
 			0.162611735194631,
 			0.118997681558377
 		}));
@@ -654,19 +650,19 @@ namespace tmpc :: testing
 		ws.solve();
 		auto solution = ws.solution();
 
-		EXPECT_PRED2(MatrixApproxEquality(1e-6), solution[0].x(), (DynamicVector<typename TestFixture::Kernel> {
+		EXPECT_PRED2(ApproxEqual(1e-6), solution[0].x(), (typename TestFixture::Vector {
 			146.566682434017,
 			-427.218558989821,
 			-345.347969700289
 		}));
 
-		EXPECT_PRED2(MatrixApproxEquality(1e-6), solution[0].u(), (DynamicVector<typename TestFixture::Kernel> {
+		EXPECT_PRED2(ApproxEqual(1e-6), solution[0].u(), (typename TestFixture::Vector {
 			769.663140469139,
 			-191.122524763114
 		}));
 
-		EXPECT_PRED2(MatrixApproxEquality(1e-6), solution[1].x(), (DynamicVector<typename TestFixture::Kernel> {}));
-		EXPECT_PRED2(MatrixApproxEquality(1e-6), solution[1].u(), (DynamicVector<typename TestFixture::Kernel> {}));
+		EXPECT_PRED2(ApproxEqual(1e-6), solution[1].x(), (typename TestFixture::Vector {}));
+		EXPECT_PRED2(ApproxEqual(1e-6), solution[1].u(), (typename TestFixture::Vector {}));
 	}
 
 	/**
@@ -696,13 +692,13 @@ namespace tmpc :: testing
 			{2.46061457306194,	1.94728938270016}
 		}));
 
-		problem[0].q(DynamicVector<typename TestFixture::Kernel>({
+		problem[0].q(typename TestFixture::Vector({
 			0.276025076998578,
 			0.679702676853675,
 			0.655098003973841
 		}));
 
-		problem[0].r(DynamicVector<typename TestFixture::Kernel>({
+		problem[0].r(typename TestFixture::Vector({
 			0.162611735194631,
 			0.118997681558377
 		}));
@@ -718,21 +714,21 @@ namespace tmpc :: testing
 		ws.solve();
 		auto solution = ws.solution();
 
-		using Vector = DynamicVector<typename TestFixture::Kernel>;
+		using Vector = typename TestFixture::Vector;
 
-		EXPECT_PRED2(MatrixApproxEquality(1e-6), solution[0].x(), (Vector {
+		EXPECT_PRED2(ApproxEqual(1e-6), solution[0].x(), (Vector {
 			146.566682434017,
 			-427.218558989821,
 			-345.347969700289
 		}));
 
-		EXPECT_PRED2(MatrixApproxEquality(1e-6), solution[0].u(), (Vector {
+		EXPECT_PRED2(ApproxEqual(1e-6), solution[0].u(), (Vector {
 			769.663140469139,
 			-191.122524763114
 		}));
 
-		EXPECT_PRED2(MatrixApproxEquality(1e-6), solution[1].x(), (Vector {}));
-		EXPECT_PRED2(MatrixApproxEquality(1e-6), solution[1].u(), (Vector {}));
+		EXPECT_PRED2(ApproxEqual(1e-6), solution[1].x(), (Vector {}));
+		EXPECT_PRED2(ApproxEqual(1e-6), solution[1].u(), (Vector {}));
 	}
 
 	/**
@@ -762,13 +758,13 @@ namespace tmpc :: testing
 			{2.46061457306194,	1.94728938270016}
 		}));
 
-		problem[0].q(DynamicVector<typename TestFixture::Kernel>({
+		problem[0].q(typename TestFixture::Vector({
 			0.276025076998578,
 			0.679702676853675,
 			0.655098003973841
 		}));
 
-		problem[0].r(DynamicVector<typename TestFixture::Kernel>({
+		problem[0].r(typename TestFixture::Vector({
 			0.162611735194631,
 			0.118997681558377
 		}));
@@ -778,29 +774,29 @@ namespace tmpc :: testing
 		problem[0].b(StaticVector<typename TestFixture::Kernel, 0>(0.));
 
 		// TODO: can we make lbx() etc. accept initializer lists?
-		problem[0].lbx(DynamicVector<typename TestFixture::Kernel> {-10000., -inf<Real>(), -10000.});
-		problem[0].ubx(DynamicVector<typename TestFixture::Kernel> {10000., inf<Real>(), 10000.});
-		problem[0].lbu(DynamicVector<typename TestFixture::Kernel> {-inf<Real>(), -10000.});
-		problem[0].ubu(DynamicVector<typename TestFixture::Kernel> {inf<Real>(), 10000.});
+		problem[0].lbx(typename TestFixture::Vector {-10000., -inf<Real>(), -10000.});
+		problem[0].ubx(typename TestFixture::Vector {10000., inf<Real>(), 10000.});
+		problem[0].lbu(typename TestFixture::Vector {-inf<Real>(), -10000.});
+		problem[0].ubu(typename TestFixture::Vector {inf<Real>(), 10000.});
 
 		ws.solve();
 		auto solution = ws.solution();
 
-		using Vector = DynamicVector<typename TestFixture::Kernel>;
+		using Vector = typename TestFixture::Vector;
 
-		EXPECT_PRED2(MatrixApproxEquality(1e-6), solution[0].x(), (Vector {
+		EXPECT_PRED2(ApproxEqual(1e-6), solution[0].x(), (Vector {
 			146.566682434017,
 			-427.218558989821,
 			-345.347969700289
 		}));
 
-		EXPECT_PRED2(MatrixApproxEquality(1e-6), solution[0].u(), (Vector {
+		EXPECT_PRED2(ApproxEqual(1e-6), solution[0].u(), (Vector {
 			769.663140469139,
 			-191.122524763114
 		}));
 
-		EXPECT_PRED2(MatrixApproxEquality(1e-6), solution[1].x(), (Vector {}));
-		EXPECT_PRED2(MatrixApproxEquality(1e-6), solution[1].u(), (Vector {}));
+		EXPECT_PRED2(ApproxEqual(1e-6), solution[1].x(), (Vector {}));
+		EXPECT_PRED2(ApproxEqual(1e-6), solution[1].u(), (Vector {}));
 	}
 
 	TYPED_TEST_P(TreeQpWorkspaceSolveTest, testSolve2)
@@ -812,20 +808,20 @@ namespace tmpc :: testing
 		
 		auto& stage0 = workspace.problem()[0];
 		stage0.gaussNewtonCostApproximation(
-			DynamicVector<Kernel> {1., 2., 42.},
+			Vector {1., 2., 42.},
 			IdentityMatrix<Kernel> {3u},
-			DynamicMatrix<Kernel> {3u, 0u}
+			Matrix {3u, 0u}
 		);
 		stage0.stateBounds(-inf<Real>(), inf<Real>());
 		stage0.inputBounds(-inf<Real>(), inf<Real>());
 
 		workspace.solve();
 	
-		EXPECT_EQ(forcePrint(workspace.solution()[0].x()), forcePrint(DynamicVector<Kernel> {-1., -2., -42.}));
+		EXPECT_EQ(forcePrint(workspace.solution()[0].x()), forcePrint(Vector {-1., -2., -42.}));
 	}
 #endif
 
-	REGISTER_TYPED_TEST_CASE_P(TreeQpWorkspaceSolveTest,
+	REGISTER_TYPED_TEST_SUITE_P(TreeQpWorkspaceSolveTest,
 		//testMoveConstructor, 
 		testSolve0
 		, testSolve0Unconstrained

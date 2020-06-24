@@ -7,29 +7,27 @@
 #include <tmpc/ocp/OcpGraph.hpp>
 #include <tmpc/ocp/OcpSize.hpp>
 #include <tmpc/Matrix.hpp>
-#include <tmpc/core/PropertyMap.hpp>
+#include <tmpc/property_map/PropertyMap.hpp>
 #include <tmpc/Traits.hpp>
-#include <tmpc/test_tools.hpp>
-
-#include <gtest/gtest.h>
+#include <tmpc/Testing.hpp>
 
 #include <iostream>
 #include <array>
+
 
 namespace tmpc :: testing
 {
     template <typename WS>
     class TreeQpWorkspaceTest 
-    :   public ::testing::Test
+    :   public Test
     {
     public:
         using Workspace = WS;
 
     protected:
-        using Kernel = typename KernelOf<Workspace>::type;
         using Real = typename RealOf<Workspace>::type;
-        using Vector = DynamicVector<Kernel>;
-        using Matrix = DynamicMatrix<Kernel>;
+        using Vector = blaze::DynamicVector<Real, blaze::columnVector>;
+        using Matrix = blaze::DynamicMatrix<Real>;
 
 
         TreeQpWorkspaceTest()
@@ -49,14 +47,13 @@ namespace tmpc :: testing
     };
 
 
-    TYPED_TEST_CASE_P(TreeQpWorkspaceTest);
+    TYPED_TEST_SUITE_P(TreeQpWorkspaceTest);
 
 
     TYPED_TEST_P(TreeQpWorkspaceTest, testQpInterface)
     {
         auto& g = this->ws_.graph();
-        auto const N = num_vertices(g);
-
+        
         std::map<OcpVertexDescriptor, typename TestFixture::Matrix> Q;
         std::map<OcpVertexDescriptor, typename TestFixture::Vector> q;
         std::map<OcpVertexDescriptor, typename TestFixture::Vector> r;
@@ -72,15 +69,21 @@ namespace tmpc :: testing
         std::map<OcpVertexDescriptor, typename TestFixture::Vector> d_min, d_max;
 
         // Writing random data
-        Rand<typename TestFixture::Kernel, typename TestFixture::Matrix> rand_matrix;
-        Rand<typename TestFixture::Kernel, typename TestFixture::Vector> rand_vector;
+        blaze::Rand<typename TestFixture::Matrix> rand_matrix;
+        blaze::Rand<typename TestFixture::Vector> rand_vector;
 
         for (auto v : graph::vertices(g))
         {
             auto const& sz = get(this->ws_.size(), v);
 
-            put(this->ws_.Q(), v, Q[v] = rand_matrix.generate(sz.nx(), sz.nx()));
-            put(this->ws_.R(), v, R[v] = rand_matrix.generate(sz.nu(), sz.nu()));
+            Q[v].resize(sz.nx(), sz.nx());
+            makePositiveDefinite(Q[v]);
+
+            R[v].resize(sz.nu(), sz.nu());
+            makePositiveDefinite(R[v]);
+
+            put(this->ws_.Q(), v, Q[v]);
+            put(this->ws_.R(), v, R[v]);
             put(this->ws_.S(), v, S[v] = rand_matrix.generate(sz.nu(), sz.nx()));
             put(this->ws_.q(), v, q[v] = rand_vector.generate(sz.nx()));
             put(this->ws_.r(), v, r[v] = rand_vector.generate(sz.nu()));
@@ -179,6 +182,6 @@ namespace tmpc :: testing
         }
     }
 
-    REGISTER_TYPED_TEST_CASE_P(TreeQpWorkspaceTest,
+    REGISTER_TYPED_TEST_SUITE_P(TreeQpWorkspaceTest,
         testQpInterface, testMatrixSizesCorrect);
 }

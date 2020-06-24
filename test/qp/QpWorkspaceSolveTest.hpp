@@ -4,19 +4,17 @@
 
 #include <tmpc/Matrix.hpp>
 #include <tmpc/Math.hpp>
-
-#include <tmpc/test_tools.hpp>
-
-#include <gtest/gtest.h>
+#include <tmpc/Testing.hpp>
 
 #include <iostream>
 #include <fstream>
+
 
 namespace tmpc :: testing
 {
 	template <typename WS>
 	class QpWorkspaceSolveTest 
-	: 	public ::testing::Test
+	: 	public Test
 	{
 	protected:
 		using Workspace = WS;
@@ -121,7 +119,7 @@ namespace tmpc :: testing
 		}
 	};
 
-	TYPED_TEST_CASE_P(QpWorkspaceSolveTest);
+	TYPED_TEST_SUITE_P(QpWorkspaceSolveTest);
 
 	/// \brief Check if QPSolver move constructor works and the solver works after move constructor.
 	TYPED_TEST_P(QpWorkspaceSolveTest, testMoveConstructor)
@@ -132,13 +130,13 @@ namespace tmpc :: testing
 		ws1.solve();
 		auto const sol = ws1.solution();
 
-		EXPECT_PRED2(MatrixApproxEquality(1e-6), sol[0].x(), (DynamicVector<typename TestFixture::Kernel> {1., -1.}));
-		EXPECT_PRED2(MatrixApproxEquality(1e-6), sol[0].u(), (DynamicVector<typename TestFixture::Kernel> {-1.}));
+		EXPECT_TRUE(approxEqual(sol[0].x(), (DynamicVector<typename TestFixture::Kernel> {1., -1.}), 1e-6));
+		EXPECT_TRUE(approxEqual(sol[0].u(), (DynamicVector<typename TestFixture::Kernel> {-1.}), 1e-6));
 
-		EXPECT_PRED2(MatrixApproxEquality(1e-6), sol[1].x(), (DynamicVector<typename TestFixture::Kernel> {0.5, 0.}));
-		EXPECT_PRED2(MatrixApproxEquality(1e-6), sol[1].u(), (DynamicVector<typename TestFixture::Kernel> {-1.}));
+		EXPECT_TRUE(approxEqual(sol[1].x(), (DynamicVector<typename TestFixture::Kernel> {0.5, 0.}), 1e-6));
+		EXPECT_TRUE(approxEqual(sol[1].u(), (DynamicVector<typename TestFixture::Kernel> {-1.}), 1e-6));
 
-		EXPECT_PRED2(MatrixApproxEquality(1e-6), sol[2].x(), (DynamicVector<typename TestFixture::Kernel> {1., 1.}));
+		EXPECT_TRUE(approxEqual(sol[2].x(), (DynamicVector<typename TestFixture::Kernel> {1., 1.}), 1e-6));
 	}
 
 	TYPED_TEST_P(QpWorkspaceSolveTest, testSolve0)
@@ -148,13 +146,13 @@ namespace tmpc :: testing
 		ws.solve();
 		auto const sol = ws.solution();
 
-		EXPECT_PRED2(MatrixApproxEquality(1e-6), sol[0].x(), (DynamicVector<typename TestFixture::Kernel> {1., -1.}));
-		EXPECT_PRED2(MatrixApproxEquality(1e-6), sol[0].u(), (DynamicVector<typename TestFixture::Kernel> {-1.}));
+		EXPECT_TRUE(approxEqual(sol[0].x(), (DynamicVector<typename TestFixture::Kernel> {1., -1.}), 1e-6));
+		EXPECT_TRUE(approxEqual(sol[0].u(), (DynamicVector<typename TestFixture::Kernel> {-1.}), 1e-6));
 
-		EXPECT_PRED2(MatrixApproxEquality(1e-6), sol[1].x(), (DynamicVector<typename TestFixture::Kernel> {0.5, 0.}));
-		EXPECT_PRED2(MatrixApproxEquality(1e-6), sol[1].u(), (DynamicVector<typename TestFixture::Kernel> {-1.}));
+		EXPECT_TRUE(approxEqual(sol[1].x(), (DynamicVector<typename TestFixture::Kernel> {0.5, 0.}), 1e-6));
+		EXPECT_TRUE(approxEqual(sol[1].u(), (DynamicVector<typename TestFixture::Kernel> {-1.}), 1e-6));
 
-		EXPECT_PRED2(MatrixApproxEquality(1e-6), sol[2].x(), (DynamicVector<typename TestFixture::Kernel> {1., 1.}));
+		EXPECT_TRUE(approxEqual(sol[2].x(), (DynamicVector<typename TestFixture::Kernel> {1., 1.}), 1e-6));
 	}
 
 	TYPED_TEST_P(QpWorkspaceSolveTest, testSolve1)
@@ -164,13 +162,13 @@ namespace tmpc :: testing
 		ws.solve();
 		auto const sol = ws.solution();
 
-		EXPECT_PRED2(MatrixApproxEquality(1e-6), sol[0].x(), (DynamicVector<typename TestFixture::Kernel> {1., 0.}));
-		EXPECT_PRED2(MatrixApproxEquality(1e-6), sol[0].u(), (DynamicVector<typename TestFixture::Kernel> {-0.68098253759615734}));
+		EXPECT_TRUE(approxEqual(sol[0].x(), (DynamicVector<typename TestFixture::Kernel> {1., 0.}), 1e-6));
+		EXPECT_TRUE(approxEqual(sol[0].u(), (DynamicVector<typename TestFixture::Kernel> {-0.68098253759615734}), 1e-6));
 
-		EXPECT_PRED2(MatrixApproxEquality(1e-6), sol[1].x(), (DynamicVector<typename TestFixture::Kernel> {0.65950873120185627, -0.68098253759609839}));
-		EXPECT_PRED2(MatrixApproxEquality(1e-6), sol[1].u(), (DynamicVector<typename TestFixture::Kernel> {0.20174225742383531}));
+		EXPECT_TRUE(approxEqual(sol[1].x(), (DynamicVector<typename TestFixture::Kernel> {0.65950873120185627, -0.68098253759609839}), 1e-6));
+		EXPECT_TRUE(approxEqual(sol[1].u(), (DynamicVector<typename TestFixture::Kernel> {0.20174225742383531}), 1e-6));
 
-		EXPECT_PRED2(MatrixApproxEquality(1e-6), sol[2].x(), (DynamicVector<typename TestFixture::Kernel> {0.079397322317675517, -0.47924028017226311}));
+		EXPECT_TRUE(approxEqual(sol[2].x(), (DynamicVector<typename TestFixture::Kernel> {0.079397322317675517, -0.47924028017226311}), 1e-6));
 	}
 	
 
@@ -187,7 +185,7 @@ namespace tmpc :: testing
 		ws.solve();
 		auto solution = ws.solution();
 
-		EXPECT_PRED2(MatrixApproxEquality(1e-6), solution[0].x(), (DynamicVector<typename TestFixture::Kernel> {0.5}));
+		EXPECT_TRUE(approxEqual(solution[0].x(), (DynamicVector<typename TestFixture::Kernel> {0.5}), 1e-6));
 	}
 
 	///
@@ -222,8 +220,8 @@ namespace tmpc :: testing
 
 		Real const x0_opt = -(q0 + Q1 * A0 * b0 + q1 * A0) / (Q0 + Q1 * A0 * A0);
 
-		EXPECT_PRED2(MatrixApproxEquality(1e-6), solution[0].x(), (DynamicVector<typename TestFixture::Kernel> {x0_opt}));
-		EXPECT_PRED2(MatrixApproxEquality(1e-6), solution[1].x(), (DynamicVector<typename TestFixture::Kernel> {A0 * x0_opt + b0}));
+		EXPECT_TRUE(approxEqual(solution[0].x(), (DynamicVector<typename TestFixture::Kernel> {x0_opt}), 1e-6));
+		EXPECT_TRUE(approxEqual(solution[1].x(), (DynamicVector<typename TestFixture::Kernel> {A0 * x0_opt + b0}), 1e-6));
 	}
 
 	/**
@@ -278,19 +276,19 @@ namespace tmpc :: testing
 		ws.solve();
 		auto solution = ws.solution();
 
-		EXPECT_PRED2(MatrixApproxEquality(1e-6), solution[0].x(), (DynamicVector<typename TestFixture::Kernel> {
+		EXPECT_TRUE(approxEqual(solution[0].x(), (DynamicVector<typename TestFixture::Kernel> {
 			146.566682434017,
 			-427.218558989821,
 			-345.347969700289
-		}));
+		}), 1e-6));
 
-		EXPECT_PRED2(MatrixApproxEquality(1e-6), solution[0].u(), (DynamicVector<typename TestFixture::Kernel> {
+		EXPECT_TRUE(approxEqual(solution[0].u(), (DynamicVector<typename TestFixture::Kernel> {
 			769.663140469139,
 			-191.122524763114
-		}));
+		}), 1e-6));
 
-		EXPECT_PRED2(MatrixApproxEquality(1e-6), solution[1].x(), (DynamicVector<typename TestFixture::Kernel> {}));
-		EXPECT_PRED2(MatrixApproxEquality(1e-6), solution[1].u(), (DynamicVector<typename TestFixture::Kernel> {}));
+		EXPECT_TRUE(approxEqual(solution[1].x(), (DynamicVector<typename TestFixture::Kernel> {}), 1e-6));
+		EXPECT_TRUE(approxEqual(solution[1].u(), (DynamicVector<typename TestFixture::Kernel> {}), 1e-6));
 	}
 
 	/**
@@ -344,19 +342,19 @@ namespace tmpc :: testing
 
 		using Vector = DynamicVector<typename TestFixture::Kernel>;
 
-		EXPECT_PRED2(MatrixApproxEquality(1e-6), solution[0].x(), (Vector {
+		EXPECT_TRUE(approxEqual(solution[0].x(), (Vector {
 			146.566682434017,
 			-427.218558989821,
 			-345.347969700289
-		}));
+		}), 1e-6));
 
-		EXPECT_PRED2(MatrixApproxEquality(1e-6), solution[0].u(), (Vector {
+		EXPECT_TRUE(approxEqual(solution[0].u(), (Vector {
 			769.663140469139,
 			-191.122524763114
-		}));
+		}), 1e-6));
 
-		EXPECT_PRED2(MatrixApproxEquality(1e-6), solution[1].x(), (Vector {}));
-		EXPECT_PRED2(MatrixApproxEquality(1e-6), solution[1].u(), (Vector {}));
+		EXPECT_TRUE(approxEqual(solution[1].x(), (Vector {}), 1e-6));
+		EXPECT_TRUE(approxEqual(solution[1].u(), (Vector {}), 1e-6));
 	}
 
 	/**
@@ -412,19 +410,19 @@ namespace tmpc :: testing
 
 		using Vector = DynamicVector<typename TestFixture::Kernel>;
 
-		EXPECT_PRED2(MatrixApproxEquality(1e-6), solution[0].x(), (Vector {
+		EXPECT_TRUE(approxEqual(solution[0].x(), (Vector {
 			146.566682434017,
 			-427.218558989821,
 			-345.347969700289
-		}));
+		}), 1e-6));
 
-		EXPECT_PRED2(MatrixApproxEquality(1e-6), solution[0].u(), (Vector {
+		EXPECT_TRUE(approxEqual(solution[0].u(), (Vector {
 			769.663140469139,
 			-191.122524763114
-		}));
+		}), 1e-6));
 
-		EXPECT_PRED2(MatrixApproxEquality(1e-6), solution[1].x(), (Vector {}));
-		EXPECT_PRED2(MatrixApproxEquality(1e-6), solution[1].u(), (Vector {}));
+		EXPECT_TRUE(approxEqual(solution[1].x(), (Vector {}), 1e-6));
+		EXPECT_TRUE(approxEqual(solution[1].u(), (Vector {}), 1e-6));
 	}
 
 	TYPED_TEST_P(QpWorkspaceSolveTest, testSolve2)
@@ -448,7 +446,7 @@ namespace tmpc :: testing
 		EXPECT_EQ(forcePrint(workspace.solution()[0].x()), forcePrint(DynamicVector<Kernel> {-1., -2., -42.}));
 	}
 
-	REGISTER_TYPED_TEST_CASE_P(QpWorkspaceSolveTest,
+	REGISTER_TYPED_TEST_SUITE_P(QpWorkspaceSolveTest,
 		testMoveConstructor, 
 		testSolve0, 
 		testSolve1, 

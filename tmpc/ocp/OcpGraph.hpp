@@ -3,31 +3,54 @@
 #include <tmpc/SizeT.hpp>
 #include <tmpc/graph/Graph.hpp>
 #include <tmpc/graph/GraphTraits.hpp>
+#include <tmpc/core/Range.hpp>
 #include <tmpc/graph/DepthFirstSearch.hpp>
 #include <tmpc/graph/ImpactRecorder.hpp>
-#include <tmpc/core/PropertyMap.hpp>
+#include <tmpc/property_map/PropertyMap.hpp>
 
 #include <boost/iterator/iterator_facade.hpp>
 
+#include <vector>
 #include <optional>
-#include <iostream>
 
 
 namespace tmpc
 {
     class OcpGraph
-    :   public graph::compressed_sparse_row_graph<graph::bidirectionalS>
+    :   public graph::compressed_sparse_row_graph<graph::directedS>
     {
     public:
         OcpGraph() = default;
 
 
         template <typename InputIterator>
-        OcpGraph(InputIterator first, InputIterator last, vertices_size_type numverts);
+        OcpGraph(InputIterator first, InputIterator last, vertices_size_type numverts)
+        :   Base(boost::edges_are_sorted, first, last, numverts)
+        {
+            auto& base = static_cast<Base const&>(*this);
+            
+            parentEdge_.resize(num_vertices(base));
+            for (auto e : graph::edges(base))
+                parentEdge_[target(e, base)] = e;
+        }
+
+
+        std::optional<edge_descriptor> parentEdge(vertex_descriptor v) const
+        {
+            std::optional<edge_descriptor> e;
+
+            if (v != 0)
+                e = parentEdge_[v];
+
+            return e;
+        } 
 
 
     private:
-        using Base = boost::compressed_sparse_row_graph<boost::bidirectionalS>;
+        using Base = boost::compressed_sparse_row_graph<boost::directedS>;
+
+        // Maps vertex id to its parent edge.
+        std::vector<edge_descriptor> parentEdge_;
     };
 
     // using OcpGraph = boost::adjacency_list<
@@ -150,6 +173,15 @@ namespace tmpc
     }
 
 
+    /// @brief Input degree of a node.
+    ///
+    /// Since OcpGraph is always a tree, in_degree() is 0 for the root and 1 for all other nodes.
+    inline OcpGraph::edges_size_type in_degree(OcpVertexDescriptor v, OcpGraph const& g)
+    {
+        return get(graph::vertex_index, g, v) == 0 ? 0 : 1;
+    }
+	
+
     /// @brief Parent of a node.
     ///
     /// Since OcpGraph is always a tree, parent() is empty for the root 
@@ -158,9 +190,8 @@ namespace tmpc
     {
         std::optional<OcpVertexDescriptor> p;
 
-        auto const in_edg = tmpc::graph::in_edges(v, g);
-        if (size(in_edg) == 1)
-            p = source(in_edg.front(), g);
+        if (auto const e = g.parentEdge(v))
+            p = source(*e, g);
 
         return p;
     }
@@ -186,13 +217,6 @@ namespace tmpc
     inline OcpVertexDescriptor root(OcpGraph const& g)
     {
         return vertex(0, g);
-    }
-
-
-    template <typename InputIterator>
-    inline OcpGraph::OcpGraph(InputIterator first, InputIterator last, vertices_size_type numverts)
-    :   Base(boost::edges_are_unsorted_multi_pass, first, last, numverts)
-    {
     }
 
 
@@ -223,5 +247,37 @@ namespace tmpc
             graph::dfs_visitor(graph::record_distances(distance, graph::on_tree_edge())), 
             make_iterator_property_map(color.begin(), get(graph::vertex_index, g)),
             source);
+    }
+	
+	
+	/// @brief Traverse the OcpGraph in breadth-first order (from root to leaves)
+    template <typename Visitor>
+    inline void breadthFirstVisit(OcpGraph const& g, Visitor visitor)
+    {
+        for (auto v : graph::vertices(g))
+        {
+            if (auto const e = g.parentEdge(v))
+                visitor.edge(*e, g);
+
+            visitor.vertex(v, g);
+        }
+    }
+	
+	
+    /// @brief Traverse the OcpGraph in reverse breadth-first order (from leaves to root)
+    template <typename Visitor>
+    inline void reverseBreadthFirstVisit(OcpGraph const& g, Visitor visitor)
+    {
+        // Beware of Incorrect behavior of reversed_range with -O2 g++ option:
+		// https://github.com/boostorg/range/issues/82
+        // for (auto v : reverse(graph::vertices(g)))
+
+        for (OcpVertexDescriptor v = num_vertices(g); v-- > 0; )
+        {
+            visitor.vertex(v, g);
+
+            if (auto const e = g.parentEdge(v))
+                visitor.edge(*e, g);
+        }
     }
 }
