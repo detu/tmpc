@@ -1,3 +1,5 @@
+"""Define some sample functions for code generation
+"""
 import casadi as cs
         
 A = cs.MX.sym('A', 3, 2)

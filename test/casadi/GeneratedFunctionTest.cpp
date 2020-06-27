@@ -171,7 +171,7 @@ namespace tmpc :: testing
 
 		// Evaluate the function sequentially.
 		for (size_t i = 0; i < N; ++i)
-			fun_({A[i].data(), B[i].data(), &x[i]}, {X_ref[i].data(), Y_ref[i].data()});
+			fun_(std::tie(A[i], B[i], x[i]), std::tie(X_ref[i], Y_ref[i]));
 
 		// Evaluate the function in parallel. 
 		// Set high number of threads to maximize probability of collisions.
@@ -179,7 +179,7 @@ namespace tmpc :: testing
 		{
 			#pragma omp for
 			for (size_t i = 0; i < N; ++i)
-				fun_({A[i].data(), B[i].data(), &x[i]}, {X[i].data(), Y[i].data()});
+				fun_(std::tie(A[i], B[i], x[i]), std::tie(X[i], Y[i]));
 		}
 
 		// Check if the results are the same.
