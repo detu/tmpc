@@ -1,6 +1,6 @@
 #pragma once
 
-#include <tmpc/ocp/OcpGraph.hpp>
+#include <tmpc/ocp/OcpTree.hpp>
 
 #include <blaze/Math.h>
 
@@ -17,7 +17,7 @@ namespace tmpc
     /// @param Ju derivative df/du
     /// @param map_x mapping from a vertex to a linearization point in state space
     template <typename QP, typename Vector1, typename Matrix1, typename Matrix2, typename MapX>
-    inline void linearizedShootingEquality(QP& qp, OcpEdgeDescriptor e, 
+    inline void linearizedShootingEquality(QP& qp, OcpEdge e, 
         Vector1 const& f, Matrix1 const& Jx, Matrix2 const& Ju, MapX map_x)
     {
         put(qp.A(), e, Jx);
@@ -31,7 +31,7 @@ namespace tmpc
     /// TODO: think about making u(), x() property maps of a new SqpWorkspace class
     /// (see https://gitlab.syscop.de/mikhail.katliar/tmpc/issues/45)
     template <typename QP, typename MapU, typename Vector2, typename Vector3>
-    inline void relativeInputBounds(QP& qp, OcpVertexDescriptor v, MapU u, Vector2 const& lu, Vector3 const& uu)
+    inline void relativeInputBounds(QP& qp, OcpVertex v, MapU u, Vector2 const& lu, Vector3 const& uu)
     {
         put(qp.lu(), v, lu - get(u, v));
         put(qp.uu(), v, uu - get(u, v));
@@ -40,7 +40,7 @@ namespace tmpc
 
     /// @brief Set upper and lower state bounds relative to a point.
     template <typename QP, typename MapX, typename Vector2, typename Vector3>
-    inline void relativeStateBounds(QP& qp, OcpVertexDescriptor v, MapX x, Vector2 const& lx, Vector3 const& ux)
+    inline void relativeStateBounds(QP& qp, OcpVertex v, MapX x, Vector2 const& lx, Vector3 const& ux)
     {
         put(qp.lx(), v, lx - get(x, v));
         put(qp.ux(), v, ux - get(x, v));
@@ -49,7 +49,7 @@ namespace tmpc
 
     /// @brief Set the Gauss-Newton approximation of the hessian Hessian and the gradient.
     template <typename QP, typename ResidualVector, typename CMatrix, typename DMatrix>
-    inline void gaussNewtonCostApproximation(QP& qp, OcpVertexDescriptor v, ResidualVector const& res, CMatrix const& C, DMatrix const& D)
+    inline void gaussNewtonCostApproximation(QP& qp, OcpVertex v, ResidualVector const& res, CMatrix const& C, DMatrix const& D)
     {
         // H = G^T G
         //   = [Q S^T
@@ -69,7 +69,7 @@ namespace tmpc
 
     /// @brief Set the scaled Gauss-Newton approximation of the Hessian and the gradient.
     template <typename QP, typename ResidualVector, typename CMatrix, typename DMatrix, typename Real>
-    inline void gaussNewtonCostApproximation(QP& qp, OcpVertexDescriptor v, ResidualVector const& res, CMatrix const& C, DMatrix const& D, Real scale)
+    inline void gaussNewtonCostApproximation(QP& qp, OcpVertex v, ResidualVector const& res, CMatrix const& C, DMatrix const& D, Real scale)
     {
         // H = G^T G
         //   = [Q S^T
@@ -89,9 +89,9 @@ namespace tmpc
 
     ///@brief Add Levenberg-Marquardt term to Q and R.
     template <typename QP, typename Real>
-    inline void addLevenbergMarquardt(QP& qp, OcpVertexDescriptor v, Real levenberg_marquardt)
+    inline void addLevenbergMarquardt(QP& qp, OcpVertex v, Real levenberg_marquardt)
     {
-        put(qp.Q(), v, get(qp.Q(), v) + levenberg_marquardt * blaze::IdentityMatrix<Real>(get(qp.size(), v).nx()));
-        put(qp.R(), v, get(qp.R(), v) + levenberg_marquardt * blaze::IdentityMatrix<Real>(get(qp.size(), v).nu()));
+        put(qp.Q(), v, get(qp.Q(), v) + levenberg_marquardt * blaze::IdentityMatrix<Real>(qp.size(v).nx()));
+        put(qp.R(), v, get(qp.R(), v) + levenberg_marquardt * blaze::IdentityMatrix<Real>(qp.size(v).nu()));
     }
 }

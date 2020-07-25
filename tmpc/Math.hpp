@@ -236,7 +236,7 @@ namespace blaze
     template <typename ET, bool TF>
     inline auto noresize(DynamicVector<ET, TF>& v)
     {
-        return tmpc::detail::NoResize<DynamicVector<ET, TF>>(v);
+        return subvector(~v, 0, size(~v));
     }
 
 
@@ -246,7 +246,7 @@ namespace blaze
     template <typename ET, bool SO>
     inline auto noresize(DynamicMatrix<ET, SO>& m)
     {
-        return tmpc::detail::NoResize<DynamicMatrix<ET, SO>>(m);
+        return submatrix(~m, 0, 0, rows(~m), columns(~m));
     }
 
 
@@ -256,7 +256,7 @@ namespace blaze
     template <typename ET, bool SO>
     inline auto noresize(SymmetricMatrix<DynamicMatrix<ET, SO>>& m)
     {
-        return tmpc::detail::NoResize<SymmetricMatrix<DynamicMatrix<ET, SO>>>(m);
+        return submatrix(~m, 0, 0, rows(~m), columns(~m));
     }
 
 

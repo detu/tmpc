@@ -1,263 +1,302 @@
 #pragma once
 
-#include <tmpc/property_map/BundlePropertyMap.hpp>
-
-#include <tmpc/ocp/OcpGraph.hpp>
-#include <tmpc/ocp/OcpSize.hpp>
-#include <tmpc/property_map/PropertyMap.hpp>
-#include <tmpc/graph/Graph.hpp>
+#include <tmpc/ocp/OcpTree.hpp>
+#include <tmpc/ocp/StaticOcpSize.hpp>
+#include <tmpc/qp/OcpQp.hpp>
 #include <tmpc/Math.hpp>
-#include <tmpc/Traits.hpp>
 
 #include <vector>
 
 
 namespace tmpc
 {
-    template <typename Real, size_t NX, size_t NU, size_t NC = 0>
+    template <typename Real_, size_t NX, size_t NU, size_t NC = 0>
     class StaticOcpQp
     {
     public:
-        StaticOcpQp(OcpGraph const& g)
+        using Real = Real_;
+
+
+        StaticOcpQp()
+        :   graph_ {}
+        ,   size_ {graph_}
+        ,   edgeVertexProperties_(num_vertices(graph_))
+        {
+        }
+
+
+        explicit StaticOcpQp(OcpTree const& g)
         :   graph_(g)
+        ,   size_ {graph_}
         ,   edgeVertexProperties_(num_vertices(g))
         {
         }
 
 
-        auto size() const
+        template <OcpQp Qp>
+        StaticOcpQp& operator=(Qp const& rhs)
         {
-            return make_function_property_map<OcpVertexDescriptor>(
-                [] (OcpVertexDescriptor v) 
-                { 
-                    return OcpSize {NX, NU, NC};
-                }
-            );
+            assign(*this, rhs);
+            return *this;
         }
 
 
-        auto const& graph() const
+        /// @brief OCP size.
+        auto const& size() const noexcept
+        {
+            return size_;
+        }
+
+
+        auto const& graph() const noexcept
         {
             return graph_;
         }
 
 
-        auto H()
+        auto const& H(OcpVertex v) const
         {
-            return BundlePropertyMap(&EdgeVertexPropertyBundle::H_, vertexProperties());
+            return edgeVertexProperties_[v].H_;
         }
 
 
-        auto H() const
+        template <typename MT, bool SO>
+        void H(OcpVertex v, blaze::Matrix<MT, SO> const& val)
         {
-            return BundlePropertyMap(&EdgeVertexPropertyBundle::H_, vertexProperties());
+            edgeVertexProperties_[v].H_ = ~val;
         }
 
 
-        auto Q()
+        auto const& Q(OcpVertex v) const
         {
-            return BundlePropertyMap(&EdgeVertexPropertyBundle::Q_, vertexProperties());
+            return edgeVertexProperties_[v].Q_;
         }
 
 
-        auto Q() const
+        template <typename MT, bool SO>
+        void Q(OcpVertex v, blaze::Matrix<MT, SO> const& val)
         {
-            return BundlePropertyMap(&EdgeVertexPropertyBundle::Q_, vertexProperties());
+            edgeVertexProperties_[v].Q_ = ~val;
         }
 
 
-        auto R()
+        auto const& R(OcpVertex v) const
         {
-            return BundlePropertyMap(&EdgeVertexPropertyBundle::R_, vertexProperties());
+            assert(out_degree(v, graph_) > 0);
+            return edgeVertexProperties_[v].R_;
         }
 
 
-        auto R() const
+        template <typename MT, bool SO>
+        void R(OcpVertex v, blaze::Matrix<MT, SO> const& val)
         {
-            return BundlePropertyMap(&EdgeVertexPropertyBundle::R_, vertexProperties());
+            assert(out_degree(v, graph_) > 0);
+            edgeVertexProperties_[v].R_ = val;
         }
 
 
-        auto S()
+        template <typename MT, bool SO>
+        void S(OcpVertex v, blaze::Matrix<MT, SO> const& val)
         {
-            return BundlePropertyMap(&EdgeVertexPropertyBundle::S_, vertexProperties());
+            assert(out_degree(v, graph_) > 0);
+            edgeVertexProperties_[v].S_ = ~val;
         }
 
 
-        auto S() const
+        auto const& S(OcpVertex v) const
         {
-            return BundlePropertyMap(&EdgeVertexPropertyBundle::S_, vertexProperties());
+            assert(out_degree(v, graph_) > 0);
+            return edgeVertexProperties_[v].S_;
         }
 
 
-        auto q()
+        template <typename VT, bool TF>
+        void q(OcpVertex v, blaze::Vector<VT, TF> const& val)
         {
-            return BundlePropertyMap(&EdgeVertexPropertyBundle::q_, vertexProperties());
+            edgeVertexProperties_[v].q_ = ~val;
         }
 
 
-        auto q() const
+        auto const& q(OcpVertex v) const
         {
-            return BundlePropertyMap(&EdgeVertexPropertyBundle::q_, vertexProperties());
+            return edgeVertexProperties_[v].q_;
         }
 
 
-        auto r()
+        template <typename VT, bool TF>
+        void r(OcpVertex v, blaze::Vector<VT, TF> const& val)
         {
-            return BundlePropertyMap(&EdgeVertexPropertyBundle::r_, vertexProperties());
+            assert(out_degree(v, graph_) > 0);
+            edgeVertexProperties_[v].r_ = ~val;
         }
 
 
-        auto r() const
+        auto const& r(OcpVertex v) const
         {
-            return BundlePropertyMap(&EdgeVertexPropertyBundle::r_, vertexProperties());
+            assert(out_degree(v, graph_) > 0);
+            return edgeVertexProperties_[v].r_;
         }
 
 
-        auto lx()
+        template <typename MT, bool SO>
+        void C(OcpVertex v, blaze::Matrix<MT, SO> const& val)
         {
-            return BundlePropertyMap(&EdgeVertexPropertyBundle::lx_, vertexProperties());
+            edgeVertexProperties_[v].C_ = ~val;
         }
 
 
-        auto lx() const
+        auto const& C(OcpVertex v) const
         {
-            return BundlePropertyMap(&EdgeVertexPropertyBundle::lx_, vertexProperties());
+            return edgeVertexProperties_[v].C_;
         }
 
 
-        auto ux()
+        template <typename MT, bool SO>
+        void D(OcpVertex v, blaze::Matrix<MT, SO> const& val)
         {
-            return BundlePropertyMap(&EdgeVertexPropertyBundle::ux_, vertexProperties());
+            assert(out_degree(v, graph_) > 0);
+            edgeVertexProperties_[v].D_ = ~val;
         }
 
 
-        auto ux() const
+        auto const& D(OcpVertex v) const
         {
-            return BundlePropertyMap(&EdgeVertexPropertyBundle::ux_, vertexProperties());
+            assert(out_degree(v, graph_) > 0);
+            return edgeVertexProperties_[v].D_;
         }
 
 
-        auto lu()
+        template <typename VT, bool TF>
+        void ld(OcpVertex v, blaze::Vector<VT, TF> const& val)
         {
-            return BundlePropertyMap(&EdgeVertexPropertyBundle::lu_, vertexProperties());
+            edgeVertexProperties_[v].ld_ = ~val;
         }
 
 
-        auto lu() const
+        auto const& ld(OcpVertex v) const
         {
-            return BundlePropertyMap(&EdgeVertexPropertyBundle::lu_, vertexProperties());
+            return edgeVertexProperties_[v].ld_;
         }
 
 
-        auto uu()
+        template <typename VT, bool TF>
+        void ud(OcpVertex v, blaze::Vector<VT, TF> const& val)
         {
-            return BundlePropertyMap(&EdgeVertexPropertyBundle::uu_, vertexProperties());
+            edgeVertexProperties_[v].ud_ = ~val;
         }
 
 
-        auto uu() const
+        auto const& ud(OcpVertex v) const
         {
-            return BundlePropertyMap(&EdgeVertexPropertyBundle::uu_, vertexProperties());
+            return edgeVertexProperties_[v].ud_;
         }
 
 
-        auto C()
+        template <typename VT, bool TF>
+        void lx(OcpVertex v, blaze::Vector<VT, TF> const& val)
         {
-            return BundlePropertyMap(&EdgeVertexPropertyBundle::C_, vertexProperties());
+            edgeVertexProperties_[v].lx_ = ~val;
         }
 
 
-        auto C() const
+        auto const& lx(OcpVertex v) const
         {
-            return BundlePropertyMap(&EdgeVertexPropertyBundle::C_, vertexProperties());
+            return edgeVertexProperties_[v].lx_;
         }
 
 
-        auto D()
+        template <typename VT, bool TF>
+        void ux(OcpVertex v, blaze::Vector<VT, TF> const& val)
         {
-            return BundlePropertyMap(&EdgeVertexPropertyBundle::D_, vertexProperties());
+            edgeVertexProperties_[v].ux_ = ~val;
         }
 
 
-        auto D() const
+        auto const& ux(OcpVertex v) const
         {
-            return BundlePropertyMap(&EdgeVertexPropertyBundle::D_, vertexProperties());
+            return edgeVertexProperties_[v].ux_;
         }
 
 
-        auto ld()
+        template <typename VT, bool TF>
+        void lu(OcpVertex v, blaze::Vector<VT, TF> const& val)
         {
-            return BundlePropertyMap(&EdgeVertexPropertyBundle::ld_, vertexProperties());
+            assert(out_degree(v, graph_) > 0);
+            edgeVertexProperties_[v].lu_ = ~val;
         }
 
 
-        auto ld() const
+        auto const& lu(OcpVertex v) const
         {
-            return BundlePropertyMap(&EdgeVertexPropertyBundle::ld_, vertexProperties());
+            assert(out_degree(v, graph_) > 0);
+            return edgeVertexProperties_[v].lu_;
         }
 
 
-        auto ud()
+        template <typename VT, bool TF>
+        void uu(OcpVertex v, blaze::Vector<VT, TF> const& val)
         {
-            return BundlePropertyMap(&EdgeVertexPropertyBundle::ud_, vertexProperties());
+            assert(out_degree(v, graph_) > 0);
+            edgeVertexProperties_[v].uu_ = ~val;
         }
 
 
-        auto ud() const
+        auto const& uu(OcpVertex v) const
         {
-            return BundlePropertyMap(&EdgeVertexPropertyBundle::ud_, vertexProperties());
+            assert(out_degree(v, graph_) > 0);
+            return edgeVertexProperties_[v].uu_;
         }
 
 
-
-		/*
-        auto BA()
+        auto const& BA(OcpEdge e) const
         {
-            return BundlePropertyMap(&EdgeVertexPropertyBundle::BA_, edgeProperties());
+            return edgeVertexProperties_[target(e, graph_)].BA_;
         }
 
 
-        auto BA() const
+        template <typename MT, bool SO>
+        void BA(OcpEdge e, blaze::Matrix<MT, SO> const& val)
         {
-            return BundlePropertyMap(&EdgeVertexPropertyBundle::BA_, edgeProperties());
-        }
-		*/
-
-
-        auto A()
-        {
-            return BundlePropertyMap(&EdgeVertexPropertyBundle::A_, edgeProperties());
+            edgeVertexProperties_[target(e, graph_)].BA_ = ~val;
         }
 
 
-        auto A() const
+        auto A(OcpEdge e) const
         {
-            return BundlePropertyMap(&EdgeVertexPropertyBundle::A_, edgeProperties());
+            return blaze::submatrix<0, NU, NX, NX>(edgeVertexProperties_[target(e, graph_)].BA_);
         }
 
 
-        auto B()
+        template <typename MT, bool SO>
+        void A(OcpEdge e, blaze::Matrix<MT, SO> const& val)
         {
-            return BundlePropertyMap(&EdgeVertexPropertyBundle::B_, edgeProperties());
+            blaze::submatrix<0, NU, NX, NX>(edgeVertexProperties_[target(e, graph_)].BA_) = ~val;
         }
 
 
-        auto B() const
+        auto B(OcpEdge e) const
         {
-            return BundlePropertyMap(&EdgeVertexPropertyBundle::B_, edgeProperties());
+            return blaze::submatrix<0, 0, NX, NU>(edgeVertexProperties_[target(e, graph_)].BA_);
         }
 
 
-        auto b()
+        template <typename MT, bool SO>
+        void B(OcpEdge e, blaze::Matrix<MT, SO> const& val)
         {
-            return BundlePropertyMap(&EdgeVertexPropertyBundle::b_, edgeProperties());
+            blaze::submatrix<0, 0, NX, NU>(edgeVertexProperties_[target(e, graph_)].BA_) = ~val;
         }
 
 
-        auto b() const
+        auto const& b(OcpEdge e) const
         {
-            return BundlePropertyMap(&EdgeVertexPropertyBundle::b_, edgeProperties());
+            return edgeVertexProperties_[target(e, graph_)].b_;
+        }
+
+
+        template <typename VT, bool TF>
+        void b(OcpEdge e, blaze::Vector<VT, TF> const& val)
+        {
+            edgeVertexProperties_[target(e, graph_)].b_ = ~val;
         }
 
 
@@ -269,19 +308,8 @@ namespace tmpc
             // Edge properties
             //
 
-            blaze::StaticMatrix<Real, NX, NX, blaze::columnMajor> A_;
-            blaze::StaticMatrix<Real, NX, NU, blaze::columnMajor> B_;
-			
-			/*
-            blaze::DynamicMatrix<Real, blaze::columnMajor> BA_;
-
-            using Submatrix = decltype(blaze::submatrix(BA_, 0, 0, 1, 1));
-
-            Submatrix A_;
-            Submatrix B_;
-			*/
-			
-            blaze::StaticVector<Real, NX> b_;
+            blaze::StaticMatrix<Real, NX, NU + NX, blaze::columnMajor> BA_;
+			blaze::StaticVector<Real, NX> b_;
 
             //
             // Vertex properties
@@ -309,91 +337,8 @@ namespace tmpc
         };
 
 
-        auto vertexProperties()
-        {
-            return make_iterator_property_map(edgeVertexProperties_.begin(), vertexIndex(graph_));
-        }
-
-
-        auto vertexProperties() const
-        {
-            return make_iterator_property_map(edgeVertexProperties_.begin(), vertexIndex(graph_));
-        }
-
-
-        auto edgeProperties()
-        {
-            return make_iterator_property_map(edgeVertexProperties_.begin(), targetVertexIndex());
-        }
-
-
-        auto edgeProperties() const
-        {
-            return make_iterator_property_map(edgeVertexProperties_.begin(), targetVertexIndex());
-        }
-
-
-        auto targetVertexIndex() const
-        {
-            return make_function_property_map<OcpEdgeDescriptor>(
-                [this] (OcpEdgeDescriptor e)
-                {
-                    return get(graph::edge_index, graph_, e) + 1;
-                }
-            );
-        }
-
-
-        OcpGraph graph_;
+        OcpTree graph_;
+        StaticOcpSize<NX, NU, NC> size_;
         std::vector<EdgeVertexPropertyBundle> edgeVertexProperties_;
     };
-
-
-    template <typename Real, size_t NX, size_t NU, size_t NC>
-    struct RealOf<StaticOcpQp<Real, NX, NU, NC>>
-    {
-        using type = Real;
-    };
-
-
-    /// @brief Specialize copyQpProperties for StaticOcpQp<> source.
-    ///
-    /// This is necessary to avoid copying elements which are "logically" empty but physically non-empty.
-    /// Such elements are S, R, r, lu, uu, D for leaf nodes.
-    /// If we try to copy them to a dynamically-sized QP, we will get a runtime-error because of matrix/vector size mismatch.
-    ///
-    template <typename Real, size_t NX, size_t NU, size_t NC, typename QpDst>
-	inline void copyQpProperties(StaticOcpQp<Real, NX, NU, NC> const& src, QpDst& dst)
-	{
-		auto const vert = graph::vertices(src.graph());
-		copyProperty(src.Q(), dst.Q(), vert);
-		copyProperty(src.q(), dst.q(), vert);
-		copyProperty(src.lx(), dst.lx(), vert);
-		copyProperty(src.ux(), dst.ux(), vert);
-		copyProperty(src.C(), dst.C(), vert);
-		copyProperty(src.ld(), dst.ld(), vert);
-		copyProperty(src.ud(), dst.ud(), vert);
-
-        // "A vertex of a path or tree is *internal* if it is not a leaf"
-        // https://en.wikipedia.org/wiki/Glossary_of_graph_theory_terms
-        //
-        // Copy S, R, r, lu, uu, D only for internal vertices, since leaf vertices don't have u.
-        for (auto v : vert)
-        {
-            if (out_degree(v, src.graph()) > 0)
-            {
-                put(dst.S(), v, get(src.S(), v));
-                put(dst.R(), v, get(src.R(), v));
-                put(dst.r(), v, get(src.r(), v));
-                put(dst.lu(), v, get(src.lu(), v));
-                put(dst.uu(), v, get(src.uu(), v));
-                put(dst.D(), v, get(src.D(), v));
-            }
-        }        
-		
-		auto const edg = graph::edges(src.graph());
-		copyProperty(src.A(), dst.A(), edg);
-		copyProperty(src.B(), dst.B(), edg);
-		copyProperty(src.b(), dst.b(), edg);
-	}
 }

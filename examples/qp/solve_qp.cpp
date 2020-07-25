@@ -1,38 +1,86 @@
-#include <tmpc/qp/QpOasesWorkspace.hpp>
+/// @brief Demonstrates how to create and solve an OCP QP.
+///
+
+#include <tmpc/qp/DynamicOcpQp.hpp>
+#include <tmpc/qp/Randomize.hpp>
+#include <tmpc/qp/KktValue.hpp>
+#include <tmpc/ocp/DynamicOcpSolution.hpp>
+#include <tmpc/ocp/DynamicOcpKktValue.hpp>
 #include <tmpc/print/qp/OcpQp.hpp>
-#include <tmpc/print/qp/OcpSolution.hpp>
+#include <tmpc/print/ocp/OcpSolution.hpp>
+#include <tmpc/print/ocp/OcpKktValue.hpp>
+#include <tmpc/hpipm/NominalSolver.hpp>
 
-#include <tmpc/BlazeKernel.hpp>
-#include <tmpc/EigenKernel.hpp>
-#include <tmpc/Math.hpp>
+#include <boost/exception/diagnostic_information.hpp>
 
-#include <vector>
 #include <iostream>
+
 
 int main(int, char **)
 {
 	using namespace tmpc;
+	using Real = double;
 
-	using Kernel = BlazeKernel<double>;
-	using Workspace = QpOasesWorkspace<Kernel>;
+	try
+	{
+		// Define and OCP QP graph with 3 vertices:
+		//
+		// (0)------>(1)------>(2)
+		// v0   e0   v1   e1   v2
+		//
 
-	Workspace workspace {OcpSize {3, 0, 0}, OcpSize {0, 0, 0}};
-	
-	auto& stage0 = workspace.problem()[0];
-	stage0.gaussNewtonCostApproximation(
-		DynamicVector<Kernel> {1., 2., 42.},
-		IdentityMatrix<Kernel> {3u},
-		DynamicMatrix<Kernel> {3u, 0u}
-	);
-	stage0.stateBounds(-inf<double>(), inf<double>());
-	stage0.inputBounds(-inf<double>(), inf<double>());
+		// Define the problem size at each node.
+		// DynamicOcpSize {nx, nu} sets the state size to nx
+		// and control size to nu at the corresponding node.
+		DynamicOcpSize const size {
+			{3, 2, 2},
+			{2, 1, 1},
+			{2, 0, 0}
+		};
 
-	for (auto const& s : workspace.problem())
-		std::cout << s << std::endl;
+		// Construct the QP.
+		// DynamicOcpQp represents an OCP QP
+		// with size at each node defined at run-time.
+		DynamicOcpQp<Real> qp {size};
 
-	workspace.solve();
+		// Make a random feasible QP.
+		randomize(qp);
 
-	std::cout << workspace.solution()[0].x() << std::endl;
+		// Print the QP.
+		std::cout << "**** QP ****" << std::endl;
+		std::cout << qp;
+
+		// Construct the solution object.
+		// DynamicOcpSolution represents an OCP solution
+		// with size at each node defined at run-time.
+		DynamicOcpSolution<Real> sol {size};
+
+		// Create the solver.
+		// NominalSolver is the interface 
+		// to the HPIPM solver https://github.com/giaf/hpipm
+		// You need to compile and install HPIPM first.
+		// Then set the CMake variable TMPC_WITH_HPIPM=ON when configuring tmpc.
+		hpipm::NominalSolver<Real> solver {size};
+		
+		// Solve the QP.
+		solver(qp, sol);
+
+		// Print the solution.
+		std::cout << "**** solution ****" << std::endl;
+		std::cout << sol;
+
+		// Check KKT values.
+		DynamicOcpKktValue<Real> kkt {size};
+		kktValue(qp, sol, kkt);
+
+		std::cout << "**** KKT values ****" << std::endl;
+		std::cout << kkt;
+	}
+	catch (boost::exception const& e)
+	{
+		// Catch errors and print diagnostic information, just in case.
+		std::cerr << diagnostic_information(e);
+	}
 
 	return 0;
 }

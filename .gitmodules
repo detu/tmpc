@@ -1,0 +1,3 @@
+[submodule "src/blazefeo"]
+	path = blazefeo
+	url = git@gitlab.syscop.de:mikhail.katliar/blazefeo.git

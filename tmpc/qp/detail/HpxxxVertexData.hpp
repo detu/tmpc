@@ -1,6 +1,6 @@
 #pragma once
 
-#include <tmpc/ocp/OcpSize.hpp>
+#include <tmpc/ocp/DynamicOcpSize.hpp>
 
 #include <tmpc/Matrix.hpp>
 #include <tmpc/Math.hpp>
@@ -26,7 +26,7 @@ namespace tmpc :: detail
 		using Kernel = Kernel_;
 		using Real = typename Kernel::Real;
 
-		HpxxxVertexData(OcpSize const& sz)
+		HpxxxVertexData(DynamicOcpSize const& sz)
 		:	size_(sz)
 		,	idxb_(sz.nu() + sz.nx())
 		,	Q_ {sz.nx(), sz.nx()}
@@ -281,7 +281,7 @@ namespace tmpc :: detail
 		Real * lam_us_data() { return lam_us_.data(); }
 
 	private:
-		OcpSize size_;
+		DynamicOcpSize size_;
 
 		// Index of bound-constrained variables
 		std::vector<int> idxb_;

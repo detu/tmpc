@@ -1,6 +1,3 @@
-#include <tmpc/qp/OcpQp.hpp>
-#include <tmpc/mpc/MpcOcpSize.hpp>
-#include <test/Kernels.hpp>
 #include <tmpc/Testing.hpp>
 
 
@@ -134,8 +131,8 @@ namespace tmpc :: testing
 			subvector(lbu_expected, 1 * NU, NU) = qp[1].lbu();	subvector(ubu_expected, 1 * NU, NU) = qp[1].ubu();
 		}
 
-		std::vector<OcpSize> size_;
-		std::vector<OcpQp<Kernel>> qp;
+		std::vector<DynamicOcpSize> size_;
+		std::vector<OcpQpStage<Kernel>> qp;
 		StaticMatrix<Kernel, NX, NX> Qc_expected;
 		StaticMatrix<Kernel, NT * NU, NT * NU> Rc_expected;
 		StaticMatrix<Kernel, NX, NT * NU> Sc_expected;
@@ -157,7 +154,7 @@ namespace tmpc :: testing
 
 		// Condense
 		typename TestFixture::CondensingAlgorithm condensing(sizeBegin(this->qp), sizeEnd(this->qp));
-		OcpQp<Kernel> const condensed = condensing(this->qp.begin(), this->qp.end());
+		OcpQpStage<Kernel> const condensed = condensing(this->qp.begin(), this->qp.end());
 
 		EXPECT_EQ(forcePrint(condensed.Q()), forcePrint(this->Qc_expected));
 		EXPECT_EQ(forcePrint(condensed.R()), forcePrint(this->Rc_expected));

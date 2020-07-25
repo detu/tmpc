@@ -6,13 +6,13 @@
 
 #include <nlohmann/json.hpp>
 
-#include <tmpc/ocp/OcpGraph.hpp>
-#include <tmpc/ocp/OcpSize.hpp>
+#include <tmpc/ocp/OcpTree.hpp>
+#include <tmpc/ocp/DynamicOcpSize.hpp>
 #include <tmpc/core/Range.hpp>
 #include <tmpc/property_map/PropertyMap.hpp>
 //#include <tmpc/qp/HpmpcWorkspace.hpp>
 //#include <tmpc/qp/TreeQpWorkspaceAdaptor.hpp>
-#include <tmpc/qp/OcpQp.hpp>
+#include <tmpc/qp/OcpQpStage.hpp>
 #include <tmpc/qp/DualNewtonTreeWorkspace.hpp>
 #include <tmpc/BlazeKernel.hpp>
 #include <tmpc/json/JsonBlaze.hpp>

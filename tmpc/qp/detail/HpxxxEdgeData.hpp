@@ -1,6 +1,6 @@
 #pragma once
 
-#include <tmpc/ocp/OcpSize.hpp>
+#include <tmpc/ocp/DynamicOcpSize.hpp>
 
 #include <tmpc/Matrix.hpp>
 #include <tmpc/Math.hpp>
@@ -22,7 +22,7 @@ namespace tmpc :: detail
 		using Kernel = Kernel_;
 		using Real = typename Kernel::Real;
 
-		HpxxxEdgeData(OcpSize const& sz_u, OcpSize const& sz_v)
+		HpxxxEdgeData(DynamicOcpSize const& sz_u, DynamicOcpSize const& sz_v)
 		:	A_ {sz_v.nx(), sz_u.nx()}
 		,	B_ {sz_v.nx(), sz_u.nu()}
 		,	b_(sz_v.nx())

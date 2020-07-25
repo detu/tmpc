@@ -4,7 +4,7 @@
 #include <tmpc/json/JsonQp.hpp>
 #include <tmpc/json/JsonBlaze.hpp>
 
-#include <tmpc/qp/OcpQp.hpp>
+#include <tmpc/qp/OcpQpStage.hpp>
 #include <tmpc/BlazeKernel.hpp>
 
 #include <iostream>
@@ -16,10 +16,10 @@ int main(int, char **)
 
     using Kernel = BlazeKernel<double>;
 
-    std::vector<OcpSize> size =
+    std::vector<DynamicOcpSize> size =
     {
-        OcpSize {3, 2, 0},
-        OcpSize {2, 1, 0}
+        DynamicOcpSize {3, 2, 0},
+        DynamicOcpSize {2, 1, 0}
     };
 
     JsonQp<Kernel> qp;
@@ -37,10 +37,10 @@ int main(int, char **)
     std::cout << get(qp.q(), v0) << std::endl;
 
     /*
-    using Stage = OcpQp<Kernel>;
+    using Stage = OcpQpStage<Kernel>;
 
-    Stage stage0 {OcpSize {3, 2, 0}, 2};
-    Stage stage1 {OcpSize {2, 1, 0}, 0};
+    Stage stage0 {DynamicOcpSize {3, 2, 0}, 2};
+    Stage stage1 {DynamicOcpSize {2, 1, 0}, 0};
     
     randomize(stage0);
     randomize(stage1);

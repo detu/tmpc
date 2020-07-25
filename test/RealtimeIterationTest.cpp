@@ -41,8 +41,8 @@ namespace tmpc :: testing
 		:	nt_(nt)
 		{
 			dimensions_.reserve(nt + 1);
-			std::fill_n(std::back_inserter(dimensions_), nt, OcpSize(NX, NU, NC));
-			dimensions_.push_back(OcpSize(NX, 0, NCT));
+			std::fill_n(std::back_inserter(dimensions_), nt, DynamicOcpSize(NX, NU, NC));
+			dimensions_.push_back(DynamicOcpSize(NX, 0, NCT));
 
 			A = {{1.,  1.},
 				{0.,  1.}};
@@ -147,14 +147,14 @@ namespace tmpc :: testing
 			// Nothing to update.
 		}
 
-		boost::iterator_range<std::vector<OcpSize>::const_iterator> dimensions() const
+		boost::iterator_range<std::vector<DynamicOcpSize>::const_iterator> dimensions() const
 		{
 			return {dimensions_.begin(), dimensions_.end()};
 		}
 
 	private:
 		std::size_t nt_;
-		std::vector<OcpSize> dimensions_;
+		std::vector<DynamicOcpSize> dimensions_;
 
 		StateVector _x_min;
 		StateVector _x_max;
@@ -258,6 +258,6 @@ namespace tmpc :: testing
 		auto const nt = 2u;
 
 		EXPECT_THAT(tmpc::mpcOcpSize(nt, nx, nu, nc, nct),
-				::testing::ElementsAre(tmpc::OcpSize(nx, nu, nc), tmpc::OcpSize(nx, nu, nc), tmpc::OcpSize(nx, 0, nct)));
+				::testing::ElementsAre(tmpc::DynamicOcpSize(nx, nu, nc), tmpc::DynamicOcpSize(nx, nu, nc), tmpc::DynamicOcpSize(nx, 0, nct)));
 	}
 }

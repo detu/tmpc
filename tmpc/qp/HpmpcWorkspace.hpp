@@ -5,11 +5,8 @@
 #include <tmpc/qp/HpmpcIterationInfo.hpp>
 #include <tmpc/qp/HpmpcResidualNorm.hpp>
 
-#include <tmpc/ocp/OcpSize.hpp>
-#include <tmpc/ocp/OcpGraph.hpp>
-#include <tmpc/ocp/OcpSolutionBase.hpp>
-#include <tmpc/qp/OcpQpBase.hpp>
-//#include <tmpc/qp/QpWorkspaceBase.hpp>
+#include <tmpc/ocp/DynamicOcpSize.hpp>
+#include <tmpc/ocp/OcpTree.hpp>
 #include <tmpc/qp/hpmpc/Hpmpc.hpp>
 
 #include <tmpc/Matrix.hpp>
@@ -41,10 +38,12 @@ namespace tmpc
 	 *
 	 * \tparam <Kernel> the math kernel type
 	 */
-	template <typename Real>
+	template <typename Real_>
 	class HpmpcWorkspace
 	{
 	public:
+        using Real = Real_;
+        
 		static auto constexpr SO = blaze::rowMajor;
 		
 		
@@ -70,12 +69,12 @@ namespace tmpc
 		 * \brief Takes QP problem size to preallocate workspace.
 		 */
 		template <typename SizeMap>
-		explicit HpmpcWorkspace(OcpGraph const& graph, SizeMap size, size_t max_iter = 100)
+		explicit HpmpcWorkspace(OcpTree const& graph, SizeMap size, size_t max_iter = 100)
 		:	graph_ {graph}
 		,	size_(num_vertices(graph))
         ,	maxIter_(max_iter)
 		{
-			copyProperty(size, iterator_property_map(size_.begin(), get(graph::vertex_index, graph_)), graph::vertices(graph_));
+			copyProperty(size, iterator_property_map(size_.begin(), vertexIndex(graph_)), vertices(graph_));
 
             // Init vertex and edge data
 			initData();
@@ -105,7 +104,7 @@ namespace tmpc
 		HpmpcWorkspace& operator= (HpmpcWorkspace &&) = delete;
 
 
-		void solve()
+		void operator()() const
 		{
 			// Number of QP steps for HPMPC
 			auto const N = num_vertices(graph_) - 1;
@@ -172,7 +171,7 @@ namespace tmpc
 
 		auto size() const
 		{
-			return iterator_property_map(size_.begin(), get(graph::vertex_index, graph_));
+			return iterator_property_map(size_.begin(), vertexIndex(graph_));
 		}
 
 
@@ -485,7 +484,7 @@ namespace tmpc
 	private:
 		struct VertexData
         {
-            VertexData(OcpSize const& sz)
+            VertexData(DynamicOcpSize const& sz)
             :   size_ {sz}
             ,   Q_(sz.nx(), sz.nx())
             ,   R_(sz.nu(), sz.nu())
@@ -560,7 +559,7 @@ namespace tmpc
             }
 
 
-            OcpSize const size_;
+            DynamicOcpSize const size_;
 
             UnpaddedMatrix<Real, SO> Q_;
             UnpaddedMatrix<Real, SO> R_;
@@ -599,7 +598,7 @@ namespace tmpc
 
         struct EdgeData
         {
-            EdgeData(OcpSize const& size_src, OcpSize const& size_dst)
+            EdgeData(DynamicOcpSize const& size_src, DynamicOcpSize const& size_dst)
             :   A_(size_dst.nx(), size_src.nx())
             ,   B_(size_dst.nx(), size_src.nu())
 			,   b_(size_dst.nx())
@@ -643,25 +642,25 @@ namespace tmpc
 
 		auto vertexProperties()
         {
-            return make_iterator_property_map(begin(vertexData_), get(graph::vertex_index, graph_));
+            return make_iterator_property_map(begin(vertexData_), vertexIndex(graph_));
         }
 
 
         auto vertexProperties() const
         {
-            return make_iterator_property_map(begin(vertexData_), get(graph::vertex_index, graph_));
+            return make_iterator_property_map(begin(vertexData_), vertexIndex(graph_));
         }
 
 
         auto edgeProperties()
         {
-            return make_iterator_property_map(begin(edgeData_), get(graph::edge_index, graph_));
+            return make_iterator_property_map(begin(edgeData_), edgeIndex(graph_));
         }
 
 
         auto edgeProperties() const
         {
-            return make_iterator_property_map(begin(edgeData_), get(graph::edge_index, graph_));
+            return make_iterator_property_map(begin(edgeData_), edgeIndex(graph_));
         }
 
 
@@ -710,7 +709,7 @@ namespace tmpc
 			u_.reserve(nv);
 			lam_.reserve(nv);
 
-			for (auto v : graph::vertices(graph_))
+			for (auto v : vertices(graph_))
             {
                 auto const& sz = get(size(), v);
                 auto& vd = get(vertexProperties(), v);
@@ -752,7 +751,7 @@ namespace tmpc
 			b_.reserve(ne);
 			pi_.reserve(ne);
 
-            for (auto e : graph::edges(graph_))
+            for (auto e : edges(graph_))
             {
                 auto& ed = get(edgeProperties(), e);
 
@@ -774,8 +773,8 @@ namespace tmpc
         }
 
 
-		OcpGraph graph_;
-		std::vector<OcpSize> size_;
+		OcpTree graph_;
+		std::vector<DynamicOcpSize> size_;
 
 		std::vector<VertexData> vertexData_;
 		std::vector<EdgeData> edgeData_;
@@ -857,13 +856,13 @@ namespace tmpc
             }
 
         
-            void discover_vertex(OcpVertexDescriptor u, OcpGraph const& g)
+            void discover_vertex(OcpVertex u, OcpTree const& g)
             {
 				ws_.vertexData_.emplace_back(get(ws_.size(), u));
             }
 
 
-			void tree_edge(OcpEdgeDescriptor e, OcpGraph const& g)
+			void tree_edge(OcpEdge e, OcpTree const& g)
 			{
 				auto const u = source(e, g);
 				auto const v = target(e, g);
@@ -877,7 +876,7 @@ namespace tmpc
 			}
 
 
-			void non_tree_edge(OcpEdgeDescriptor e, OcpGraph const& g)
+			void non_tree_edge(OcpEdge e, OcpTree const& g)
 			{
 				TMPC_THROW_EXCEPTION(std::invalid_argument("Invalid tree structure in HpmpcWorkspace ctor: non-tree graph structure detected."));
 			}

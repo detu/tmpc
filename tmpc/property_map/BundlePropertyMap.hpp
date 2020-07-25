@@ -2,7 +2,7 @@
 
 #include <tmpc/property_map/PropertyMap.hpp>
 #include <tmpc/Exception.hpp>
-
+#include <tmpc/Math.hpp>
 
 namespace tmpc
 {

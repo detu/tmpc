@@ -24,7 +24,7 @@ namespace tmpc :: testing
 	{
 		using Kernel = typename TestFixture::Kernel;
 
-		QpOasesWorkspace<Kernel> ws(std::array<OcpSize, 1> {OcpSize{2, 1, 0}});
+		QpOasesWorkspace<Kernel> ws(std::array<DynamicOcpSize, 1> {DynamicOcpSize{2, 1, 0}});
 		auto p = ws.problem();
 
 		StaticMatrix<Kernel, 3, 2, columnMajor> x;
@@ -51,7 +51,7 @@ namespace tmpc :: testing
 	{
 		using Kernel = typename TestFixture::Kernel;
 
-		std::array<OcpSize, 3> sz = {OcpSize(2, 1, 2), OcpSize(2, 2, 1), OcpSize(3, 1, 3)};
+		std::array<DynamicOcpSize, 3> sz = {DynamicOcpSize(2, 1, 2), DynamicOcpSize(2, 2, 1), DynamicOcpSize(3, 1, 3)};
 		auto const total_nx = numVariables(sz.begin(), sz.end());
 		auto const total_nc = numEqualities(sz.begin(), sz.end()) + numInequalities(sz.begin(), sz.end());
 
@@ -66,7 +66,7 @@ namespace tmpc :: testing
 
 		for (auto stage = p.begin(); stage != p.end(); ++stage)
 		{
-			OcpSize const sz = stage->size();
+			DynamicOcpSize const sz = stage->size();
 
 			{
 				auto const tmp = evaluate(rand_matrix.generate(sz.nx(), sz.nx()));

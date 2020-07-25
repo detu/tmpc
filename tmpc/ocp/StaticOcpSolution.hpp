@@ -2,10 +2,10 @@
 
 #include <tmpc/property_map/BundlePropertyMap.hpp>
 
-#include <tmpc/ocp/OcpGraph.hpp>
-#include <tmpc/ocp/OcpSize.hpp>
+#include <tmpc/ocp/OcpTree.hpp>
+#include <tmpc/ocp/StaticOcpSize.hpp>
 #include <tmpc/property_map/PropertyMap.hpp>
-#include <tmpc/graph/Graph.hpp>
+
 #include <tmpc/Math.hpp>
 
 #include <vector>
@@ -15,26 +15,25 @@ namespace tmpc
 {
     /// @brief Solution of an OCP with sizes known at compile-time.
     ///
-    template <typename Real, size_t NX, size_t NU, size_t NC = 0>
+    template <typename R, size_t NX, size_t NU, size_t NC = 0>
     class StaticOcpSolution
     {
     public:
-        StaticOcpSolution(OcpGraph const& g)
-        :   graph_(g)
+        using Real = R;
+
+        
+        StaticOcpSolution(OcpTree const& g)
+        :   graph_ {g}
+        ,   size_ {g}
         ,   vertexProperties_(num_vertices(g))
         ,   edgeProperties_(num_edges(g))
         {
         }
 
 
-        auto size() const
+        auto const& size() const
         {
-            return make_function_property_map<OcpVertexDescriptor>(
-                [] (OcpVertexDescriptor v) 
-                { 
-                    return OcpSize {NX, NU, NC};
-                }
-            );
+            return size_;
         }
 
 
@@ -44,111 +43,117 @@ namespace tmpc
         }
 
 
-        auto x()
+        auto const& x(OcpVertex v) const
         {
-            return BundlePropertyMap(&VertexPropertyBundle::x_, vertexProperties());
+            return vertexProperties_[v].x_;
         }
 
 
-        auto x() const
+        auto& x(OcpVertex v)
         {
-            return BundlePropertyMap(&VertexPropertyBundle::x_, vertexProperties());
+            return vertexProperties_[v].x_;
         }
 
 
-        auto u()
+        auto const& u(OcpVertex v) const
         {
-            return BundlePropertyMap(&VertexPropertyBundle::u_, vertexProperties());
+            assert(out_degree(v, graph_) > 0);
+            return vertexProperties_[v].u_;
         }
 
 
-        auto u() const
+        auto& u(OcpVertex v)
         {
-            return BundlePropertyMap(&VertexPropertyBundle::u_, vertexProperties());
+            assert(out_degree(v, graph_) > 0);
+            return vertexProperties_[v].u_;
         }
 
 
-        auto lam_lx()
+        auto const& lam_lx(OcpVertex v) const
         {
-            return BundlePropertyMap(&VertexPropertyBundle::lam_lx_, vertexProperties());
+            return vertexProperties_[v].lam_lx_;
         }
 
 
-        auto lam_lx() const
+        auto& lam_lx(OcpVertex v)
         {
-            return BundlePropertyMap(&VertexPropertyBundle::lam_lx_, vertexProperties());
+            return vertexProperties_[v].lam_lx_;
         }
 
 
-        auto lam_ux()
+        auto const& lam_ux(OcpVertex v) const
         {
-            return BundlePropertyMap(&VertexPropertyBundle::lam_ux_, vertexProperties());
+            return vertexProperties_[v].lam_ux_;
         }
 
 
-        auto lam_ux() const
+        auto& lam_ux(OcpVertex v)
         {
-            return BundlePropertyMap(&VertexPropertyBundle::lam_ux_, vertexProperties());
+            return vertexProperties_[v].lam_ux_;
         }
 
 
-        auto lam_lu()
+        auto const& lam_lu(OcpVertex v) const
         {
-            return BundlePropertyMap(&VertexPropertyBundle::lam_lu_, vertexProperties());
+            assert(out_degree(v, graph_) > 0);
+            return vertexProperties_[v].lam_lu_;
         }
 
 
-        auto lam_lu() const
+        auto& lam_lu(OcpVertex v)
         {
-            return BundlePropertyMap(&VertexPropertyBundle::lam_lu_, vertexProperties());
+            assert(out_degree(v, graph_) > 0);
+            return vertexProperties_[v].lam_lu_;
         }
 
 
-        auto lam_uu()
+        auto const& lam_uu(OcpVertex v) const
         {
-            return BundlePropertyMap(&VertexPropertyBundle::lam_uu_, vertexProperties());
+            assert(out_degree(v, graph_) > 0);
+            return vertexProperties_[v].lam_uu_;
         }
 
 
-        auto lam_uu() const
+        auto& lam_uu(OcpVertex v)
         {
-            return BundlePropertyMap(&VertexPropertyBundle::lam_uu_, vertexProperties());
+            assert(out_degree(v, graph_) > 0);
+            return vertexProperties_[v].lam_uu_;
         }
 
 
-        auto lam_ld()
+        auto const& lam_ld(OcpVertex v) const
         {
-            return BundlePropertyMap(&VertexPropertyBundle::lam_ld_, vertexProperties());
+            return vertexProperties_[v].lam_ld_;
         }
 
 
-        auto lam_ld() const
+        auto& lam_ld(OcpVertex v)
         {
-            return BundlePropertyMap(&VertexPropertyBundle::lam_ld_, vertexProperties());
+            return vertexProperties_[v].lam_ld_;
         }
 
 
-        auto lam_ud()
+        auto const& lam_ud(OcpVertex v) const
         {
-            return BundlePropertyMap(&VertexPropertyBundle::lam_ud_, vertexProperties());
+            return vertexProperties_[v].lam_ud_;
         }
 
 
-        auto lam_ud() const
+        auto& lam_ud(OcpVertex v)
         {
-            return BundlePropertyMap(&VertexPropertyBundle::lam_ud_, vertexProperties());
+            return vertexProperties_[v].lam_ud_;
         }
 
 
-        auto pi()
+        auto const& pi(OcpEdge e) const
         {
-            return BundlePropertyMap(&EdgePropertyBundle::pi_, edgeProperties());
+            return edgeProperties_[e].pi_;
         }
 
 
-        auto pi() const
+        auto& pi(OcpEdge e)
         {
-            return BundlePropertyMap(&EdgePropertyBundle::pi_, edgeProperties());
+            return edgeProperties_[e].pi_;
         }
 
 
@@ -173,37 +178,8 @@ namespace tmpc
         };
 
 
-        auto vertexProperties()
-        {
-            return make_iterator_property_map(vertexProperties_.begin(), vertexIndex(graph_));
-        }
-
-
-        auto vertexProperties() const
-        {
-            return make_iterator_property_map(vertexProperties_.begin(), vertexIndex(graph_));
-        }
-
-
-        auto edgeProperties()
-        {
-            return make_iterator_property_map(edgeProperties_.begin(), edgeIndex());
-        }
-
-
-        auto edgeProperties() const
-        {
-            return make_iterator_property_map(edgeProperties_.begin(), edgeIndex());
-        }
-
-
-        auto edgeIndex() const
-        {
-            return get(graph::edge_index, graph_);
-        }
-
-
-        OcpGraph graph_;
+        OcpTree graph_;
+        StaticOcpSize<NX, NU, NC> size_;
         std::vector<VertexPropertyBundle> vertexProperties_;
         std::vector<EdgePropertyBundle> edgeProperties_;
     };

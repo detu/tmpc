@@ -4,15 +4,18 @@ find_package(Threads REQUIRED)
 
 #~~~~~~~~~~~~~~~~
 add_executable(bench-tmpc
+    Main.cpp
+    
     math/Cholesky.cpp
     math/Trsv.cpp
     math/SyrkPotrf.cpp
     
-    CondensingBench.cpp
-    ClassicalRiccatiBench.cpp
-    FactorizedRiccatiBench.cpp
-    StaticFactorizedRiccatiBench.cpp
-    OcpGraphBench.cpp
+    # CondensingBench.cpp
+    qp/DynamicClassicalRiccatiBench.cpp
+    qp/DynamicFactorizedRiccatiBench.cpp
+    qp/StaticClassicalRiccatiBench.cpp
+    qp/StaticFactorizedRiccatiBench.cpp
+    OcpTreeBench.cpp
 )
 
 
