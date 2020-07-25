@@ -19,7 +19,7 @@ namespace tmpc :: hpipm
     
 
     template <typename Real>
-    using tree_ocp_qp_sol = TreeOcpQpSolType<Real>::Type;
+    using tree_ocp_qp_sol = typename TreeOcpQpSolType<Real>::Type;
 
 
     inline int memsize_tree_ocp_qp_sol(d_tree_ocp_qp_dim const& dim)

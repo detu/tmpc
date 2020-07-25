@@ -54,7 +54,7 @@ namespace tmpc
         template <OcpQp Qp, typename QpSol>
         void operator()(Qp const& qp, QpSol& sol) const
         {
-            for (auto v : graph().vertices() | std::views::reverse)
+            for (auto v : graph().vertices() | views::reverse)
                 vertexBackward(v, qp);
 
             for (auto v : graph().vertices())

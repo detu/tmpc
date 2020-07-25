@@ -24,7 +24,7 @@ namespace tmpc :: hpipm
 
 
     template <typename Real>
-    using tree_ocp_qp = TreeOcpQpType<Real>::Type;
+    using tree_ocp_qp = typename TreeOcpQpType<Real>::Type;
     
     
     inline int memsize_tree_ocp_qp(d_tree_ocp_qp_dim const& dim)

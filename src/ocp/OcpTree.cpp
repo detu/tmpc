@@ -32,13 +32,19 @@ namespace tmpc
     }
 
 
+    OcpTree::OcpTree(std::initializer_list<OcpTree::degree_size_type> branching)
+    :   OcpTree(views::all(branching))
+    {
+    }
+
+
     OcpTree::OcpTree(size_t n_nodes)
     :   OcpTree(
-            std::views::iota(
+            views::iota(
                 OcpVertex {0},
                 OcpVertex {static_cast<OcpTree::vertices_size_type>(n_nodes)}
             ) |
-            std::views::transform(
+            views::transform(
                 [n_nodes] (OcpVertex v) { return v + 1 < n_nodes ? 1 : 0; }
             )
         )

@@ -10,9 +10,9 @@
 #include <tmpc/json/Json.hpp>
 #include <tmpc/json/JsonBlaze.hpp>
 #include <tmpc/Exception.hpp>
+#include <tmpc/core/Range.hpp>
 
 #include <string>
-#include <ranges>
 
 
 namespace nlohmann 
@@ -85,7 +85,7 @@ namespace nlohmann
         static Qp from_json(const json& j) 
         {
             tmpc::OcpTree g {j.at("branching") 
-                | std::views::transform([] (auto const& n) -> std::size_t { return n; })};
+                | tmpc::views::transform([] (auto const& n) -> std::size_t { return n; })};
 
             auto const j_nodes = j.at("nodes");
             auto const j_edges = j.at("edges");

@@ -23,7 +23,7 @@ namespace tmpc :: hpipm
 
 
     template <typename Real>
-    using tree_ocp_qp_ipm_workspace = TreeOcpQpIpmWorkspaceType<Real>::Type;
+    using tree_ocp_qp_ipm_workspace = typename TreeOcpQpIpmWorkspaceType<Real>::Type;
 
 
     

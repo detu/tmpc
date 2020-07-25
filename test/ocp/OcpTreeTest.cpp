@@ -107,13 +107,13 @@ namespace tmpc :: testing
 	}
 
 
-	// Check that the vertices(g) | std::views::reverse returns a correct sequence of vertices.
+	// Check that the vertices(g) | views::reverse returns a correct sequence of vertices.
 	//
 	TEST(OcpTreeTest, testReverseVertices)
 	{
 		size_t const N = 4;
 		OcpTree const g(N);
-		auto const v = vertices(g) | std::views::reverse;
+		auto const v = vertices(g) | views::reverse;
 
 		ASSERT_EQ(std::size(v), 4);
 		EXPECT_EQ(v[0], 3);

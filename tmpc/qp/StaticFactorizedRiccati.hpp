@@ -8,6 +8,8 @@
 #include <tmpc/math/Trsv.hpp>
 #include <tmpc/Exception.hpp>
 
+#include <blazefeo/math/dense/Gemm.hpp>
+
 #include <vector>
 
 
@@ -58,7 +60,7 @@ namespace tmpc
         template <typename Qp>
         void backwardFactorization(Qp const& qp)
         {
-            for (auto u : vertices(graph_) | std::views::reverse)
+            for (auto u : vertices(graph_) | views::reverse)
             {
                 auto& vd_u = vertexData_[u];
 
@@ -75,8 +77,10 @@ namespace tmpc
                 else
                 {
                     // Alg 1 line 5
-                    blaze::SymmetricMatrix<blaze::StaticMatrix<
-                        Real, NX + NU, NX + NU, blaze::columnMajor>> RSQ_tilde = qp.H(u);
+                    // blaze::SymmetricMatrix<blaze::StaticMatrix<
+                    //     Real, NX + NU, NX + NU, blaze::columnMajor>> RSQ_tilde = qp.H(u);
+                    blaze::StaticMatrix<
+                        Real, NX + NU, NX + NU, blaze::columnMajor> RSQ_tilde = qp.H(u);
 
                     for (auto e : out_edges(u, graph_))
                     {
@@ -86,11 +90,15 @@ namespace tmpc
 
                         // Alg 1 line 7
                         // D = trans(Lcal_next) * get(qp.BA(), e);
-                        blaze::StaticMatrix<Real, NX, NU + NX, blaze::columnMajor> D
-                            = trans(Lcal_next) * qp.BA(e);
+                        // blaze::StaticMatrix<Real, NX, NU + NX, blaze::columnMajor> D
+                        //     = trans(Lcal_next) * qp.BA(e);
+                        blaze::StaticMatrix<Real, NU + NX, NX, blaze::columnMajor> transD
+                            = trans(qp.BA(e)) * Lcal_next;
 
                         // Alg 1 line 8
-                        RSQ_tilde += declsym(trans(D) * D);
+                        // RSQ_tilde += declsym(trans(D) * D);
+                        // RSQ_tilde += declsym(transD * trans(transD));
+                        blazefeo::gemm_nt(transD, transD, RSQ_tilde, RSQ_tilde);
                     }
                     
                     // Alg 1 line 10
@@ -103,7 +111,7 @@ namespace tmpc
         template <typename Qp>
         void backwardSubstitution(Qp const& qp)
         {
-            for (auto u : vertices(graph_) | std::views::reverse)
+            for (auto u : vertices(graph_) | views::reverse)
             {
                 auto& vd_u = vertexData_[u];
 

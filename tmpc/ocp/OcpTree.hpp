@@ -2,11 +2,10 @@
 
 #include <tmpc/SizeT.hpp>
 #include <tmpc/Exception.hpp>
-#include <tmpc/property_map/PropertyMap.hpp>
+#include <tmpc/core/Range.hpp>
 
 #include <vector>
 #include <optional>
-#include <ranges>
 #include <algorithm>
 
 
@@ -24,10 +23,7 @@ namespace tmpc
         using degree_size_type = unsigned int;
 
 
-        explicit OcpTree(std::initializer_list<degree_size_type> branching)
-        :   OcpTree(std::views::all(branching))
-        {
-        }
+        explicit OcpTree(std::initializer_list<degree_size_type> branching);
         
 
         /// @brief Copy constructor
@@ -46,75 +42,7 @@ namespace tmpc
         /// and the sum of branching factors should be equal to the number of vertices minus 1.
         ///
         template <std::ranges::range Range>
-        explicit OcpTree(Range const& branching)
-        :   impl_ {std::make_shared<Impl>()}
-        {
-            impl_->numVertices_ = static_cast<vertices_size_type>(std::size(branching));
-
-            // Check arguments
-            if (impl_->numVertices_ == 0)
-                TMPC_THROW_EXCEPTION(std::invalid_argument("branching must have at least 1 element"));
-
-            // Get number of leaves
-            vertices_size_type const n_leaves = std::ranges::count(
-                branching.begin(), branching.end(), vertices_size_type {0});
-
-            // Populate arrays
-            impl_->firstChild_.resize(impl_->numVertices_ + 1);
-            impl_->source_.resize(impl_->numVertices_ - 1);
-            impl_->depth_.resize(impl_->numVertices_);
-            impl_->depth_[0] = 0;
-            impl_->branchVertices_.reserve(impl_->numVertices_ - n_leaves);
-            impl_->leafVertices_.reserve(n_leaves);
-
-            OcpVertex u {0}, v {1};
-            
-            for (auto nc : branching)
-            {
-                if (v + nc > impl_->numVertices_)
-                    TMPC_THROW_EXCEPTION(std::invalid_argument("Inconsistent branching values"));
-
-                impl_->firstChild_[u] = v;
-
-                if (nc > 0)
-                    impl_->branchVertices_.push_back(u);
-                else
-                    impl_->leafVertices_.push_back(u);
-
-                while (nc-- > 0)
-                {
-                    impl_->source_[v - 1] = u;
-                    impl_->depth_[v] = impl_->depth_[u] + 1;
-                    ++v;
-                }
-
-                ++u;
-            }
-
-            impl_->firstChild_[u] = v;
-
-            if (v != u)
-                TMPC_THROW_EXCEPTION(std::invalid_argument("Inconsistent branching values"));
-
-            // Init scenario count
-            impl_->scenarioCount_.resize(impl_->numVertices_);
-
-            for (auto v : vertices() | std::views::reverse)
-            {
-                auto const kinder = children(v);
-                
-                if (std::empty(kinder))
-                {
-                    impl_->scenarioCount_[v] = 1;
-                }
-                else
-                {
-                    impl_->scenarioCount_[v] = 0;
-                    for (auto ch : kinder)
-                        impl_->scenarioCount_[v] += impl_->scenarioCount_[ch];
-                }
-            }
-        }
+        explicit OcpTree(Range const& branching);
 
 
         /// @brief Create a linear OcpTree with num_stages vertices.
@@ -176,7 +104,7 @@ namespace tmpc
         /// @brief Vertices in forward breadth-first order as a range.
         auto vertices() const noexcept
         {
-            return std::views::iota(
+            return views::iota(
                 OcpVertex {0},
                 OcpVertex {numVertices()}
             );
@@ -187,7 +115,7 @@ namespace tmpc
         /// in forward breadth-first order as a range.
         auto branchVertices() const noexcept
         {
-            return std::views::all(impl_->branchVertices_);
+            return views::all(impl_->branchVertices_);
         }
 
 
@@ -195,14 +123,14 @@ namespace tmpc
         /// in forward breadth-first order as a range.
         auto leafVertices() const noexcept
         {
-            return std::views::all(impl_->leafVertices_);
+            return views::all(impl_->leafVertices_);
         }
 
 
         /// @brief Edges in forward breadth-first order as a range.
         auto edges() const noexcept
         {
-            return std::views::iota(
+            return views::iota(
                 OcpEdge {0},
                 OcpEdge {numEdges()}
             );
@@ -244,7 +172,7 @@ namespace tmpc
         /// @return a range of out-edges for vertex \a v.
         auto outEdges(OcpVertex v) const
         {
-            return std::views::iota(
+            return views::iota(
                 OcpEdge {impl_->firstChild_.at(v) - 1}, 
                 OcpEdge {impl_->firstChild_.at(v + 1) - 1}
             );
@@ -289,7 +217,7 @@ namespace tmpc
         /// @return range of vertices to which there is an out-edge from \a v.
         auto children(OcpVertex v) const
         {
-            return std::views::iota(impl_->firstChild_.at(v), impl_->firstChild_.at(v + 1));
+            return views::iota(impl_->firstChild_.at(v), impl_->firstChild_.at(v + 1));
         }
 
 
@@ -320,6 +248,85 @@ namespace tmpc
 
         std::shared_ptr<Impl> impl_;
     };
+
+
+    /// @brief Construct from branching factor sequence.
+    ///
+    /// @param branching a range defining branching factors for each vertex
+    /// in breath-first order starting from root.
+    /// The size of the range is equal to the number of vertices,
+    /// and the sum of branching factors should be equal to the number of vertices minus 1.
+    ///
+    template <std::ranges::range Range>
+    inline OcpTree::OcpTree(Range const& branching)
+    :   impl_ {std::make_shared<Impl>()}
+    {
+        impl_->numVertices_ = static_cast<vertices_size_type>(size(branching));
+
+        // Check arguments
+        if (impl_->numVertices_ == 0)
+            TMPC_THROW_EXCEPTION(std::invalid_argument("branching must have at least 1 element"));
+
+        // Get number of leaves
+        vertices_size_type const n_leaves = std::ranges::count(
+            branching.begin(), branching.end(), vertices_size_type {0});
+
+        // Populate arrays
+        impl_->firstChild_.resize(impl_->numVertices_ + 1);
+        impl_->source_.resize(impl_->numVertices_ - 1);
+        impl_->depth_.resize(impl_->numVertices_);
+        impl_->depth_[0] = 0;
+        impl_->branchVertices_.reserve(impl_->numVertices_ - n_leaves);
+        impl_->leafVertices_.reserve(n_leaves);
+
+        OcpVertex u {0}, v {1};
+        
+        for (auto nc : branching)
+        {
+            if (v + nc > impl_->numVertices_)
+                TMPC_THROW_EXCEPTION(std::invalid_argument("Inconsistent branching values"));
+
+            impl_->firstChild_[u] = v;
+
+            if (nc > 0)
+                impl_->branchVertices_.push_back(u);
+            else
+                impl_->leafVertices_.push_back(u);
+
+            while (nc-- > 0)
+            {
+                impl_->source_[v - 1] = u;
+                impl_->depth_[v] = impl_->depth_[u] + 1;
+                ++v;
+            }
+
+            ++u;
+        }
+
+        impl_->firstChild_[u] = v;
+
+        if (v != u)
+            TMPC_THROW_EXCEPTION(std::invalid_argument("Inconsistent branching values"));
+
+        // Init scenario count
+        impl_->scenarioCount_.resize(impl_->numVertices_);
+
+        for (auto v : vertices() | views::reverse)
+        {
+            auto const kinder = children(v);
+            
+            if (std::empty(kinder))
+            {
+                impl_->scenarioCount_[v] = 1;
+            }
+            else
+            {
+                impl_->scenarioCount_[v] = 0;
+                for (auto ch : kinder)
+                    impl_->scenarioCount_[v] += impl_->scenarioCount_[ch];
+            }
+        }
+    }
 
     
     inline auto num_vertices(OcpTree const& g)
@@ -409,7 +416,7 @@ namespace tmpc
     {
         auto const p = parent(v, g);
         
-        return p ? children(*p, g) : std::views::iota(v, v + 1);
+        return p ? children(*p, g) : views::iota(v, v + 1);
     }
 
 
