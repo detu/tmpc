@@ -31,7 +31,7 @@ namespace tmpc
             submatrix(work_, 0, nx_, nx_, nu_) = Bc;
             submatrix(work_, nx_, 0, nu_, nx_ + nu_) = 0.;
 
-            work_ = expm(time_step * work_);
+            work_ = matexp(time_step * work_);
 
             ~Ad = submatrix(work_, 0, 0, nx_, nx_);
             ~Bd = submatrix(work_, 0, nx_, nx_, nu_);

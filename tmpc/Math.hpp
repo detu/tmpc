@@ -2,15 +2,12 @@
 
 #pragma once
 
-#include "math/Expm.hpp"
+#include <tmpc/Exception.hpp>
 
 #include <blaze/Math.h>
 
-#include <boost/throw_exception.hpp>
-
 #include <limits>
 #include <cmath>
-#include <stdexcept>
 
 
 namespace tmpc

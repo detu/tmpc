@@ -73,7 +73,6 @@ add_executable(test-tmpc
     matrix/KernelTest.cpp
     matrix/BlockMatrixViewTest.cpp
 
-    math/ExpmTest.cpp
     math/RankTest.cpp
     math/LlhTest.cpp
     math/SyrkPotrfTest.cpp
