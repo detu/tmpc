@@ -124,17 +124,17 @@ gtest_discover_tests(test-tmpc)
 
 
 if (TMPC_WITH_qpOASES)
-    add_subdirectory("qp-qpoases")
+    add_subdirectory("qpoases")
 endif ()
 
 
 if (TMPC_WITH_treeQP)
-    add_subdirectory("qp-treeqp")
+    add_subdirectory("treeqp")
 endif ()
 
 
 if (TMPC_WITH_HPMPC)
-    add_subdirectory("qp-hpmpc")
+    add_subdirectory("hpmpc")
 endif ()
 
 
