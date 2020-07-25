@@ -14,7 +14,7 @@ namespace tmpc :: benchmark
         using Real = double;
         size_t const N = state.range(0), nx = state.range(1), nu = state.range(2);
 
-        auto const sz = ocpSizeNominalMpc(N, nx, nu, 0, 0, 0, true);
+        DynamicOcpSize const sz(N, nx, nu, 0, 0, 0, true);
         DynamicOcpQp<Real> qp {sz};
         DynamicOcpSolution<Real> sol {sz};
         DynamicFactorizedRiccati<Real> riccati {sz};

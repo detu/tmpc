@@ -14,10 +14,10 @@ namespace tmpc :: benchmark
     {
         size_t const N = state.range(0), nx = state.range(1), nu = state.range(2);
 
-        auto const size = ocpSizeNominalMpc(N, nx, nu, 0, 0, 0, true);
+        DynamicOcpSize const size(N, nx, nu, 0, 0, 0, true);
         DynamicOcpQp<double> qp {size};
         DynamicOcpSolution<double> sol {size};
-        NominalSolver<double> ws {size};
+        hpipm::NominalSolver<double> ws {size};
 
         randomize(qp);
         ws.convertProblem(qp);
