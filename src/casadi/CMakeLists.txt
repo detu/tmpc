@@ -1,5 +1,9 @@
 find_package(casadi REQUIRED 3.5.0)
 
+message(STATUS "CASADI_INCLUDE_DIRS=${CASADI_INCLUDE_DIRS}")
+
+include("cmake/GenerateCasadiFunction.cmake")
+
 add_library(tmpc-casadi STATIC 
     GeneratedFunction.cpp
 )

@@ -1,23 +1,26 @@
-#include <tmpc/qp/HpipmWorkspace.hpp>
-#include <tmpc/qp/OcpQp.hpp>
-#include <tmpc/ocp/OcpSizeProperties.hpp>
+#include <tmpc/hpipm/NominalSolver.hpp>
+#include <tmpc/qp/Randomize.hpp>
+#include <tmpc/qp/DynamicOcpQp.hpp>
+#include <tmpc/ocp/DynamicOcpSolution.hpp>
 
-#include <bench/RiccatiBench.hpp>
+#include <bench/qp/DynamicRiccatiBench.hpp>
 #include <bench/Benchmark.hpp>
 #include <bench/Complexity.hpp>
 
 
 namespace tmpc :: benchmark
 {
-    void BM_HpipmRiccati(::benchmark::State& state)
+    void BM_HpipmRiccati(State& state)
     {
         size_t const N = state.range(0), nx = state.range(1), nu = state.range(2);
 
-        OcpGraph const g = ocpGraphLinear(N + 1);
-        HpipmWorkspace<double> ws(g, ocpSizeNominalMpc(N, nx, nu, 0, 0, 0, true));
+        auto const size = ocpSizeNominalMpc(N, nx, nu, 0, 0, 0, true);
+        DynamicOcpQp<double> qp {size};
+        DynamicOcpSolution<double> sol {size};
+        NominalSolver<double> ws {size};
 
-        randomizeQp(ws);
-        ws.convertProblem();
+        randomize(qp);
+        ws.convertProblem(qp);
 
         for (auto _ : state)
             ws.solveUnconstrainedInternal();

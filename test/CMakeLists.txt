@@ -42,21 +42,22 @@ endforeach ()
 add_executable(test-tmpc
     ElementGroupTest.cpp
 
-    property_map/VectorPropertyMapTest.cpp
+    # property_map/VectorPropertyMapTest.cpp
     
-    ocp/SensitivityTupleTest.cpp
-    ocp/CondensedOcpSizeTest.cpp
-    ocp/OcpGraphTest.cpp
-    ocp/OcpSizePropertiesTest.cpp
+    ocp/CondensedSizeTest.cpp
+    ocp/OcpTreeTest.cpp
+    ocp/DynamicOcpSizeTest.cpp
+    ocp/StaticOcpSizeTest.cpp
     ocp/StaticOcpSolutionTest.cpp
-    ocp/OcpKktResidualTest.cpp
+    ocp/DynamicOcpKktValueTest.cpp
 
-    qp/CondensingN3Test.cpp
-    qp/CondensingN2Test.cpp
-    qp/MpipmWorkspaceTest.cpp
+    # qp/CondensingN3Test.cpp
+    # qp/CondensingN2Test.cpp
+    qp/MpipmSolverTest.cpp
     qp/StaticOcpQpTest.cpp
-    qp/RiccatiTest.cpp
-    # qp/StaticRiccatiTest.cpp
+    qp/DynamicOcpQpTest.cpp
+    qp/DynamicRiccatiTest.cpp
+    qp/StaticRiccatiTest.cpp
 
     integrator/ErkMassSpringDamperTest.cpp
     integrator/ErkDecayTest.cpp
@@ -139,5 +140,5 @@ endif ()
 
 
 if (TMPC_WITH_HPIPM)
-    add_subdirectory("qp-hpipm")
+    add_subdirectory("hpipm")
 endif ()

@@ -29,7 +29,7 @@ namespace tmpc :: testing
 
 	TYPED_TEST_P(SoftConstraintsTest, test1dSmallPenalty)
 	{
-		typename TestFixture::Workspace workspace {OcpSize {1, 0, 0, 1}, OcpSize {0, 0, 0}};
+		typename TestFixture::Workspace workspace {DynamicOcpSize {1, 0, 0, 1}, DynamicOcpSize {0, 0, 0}};
 		
 		auto& stage0 = workspace.problem()[0];
 		stage0.Q(1.);
@@ -48,7 +48,7 @@ namespace tmpc :: testing
 
 	TYPED_TEST_P(SoftConstraintsTest, test1dBigPenalty)
 	{
-		typename TestFixture::Workspace workspace {OcpSize {1, 0, 0, 1}, OcpSize {0, 0, 0}};
+		typename TestFixture::Workspace workspace {DynamicOcpSize {1, 0, 0, 1}, DynamicOcpSize {0, 0, 0}};
 		
 		auto& stage0 = workspace.problem()[0];
 		stage0.Q(1.);
@@ -67,7 +67,7 @@ namespace tmpc :: testing
 
 	TYPED_TEST_P(SoftConstraintsTest, test2stage1dInfeasible)
 	{
-		typename TestFixture::Workspace workspace {OcpSize {1, 0, 0, 1}, OcpSize {1, 0, 0}};	
+		typename TestFixture::Workspace workspace {DynamicOcpSize {1, 0, 0, 1}, DynamicOcpSize {1, 0, 0}};	
 		
 		auto problem = workspace.problem();
 		

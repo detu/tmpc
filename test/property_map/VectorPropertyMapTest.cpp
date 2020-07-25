@@ -1,5 +1,4 @@
 #include <tmpc/property_map/VectorPropertyMap.hpp>
-#include <tmpc/ocp/OcpSizeProperties.hpp>
 #include <tmpc/property_map/PropertyMap.hpp>
 #include <tmpc/Testing.hpp>
 
@@ -19,12 +18,12 @@ namespace tmpc :: testing
         }
 
 
-        OcpGraph const graph_ = ocpGraphLinear(3);
+        OcpTree const graph_(3);
 
-        std::vector<OcpSize> const size_ = {
-            OcpSize {2, 1, 1},
-            OcpSize {5, 4, 2},
-            OcpSize {8, 7, 3}
+        std::vector<DynamicOcpSize> const size_ = {
+            DynamicOcpSize {2, 1, 1},
+            DynamicOcpSize {5, 4, 2},
+            DynamicOcpSize {8, 7, 3}
         };
     };
 
@@ -52,7 +51,7 @@ namespace tmpc :: testing
                 dst[i] = index + i * 0.1;
         };
 
-        auto map = makeVectorPropertyMap<OcpVertexDescriptor, Vector>(index_map, size_x(size_map), setter, getter);
+        auto map = makeVectorPropertyMap<OcpVertex, Vector>(index_map, size_x(size_map), setter, getter);
         
         expected_index = 0;
         EXPECT_EQ(forcePrint(get(map, 0)), (Vector {0.0, 0.1}));

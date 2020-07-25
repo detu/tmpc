@@ -2,7 +2,7 @@ cmake_minimum_required (VERSION 3.10)   # Need at least 3.10 for gtest_discover_
 project (tmpc)
 
 # Enable modern C++
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 
 # Don't use compiler's C++ extensions
 set(CMAKE_CXX_EXTENSIONS False)
@@ -44,33 +44,16 @@ find_package(BLAS REQUIRED)
 find_package(LAPACK REQUIRED)
 
 # Find boost.
-find_package(Boost REQUIRED COMPONENTS graph exception)
-
-# Find CasADi. Besides Used in some tests
-find_package(CasADi 3.2.0)
-
-if (TARGET casadi)
-    message(STATUS "CASADI_INCLUDE_DIRS=${CASADI_INCLUDE_DIRS}")
-else ()
-    message(STATUS "CasADi not found; the tests depending on CasADi will not be built")
-endif ()
+find_package(Boost REQUIRED COMPONENTS exception)
 
 
 # TMPC_WITH_CASADI
 set(TMPC_WITH_CASADI ON CACHE BOOL "Build tmpc with CasADi generated function support classes")
 
-if (TMPC_WITH_CASADI)
-    if (TARGET casadi)
-        include("CMakeModules/GenerateCasadiFunction.cmake")
-    else ()
-        message(SEND_ERROR, "You have selected TMPC_WITH_CASADI, but CasADi was not found")
-    endif ()
-endif ()
-
-
 # TMPC_WITH_JSON
 set(TMPC_WITH_JSON ON CACHE BOOL "Build tmpc with JSON support")
 
+add_subdirectory(blazefeo)
 add_subdirectory(src)
 add_subdirectory(examples)
 

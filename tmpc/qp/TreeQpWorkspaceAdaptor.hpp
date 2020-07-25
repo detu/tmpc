@@ -1,6 +1,6 @@
 #pragma once
 
-#include <tmpc/ocp/OcpGraph.hpp>
+#include <tmpc/ocp/OcpTree.hpp>
 #include <tmpc/core/Range.hpp>
 
 #include <boost/graph/copy.hpp>
@@ -113,7 +113,7 @@ namespace tmpc
 		};
 
 
-        using SizeMap = typename boost::property_map<OcpSizeGraph, OcpSize OcpVertex::*>::const_type;
+        using SizeMap = typename boost::property_map<OcpSizeGraph, DynamicOcpSize OcpVertex::*>::const_type;
         using VertexIdMap = boost::property_map<OcpSizeGraph, boost::vertex_index_t>::type;
         using EdgeIdMap = boost::property_map<OcpSizeGraph, boost::edge_index_t>::type;
         using ProblemVertexMap = boost::iterator_property_map<ProblemVertexIterator, VertexIdMap>;

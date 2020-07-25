@@ -1,6 +1,6 @@
-#include <tmpc/qp/HpipmWorkspace.hpp>
-#include <tmpc/print/qp/OcpQp.hpp>
-#include <tmpc/print/qp/OcpSolution.hpp>
+#include <tmpc/qp/HpipmSolver.hpp>
+#include <tmpc/print/qp/OcpQpStage.hpp>
+#include <tmpc/print/ocp/OcpSolution.hpp>
 
 #include <tmpc/BlazeKernel.hpp>
 #include <tmpc/EigenKernel.hpp>
@@ -14,10 +14,10 @@ int main(int, char **)
 	using namespace tmpc;
 
 	using Kernel = BlazeKernel<double>;
-	using Workspace = HpipmWorkspace<Kernel>;
+	using Workspace = NominalSolver<Kernel>;
 
     /*
-	Workspace workspace {OcpSize {1, 0, 0, 1}, OcpSize {1, 0, 0}};	
+	Workspace workspace {DynamicOcpSize {1, 0, 0, 1}, DynamicOcpSize {1, 0, 0}};	
     auto problem = workspace.problem();
     
     problem[0]

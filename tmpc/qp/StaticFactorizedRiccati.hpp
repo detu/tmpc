@@ -1,42 +1,41 @@
 #pragma once
 
-#include <tmpc/ocp/OcpGraph.hpp>
-#include <tmpc/ocp/OcpSize.hpp>
-#include <tmpc/property_map/PropertyMap.hpp>
-#include <tmpc/graph/Graph.hpp>
-#include <tmpc/core/Range.hpp>
-#include <tmpc/Traits.hpp>
+#include <tmpc/ocp/OcpTree.hpp>
+#include <tmpc/ocp/StaticOcpSize.hpp>
 #include <tmpc/Math.hpp>
 #include <tmpc/math/Llh.hpp>
 #include <tmpc/math/SyrkPotrf.hpp>
 #include <tmpc/math/Trsv.hpp>
-
-#include <boost/throw_exception.hpp>
+#include <tmpc/Exception.hpp>
 
 #include <vector>
 
 
 namespace tmpc
 {
-    /// @brief Implements factorized Riccati algorithm from [Frison2013]
+    /// @brief Implements factorized Riccati algorithm from [Frison2017a]
     /// for static matrix sizes.
     ///
-    template <typename Real, size_t NX, size_t NU>
+    template <typename Real_, size_t NX_, size_t NU_>
     class StaticFactorizedRiccati
     {
     public:
-        StaticFactorizedRiccati(OcpGraph const& g)
-        :   graph_(g)
+        using Real = Real_;
+        static size_t constexpr NX = NX_;
+        static size_t constexpr NU = NU_;
+
+
+        StaticFactorizedRiccati(OcpTree const& g)
+        :   graph_ {g}
+        ,   size_ {g}
         ,   vertexData_(num_vertices(g))
         {
         }
 
 
-        auto size() const
+        auto const& size() const noexcept
         {
-            BOOST_THROW_EXCEPTION(std::logic_error("Function not implemented"));
-
-            return make_iterator_property_map(size_.begin(), vertexIndex(graph_));
+            return size_;
         }
 
 
@@ -49,96 +48,122 @@ namespace tmpc
         template <typename Qp, typename QpSol>
         void operator()(Qp const& qp, QpSol& sol)
         {
-            for (OcpVertexDescriptor v = num_vertices(graph_); v-- > 0; )
-                backwardPassVertex(v, qp);
-
-            for (OcpVertexDescriptor v = 0; v < num_vertices(graph_); ++v)
-            {
-                if (auto const parent_edge = graph_.parentEdge(v))
-                    forwardPassEdge(*parent_edge, qp, sol);
-
-                forwardPassVertex(v, sol);
-            }
+            backwardFactorization(qp);
+            backwardSubstitution(qp);
+            forwardSubstitution(qp, sol);
         }
 
 
     private:
         template <typename Qp>
-        void backwardPassVertex(OcpVertexDescriptor u, Qp const& qp)
+        void backwardFactorization(Qp const& qp)
         {
-            auto& vd_u = vertexData_[u];
-
-            if (out_degree(u, graph_) == 0)
+            for (auto u : vertices(graph_) | std::views::reverse)
             {
-                // Alg 3 line 1
-                auto Lcal = vd_u.Lcal();
-                tmpc::llh(get(qp.Q(), u), Lcal);
+                auto& vd_u = vertexData_[u];
 
-                // Alg 2 line 1
-                vd_u.p_ = get(qp.q(), u);
-            }
-            else
-            {
-                auto const out_e = graph::out_edges(u, graph_);
-
-                if (out_e.size() == 1)
+                if (out_degree(u, graph_) == 0)
                 {
-                    auto const e = out_e.front();
-                    auto const v = target(e, graph_);
-                    auto const& vd_v = vertexData_[v];
+                    // Alg 1 line 3
+                    auto Lcal = vd_u.Lcal();
 
-                    // Alg 3 line 3
-                    auto const Lcal_next = vd_v.Lcal();
-                    // LBLA_ = trans(Lcal_next) * get(qp.BA(), e);
-                    blaze::submatrix<0, 0, NX, NU>(LBLA_) = trans(Lcal_next) * get(qp.B(), e);
-                    blaze::submatrix<0, NU, NX, NX>(LBLA_) = trans(Lcal_next) * get(qp.A(), e);
-
-                    // Alg 3 line 4, 5
-                    tmpc::syrkPotrf(LBLA_, declsym(get(qp.H(), u)), vd_u.LL_);
-
-                    // Alg 2 line 3.
-                    // Pb_p = P_{n+1}^T * b_n + p_{n+1} = \mathcal{L}_{n+1} * \mathcal{L}_{n+1}^T * b_n + p_{n+1}
-                    blaze::StaticVector<Real, NX> const tmp1 = trans(Lcal_next) * get(qp.b(), e);
-                    blaze::StaticVector<Real, NX> const Pb_p = vd_v.p_ + Lcal_next * tmp1;
-                        
-                    auto& l = vd_u.l_;
-                    blaze::StaticVector<Real, NU> const tmp2 = get(qp.r(), u) + trans(get(qp.B(), e)) * Pb_p;
-                    l = inv(vd_u.Lambda()) * tmp2;
-                    
-                    // Alg 2 line 4
-                    auto& p = vd_u.p_;
-                    p = get(qp.q(), u) + trans(get(qp.A(), e)) * Pb_p - vd_u.L_trans() * l;
+                    // TODO: tmpc::llh() segfaults here for matrices of size 9;
+                    // using blaze::llh() as a workaround.
+                    // tmpc::llh(qp.Q(u), Lcal);
+                    blaze::llh(qp.Q(u), Lcal);
                 }
                 else
                 {
-                    throw std::invalid_argument("StaticFactorizedRiccati solver is not implemented on tree QPs yet");
+                    // Alg 1 line 5
+                    blaze::SymmetricMatrix<blaze::StaticMatrix<
+                        Real, NX + NU, NX + NU, blaze::columnMajor>> RSQ_tilde = qp.H(u);
+
+                    for (auto e : out_edges(u, graph_))
+                    {
+                        auto const v = target(e, graph_);
+                        auto const& vd_v = vertexData_[v];
+                        auto const Lcal_next = vd_v.Lcal();
+
+                        // Alg 1 line 7
+                        // D = trans(Lcal_next) * get(qp.BA(), e);
+                        blaze::StaticMatrix<Real, NX, NU + NX, blaze::columnMajor> D
+                            = trans(Lcal_next) * qp.BA(e);
+
+                        // Alg 1 line 8
+                        RSQ_tilde += declsym(trans(D) * D);
+                    }
+                    
+                    // Alg 1 line 10
+                    blaze::llh(RSQ_tilde, vd_u.LL_);
                 }
             }
         }
 
 
-        
-        template <typename QpSol>
-        void forwardPassVertex(OcpVertexDescriptor u, QpSol& sol)
+        template <typename Qp>
+        void backwardSubstitution(Qp const& qp)
         {
-            auto& vd_u = vertexData_[u];
-
-            if (in_degree(u, graph_) == 0)
+            for (auto u : vertices(graph_) | std::views::reverse)
             {
-                // Root vertex.
-                
-                // Solve P*x+p=0 by using Cholesky factor of P:
-                // \mathcal{L}*(\mathcal{L}^T*x)=-p
-                blaze::StaticVector<Real, NX> const tmp1 = inv(vd_u.Lcal()) * vd_u.p_;
-                blaze::StaticVector<Real, NX> const tmp2 = inv(trans(vd_u.Lcal())) * tmp1;
+                auto& vd_u = vertexData_[u];
 
-                put(sol.x(), u, -tmp2);
+                if (out_degree(u, graph_) == 0)
+                {
+                    // Alg 2 line 3
+                    vd_u.p_ = qp.q(u);
+                }
+                else
+                {
+                    // Alg 2 line 5
+                    blaze::StaticVector<Real, NU> r_tilde = qp.r(u);
+                    blaze::StaticVector<Real, NX> q_tilde = qp.q(u);
+                                    
+                    for (auto e : out_edges(u, graph_))
+                    {
+                        auto const v = target(e, graph_);
+                        auto const& vd_v = vertexData_[v];
+                        auto const Lcal_next = vd_v.Lcal();
+
+                        // Alg 2 line 7.
+                        // Pb_p = P_v^T * b_e + p_v = \mathcal{L}_v * \mathcal{L}_v^T * b_e + p_v
+                        blaze::StaticVector<Real, NX> const tmp1 = trans(Lcal_next) * qp.b(e);
+                        blaze::StaticVector<Real, NX> const Pb_p = vd_v.p_ + Lcal_next * tmp1;
+
+                        // Alg 2 line 8.
+                        r_tilde += trans(qp.B(e)) * Pb_p;
+                        q_tilde += trans(qp.A(e)) * Pb_p;
+                    }
+                    
+                    // Alg 2 line 10
+                    vd_u.l_ = inv(vd_u.Lambda()) * r_tilde;
+                    
+                    // Alg 2 line 11
+                    vd_u.p_ = q_tilde - vd_u.L_trans() * vd_u.l_;
+                }
             }
+        }
 
-            // Alg 2 line 8
-            if (out_degree(u, graph_) > 0)
+
+        template <typename Qp, typename QpSol>
+        void forwardSubstitution(Qp const& qp, QpSol& sol)
+        {
+            for (auto u : graph_.branchVertices())
             {
-                // Only non-leaf edges have u.
+                auto& vd_u = vertexData_[u];
+
+                if (in_degree(u, graph_) == 0)
+                {
+                    // Root vertex.
+                    
+                    // Solve P*x+p=0 by using Cholesky factor of P:
+                    // \mathcal{L}*(\mathcal{L}^T*x)=-p
+                    blaze::StaticVector<Real, NX> const tmp1 = inv(vd_u.Lcal()) * vd_u.p_;
+                    blaze::StaticVector<Real, NX> const tmp2 = inv(trans(vd_u.Lcal())) * tmp1;
+
+                    sol.x(u) = -tmp2;
+                }
+
+                // Alg 3 line 3
                 //
                 // NOTE: need a temporary StaticVector here, otherwise with -O2 we get a SEGFAULT
                 // because of improperly aligned vmovapd: 
@@ -151,39 +176,30 @@ namespace tmpc
                 // as a temporary, because of the same issue
                 //
                 blaze::StaticVector<Real, NU>& tmp1 = vd_u.l_;
-                tmp1 += trans(vd_u.L_trans()) * get(sol.x(), u);
+                tmp1 += trans(vd_u.L_trans()) * sol.x(u);
                 blaze::StaticVector<Real, NU> const tmp2 = inv(trans(vd_u.Lambda())) * tmp1;
+                sol.u(u) = -tmp2;
 
-                put(sol.u(), u, -tmp2);
+                for (auto e : out_edges(u, graph_))
+                {
+                    auto const v = target(e, graph_);
+                    auto const& vd_v = vertexData_[v];
+
+                    // Alg 3 line 5
+                    sol.x(v) = qp.b(e) + qp.A(e) * sol.x(u) + qp.B(e) * sol.u(u);
+
+                    // Alg 3 line 6
+                    blaze::StaticVector<Real, NX> const tmp = trans(vd_v.Lcal()) * sol.x(v);
+                    sol.pi(e) = vd_v.p_ + vd_v.Lcal() * tmp;
+
+                    // std::clog << "pi = " << std::endl << get(sol.pi(), e) << std::endl;
+                }
             }
-
-            /*
-            std::clog << "u = " << std::endl << get(sol.u(), u) << std::endl;
-            std::clog << "x = " << std::endl << get(sol.x(), u) << std::endl;
-            */
         }
 
 
-        template <typename Qp, typename QpSol>
-        void forwardPassEdge(OcpEdgeDescriptor e, Qp const& qp, QpSol& sol) const
-        {
-            auto const u = source(e, graph_);
-            auto const v = target(e, graph_);
-            auto const& vd_v = vertexData_[v];
-
-            // Alg 2 line 9
-            put(sol.x(), v, get(qp.b(), e) + get(qp.A(), e) * get(sol.x(), u) + get(qp.B(), e) * get(sol.u(), u));
-
-            // Alg 2 line 10
-            blaze::StaticVector<Real, NX> const tmp = trans(vd_v.Lcal()) * get(sol.x(), v);
-            put(sol.pi(), e, vd_v.p_ + vd_v.Lcal() * tmp);
-
-            // std::clog << "pi = " << std::endl << get(sol.pi(), e) << std::endl;
-        }
-
-
-        OcpGraph graph_;
-        std::vector<OcpSize> size_;
+        OcpTree graph_;
+        StaticOcpSize<NX, NU, 0> size_;
 
         struct VertexData
         {
@@ -241,15 +257,5 @@ namespace tmpc
 
         // Temporary variables for each vertex used by the algorithm
         std::vector<VertexData> vertexData_;
-
-        // LBLA = [L'*B, L'*A]
-        blaze::StaticMatrix<Real, NX, NU + NX, blaze::columnMajor> LBLA_;
-    };
-
-
-    template <typename Real, size_t NX, size_t NU>
-    struct RealOf<StaticFactorizedRiccati<Real, NX, NU>>
-    {
-        using type = Real;
     };
 }

@@ -1,5 +1,5 @@
 MESSAGE( STATUS "********************************************************************************" )
-MESSAGE( STATUS "Looking for treeQP package: \n" )
+MESSAGE( STATUS "Looking for treeQP package:" )
 #
 # Include folders
 #
@@ -8,34 +8,59 @@ MESSAGE( STATUS "Looking for treeQP include directories" )
 FIND_PATH(treeQP_INCLUDE_DIR "treeqp/src/tree_qp_common.h"
 	HINTS "${treeQP_DIR}" "$ENV{treeQP_DIR}"				
 )
-IF( treeQP_INCLUDE_DIR )
+
+IF (treeQP_INCLUDE_DIR)
 	SET( treeQP_INCLUDE_DIRS_FOUND TRUE )
-	list(APPEND treeQP_INCLUDE_DIR "${treeQP_INCLUDE_DIR}/external")
-	MESSAGE( STATUS "Found treeQP include directories: ${treeQP_INCLUDE_DIR} \n" )
-ELSE( treeQP_INCLUDE_DIR )
-	MESSAGE( STATUS "Could not find treeQP include directories \n" )
-ENDIF( treeQP_INCLUDE_DIR )
+	# list(APPEND treeQP_INCLUDE_DIR "${treeQP_INCLUDE_DIR}/external")
+	MESSAGE( STATUS "Found treeQP include directories: ${treeQP_INCLUDE_DIR}" )
+ELSE ()
+	MESSAGE( STATUS "Could not find treeQP include directories" )
+ENDIF ()
+
+
+set (treeQP_INCLUDE_DIRS ${treeQP_INCLUDE_DIR})
+
+foreach (LIB "blasfeo" "qpoases" "hpmpc")
+	list (APPEND treeQP_INCLUDE_DIRS "${treeQP_INCLUDE_DIR}/external/${LIB}/include")
+endforeach ()
+
 
 #
 # Libraries
 #
-FIND_LIBRARY( treeQP_STATIC_LIB treeqp 
-	HINTS "${treeQP_DIR}/lib" "$ENV{treeQP_DIR}/lib" "/opt/treeqp/lib"
-)
+set (treeQP_STATIC_LIBS)
 
-IF( treeQP_STATIC_LIB )
-	MESSAGE( STATUS "Found treeQP static library: ${treeQP_STATIC_LIB} \n" )
-	SET( treeQP_STATIC_LIBS_FOUND TRUE )
-ELSE( treeQP_STATIC_LIB )
-	MESSAGE( STATUS "Could not find treeQP static library.\n" )
-	SET( treeQP_STATIC_LIBS_FOUND FALSE )
-ENDIF( treeQP_STATIC_LIB )
+# NOTE: hpmpc must go before blasfeo in linker args, otherwise we get linker error!
+foreach (LIB "treeqp" "hpmpc" "blasfeo" "qpoases")
+	FIND_LIBRARY( treeQP_${LIB}_STATIC_LIB ${LIB} 
+		HINTS "${treeQP_DIR}/lib" "$ENV{treeQP_DIR}/lib" "/opt/treeqp/lib"
+	)
+
+	IF (treeQP_${LIB}_STATIC_LIB)
+		MESSAGE( STATUS "Found treeQP ${LIB} static library: ${treeQP_${LIB}_STATIC_LIB}" )
+		SET( treeQP_${LIB}_STATIC_LIB_FOUND TRUE )
+		list (APPEND treeQP_STATIC_LIBS ${treeQP_${LIB}_STATIC_LIB})
+		#list (APPEND treeQP_INCLUDE_DIRS "${treeQP_INCLUDE_DIR}/external/")
+	ELSE ()
+		MESSAGE( STATUS "Could not find treeQP ${LIB} static library." )
+		SET( treeQP_${LIB}_STATIC_LIB_FOUND FALSE )
+	ENDIF ()
+endforeach ()
+
 
 #
 # And finally set found flag...
 #
-IF( treeQP_INCLUDE_DIRS_FOUND AND treeQP_STATIC_LIBS_FOUND )
-	SET( treeQP_FOUND TRUE )
-ENDIF()
+IF (treeQP_INCLUDE_DIRS_FOUND AND 
+	treeQP_treeqp_STATIC_LIB_FOUND AND
+	treeQP_blasfeo_STATIC_LIB_FOUND AND
+	treeQP_qpoases_STATIC_LIB_FOUND AND
+	treeQP_hpmpc_STATIC_LIB_FOUND)
+	set(treeQP_FOUND TRUE)
+	message(STATUS "treeQP_STATIC_LIBS=${treeQP_STATIC_LIBS}")
+	message(STATUS "treeQP_INCLUDE_DIRS=${treeQP_INCLUDE_DIRS}")
+ELSE ()
+	set(treeQP_FOUND FALSE)
+ENDIF ()
 
 MESSAGE( STATUS "********************************************************************************" )

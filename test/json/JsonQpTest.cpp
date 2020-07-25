@@ -1,12 +1,6 @@
-#include "../qp/TreeQpWorkspaceTest.hpp"
-
 #include <tmpc/json/JsonQp.hpp>
-#include <tmpc/json/JsonBlaze.hpp>
-
-#include <tmpc/qp/OcpQp.hpp>
-#include <tmpc/BlazeKernel.hpp>
-#include <tmpc/core/Range.hpp>
-
+#include <tmpc/qp/DynamicOcpQp.hpp>
+#include <tmpc/qp/Randomize.hpp>
 #include <tmpc/Testing.hpp>
 
 
@@ -23,43 +17,14 @@ namespace tmpc :: testing
     }
 
 
-    TEST(JsonQpTest, test_ocpQpToFromJson)
-    {
-        using Kernel = BlazeKernel<double>;
-        using Stage = OcpQp<Kernel>;
-
-        Stage stage0 {OcpSize {3, 2, 0}, 2};
-        Stage stage1 {OcpSize {2, 1, 0}, 0};
-        
-        randomize(stage0);
-        randomize(stage1);
-
-        std::vector<Stage> qp;
-        qp.push_back(stage0);
-        qp.push_back(stage1);
-
-        json j = ocpQpToJson(qp);
-    }
-
-
-    TEST(JsonQpTest, test_ctorFromGraph)
-    {
-        using K = BlazeKernel<double>;
-        size_t constexpr N = 2, NX = 3, NU = 2, NC = 1;
-
-        JsonQp<K> qp(ocpGraphLinear(N + 1), ocpSizeNominalMpc(N, NX, NU, NC));
-
-        EXPECT_EQ(num_vertices(qp.graph()), N + 1);
-        EXPECT_EQ(num_edges(qp.graph()), N);
-    }
-
-
-    TEST(JsonQpTest, test_ctorFromJson)
+    TEST(JsonQpTest, testFromJson)
     {
         auto const j = R"(
         {
+            "branching": [2, 0, 0],
             "nodes": [
                 {
+                    "nx": 3, "nu": 2, "nc": 2,
                     "Q": [
                         [10, 1, 0],
                         [1, 15, 2],
@@ -95,6 +60,7 @@ namespace tmpc :: testing
                     "Zu": []
                 },
                 {
+                    "nx": 2, "nu": 0, "nc": 1,
                     "Q": [
                         [15, 2],
                         [2, 20]
@@ -119,6 +85,7 @@ namespace tmpc :: testing
                     "Zu": []
                 },
                 {
+                    "nx": 2, "nu": 0, "nc": 1,
                     "Q": [
                         [15, 2],
                         [2, 20]
@@ -175,58 +142,94 @@ namespace tmpc :: testing
         )"_json;
 
 
-        using K = BlazeKernel<double>;
-        using Vec = DynamicVector<K>;
-        using Mat = DynamicMatrix<K>;
+        using Vec = blaze::DynamicVector<double>;
+        using Mat = blaze::DynamicMatrix<double>;
 
-        JsonQp<K> json_qp {j};
+        DynamicOcpQp<double> qp = j;
 
-        EXPECT_EQ(num_vertices(json_qp.graph()), j["nodes"].size());
-        EXPECT_EQ(num_edges(json_qp.graph()), j["edges"].size());
-        EXPECT_EQ(get(json_qp.size(), 0), OcpSize(3, 2, 2, 0));
-        EXPECT_EQ(get(json_qp.size(), 1), OcpSize(2, 0, 1, 0));
+        EXPECT_EQ(num_vertices(qp.graph()), j["nodes"].size());
+        EXPECT_EQ(num_edges(qp.graph()), j["edges"].size());
+        EXPECT_EQ(qp.size(), (DynamicOcpSize {
+            OcpTree {2, 0, 0}, 
+            {{3, 2, 2, 0}, {2, 0, 1, 0}, {2, 0, 1, 0}}
+        }));
 
-        for (auto v : make_iterator_range(vertices(json_qp.graph())))
+        for (auto v : vertices(qp.graph()))
         {
-            EXPECT_EQ(get(json_qp.Q(), v), j["nodes"][v]["Q"].get<Mat>());
-            EXPECT_EQ(get(json_qp.R(), v), j["nodes"][v]["R"].get<Mat>());
-            EXPECT_EQ(get(json_qp.S(), v), resize(j["nodes"][v]["S"].get<Mat>(), get(size_S(json_qp.size()), v)));
-            EXPECT_EQ(get(json_qp.q(), v), j["nodes"][v]["q"].get<Vec>());
-            EXPECT_EQ(get(json_qp.r(), v), j["nodes"][v]["r"].get<Vec>());
-
-            EXPECT_EQ(get(json_qp.lx(), v), j["nodes"][v]["lx"].get<Vec>());
-            EXPECT_EQ(get(json_qp.ux(), v), j["nodes"][v]["ux"].get<Vec>());
-            EXPECT_EQ(get(json_qp.lu(), v), j["nodes"][v]["lu"].get<Vec>());
-            EXPECT_EQ(get(json_qp.uu(), v), j["nodes"][v]["uu"].get<Vec>());
-
-            EXPECT_EQ(get(json_qp.C(), v), resize(j["nodes"][v]["C"].get<Mat>(), get(size_C(json_qp.size()), v)));
-            EXPECT_EQ(get(json_qp.D(), v), resize(j["nodes"][v]["D"].get<Mat>(), get(size_D(json_qp.size()), v)));
-            EXPECT_EQ(get(json_qp.ld(), v), j["nodes"][v]["ld"].get<Vec>());
-            EXPECT_EQ(get(json_qp.ud(), v), j["nodes"][v]["ud"].get<Vec>());
+            TMPC_EXPECT_EQ(qp.Q(v), j["nodes"][v]["Q"].get<Mat>());
+            TMPC_EXPECT_EQ(qp.q(v), j["nodes"][v]["q"].get<Vec>());
+            TMPC_EXPECT_EQ(qp.lx(v), j["nodes"][v]["lx"].get<Vec>());
+            TMPC_EXPECT_EQ(qp.ux(v), j["nodes"][v]["ux"].get<Vec>());
+            TMPC_EXPECT_EQ(qp.C(v), resize(j["nodes"][v]["C"].get<Mat>(), {qp.size().nc(v), qp.size().nx(v)}));
+            TMPC_EXPECT_EQ(qp.ld(v), j["nodes"][v]["ld"].get<Vec>());
+            TMPC_EXPECT_EQ(qp.ud(v), j["nodes"][v]["ud"].get<Vec>());
         }
 
-        
-        for (auto e : make_iterator_range(edges(json_qp.graph())))
+        for (auto v : qp.graph().branchVertices())
         {
-            // Find corresponding edge in json
-            auto const j_edges = j["edges"];
-            auto const u = source(e, json_qp.graph());
-            auto const v = target(e, json_qp.graph());
-            auto const j_edge = std::find_if(j_edges.begin(), j_edges.end(), [u, v] (auto je) 
-            {
-                return je["from"] == u && je["to"] == v;
-            });
-
-            ASSERT_NE(j_edge, j_edges.end());
-            auto const edge_id = std::distance(j_edges.begin(), j_edge);
-
+            TMPC_EXPECT_EQ(qp.R(v), j["nodes"][v]["R"].get<Mat>());
+            TMPC_EXPECT_EQ(qp.S(v), resize(j["nodes"][v]["S"].get<Mat>(), {qp.size().nu(v), qp.size().nx(v)}));
+            TMPC_EXPECT_EQ(qp.r(v), j["nodes"][v]["r"].get<Vec>());
+            TMPC_EXPECT_EQ(qp.lu(v), j["nodes"][v]["lu"].get<Vec>());
+            TMPC_EXPECT_EQ(qp.uu(v), j["nodes"][v]["uu"].get<Vec>());
+            TMPC_EXPECT_EQ(qp.D(v), resize(j["nodes"][v]["D"].get<Mat>(), {qp.size().nc(v), qp.size().nu(v)}));
+        }
+        
+        for (auto e : edges(qp.graph()))
+        {
             // Check values
-            EXPECT_EQ(get(json_qp.A(), e), j["edges"][edge_id]["A"].get<Mat>());
-            EXPECT_EQ(get(json_qp.B(), e), j["edges"][edge_id]["B"].get<Mat>());
-            EXPECT_EQ(get(json_qp.b(), e), j["edges"][edge_id]["b"].get<Vec>());
+            TMPC_EXPECT_EQ(qp.A(e), j["edges"][e]["A"].get<Mat>());
+            TMPC_EXPECT_EQ(qp.B(e), j["edges"][e]["B"].get<Mat>());
+            TMPC_EXPECT_EQ(qp.b(e), j["edges"][e]["b"].get<Vec>());
         }
     }
 
-    
-    INSTANTIATE_TYPED_TEST_SUITE_P(JsonQp_Blaze_double, TreeQpWorkspaceTest, JsonQp<BlazeKernel<double>>);
+
+    /// @brief Check that a QP remains the same after converting to JSON and back.
+    ///
+    TEST(JsonQpTest, testToFromJson)
+    {
+        using Vec = blaze::DynamicVector<double>;
+        using Mat = blaze::DynamicMatrix<double>;
+
+        OcpTree const g {3, 2, 2, 2, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0};
+        DynamicOcpSize const size {g, 3, 2, 1};
+
+        DynamicOcpQp<double> qp0 {size};
+        randomize(qp0);
+
+        json j = qp0;
+        DynamicOcpQp<double> qp1 = j;
+
+        ASSERT_EQ(qp1.graph(), qp0.graph());
+
+        for (auto v : vertices(qp1.graph()))
+        {
+            TMPC_EXPECT_EQ(qp1.Q(v), qp0.Q(v)) << "at v=" << v;
+            TMPC_EXPECT_EQ(qp1.q(v), qp0.q(v)) << "at v=" << v;
+            TMPC_EXPECT_EQ(qp1.lx(v), qp0.lx(v)) << "at v=" << v;
+            TMPC_EXPECT_EQ(qp1.ux(v), qp0.ux(v)) << "at v=" << v;
+            TMPC_EXPECT_EQ(qp1.C(v), qp0.C(v)) << "at v=" << v;
+            TMPC_EXPECT_EQ(qp1.ld(v), qp0.ld(v)) << "at v=" << v;
+            TMPC_EXPECT_EQ(qp1.ud(v), qp0.ud(v)) << "at v=" << v;
+        }
+
+        for (auto v : qp1.graph().branchVertices())
+        {
+            TMPC_EXPECT_EQ(qp1.R(v), qp0.R(v)) << "at v=" << v;
+            TMPC_EXPECT_EQ(qp1.S(v), qp0.S(v)) << "at v=" << v;
+            TMPC_EXPECT_EQ(qp1.r(v), qp0.r(v)) << "at v=" << v;
+            TMPC_EXPECT_EQ(qp1.lu(v), qp0.lu(v)) << "at v=" << v;
+            TMPC_EXPECT_EQ(qp1.uu(v), qp0.uu(v)) << "at v=" << v;
+            TMPC_EXPECT_EQ(qp1.D(v), qp0.D(v)) << "at v=" << v;
+        }
+        
+        for (auto e : edges(qp1.graph()))
+        {
+            // Check values
+            TMPC_EXPECT_EQ(qp1.A(e), qp0.A(e)) << "at e=" << e;
+            TMPC_EXPECT_EQ(qp1.B(e), qp0.B(e)) << "at e=" << e;
+            TMPC_EXPECT_EQ(qp1.b(e), qp0.b(e)) << "at e=" << e;
+        }
+    }
 }

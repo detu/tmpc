@@ -1,7 +1,9 @@
 #pragma once
 
+#include <tmpc/ocp/OcpSolution.hpp>
+#include <tmpc/ocp/DynamicOcpKktValue.hpp>
 #include <tmpc/qp/OcpQp.hpp>
-#include <tmpc/qp/KktResidual.hpp>
+#include <tmpc/qp/KktValue.hpp>
 
 #include <tmpc/Testing.hpp>
 
@@ -9,33 +11,37 @@
 namespace tmpc :: testing
 {
 	/// @brief Check that the solution satisfies the given QP with the specified tolerance.
-	template <typename QpSol, typename Qp, typename Real>
-	inline AssertionResult isSolution(QpSol const& sol, Qp const& qp, Real abs_tol)
+	template <OcpSolution Solution, OcpQp Qp, typename Real>
+	inline AssertionResult isSolution(Solution const& sol, Qp const& qp, Real abs_tol)
 	{
 		AssertionResult res = AssertionSuccess();
 		auto const& g = qp.graph();
-		auto size_map = qp.size();
+		auto const& size = qp.size();
 
-		OcpKktResidual<Real> kkt_res {g, size_map};
-		kktResidual(sol, qp, kkt_res);
+		DynamicOcpKktValue<Real> kkt_res {size};
+		kktValue(qp, sol, kkt_res);
 
-		for (auto v : graph::vertices(g))
+		for (auto v : vertices(g))
 		{
-			res = approxEqual(get(kkt_res.gx(), v), blaze::ZeroVector<Real>(get(size_map, v).nx()), abs_tol, 0.);
+			res = approxEqual(kkt_res.gx(v), blaze::ZeroVector<Real>(size.nx(v)), abs_tol, 0.);
 			if (!res)
-				return res;
-
-			res = approxEqual(get(kkt_res.gu(), v), blaze::ZeroVector<Real>(get(size_map, v).nu()), abs_tol, 0.);
-			if (!res)
-				return res;
+				return res << " gx at vertex " << v;
 		}
 
 
-		for (auto e : graph::edges(g))
+		for (auto v : g.branchVertices())
 		{
-			res = approxEqual(get(kkt_res.c(), e), blaze::ZeroVector<Real>(get(size_map, target(e, g)).nx()), abs_tol, 0.);
+			res = approxEqual(kkt_res.gu(v), blaze::ZeroVector<Real>(size.nu(v)), abs_tol, 0.);
 			if (!res)
-				return res;
+				return res << " gu at vertex " << v;
+		}
+
+
+		for (auto e : edges(g))
+		{
+			res = approxEqual(kkt_res.c(e), blaze::ZeroVector<Real>(size.nx(target(e, g))), abs_tol, 0.);
+			if (!res)
+				return res << " c at edge " << e;
 		}
 
 		return res;

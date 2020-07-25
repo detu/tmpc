@@ -4,13 +4,28 @@
 
 #include <ostream>
 
+
 namespace tmpc
 {
 	/**
-	 * \brief Print size of an OCP QP in a human-readable format.
+	 * \brief Print size of an OCP in human-readable format.
 	 */
-	inline std::ostream& operator<<(std::ostream& os, OcpSize const& sz)
+	template <OcpSize Size>
+	inline std::ostream& operator<<(std::ostream& os, Size const& sz)
 	{
-		return os << "OcpSize(nx=" << sz.nx() << ", nu=" << sz.nu() << ", nc=" << sz.nc() << ")";
+		for (auto v : vertices(sz.graph()))
+		{
+			os << "vertex " << v << " nx=" << sz.nx(v);
+			if (out_degree(v, sz.graph()) > 0)
+				os << " nu=" << sz.nu(v);
+			os << " nc=" << sz.nc(v);
+			
+			os << " children: [";
+			for (auto u : sz.graph().children(v))
+				os << u << " ";
+			os << "]" << std::endl;
+		}
+
+		return os;
 	}
 }

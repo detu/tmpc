@@ -4,9 +4,9 @@
 
 #include <tmpc/Matrix.hpp>
 #include <tmpc/Math.hpp>
-#include <tmpc/ocp/OcpSize.hpp>
+#include <tmpc/ocp/DynamicOcpSize.hpp>
 #include <tmpc/ocp/OcpSolutionBase.hpp>
-#include <tmpc/qp/OcpQpBase.hpp>
+#include <tmpc/qp/OcpQpStageBase.hpp>
 #include <tmpc/qp/QpWorkspaceBase.hpp>
 
 #include <qpOASES.hpp>
@@ -59,12 +59,12 @@ namespace tmpc
 
 		class Stage
 		:	public OcpSolutionBase<Stage>
-		,	public OcpQpBase<Stage>
+		,	public OcpQpStageBase<Stage>
 		{
 		public:
 			using Kernel = QpOasesWorkspace::Kernel;
 
-			Stage(Workspace& ws, OcpSize const& sz, size_t n, size_t na, size_t nx_next)
+			Stage(Workspace& ws, DynamicOcpSize const& sz, size_t n, size_t na, size_t nx_next)
 			:	ws_(&ws)
 			,	n_(n)
 			,	na_(na)
@@ -411,13 +411,13 @@ namespace tmpc
 				return subvector(ws_->dualSolution, ws_->primalSolution.size() + na_, size_.nc()); 
 			}
 
-			OcpSize const& size() const { return size_; }
+			DynamicOcpSize const& size() const { return size_; }
 
 		private:
 			Workspace * ws_;
 			size_t const n_;
 			size_t const na_;
-			OcpSize const size_;
+			DynamicOcpSize const size_;
 			size_t const nxNext_;
 		};
 
@@ -433,7 +433,7 @@ namespace tmpc
 			problem_.setOptions(detail::qpOASES_DefaultOptions());
 		}
 
-		explicit QpOasesWorkspace(std::initializer_list<OcpSize> sz)
+		explicit QpOasesWorkspace(std::initializer_list<DynamicOcpSize> sz)
 		:	QpOasesWorkspace(sz.begin(), sz.end())
 		{
 		}
@@ -474,9 +474,9 @@ namespace tmpc
 		:	public boost::iterator_adaptor<
 				ProblemIterator	// derived
 			,	typename std::vector<Stage>::iterator	// base
-			,	OcpQpBase<Stage>&	// value
+			,	OcpQpStageBase<Stage>&	// value
 			,	boost::random_access_traversal_tag	// category of traversal
-			,	OcpQpBase<Stage>&	// reference
+			,	OcpQpStageBase<Stage>&	// reference
 			>
 		{
 		public:
@@ -492,9 +492,9 @@ namespace tmpc
 		:	public boost::iterator_adaptor<
 				ConstProblemIterator	// derived
 			,	typename std::vector<Stage>::const_iterator	// base
-			,	OcpQpBase<Stage> const&	// value
+			,	OcpQpStageBase<Stage> const&	// value
 			,	boost::random_access_traversal_tag	// category of traversal
-			,	OcpQpBase<Stage> const&	// reference
+			,	OcpQpStageBase<Stage> const&	// reference
 			>
 		{
 		public:

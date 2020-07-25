@@ -5,18 +5,9 @@
 #
 set(TMPC_INCLUDE_DIR ${PROJECT_INCLUDE_DIR}/tmpc)
 
-set (SRC
-    ${TMPC_INCLUDE_DIR}/Matrix.hpp
-    
-	${TMPC_INCLUDE_DIR}/qp/CondensingN3.hpp
-	${TMPC_INCLUDE_DIR}/qp/OcpQp.hpp
-
-	${TMPC_INCLUDE_DIR}/qp/diagnostics.hpp
-	${TMPC_INCLUDE_DIR}/qp/QpSolverException.hpp
-
-    ocp/OcpGraph.cpp
-
-    mpc/MpcOcpSize.cpp
+set (SRC    
+    ocp/OcpTree.cpp
+    ocp/DynamicOcpSize.cpp
 
     print/Exception.cpp
 )
@@ -29,16 +20,19 @@ target_include_directories(tmpc
 )
 
 target_link_libraries(tmpc
-    PUBLIC Boost::graph
     PUBLIC Boost::exception
+    PUBLIC blaze::blaze
+    PUBLIC blazefeo
 )
 
+
 #
-# Add CasADi interface
+# Add CasADi generated functions interface
 #
 if (TMPC_WITH_CASADI)
     add_subdirectory("casadi")
 endif ()
+
 
 #
 # Add qpOASES interface
@@ -47,12 +41,6 @@ if (TMPC_WITH_qpOASES)
     add_subdirectory("qp-qpoases")
 endif()
 
-
-if (blaze_FOUND)
-    target_link_libraries(tmpc
-        PUBLIC blaze::blaze
-    )
-endif ()
 
 #
 # Add HPMPC interface
@@ -65,7 +53,7 @@ endif()
 # Add HPIPM interface
 #
 if (TMPC_WITH_HPIPM)
-    add_subdirectory("qp-hpipm")
+    add_subdirectory("hpipm")
 endif()
 
 #
@@ -79,18 +67,10 @@ endif()
 # Link to nlohmann_json
 #
 if (TMPC_WITH_JSON)
-    # Find Nlohmann json library
-    find_package(nlohmann_json REQUIRED)
-
-    add_library(tmpc-json INTERFACE)
-
-    target_link_libraries(tmpc-json
-        INTERFACE tmpc
-        INTERFACE nlohmann_json
-    )
+    add_subdirectory("json")
 endif ()
 
 
 if (TMPC_WITH_treeQP)
-    add_subdirectory(qptool)
+    add_subdirectory("qptool")
 endif ()

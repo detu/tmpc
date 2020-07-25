@@ -1,7 +1,7 @@
 #pragma once
 
-#include <tmpc/ocp/OcpSize.hpp>
-#include <tmpc/qp/OcpQpBase.hpp>
+#include <tmpc/ocp/DynamicOcpSize.hpp>
+#include <tmpc/qp/OcpQpStageBase.hpp>
 #include <tmpc/Matrix.hpp>
 
 #include <vector>
@@ -49,7 +49,7 @@ namespace tmpc
 
 
 			template <typename QP>
-			void implEvalTo(OcpQpBase<QP>& qp) const
+			void implEvalTo(OcpQpStageBase<QP>& qp) const
 			{
 				// Initialization of QP variables
 				auto nu = first_->size().nu();
@@ -84,7 +84,7 @@ namespace tmpc
 				for (auto stage = first_ + 1; stage != last_; ++stage)
 				{
 					auto const& sz = stage->size();
-					// TODO: add nx1() to OcpSize
+					// TODO: add nx1() to DynamicOcpSize
 					auto const nx_next = stage->B().rows();
 
 					// Update Q
@@ -236,7 +236,7 @@ namespace tmpc
 		
 
 	private:
-		OcpSize const cs_;
+		DynamicOcpSize const cs_;
 
 		DynamicMatrix<Kernel> Qc_;
 		DynamicMatrix<Kernel> Rc_;

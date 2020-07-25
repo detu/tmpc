@@ -7,12 +7,15 @@
 
 namespace tmpc
 {
+    using boost::typed_identity_property_map;
+    using boost::static_property_map;
     using boost::iterator_property_map;
     using boost::function_property_map;
     using boost::associative_property_map;
     using boost::const_associative_property_map;
     using boost::transform_value_property_map;
     
+    using boost::make_static_property_map;
     using boost::make_function_property_map;
     using boost::make_iterator_property_map;
     using boost::make_transform_value_property_map;
@@ -26,9 +29,9 @@ namespace tmpc
     
     /// @brief Copy values from property map src to property map dst for the keys defined by the iterator range keys.
     template <typename PropMapSrc, typename PropMapDst, typename KeyRange>
-    inline void copyProperty(PropMapSrc src, PropMapDst dst, KeyRange keys)
+    inline void copyProperty(PropMapSrc const& src, PropMapDst& dst, KeyRange keys)
     {
         for (auto key : keys)
-            put(dst, key, get(src, key));
+            dst[key] = src[key];
     }
 }

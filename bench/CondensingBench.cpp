@@ -1,6 +1,6 @@
 #include <tmpc/qp/CondensingN3.hpp>
 #include <tmpc/qp/CondensingN2.hpp>
-#include <tmpc/qp/OcpQp.hpp>
+#include <tmpc/qp/OcpQpStage.hpp>
 #include <tmpc/BlazeKernel.hpp>
 #include <tmpc/EigenKernel.hpp>
 
@@ -19,12 +19,12 @@ namespace tmpc :: benchmark
     template <typename Kernel>
     static auto makeTestQp(size_t N, size_t nx, size_t nu, size_t nc, size_t ns)
     {
-        std::vector<OcpQp<Kernel>> qp;
+        std::vector<OcpQpStage<Kernel>> qp;
         qp.reserve(N);
 
         for (size_t k = 0; k + 1 < N; ++k)
-            qp.emplace_back(OcpSize {nx, nu, nc, ns}, nx);
-        qp.emplace_back(OcpSize {nx, nu, nc, ns}, 0);
+            qp.emplace_back(DynamicOcpSize {nx, nu, nc, ns}, nx);
+        qp.emplace_back(DynamicOcpSize {nx, nu, nc, ns}, 0);
 
         return qp;
     }
@@ -37,7 +37,7 @@ namespace tmpc :: benchmark
         auto qp = makeTestQp<Kernel>(state.range(0), NX, NU, NC, NS);
         CondensingAlgorithm condensing {sizeBegin(qp), sizeEnd(qp)};
 
-        OcpQp<Kernel> condensed {condensing.condensedSize(), rows(qp.back().A())};
+        OcpQpStage<Kernel> condensed {condensing.condensedSize(), rows(qp.back().A())};
         for (auto _ : state)
             condensed = condensing(qp.begin(), qp.end());
     }
@@ -49,5 +49,3 @@ namespace tmpc :: benchmark
     BENCHMARK_TEMPLATE(BM_Condensing, CondensingN2<EigenKernel<double>>)->Arg(5)->Arg(8)->Range(10, 100);
 }
 
-
-BENCHMARK_MAIN();

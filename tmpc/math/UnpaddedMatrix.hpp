@@ -29,6 +29,14 @@ namespace tmpc
         }
 
 
+        template <typename MT, bool SO1>
+        UnpaddedMatrix(blaze::Matrix<MT, SO1> const& rhs)
+        :   UnpaddedMatrix(rows(rhs), columns(rhs))
+        {
+            *this = rhs;
+        }
+
+
         ~UnpaddedMatrix()
         {
             delete[] this->data();

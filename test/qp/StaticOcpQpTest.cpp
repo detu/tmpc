@@ -2,8 +2,8 @@
 * Unit tests for common functionality of StaticOcpQp class.
 */
 
-#include <tmpc/ocp/OcpGraph.hpp>
-#include <tmpc/ocp/OcpSize.hpp>
+#include <tmpc/ocp/OcpTree.hpp>
+#include <tmpc/ocp/DynamicOcpSize.hpp>
 #include <tmpc/Matrix.hpp>
 #include <tmpc/property_map/PropertyMap.hpp>
 #include <tmpc/qp/StaticOcpQp.hpp>
@@ -25,13 +25,108 @@ namespace tmpc :: testing
 
     protected:
         StaticOcpQpTest()
+        :   graph_(3)
         {
         }
 
 
-        OcpGraph const graph_ = ocpGraphLinear(3);
+        OcpTree const graph_;
         Qp qp_ {graph_};
     };
+
+
+    TEST_F(StaticOcpQpTest, testQpPropertyMapInterface)
+    {
+        auto& g = this->qp_.graph();
+        auto const N = num_vertices(g);
+
+        std::map<OcpVertex, blaze::SymmetricMatrix<blaze::StaticMatrix<Real, NX, NX, blaze::columnMajor>>> Q;
+        std::map<OcpVertex, blaze::StaticVector<Real, NX>> q;
+        std::map<OcpVertex, blaze::StaticVector<Real, NU>> r;
+        std::map<OcpVertex, blaze::StaticMatrix<Real, NU, NX, blaze::columnMajor>> S;
+        std::map<OcpVertex, blaze::SymmetricMatrix<blaze::StaticMatrix<Real, NU, NU, blaze::columnMajor>>> R;
+
+        std::map<OcpEdge, blaze::StaticMatrix<Real, NX, NX, blaze::columnMajor>> A;
+        std::map<OcpEdge, blaze::StaticMatrix<Real, NX, NU, blaze::columnMajor>> B;
+        std::map<OcpEdge, blaze::StaticVector<Real, NX>> b;
+
+        std::map<OcpVertex, blaze::StaticVector<Real, NX>> x_min, x_max;
+        std::map<OcpVertex, blaze::StaticVector<Real, NU>> u_min, u_max;
+        std::map<OcpVertex, blaze::StaticVector<Real, NC>> d_min, d_max;
+
+        // Writing random data
+        for (auto v : vertices(g))
+        {
+            DynamicOcpSize const sz {NX, NU, NC};
+
+            makePositiveDefinite(Q[v]);
+            randomize(q[v]);
+            randomize(x_min[v]);
+            randomize(x_max[v]);
+            randomize(d_min[v]);
+            randomize(d_max[v]);
+
+            this->qp_.Q(v, Q[v]);
+            this->qp_.q(v, q[v]);
+            this->qp_.lx(v, x_min[v]);
+            this->qp_.ux(v, x_max[v]);
+            this->qp_.ld(v, d_min[v]);
+            this->qp_.ud(v, d_max[v]);
+        }
+
+        for (auto v : g.branchVertices())
+        {
+            makePositiveDefinite(R[v]);
+            randomize(S[v]);
+            randomize(r[v]);
+            randomize(u_min[v]);
+            randomize(u_max[v]);
+        
+            this->qp_.R(v, R[v]);
+            this->qp_.S(v, S[v]);
+            this->qp_.r(v, r[v]);
+            this->qp_.lu(v, u_min[v]);
+            this->qp_.uu(v, u_max[v]);            
+        }
+
+        for (auto e : edges(g))
+        {
+            randomize(A[e]);
+            randomize(B[e]);
+            randomize(b[e]);
+
+            this->qp_.A(e, A[e]);
+            this->qp_.B(e, B[e]);
+            this->qp_.b(e, b[e]);
+        }
+
+        // Reading the data and checking that they are the same that we wrote
+        for (auto v : vertices(g))
+        {
+            EXPECT_EQ(forcePrint(this->qp_.Q(v)), forcePrint(Q[v])) << "at v=" << v;            
+            EXPECT_EQ(forcePrint(this->qp_.q(v)), forcePrint(q[v])) << "at v=" << v;
+            EXPECT_EQ(forcePrint(this->qp_.lx(v)), forcePrint(x_min[v])) << "at v=" << v;
+            EXPECT_EQ(forcePrint(this->qp_.ux(v)), forcePrint(x_max[v])) << "at v=" << v;
+            EXPECT_EQ(forcePrint(this->qp_.ld(v)), forcePrint(d_min[v])) << "at v=" << v;
+            EXPECT_EQ(forcePrint(this->qp_.ud(v)), forcePrint(d_max[v])) << "at v=" << v;
+        }
+
+        for (auto v : g.branchVertices())
+        {
+            EXPECT_EQ(forcePrint(this->qp_.R(v)), forcePrint(R[v])) << "at v=" << v;
+            EXPECT_EQ(forcePrint(this->qp_.S(v)), forcePrint(S[v])) << "at v=" << v;
+            EXPECT_EQ(forcePrint(this->qp_.r(v)), forcePrint(r[v])) << "at v=" << v;
+            EXPECT_EQ(forcePrint(this->qp_.lu(v)), forcePrint(u_min[v])) << "at v=" << v;
+            EXPECT_EQ(forcePrint(this->qp_.uu(v)), forcePrint(u_max[v])) << "at v=" << v;
+        }
+
+        for (auto e : edges(g))
+        {
+            EXPECT_EQ(forcePrint(this->qp_.A(e)), forcePrint(A[e])) << "at e=" << e;
+            EXPECT_EQ(forcePrint(this->qp_.B(e)), forcePrint(B[e])) << "at e=" << e;
+            EXPECT_EQ(forcePrint(this->qp_.b(e)), forcePrint(b[e])) << "at e=" << e;
+        }
+    }
 
 
     TEST_F(StaticOcpQpTest, testQpInterface)
@@ -39,87 +134,91 @@ namespace tmpc :: testing
         auto& g = this->qp_.graph();
         auto const N = num_vertices(g);
 
-        std::map<OcpVertexDescriptor, blaze::SymmetricMatrix<blaze::StaticMatrix<Real, NX, NX, blaze::columnMajor>>> Q;
-        std::map<OcpVertexDescriptor, blaze::StaticVector<Real, NX>> q;
-        std::map<OcpVertexDescriptor, blaze::StaticVector<Real, NU>> r;
-        std::map<OcpVertexDescriptor, blaze::StaticMatrix<Real, NU, NX, blaze::columnMajor>> S;
-        std::map<OcpVertexDescriptor, blaze::SymmetricMatrix<blaze::StaticMatrix<Real, NU, NU, blaze::columnMajor>>> R;
+        std::map<OcpVertex, blaze::SymmetricMatrix<blaze::StaticMatrix<Real, NX, NX, blaze::columnMajor>>> Q;
+        std::map<OcpVertex, blaze::StaticVector<Real, NX>> q;
+        std::map<OcpVertex, blaze::StaticVector<Real, NU>> r;
+        std::map<OcpVertex, blaze::StaticMatrix<Real, NU, NX, blaze::columnMajor>> S;
+        std::map<OcpVertex, blaze::SymmetricMatrix<blaze::StaticMatrix<Real, NU, NU, blaze::columnMajor>>> R;
 
-        std::map<OcpEdgeDescriptor, blaze::StaticMatrix<Real, NX, NX, blaze::columnMajor>> A;
-        std::map<OcpEdgeDescriptor, blaze::StaticMatrix<Real, NX, NU, blaze::columnMajor>> B;
-        std::map<OcpEdgeDescriptor, blaze::StaticVector<Real, NX>> b;
+        std::map<OcpEdge, blaze::StaticMatrix<Real, NX, NX, blaze::columnMajor>> A;
+        std::map<OcpEdge, blaze::StaticMatrix<Real, NX, NU, blaze::columnMajor>> B;
+        std::map<OcpEdge, blaze::StaticVector<Real, NX>> b;
 
-        std::map<OcpVertexDescriptor, blaze::StaticVector<Real, NX>> x_min, x_max;
-        std::map<OcpVertexDescriptor, blaze::StaticVector<Real, NU>> u_min, u_max;
-        std::map<OcpVertexDescriptor, blaze::StaticVector<Real, NC>> d_min, d_max;
+        std::map<OcpVertex, blaze::StaticVector<Real, NX>> x_min, x_max;
+        std::map<OcpVertex, blaze::StaticVector<Real, NU>> u_min, u_max;
+        std::map<OcpVertex, blaze::StaticVector<Real, NC>> d_min, d_max;
 
         // Writing random data
-        for (auto v : graph::vertices(g))
+        for (auto v : vertices(g))
         {
-            OcpSize const sz {NX, NU, NC};
+            DynamicOcpSize const sz {NX, NU, NC};
 
-            makePositiveDefinite(Q[v]);
-            makePositiveDefinite(R[v]);
-            randomize(S[v]);
-            randomize(q[v]);
-            randomize(r[v]);
+            makePositiveDefinite(Q[v]);            
+            randomize(q[v]);            
             randomize(x_min[v]);
             randomize(x_max[v]);
-            randomize(u_min[v]);
-            randomize(u_max[v]);
             randomize(d_min[v]);
             randomize(d_max[v]);
 
-            put(this->qp_.Q(), v, Q[v]);
-            put(this->qp_.R(), v, R[v]);
-            put(this->qp_.S(), v, S[v]);
-            put(this->qp_.q(), v, q[v]);
-            put(this->qp_.r(), v, r[v]);
-
-            put(this->qp_.lx(), v, x_min[v]);
-            put(this->qp_.ux(), v, x_max[v]);
-            put(this->qp_.lu(), v, u_min[v]);
-            put(this->qp_.uu(), v, u_max[v]);
-            put(this->qp_.ld(), v, d_min[v]);
-            put(this->qp_.ud(), v, d_max[v]);
+            this->qp_.Q(v, Q[v]);            
+            this->qp_.q(v, q[v]);            
+            this->qp_.lx(v, x_min[v]);
+            this->qp_.ux(v, x_max[v]);
+            this->qp_.ld(v, d_min[v]);
+            this->qp_.ud(v, d_max[v]);
         }
 
-        for (auto e : graph::edges(g))
+        for (auto v : g.branchVertices())
+        {
+            makePositiveDefinite(R[v]);
+            randomize(S[v]);
+            randomize(r[v]);
+            randomize(u_min[v]);
+            randomize(u_max[v]);            
+
+            this->qp_.R(v, R[v]);
+            this->qp_.S(v, S[v]);
+            this->qp_.r(v, r[v]);
+            this->qp_.lu(v, u_min[v]);
+            this->qp_.uu(v, u_max[v]);
+        }
+
+        for (auto e : edges(g))
         {
             randomize(A[e]);
             randomize(B[e]);
             randomize(b[e]);
 
-            put(this->qp_.A(), e, A[e]);
-            put(this->qp_.B(), e, B[e]);
-            put(this->qp_.b(), e, b[e]);
+            this->qp_.A(e, A[e]);
+            this->qp_.B(e, B[e]);
+            this->qp_.b(e, b[e]);
         }
 
         // Reading the data and checking that they are the same that we wrote
-        for (auto v : graph::vertices(g))
+        for (auto v : vertices(g))
         {
-            EXPECT_EQ(get(qp_.size(), v), OcpSize(NX, NU, NC));
-
-            EXPECT_EQ(forcePrint(get(this->qp_.Q(), v)), forcePrint(Q[v])) << "at v=" << v;
-            
-            EXPECT_EQ(forcePrint(get(this->qp_.R(), v)), forcePrint(R[v])) << "at v=" << v;
-            EXPECT_EQ(forcePrint(get(this->qp_.S(), v)), forcePrint(S[v])) << "at v=" << v;
-            EXPECT_EQ(forcePrint(get(this->qp_.q(), v)), forcePrint(q[v])) << "at v=" << v;
-            EXPECT_EQ(forcePrint(get(this->qp_.r(), v)), forcePrint(r[v])) << "at v=" << v;
-
-            EXPECT_EQ(forcePrint(get(this->qp_.lx(), v)), forcePrint(x_min[v])) << "at v=" << v;
-            EXPECT_EQ(forcePrint(get(this->qp_.ux(), v)), forcePrint(x_max[v])) << "at v=" << v;
-            EXPECT_EQ(forcePrint(get(this->qp_.lu(), v)), forcePrint(u_min[v])) << "at v=" << v;
-            EXPECT_EQ(forcePrint(get(this->qp_.uu(), v)), forcePrint(u_max[v])) << "at v=" << v;
-            EXPECT_EQ(forcePrint(get(this->qp_.ld(), v)), forcePrint(d_min[v])) << "at v=" << v;
-            EXPECT_EQ(forcePrint(get(this->qp_.ud(), v)), forcePrint(d_max[v])) << "at v=" << v;
+            EXPECT_EQ(forcePrint(this->qp_.Q(v)), forcePrint(Q[v])) << "at v=" << v;
+            EXPECT_EQ(forcePrint(this->qp_.q(v)), forcePrint(q[v])) << "at v=" << v;
+            EXPECT_EQ(forcePrint(this->qp_.lx(v)), forcePrint(x_min[v])) << "at v=" << v;
+            EXPECT_EQ(forcePrint(this->qp_.ux(v)), forcePrint(x_max[v])) << "at v=" << v;
+            EXPECT_EQ(forcePrint(this->qp_.ld(v)), forcePrint(d_min[v])) << "at v=" << v;
+            EXPECT_EQ(forcePrint(this->qp_.ud(v)), forcePrint(d_max[v])) << "at v=" << v;
         }
 
-        for (auto e : graph::edges(g))
+        for (auto v : g.branchVertices())
         {
-            EXPECT_EQ(forcePrint(get(this->qp_.A(), e)), forcePrint(A[e])) << "at e=" << get(graph::edge_index, g, e);
-            EXPECT_EQ(forcePrint(get(this->qp_.B(), e)), forcePrint(B[e])) << "at e=" << get(graph::edge_index, g, e);
-            EXPECT_EQ(forcePrint(get(this->qp_.b(), e)), forcePrint(b[e])) << "at e=" << get(graph::edge_index, g, e);
+            EXPECT_EQ(forcePrint(this->qp_.R(v)), forcePrint(R[v])) << "at v=" << v;
+            EXPECT_EQ(forcePrint(this->qp_.S(v)), forcePrint(S[v])) << "at v=" << v;
+            EXPECT_EQ(forcePrint(this->qp_.r(v)), forcePrint(r[v])) << "at v=" << v;
+            EXPECT_EQ(forcePrint(this->qp_.lu(v)), forcePrint(u_min[v])) << "at v=" << v;
+            EXPECT_EQ(forcePrint(this->qp_.uu(v)), forcePrint(u_max[v])) << "at v=" << v;
+        }
+
+        for (auto e : edges(g))
+        {
+            EXPECT_EQ(forcePrint(this->qp_.A(e)), forcePrint(A[e])) << "at e=" << e;
+            EXPECT_EQ(forcePrint(this->qp_.B(e)), forcePrint(B[e])) << "at e=" << e;
+            EXPECT_EQ(forcePrint(this->qp_.b(e)), forcePrint(b[e])) << "at e=" << e;
         }
     }
 
@@ -128,37 +227,35 @@ namespace tmpc :: testing
     {
         auto const& ws = this->qp_;
 
-        for (auto v : graph::vertices(ws.graph()))
+        for (auto v : vertices(ws.graph()))
         {
-            OcpSize const s {NX, NU, NC};
-            
-            EXPECT_EQ(rows(get(this->qp_.Q(), v)), s.nx());
-            EXPECT_EQ(columns(get(this->qp_.Q(), v)), s.nx());
-
-            EXPECT_EQ(rows(get(this->qp_.R(), v)), s.nu());
-            EXPECT_EQ(columns(get(this->qp_.R(), v)), s.nu());
-            EXPECT_EQ(rows(get(this->qp_.S(), v)), s.nu());
-            EXPECT_EQ(columns(get(this->qp_.S(), v)), s.nx());
-            EXPECT_EQ(size(get(this->qp_.q(), v)), s.nx());
-            EXPECT_EQ(size(get(this->qp_.r(), v)), s.nu());
-
-            EXPECT_EQ(size(get(this->qp_.lx(), v)), s.nx());
-            EXPECT_EQ(size(get(this->qp_.ux(), v)), s.nx());
-            EXPECT_EQ(size(get(this->qp_.lu(), v)), s.nu());
-            EXPECT_EQ(size(get(this->qp_.uu(), v)), s.nu());
-            EXPECT_EQ(size(get(this->qp_.ld(), v)), s.nc());
-            EXPECT_EQ(size(get(this->qp_.ud(), v)), s.nc());
+            EXPECT_EQ(rows(this->qp_.Q(v)), NX);
+            EXPECT_EQ(columns(this->qp_.Q(v)), NX);
+            EXPECT_EQ(size(this->qp_.q(v)), NX);            
+            EXPECT_EQ(size(this->qp_.lx(v)), NX);
+            EXPECT_EQ(size(this->qp_.ux(v)), NX);            
+            EXPECT_EQ(size(this->qp_.ld(v)), NC);
+            EXPECT_EQ(size(this->qp_.ud(v)), NC);
         }
 
-        for (auto e : graph::edges(ws.graph()))
+        for (auto v : ws.graph().branchVertices())
         {
-            OcpSize const s {NX, NU, NC};
+            EXPECT_EQ(rows(this->qp_.R(v)), NU);
+            EXPECT_EQ(columns(this->qp_.R(v)), NU);
+            EXPECT_EQ(rows(this->qp_.S(v)), NU);
+            EXPECT_EQ(columns(this->qp_.S(v)), NX);
+            EXPECT_EQ(size(this->qp_.r(v)), NU);
+            EXPECT_EQ(size(this->qp_.lu(v)), NU);
+            EXPECT_EQ(size(this->qp_.uu(v)), NU);
+        }
 
-            EXPECT_EQ(rows(get(this->qp_.A(), e)), s.nx());
-            EXPECT_EQ(columns(get(this->qp_.A(), e)), s.nx());
-            EXPECT_EQ(rows(get(this->qp_.B(), e)), s.nx());
-            EXPECT_EQ(columns(get(this->qp_.B(), e)), s.nu());
-            EXPECT_EQ(size(get(this->qp_.b(), e)), s.nx());
+        for (auto e : edges(ws.graph()))
+        {
+            EXPECT_EQ(rows(this->qp_.A(e)), NX);
+            EXPECT_EQ(columns(this->qp_.A(e)), NX);
+            EXPECT_EQ(rows(this->qp_.B(e)), NX);
+            EXPECT_EQ(columns(this->qp_.B(e)), NU);
+            EXPECT_EQ(size(this->qp_.b(e)), NX);
         }
     }
 }
