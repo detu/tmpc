@@ -13,6 +13,8 @@
 #define BENCHMARK_STATIC_CLASSICAL_RICCATI(NX) \
     BENCHMARK_TEMPLATE(BM_StaticClassicalRiccati, NX, NX)->Arg(100);
 
+#define BENCHMARK_SIZE 20
+
 
 namespace tmpc :: benchmark
 {
@@ -38,6 +40,9 @@ namespace tmpc :: benchmark
     }
 
 
+#ifdef BENCHMARK_SIZE
+    BENCHMARK_STATIC_CLASSICAL_RICCATI(BENCHMARK_SIZE);
+#else
     BENCHMARK_STATIC_CLASSICAL_RICCATI(1);
 
     BENCHMARK_STATIC_CLASSICAL_RICCATI(2);
@@ -91,4 +96,5 @@ namespace tmpc :: benchmark
     // BENCHMARK_STATIC_CLASSICAL_RICCATI(48);
     // BENCHMARK_STATIC_CLASSICAL_RICCATI(49);
     // BENCHMARK_STATIC_CLASSICAL_RICCATI(50);
+#endif
 }

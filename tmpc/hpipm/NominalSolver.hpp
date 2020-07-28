@@ -37,17 +37,28 @@ namespace tmpc :: hpipm
 	{
 	public:
 		using Real = Real_;
-		
+
 
 		/**
-		 * \brief Takes QP problem size to preallocate workspace.
+		 * @brief Initializes solver for a given problem size.
 		 */
 		template <OcpSize Size>
 		NominalSolver(Size const& size)
+		:	NominalSolver {size, OcpQpIpmArg<Real> {dim_, ROBUST}}
+		{
+		}
+
+
+		/**
+		 * @brief Initializes solver for a given problem size 
+		 * and additionally takes HPIPM-specific options.
+		 */
+		template <OcpSize Size>
+		NominalSolver(Size const& size, OcpQpIpmArg<Real>&& options)
 		:	graph_ {size.graph()}
 		,	size_ {size}
 		,	dim_ {size}
-		,	solverArg_ {dim_, ROBUST}
+		,	solverArg_ {std::move(options)}
 		,	qp_ {dim_}
 		,	sol_ {dim_}
 		,	solverWorkspace_ {dim_, solverArg_}

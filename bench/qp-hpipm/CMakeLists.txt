@@ -1,6 +1,6 @@
 add_executable(bench-tmpc-hpipm
     Main.cpp
-    HpipmRiccatiBench.cpp
+    Riccati.cpp
 )
 
 

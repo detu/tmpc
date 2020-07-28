@@ -3,8 +3,6 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-#include <tmpc/Matrix.hpp>
-
 #include <blaze/Math.h>
 #include <blaze/util/typetraits/IsArithmetic.h>
 #include <Eigen/Dense>

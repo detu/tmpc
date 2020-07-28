@@ -22,6 +22,7 @@ add_executable(bench-tmpc
 target_link_libraries(bench-tmpc
     tmpc
     benchmark
+    blazefeo-blasfeo
     ${BLAS_LIBRARIES}
     ${LAPACK_LIBRARIES}
     ${CMAKE_THREAD_LIBS_INIT}

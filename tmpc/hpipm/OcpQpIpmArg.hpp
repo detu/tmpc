@@ -54,10 +54,17 @@ namespace tmpc :: hpipm
     }
 
 
-    // @brief Set minimum step lenght
+    /// @brief Set minimum step lenght
     inline void ocp_qp_ipm_arg_set_alpha_min(double alpha_min, d_ocp_qp_ipm_arg& arg)
     {
         ::d_ocp_qp_ipm_arg_set_alpha_min(&alpha_min, &arg);
+    }
+
+
+    /// @brief Set riccati algorithm: 0 classic, 1 square-root
+    inline void ocp_qp_ipm_arg_set_ric_alg(int value, d_ocp_qp_ipm_arg& arg)
+    {
+        ::d_ocp_qp_ipm_arg_set_ric_alg(&value, &arg);
     }
     
     
@@ -80,10 +87,17 @@ namespace tmpc :: hpipm
         }
 
 
-        // @brief Set minimum step length
+        /// @brief Set minimum step length
         void set_alpha_min(double alpha_min)
         {
             ocp_qp_ipm_arg_set_alpha_min(alpha_min, *this);
+        }
+
+
+        /// @brief Set riccati algorithm: 0 classic, 1 square-root
+        void set_ric_alg(int value)
+        {
+            ocp_qp_ipm_arg_set_ric_alg(value, *this);
         }
 
 

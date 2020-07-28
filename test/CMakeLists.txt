@@ -5,38 +5,6 @@ find_package(GTest 1.9.0 REQUIRED)
 find_package(Threads REQUIRED)    # required for gtest
 find_package(Python3 REQUIRED COMPONENTS Interpreter)
 
-# Generate and build models
-foreach (model pendulum)
-    set(generated_name "generated_${model}")
-    add_custom_command(
-        OUTPUT
-            ${generated_name}.h
-            ${generated_name}.c
-        COMMAND
-            ${Python3_EXECUTABLE}
-        ARGS
-            ${CMAKE_CURRENT_SOURCE_DIR}/model/${model}.py ${generated_name}.c
-        DEPENDS
-            model/${model}.py
-        WORKING_DIRECTORY
-            ${CMAKE_CURRENT_BINARY_DIR}
-        COMMENT
-            "Generating model code and test data for model ${model}..."
-    )
-
-    add_library(model_${model} STATIC
-        model/${model}.cpp
-        ${CMAKE_CURRENT_BINARY_DIR}/${generated_name}.h
-        ${CMAKE_CURRENT_BINARY_DIR}/${generated_name}.c
-    )
-
-    target_include_directories(model_${model}
-        PRIVATE ${CMAKE_CURRENT_BINARY_DIR}
-    )
-
-    target_link_libraries(model_${model} PRIVATE tmpc)
-endforeach ()
-
 
 # ~~~~~~~~~~ Our tests ~~~~~~~~~~~~~~
 add_executable(test-tmpc
@@ -69,8 +37,6 @@ add_executable(test-tmpc
     integrator/IrkDecayTest.cpp
 
     matrix/MatrixTest.cpp
-    matrix/DynamicSubmatrixTest.cpp
-    matrix/KernelTest.cpp
     matrix/BlockMatrixViewTest.cpp
 
     math/RankTest.cpp

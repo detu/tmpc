@@ -4,11 +4,11 @@
 #include <tmpc/ocp/StaticOcpSize.hpp>
 #include <tmpc/Math.hpp>
 #include <tmpc/math/Llh.hpp>
-#include <tmpc/math/SyrkPotrf.hpp>
 #include <tmpc/math/Trsv.hpp>
 #include <tmpc/Exception.hpp>
 
-#include <blazefeo/math/dense/Gemm.hpp>
+#include <blazefeo/math/dense/Syrk.hpp>
+#include <blazefeo/math/dense/Potrf.hpp>
 
 #include <vector>
 
@@ -63,46 +63,56 @@ namespace tmpc
             for (auto u : vertices(graph_) | views::reverse)
             {
                 auto& vd_u = vertexData_[u];
+                auto const oe = out_edges(u, graph_);
 
-                if (out_degree(u, graph_) == 0)
+                if (oe.size() == 0)
                 {
                     // Alg 1 line 3
                     auto Lcal = vd_u.Lcal();
 
                     // TODO: tmpc::llh() segfaults here for matrices of size 9;
                     // using blaze::llh() as a workaround.
-                    // tmpc::llh(qp.Q(u), Lcal);
                     blaze::llh(qp.Q(u), Lcal);
+                    // blazefeo::potrf(qp.Q(u), derestrict(Lcal));
                 }
                 else
                 {
-                    // Alg 1 line 5
-                    // blaze::SymmetricMatrix<blaze::StaticMatrix<
-                    //     Real, NX + NU, NX + NU, blaze::columnMajor>> RSQ_tilde = qp.H(u);
-                    blaze::StaticMatrix<
-                        Real, NX + NU, NX + NU, blaze::columnMajor> RSQ_tilde = qp.H(u);
+                    // RSQ_tilde is an alias to LL_;
+                    // potrf() is performed in-place.
+                    // The upper-triangular part of the matrix is untouched.
+                    auto& RSQ_tilde = derestrict(vd_u.LL_);
 
-                    for (auto e : out_edges(u, graph_))
+                    // ----------------------
+                    // Process first out edge
+                    // ----------------------
+                    auto e = oe.begin();
+
+                    // Alg 1 line 7
+                    // blaze::StaticMatrix<Real, NX, NU + NX, blaze::columnMajor> D
+                    //     = trans(Lcal_next) * qp.BA(e);
+                    blaze::StaticMatrix<Real, NU + NX, NX, blaze::columnMajor> transD
+                        = trans(qp.BA(*e)) * vertexData_[target(*e, graph_)].Lcal();
+
+                    // Alg 1 line 5, 8
+                    blazefeo::syrk_ln(1., transD, 1., qp.H(u), RSQ_tilde);
+
+                    // ---------------------------
+                    // Process remaining out edges
+                    // ---------------------------
+                    while (++e != oe.end())
                     {
-                        auto const v = target(e, graph_);
-                        auto const& vd_v = vertexData_[v];
-                        auto const Lcal_next = vd_v.Lcal();
-
                         // Alg 1 line 7
                         // D = trans(Lcal_next) * get(qp.BA(), e);
                         // blaze::StaticMatrix<Real, NX, NU + NX, blaze::columnMajor> D
                         //     = trans(Lcal_next) * qp.BA(e);
-                        blaze::StaticMatrix<Real, NU + NX, NX, blaze::columnMajor> transD
-                            = trans(qp.BA(e)) * Lcal_next;
+                        transD = trans(qp.BA(*e)) * vertexData_[target(*e, graph_)].Lcal();
 
                         // Alg 1 line 8
-                        // RSQ_tilde += declsym(trans(D) * D);
-                        // RSQ_tilde += declsym(transD * trans(transD));
-                        blazefeo::gemm_nt(transD, transD, RSQ_tilde, RSQ_tilde);
+                        blazefeo::syrk_ln(1., transD, 1., RSQ_tilde, RSQ_tilde);
                     }
-                    
+
                     // Alg 1 line 10
-                    blaze::llh(RSQ_tilde, vd_u.LL_);
+                    blazefeo::potrf(RSQ_tilde, RSQ_tilde);
                 }
             }
         }
@@ -263,7 +273,7 @@ namespace tmpc
             }
         };
 
-        // Temporary variables for each vertex used by the algorithm
+        // Temporary variables for each vertex used by the algorithm.
         std::vector<VertexData> vertexData_;
     };
 }

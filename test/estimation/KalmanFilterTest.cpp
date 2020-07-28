@@ -10,10 +10,10 @@ namespace tmpc :: testing
     
     using blaze::columnVector;
                 
-    template <size_t N, bool TF = columnVector>
+    template <size_t N, bool TF = blaze::columnVector>
     using StaticVector = blaze::StaticVector<Real, N, TF>;
 
-    template <size_t M, size_t N, bool SO = columnMajor>
+    template <size_t M, size_t N, bool SO = blaze::columnMajor>
     using StaticMatrix = blaze::StaticMatrix<Real, M, N, SO>;
 
 
