@@ -10,6 +10,7 @@
 #include <blazefeo/math/dense/Syrk.hpp>
 #include <blazefeo/math/dense/Potrf.hpp>
 #include <blazefeo/math/dense/Trmm.hpp>
+#include <blazefeo/math/dense/Trsv.hpp>
 
 #include <vector>
 
@@ -148,7 +149,7 @@ namespace tmpc
                     }
                     
                     // Alg 2 line 10
-                    vd_u.l_ = inv(vd_u.Lambda()) * r_tilde;
+                    blazefeo::trsvLeftLower(vd_u.Lambda(), r_tilde, vd_u.l_);
                     
                     // Alg 2 line 11
                     vd_u.p_ = q_tilde - vd_u.L_trans() * vd_u.l_;
@@ -170,28 +171,16 @@ namespace tmpc
                     
                     // Solve P*x+p=0 by using Cholesky factor of P:
                     // \mathcal{L}*(\mathcal{L}^T*x)=-p
-                    blaze::StaticVector<Real, NX> const tmp1 = inv(vd_u.Lcal()) * vd_u.p_;
-                    blaze::StaticVector<Real, NX> const tmp2 = inv(trans(vd_u.Lcal())) * tmp1;
-
-                    sol.x(u) = -tmp2;
+                    blazefeo::trsvLeftLower(vd_u.Lcal(), -vd_u.p_, vd_u.p_);
+                    decltype(auto) x_u = sol.x(u);
+                    blazefeo::trsvLeftUpper(trans(vd_u.Lcal()), vd_u.p_, x_u);
                 }
 
                 // Alg 3 line 3
                 //
-                // NOTE: need a temporary StaticVector here, otherwise with -O2 we get a SEGFAULT
-                // because of improperly aligned vmovapd: 
-                // vmovapd 0x8(%rdx),%ymm7
-                // 
-                // Possibly a compiler bug.
-                // See this issue: https://bitbucket.org/blaze-lib/blaze/issues/290/segfault-in-matrix-matrix-assignment-due
-                //
-                // NOTE: splitting the x + A * y operation into two and reusing vd_u.l
-                // as a temporary, because of the same issue
-                //
-                blaze::StaticVector<Real, NU>& tmp1 = vd_u.l_;
-                tmp1 += trans(vd_u.L_trans()) * sol.x(u);
-                blaze::StaticVector<Real, NU> const tmp2 = inv(trans(vd_u.Lambda())) * tmp1;
-                sol.u(u) = -tmp2;
+                vd_u.l_ += trans(vd_u.L_trans()) * sol.x(u);
+                decltype(auto) u_u = sol.u(u);
+                blazefeo::trsvLeftUpper(trans(vd_u.Lambda()), -vd_u.l_, u_u);
 
                 for (auto e : out_edges(u, graph_))
                 {
