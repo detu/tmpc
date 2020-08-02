@@ -4,7 +4,7 @@
 
 #include <boost/preprocessor/iteration/local.hpp>
 
-#define BENCHMARK_RICCATI_MAX 50
+#define BENCHMARK_RICCATI_MAX 39
 
 
 namespace tmpc :: benchmark
