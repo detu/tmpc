@@ -9,6 +9,7 @@
 
 #include <blazefeo/math/dense/Syrk.hpp>
 #include <blazefeo/math/dense/Potrf.hpp>
+#include <blazefeo/math/dense/Trmm.hpp>
 
 #include <vector>
 
@@ -88,13 +89,10 @@ namespace tmpc
                     auto e = oe.begin();
 
                     // Alg 1 line 7
-                    // blaze::StaticMatrix<Real, NX, NU + NX, blaze::columnMajor> D
-                    //     = trans(Lcal_next) * qp.BA(e);
-                    blaze::StaticMatrix<Real, NU + NX, NX, blaze::columnMajor> transD
-                        = trans(qp.BA(*e)) * vertexData_[target(*e, graph_)].Lcal();
+                    blazefeo::trmmRightLower(1., trans(qp.BA(*e)), vertexData_[target(*e, graph_)].Lcal(), transD_);
 
                     // Alg 1 line 5, 8
-                    blazefeo::syrk_ln(1., transD, 1., qp.H(u), RSQ_tilde);
+                    blazefeo::syrk_ln(1., transD_, 1., qp.H(u), RSQ_tilde);
 
                     // ---------------------------
                     // Process remaining out edges
@@ -102,13 +100,10 @@ namespace tmpc
                     while (++e != oe.end())
                     {
                         // Alg 1 line 7
-                        // D = trans(Lcal_next) * get(qp.BA(), e);
-                        // blaze::StaticMatrix<Real, NX, NU + NX, blaze::columnMajor> D
-                        //     = trans(Lcal_next) * qp.BA(e);
-                        transD = trans(qp.BA(*e)) * vertexData_[target(*e, graph_)].Lcal();
+                        blazefeo::trmmRightLower(1., trans(qp.BA(*e)), vertexData_[target(*e, graph_)].Lcal(), transD_);
 
                         // Alg 1 line 8
-                        blazefeo::syrk_ln(1., transD, 1., RSQ_tilde, RSQ_tilde);
+                        blazefeo::syrk_ln(1., transD_, 1., RSQ_tilde, RSQ_tilde);
                     }
 
                     // Alg 1 line 10
@@ -275,5 +270,7 @@ namespace tmpc
 
         // Temporary variables for each vertex used by the algorithm.
         std::vector<VertexData> vertexData_;
+
+        blaze::StaticMatrix<Real, NU + NX, NX, blaze::columnMajor> transD_;
     };
 }

@@ -308,7 +308,7 @@ namespace tmpc
             // Edge properties
             //
 
-            blaze::StaticMatrix<Real, NX, NU + NX, blaze::columnMajor> BA_;
+            blaze::StaticMatrix<Real, NX, NU + NX, blaze::rowMajor> BA_;
 			blaze::StaticVector<Real, NX> b_;
 
             //

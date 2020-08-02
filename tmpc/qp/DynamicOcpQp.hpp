@@ -364,7 +364,7 @@ namespace tmpc
             }
 
 
-            blaze::DynamicMatrix<Real, blaze::columnMajor> BA_;
+            blaze::DynamicMatrix<Real, blaze::rowMajor> BA_;
 
             using Submatrix = decltype(blaze::submatrix(BA_, 0, 0, 1, 1));
 
